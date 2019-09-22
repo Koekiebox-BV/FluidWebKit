@@ -163,11 +163,10 @@ public abstract class ABaseWorkspaceBean extends ABaseManagedBean {
 					String viewName = jobViewIter.getViewName();
 					String viewGroup = jobViewIter.getViewGroupName();
 					String uiViewGroup = this.getViewGroupForUI(viewGroup, viewName);
-					if (uiViewGroup == null) {
-						throw new ClientDashboardException(
-								"View Group assignment returned [null] for Group["+viewGroup+"] and View["+viewName+"].",
-								ClientDashboardException.ErrorCode.ILLEGAL_STATE);
+					if (uiViewGroup == null || uiViewGroup.isEmpty()) {
+						continue;
 					}
+
 					List<JobView> jobViews = this.viewGroupPlacings.get(uiViewGroup);
 					if (jobViews == null) {
 						jobViews = new ArrayList<>();
