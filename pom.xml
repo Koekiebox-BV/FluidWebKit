@@ -1,0 +1,203 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+		 xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+
+	<groupId>com.fluidbpm</groupId>
+	<artifactId>fluidwebkit</artifactId>
+	<version>1.0-SNAPSHOT</version>
+	<packaging>jar</packaging>
+
+	<name>Fluid Webkit</name>
+	<description>The Fluid WebKit for JSP PrimeFaces applications.</description>
+
+	<properties>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		<version.fluid.api>1.10</version.fluid.api>
+		<version.j2ee>8.0</version.j2ee>
+
+		<!--Plugins-->
+		<version.plugin.gpg>1.6</version.plugin.gpg>
+		<version.plugin.compiler>3.6.0</version.plugin.compiler>
+		<version.jdk.compile>1.8</version.jdk.compile>
+	</properties>
+
+	<url>https://github.com/Koekiebox-PTY-LTD/FluidWebKit</url>
+
+	<licenses>
+		<license>
+			<name>GNU GENERAL PUBLIC LICENSE, Version 3</name>
+			<url>https://github.com/Koekiebox-PTY-LTD/FluidWebKit/blob/develop/LICENSE</url>
+			<distribution>repo</distribution>
+		</license>
+	</licenses>
+
+	<developers>
+		<developer>
+			<name>Jason Bruwer</name>
+			<email>jason@koekiebox.com</email>
+			<organization>Koekiebox</organization>
+		</developer>
+	</developers>
+
+	<scm>
+		<connection>scm:git:git@github.com:Koekiebox-PTY-LTD/FluidWebKit.git</connection>
+		<developerConnection>scm:git:git@github.com:Koekiebox-PTY-LTD/FluidWebKit.git</developerConnection>
+		<url>git@github.com:Koekiebox-PTY-LTD/FluidWebKit.git</url>
+	</scm>
+
+	<dependencies>
+		<!--JUnit Testing-->
+		<dependency>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>
+			<scope>test</scope>
+			<version>4.12</version>
+		</dependency>
+
+		<!--Fluid API Dependencies-->
+		<!--The API is expected to be in the [WildFly] Web Container-->
+		<dependency>
+			<groupId>com.fluidbpm</groupId>
+			<artifactId>fluid-ws-java-client</artifactId>
+			<version>${version.fluid.api}</version>
+			<scope>provided</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>com.fluidbpm</groupId>
+			<artifactId>fluid-api</artifactId>
+			<version>${version.fluid.api}</version>
+			<scope>provided</scope>
+		</dependency>
+
+		<!-- J2EE -->
+		<dependency>
+			<groupId>javax</groupId>
+			<artifactId>javaee-api</artifactId>
+			<scope>provided</scope>
+			<version>${version.j2ee}</version>
+		</dependency>
+
+		<!-- Faces Implementation -->
+		<dependency>
+			<groupId>com.sun.faces</groupId>
+			<artifactId>jsf-impl</artifactId>
+			<version>2.2.8</version>
+			<scope>provided</scope>
+		</dependency>
+
+		<!-- Faces Library -->
+		<dependency>
+			<groupId>com.sun.faces</groupId>
+			<artifactId>jsf-api</artifactId>
+			<version>2.2.8</version>
+			<scope>provided</scope>
+		</dependency>
+
+		<!--JSP Prime Faces Dependencies-->
+		<dependency>
+			<groupId>org.primefaces</groupId>
+			<artifactId>primefaces</artifactId>
+			<version>6.2</version>
+			<scope>provided</scope>
+		</dependency>
+
+		<!--The Logger-->
+		<dependency>
+			<groupId>org.slf4j</groupId>
+			<artifactId>slf4j-api</artifactId>
+			<version>1.7.7</version>
+			<scope>provided</scope>
+		</dependency>
+
+		<!--Open CSV for Reading CSV Files-->
+		<!-- https://mvnrepository.com/artifact/com.opencsv/opencsv -->
+		<dependency>
+			<groupId>com.opencsv</groupId>
+			<artifactId>opencsv</artifactId>
+			<version>4.1</version>
+			<scope>compile</scope>
+		</dependency>
+
+		<!--POI for Word exports-->
+		<!--Apache POI-->
+		<dependency>
+			<groupId>org.apache.poi</groupId>
+			<artifactId>poi</artifactId>
+			<version>3.17</version>
+			<scope>compile</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>org.apache.poi</groupId>
+			<artifactId>poi-ooxml</artifactId>
+			<version>3.17</version>
+			<scope>compile</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>org.apache.poi</groupId>
+			<artifactId>poi-ooxml-schemas</artifactId>
+			<version>3.17</version>
+			<scope>compile</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>org.apache.poi</groupId>
+			<artifactId>poi-scratchpad</artifactId>
+			<version>3.17</version>
+			<scope>compile</scope>
+		</dependency>
+	</dependencies>
+
+	<!--Distribution Management-->
+	<distributionManagement>
+		<!--Snapshot-->
+		<snapshotRepository>
+			<id>fluid_open_source</id>
+			<url>https://oss.sonatype.org/content/repositories/snapshots</url>
+		</snapshotRepository>
+
+		<!--Release-->
+		<repository>
+			<id>fluid_open_source</id>
+			<url>https://oss.sonatype.org/service/local/staging/deploy/maven2</url>
+		</repository>
+	</distributionManagement>
+
+	<!--Plugins-->
+	<build>
+		<plugins>
+			<!--Maven GPG Sign Plugin-->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-gpg-plugin</artifactId>
+				<version>${version.plugin.gpg}</version>
+				<executions>
+					<execution>
+						<id>sign-artifacts</id>
+						<phase>verify</phase>
+						<goals>
+							<goal>sign</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+
+			<!--Compiler Plugin-->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<version>${version.plugin.compiler}</version>
+				<configuration>
+					<source>${version.jdk.compile}</source>
+					<target>${version.jdk.compile}</target>
+					<compilerArgs>
+						<!--arg>add-modules</arg>
+                        <arg>java.xml.bind</arg-->
+					</compilerArgs>
+				</configuration>
+			</plugin>
+		</plugins>
+	</build>
+</project>
