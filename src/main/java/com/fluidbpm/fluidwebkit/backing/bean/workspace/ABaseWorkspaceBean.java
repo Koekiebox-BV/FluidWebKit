@@ -50,26 +50,23 @@ import java.util.concurrent.CompletableFuture;
 public abstract class ABaseWorkspaceBean extends ABaseManagedBean {
 	private JobViewListing jobViewListing = new JobViewListing();
 	private UserQueryListing userQueryListing = new UserQueryListing();
-
 	//Views...
-	private List<JobView> viewsAll;
-
-	private Map<String, List<JobView>> viewGroupPlacings;
+	protected List<JobView> viewsAll;
+	protected Map<String, List<JobView>> viewGroupPlacings;
 
 	//Selected Content View...
 	private ABaseContentView contentView;
 
 	//Config...
-	private boolean currentlyHaveItemOpen;
+	protected boolean currentlyHaveItemOpen;
+	protected OpenPageLastCache openPageLastCache;
 
-	private OpenPageLastCache openPageLastCache;
 	private String areaToUpdateForDialogAfterSubmit;
 
 	/**
 	 * Cached items in case of a page refresh.
 	 */
-	private static class OpenPageLastCache implements Serializable
-	{
+	private static class OpenPageLastCache implements Serializable {
 		public String workspaceItemAim;
 		public String selectedJobViews;
 
@@ -213,17 +210,26 @@ public abstract class ABaseWorkspaceBean extends ABaseManagedBean {
 
 	/**
 	 *
-	 * @param uiGroupParam
+	 * @param uiGroupsParam
 	 * @return
 	 */
-	public String getQueryStringForUIGroup(String uiGroupParam) {
-		List<JobView> forGroup = null;
-		if (this.viewGroupPlacings == null ||
-				(forGroup = this.viewGroupPlacings.get(uiGroupParam)) == null) {
+	public String getQueryStringForUIGroups(String ... uiGroupsParam) {
+		if (uiGroupsParam == null || uiGroupsParam.length == 0) {
 			return null;
 		}
-		
-		return this.getViewsFor(forGroup);
+
+		if (this.viewGroupPlacings == null) {
+			return null;
+		}
+
+		List<JobView> forAll = new ArrayList<>();
+		for (String uiGroupParam : uiGroupsParam) {
+			List<JobView> localGroup = null;
+			if ((localGroup = this.viewGroupPlacings.get(uiGroupParam)) != null) {
+				forAll.addAll(localGroup);
+			}
+		}
+		return this.getViewsFor(forAll);
 	}
 
 	/**
@@ -399,22 +405,22 @@ public abstract class ABaseWorkspaceBean extends ABaseManagedBean {
 	protected abstract ABaseWebVO createABaseWebVO(SQLUtilWebSocketRESTWrapper wrapperParam, FluidItem fluidItemParam);
 
 	/**
-	 *
+	 * 
 	 * @param jobViewsParam
 	 * @param idToGetParam
 	 * @return
 	 */
-	private JobView getJobViewFromListingWithId(List<JobView> jobViewsParam, Long idToGetParam) {
-		if(idToGetParam == null) {
+	protected JobView getJobViewFromListingWithId(List<JobView> jobViewsParam, Long idToGetParam) {
+		if (idToGetParam == null) {
 			return null;
 		}
 
-		if(jobViewsParam == null || jobViewsParam.isEmpty()) {
+		if (jobViewsParam == null || jobViewsParam.isEmpty()) {
 			return null;
 		}
 
 		//Set the Active Job View...
-		if(jobViewsParam != null && !jobViewsParam.isEmpty()) {
+		if (jobViewsParam != null && !jobViewsParam.isEmpty()) {
 			for(JobView view : jobViewsParam) {
 				if(idToGetParam.equals(view.getId())) {
 					return view;

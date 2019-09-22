@@ -25,9 +25,9 @@ public class ClientDashboardException extends RuntimeException {
 	private int errorCode;
 
 	/**
-	 *
+	 * Error code mappings for Client Dashboard errors.
 	 */
-	public static final class ErrorCode {
+	public static class ErrorCode {
 		public static final int SESSION_EXPIRED = 10001;
 		public static final int IO_ERROR = 10002;
 		public static final int VALIDATION = 10003;
