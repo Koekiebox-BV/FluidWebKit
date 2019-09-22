@@ -91,7 +91,7 @@ public abstract class ABaseNotificationsBean extends ABaseManagedBean {
 				}
 			}
 		} catch (Exception except) {
-			this.logger.error("Unable to fetch Notifications. "+except.getMessage(),except);
+			this.getLogger().error("Unable to fetch Notifications. "+except.getMessage(),except);
 
 			FacesContext.getCurrentInstance().addMessage(null,
 					new FacesMessage(FacesMessage.SEVERITY_ERROR,
@@ -123,7 +123,7 @@ public abstract class ABaseNotificationsBean extends ABaseManagedBean {
 				userNotificationsClient.markUserNotificationAsRead(unreadMsg);
 			});
 		} catch (Exception except) {
-			this.logger.error("Unable to mark Notifications as READ. "+except.getMessage(),except);
+			this.getLogger().error("Unable to mark Notifications as READ. "+except.getMessage(),except);
 
 			FacesContext.getCurrentInstance().addMessage(null,
 					new FacesMessage(FacesMessage.SEVERITY_ERROR,

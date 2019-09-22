@@ -181,7 +181,7 @@ public abstract class ABaseWorkspaceBean extends ABaseManagedBean {
 			}
 		} catch (Exception fce) {
 			//We have a problem...
-			this.logger.error(fce.getMessage(),fce);
+			this.getLogger().error(fce.getMessage(),fce);
 
 			FacesMessage fMsg = new FacesMessage(FacesMessage.SEVERITY_ERROR,
 					"Failed to fetch User Queries and Views. ", fce.getMessage());
@@ -380,7 +380,7 @@ public abstract class ABaseWorkspaceBean extends ABaseManagedBean {
 			}
 		} catch (Exception except) {
 			//log it...
-			this.logger.error(except.getMessage(),except);
+			this.getLogger().error(except.getMessage(),except);
 			FacesMessage fMsg = new FacesMessage(FacesMessage.SEVERITY_ERROR,
 					"Failed to fetch items for View. ", except.getMessage());
 			FacesContext.getCurrentInstance().addMessage(null, fMsg);

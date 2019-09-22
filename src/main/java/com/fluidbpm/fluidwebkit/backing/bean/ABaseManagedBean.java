@@ -19,7 +19,6 @@ import com.fluidbpm.GitDescribe;
 import com.fluidbpm.fluidwebkit.backing.utility.Globals;
 import com.fluidbpm.fluidwebkit.exception.ClientDashboardException;
 import com.fluidbpm.fluidwebkit.exception.WebSessionExpiredException;
-import com.fluidbpm.fluidwebkit.qualifier.ClientDashboardWebResource;
 import com.fluidbpm.program.api.vo.field.Field;
 import com.fluidbpm.program.api.vo.user.User;
 import com.fluidbpm.program.api.vo.ws.auth.AppRequestToken;
@@ -28,7 +27,6 @@ import org.slf4j.Logger;
 
 import javax.faces.context.ExternalContext;
 import javax.faces.context.FacesContext;
-import javax.inject.Inject;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import java.io.IOException;
@@ -46,10 +44,6 @@ import java.util.UUID;
  */
 public abstract class ABaseManagedBean implements Serializable {
 	private final int pageSize = 15;
-
-	@Inject
-	@ClientDashboardWebResource
-	protected Logger logger;
 
 	//App Request Token...
 	protected AppRequestToken configUserAppRequestToken;
@@ -133,6 +127,12 @@ public abstract class ABaseManagedBean implements Serializable {
 	 * 
 	 * @return
 	 */
+	public abstract Logger getLogger();
+
+	/**
+	 * 
+	 * @return
+	 */
 	public String getSoftwareVersion() {
 		return GitDescribe.GIT_DESCRIBE;
 	}
@@ -158,7 +158,7 @@ public abstract class ABaseManagedBean implements Serializable {
 		} catch (WebSessionExpiredException webExp) {
 			return "yyyy-MMM-dd HH:mm";
 		} catch (Exception except) {
-			this.logger.error("Unable to get 'Date and Time' Format! "+except.getMessage(),except);
+			this.getLogger().error("Unable to get 'Date and Time' Format! "+except.getMessage(),except);
 			return "yyyy-MMM-dd HH:mm";
 		}
 	}
@@ -173,7 +173,7 @@ public abstract class ABaseManagedBean implements Serializable {
 		} catch (WebSessionExpiredException webExp) {
 			return "yyyy-MMM-dd";
 		} catch (Exception except) {
-			this.logger.error("Unable to get 'Date' Format! "+except.getMessage(),except);
+			this.getLogger().error("Unable to get 'Date' Format! "+except.getMessage(),except);
 			return "yyyy-MMM-dd";
 		}
 	}
@@ -349,7 +349,7 @@ public abstract class ABaseManagedBean implements Serializable {
 			loggedInUser = this.getLoggedInUser();
 		} catch (ClientDashboardException except) {
 			if (except.getErrorCode() != ClientDashboardException.ErrorCode.SESSION_EXPIRED) {
-				this.logger.error("Unable to get logged in user. "+except.getMessage(), except);
+				this.getLogger().error("Unable to get logged in user. "+except.getMessage(), except);
 			}
 		}
 

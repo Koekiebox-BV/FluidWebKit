@@ -62,12 +62,12 @@ public abstract class ABaseFormFieldAccessBean extends ABaseManagedBean {
 	public void actionPopulateInit() {
 
 		if (this.fieldCachingDone) {
-			this.logger.info("FFC-Bean: Fields ALREADY CACHED.");
+			this.getLogger().info("FFC-Bean: Fields ALREADY CACHED.");
 			return;
 		}
 		realtimeCounter = 0;
 
-		this.logger.info("FFC-Bean: Starting Caching.");
+		this.getLogger().info("FFC-Bean: Starting Caching.");
 
 		String serviceTicket = this.getLoggedInUser().getServiceTicket();
 
@@ -87,13 +87,13 @@ public abstract class ABaseFormFieldAccessBean extends ABaseManagedBean {
 				});
 			}
 
-			this.logger.info("FFC-Bean: PART-1-COMPLETE.");
+			this.getLogger().info("FFC-Bean: PART-1-COMPLETE.");
 			List<Form> allFormDefinitions = formDefinitionClient.getAllByLoggedInUser(true);
 			if (allFormDefinitions == null) {
 				return;
 			}
 
-			this.logger.info("FFC-Bean: PART-2-COMPLETE.");
+			this.getLogger().info("FFC-Bean: PART-2-COMPLETE.");
 
 			long now = System.currentTimeMillis();
 
@@ -132,7 +132,7 @@ public abstract class ABaseFormFieldAccessBean extends ABaseManagedBean {
 					this.fieldsForEditing.put(
 							formDefTitle, formFieldsForEdit);
 
-					this.logger.info("FFC-Bean: PART-2-[{}]-COMPLETE TK({})",
+					this.getLogger().info("FFC-Bean: PART-2-[{}]-COMPLETE TK({})",
 							formDefTitle,
 							(System.currentTimeMillis() - starting));
 
@@ -145,7 +145,7 @@ public abstract class ABaseFormFieldAccessBean extends ABaseManagedBean {
 			//We are waiting for all of them to complete...
 			CompletableFuture.allOf(allAsyncs.toArray(new CompletableFuture[]{})).join();
 
-			this.logger.info("FFC-Bean: PART-3-COMPLETE: {} millis. Total of {} items. " +
+			this.getLogger().info("FFC-Bean: PART-3-COMPLETE: {} millis. Total of {} items. " +
 							"Should have taken {}.",
 					(System.currentTimeMillis() - now),
 					this.fieldsForViewing.size(),
@@ -154,14 +154,14 @@ public abstract class ABaseFormFieldAccessBean extends ABaseManagedBean {
 			this.fieldCachingDone = true;
 		} catch (Exception except) {
 			//log it...
-			this.logger.error(except.getMessage(), except);
+			this.getLogger().error(except.getMessage(), except);
 
 			FacesMessage fMsg = new FacesMessage(FacesMessage.SEVERITY_ERROR,
 					"Failed to populate.", except.getMessage());
 			FacesContext.getCurrentInstance().addMessage(null, fMsg);
 		} finally {
 			formDefinitionClient.closeAndClean();
-			this.logger.info("FFC-Bean: DONE");
+			this.getLogger().info("FFC-Bean: DONE");
 		}
 	}
 

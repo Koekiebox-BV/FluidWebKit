@@ -1,7 +1,0 @@
-Manifest-Version: 1.0
-Archiver-Version: Maven Archiver
-Build-Jdk: 1.8
-Name: com/fluidbpmwebkit
-Sealed: false
-Created-By: Apache Maven
-Built-By: Jason Bruwer

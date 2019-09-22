@@ -51,7 +51,7 @@ public abstract class ABaseLoginBean extends ABaseManagedBean {
 	 */
 	public String actionLogin() {
 
-		this.logger.debug("Login attempt ["+this.getInputUsername()+"]");
+		this.getLogger().debug("Login attempt ["+this.getInputUsername()+"]");
 
 		//Lets confirm username and password is set first...
 		if (this.getInputUsername() == null ||
@@ -101,7 +101,7 @@ public abstract class ABaseLoginBean extends ABaseManagedBean {
 					user.setUserFields(fieldListing.getListing());
 				}
 			} catch (FluidClientException fle) {
-				this.logger.error("Unable to get user fields for "+
+				this.getLogger().error("Unable to get user fields for "+
 						loggedInUserInfo.getUsername()+". "+fle.getMessage(),fle);
 			}
 		} catch (FluidClientException fce) {
@@ -149,11 +149,9 @@ public abstract class ABaseLoginBean extends ABaseManagedBean {
 			LDAP.authenticateLDAP(
 					this.getInputUsername(),
 					this.getInputPassword());
-
-			this.logger.info("LDAP LOGIN IS GOOD -> !");
-
-		}catch (Exception exception) {
-			this.logger.error("Unable to login through LDAP. " +
+			this.getLogger().info("LDAP LOGIN IS GOOD -> !");
+		} catch (Exception exception) {
+			this.getLogger().error("Unable to login through LDAP. " +
 					exception.getMessage(),exception);
 			FacesMessage fMsg = new FacesMessage(FacesMessage.SEVERITY_ERROR,
 					"Failed to Login. ", exception.getMessage());
