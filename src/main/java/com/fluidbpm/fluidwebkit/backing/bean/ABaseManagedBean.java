@@ -24,6 +24,7 @@ import com.fluidbpm.program.api.vo.user.User;
 import com.fluidbpm.program.api.vo.ws.auth.AppRequestToken;
 import org.primefaces.PrimeFaces;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.faces.context.ExternalContext;
 import javax.faces.context.FacesContext;
@@ -124,10 +125,13 @@ public abstract class ABaseManagedBean implements Serializable {
 	}
 
 	/**
-	 * 
-	 * @return
+	 * Default logger through;
+	 * {@code LoggerFactory.getLogger(this.getClass().getName())}
+	 * @return New logger instance.
 	 */
-	public abstract Logger getLogger();
+	public Logger getLogger() {
+		return LoggerFactory.getLogger(this.getClass().getName());
+	}
 
 	/**
 	 * 

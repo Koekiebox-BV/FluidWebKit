@@ -28,6 +28,8 @@ import com.fluidbpm.program.api.vo.userquery.UserQueryListing;
 import com.fluidbpm.ws.client.FluidClientException;
 import com.fluidbpm.ws.client.v1.flow.FlowStepClient;
 import com.fluidbpm.ws.client.v1.flowitem.FlowItemClient;
+import com.fluidbpm.ws.client.v1.form.FormContainerClient;
+import com.fluidbpm.ws.client.v1.sqlutil.sqlnative.SQLUtilWebSocketExecuteNativeSQLClient;
 import com.fluidbpm.ws.client.v1.sqlutil.wrapper.SQLUtilWebSocketRESTWrapper;
 import com.fluidbpm.ws.client.v1.userquery.UserQueryClient;
 
@@ -271,6 +273,50 @@ public abstract class ABaseWorkspaceBean extends ABaseManagedBean {
 	}
 
 	/**
+	 * Open an 'Form' for editing or viewing.
+	 */
+	public void actionOpenFormForEditingFromWorkspace() {
+		this.setAreaToUpdateForDialogAfterSubmit(null);
+		this.currentlyHaveItemOpen = false;
+
+		Long formIdToUpdate = this.getLongRequestParam(RequestParam.TO_UPDATE);
+		Long openedFromViewId = this.getLongRequestParam(RequestParam.OPENED_FROM_VIEW);
+		JobView fromView = this.getJobViewFromListingWithId(this.viewsAll, openedFromViewId);
+		User loggedInUser = this.getLoggedInUser();
+
+		String confUrl = this.getConfigURLFromSystemProperty();
+
+		final FormContainerClient formContClient = new FormContainerClient(confUrl, loggedInUser.getServiceTicket());
+		final SQLUtilWebSocketExecuteNativeSQLClient nativeSQLClient =
+				new SQLUtilWebSocketExecuteNativeSQLClient(
+						confUrl,
+						null,
+						loggedInUser.getServiceTicketAsHexUpper(),
+						Globals.WEB_SOCKET_TIMEOUT_MILLIS);
+		try {
+			this.actionOpenFormForEditingFromWorkspace(fromView, formIdToUpdate, formContClient, nativeSQLClient);
+			this.currentlyHaveItemOpen = true;
+		} catch (Exception except) {
+			this.getLogger().error(except.getMessage(), except);
+			FacesMessage fMsg = new FacesMessage(FacesMessage.SEVERITY_ERROR,
+					"Failed to Open '"+formIdToUpdate+"'. ", except.getMessage());
+			FacesContext.getCurrentInstance().addMessage(null, fMsg);
+		} finally {
+			formContClient.closeAndClean();
+			nativeSQLClient.closeAndClean();
+		}
+	}
+
+	/**
+	 * Open an 'Form' for editing or viewing.
+	 */
+	public abstract void actionOpenFormForEditingFromWorkspace(
+			JobView fromView,
+			Long formIdToUpdateParam,
+			FormContainerClient formContClient,
+			SQLUtilWebSocketExecuteNativeSQLClient nativeSQLClientParam);
+
+	/**
 	 * When the main page for the workspace is opened or refreshed.
 	 */
 	public void actionOpenMainPage() {
@@ -430,11 +476,6 @@ public abstract class ABaseWorkspaceBean extends ABaseManagedBean {
 
 		return null;
 	}
-
-	/**
-	 * Open an 'Form' for editing or viewing.
-	 */
-	public abstract void actionOpenFormForEditingFromWorkspace();
 
 	/**
 	 *
