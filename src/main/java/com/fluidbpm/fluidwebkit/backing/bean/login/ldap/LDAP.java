@@ -32,9 +32,9 @@ import java.util.Hashtable;
  * @since 1.0
  */
 public class LDAP {
-	public static final String DOMAIN = "SAIBNET2\\";
-	public static final String AD_SERVER = "ldap://saibnt922.saibnet2.saib.com:389";
-	public static final String SEARCH_BASE = "dc=SAIBNET2,dc=saib,dc=com";
+	public static String DOMAIN = null;
+	public static String AD_SERVER = null;
+	public static String SEARCH_BASE = null;
 
 	/**
 	 *
