@@ -9,4 +9,5 @@ The required libraries for the kit are as follows;
     <tr><td>PrimeFaces</td><td>v6.2</td></tr>
     <tr><td>Fluid-API</td><td>v1.10</td></tr>
     <tr><td>Fluid-WS</td><td>v1.10</td></tr>
+    <tr><td>CDI</td><td>v1.1</td></tr>
 </table>
