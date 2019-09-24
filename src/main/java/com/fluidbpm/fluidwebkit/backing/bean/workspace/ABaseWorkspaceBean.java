@@ -373,23 +373,17 @@ public abstract class ABaseWorkspaceBean extends ABaseManagedBean {
 					CompletableFuture toAdd = CompletableFuture.runAsync(
 							() -> {
 								FluidItemListing listOfItems = null;
-								FlowItemClient clnt = new FlowItemClient(
+								FlowItemClient flowItemClient = new FlowItemClient(
 										this.getConfigURLFromSystemProperty(),
 										loggedInUser.getServiceTicket());
-
-								final SQLUtilWebSocketRESTWrapper sqlUtilWSRESTWrapper =
-										new SQLUtilWebSocketRESTWrapper(
-												this.getConfigURLFromSystemProperty(),
-												loggedInUser.getServiceTicket(),
-												Globals.WEB_SOCKET_TIMEOUT_MILLIS);
+								
+								final SQLUtilWebSocketRESTWrapper sqlUtilWSRESTWrapper = Globals.getConfigWrapperInstance();
 								List<WorkspaceFluidItem> itemsForTheView = new ArrayList<>();
 								try {
-									listOfItems = clnt.getFluidItemsForView(
+									listOfItems = flowItemClient.getFluidItemsForView(
 											viewToSetForm,
 											1000,
-											0,
-											"",
-											"");
+											0);
 
 									if (listOfItems == null || (listOfItems.getListing() == null ||
 											listOfItems.getListing().isEmpty())) {
@@ -410,7 +404,7 @@ public abstract class ABaseWorkspaceBean extends ABaseManagedBean {
 									//Set the items for the view...
 									mappingToSet.put(viewToSetForm, itemsForTheView);
 
-									clnt.closeAndClean();
+									flowItemClient.closeAndClean();
 									sqlUtilWSRESTWrapper.closeAndClean();
 								}
 							});
