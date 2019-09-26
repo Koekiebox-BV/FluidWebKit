@@ -12,10 +12,11 @@
  * Dissemination of this information or reproduction of this material is strictly
  * forbidden unless prior written permission is obtained from Koekiebox Innovations.
  */
+
 package com.fluidbpm.fluidwebkit.backing.bean.workspace;
 
 import com.fluidbpm.fluidwebkit.backing.bean.ABaseManagedBean;
-import com.fluidbpm.fluidwebkit.backing.bean.ABaseWebVO;
+import com.fluidbpm.fluidwebkit.backing.vo.ABaseWebVO;
 import com.fluidbpm.fluidwebkit.backing.bean.workspace.contentview.ABaseContentView;
 import com.fluidbpm.fluidwebkit.backing.utility.Globals;
 import com.fluidbpm.fluidwebkit.exception.ClientDashboardException;
@@ -44,14 +45,15 @@ import java.util.*;
 import java.util.concurrent.CompletableFuture;
 
 /**
- * Bean to handle workspace.
+ * Bean to handle a workspace.
+ * The base class for the custom Dashboard workspace.
  * 
  * @author jasonbruwer on 2017-12-30
  * @since 1.0
  */
 public abstract class ABaseWorkspaceBean extends ABaseManagedBean {
 	private JobViewListing jobViewListing = new JobViewListing();
-	private UserQueryListing userQueryListing = new UserQueryListing();
+	protected UserQueryListing userQueryListing = new UserQueryListing();
 	//Views...
 	protected List<JobView> viewsAll;
 	protected Map<String, List<JobView>> viewGroupPlacings;
@@ -73,66 +75,51 @@ public abstract class ABaseWorkspaceBean extends ABaseManagedBean {
 		public String selectedJobViews;
 
 		/**
+		 * Default constructor to store aim and comma separated list of {@code JobView} Id's.
 		 *
-		 * @param workspaceItemAimParam
-		 * @param selectedJobViewsParam
+		 * @param workspaceItemAimParam The aim of the action fired.
+		 * @param selectedJobViewsParam The comma separated list of selected views.
 		 */
-		public OpenPageLastCache(
-				String workspaceItemAimParam,
-				String selectedJobViewsParam
-		) {
+		public OpenPageLastCache(String workspaceItemAimParam, String selectedJobViewsParam) {
 			this.workspaceItemAim = workspaceItemAimParam;
 			this.selectedJobViews = selectedJobViewsParam;
 		}
 
 		/**
+		 * Verify if cache should be used in the event of {@code workspaceItemAimParam} and {@code selectedJobViewsParam}
+		 * not being set.
 		 *
-		 * @param workspaceItemAimParam
-		 * @param selectedJobViewsParam
-		 * @return
+		 * @param workspaceItemAimParam The aim of the action fired.
+		 * @param selectedJobViewsParam The comma separated list of selected views.
+		 * 
+		 * @return {@code true} if {@code workspaceItemAimParam} and {@code selectedJobViewsParam} is not {@code null}.
 		 */
-		public static boolean shouldUseCache(
-				String workspaceItemAimParam,
-				String selectedJobViewsParam) {
-
+		public static boolean shouldUseCache(String workspaceItemAimParam, String selectedJobViewsParam) {
 			return (workspaceItemAimParam == null && selectedJobViewsParam == null);
 		}
 	}
 
 	/**
-	 * Request parameter names.
+	 * Request parameter names got HTTP request mappings.
 	 */
 	public static class RequestParam {
-		public static final String SELECTED_JOB_VIEW = "selectedJobView";
 		public static final String SELECTED_JOB_VIEWS = "selectedJobViews";
 		public static final String WORKSPACE_AIM = "workspaceItemAim";
-		public static final String IDEATION_ONLY_ITEMS = "ideationOnlyItems";
-
 		public static final String OPENED_FROM_VIEW = "openedFromView";
 		public static final String TO_UPDATE = "toUpdate";
 	}
 
 	/**
-	 * Request attribute names.
-	 */
-	public static class RequestAttribute {
-		public static final String ITEM_VALUE_TO_REPLACE = "itemValueToReplace";
-		public static final String ITEM_VALUE_TO_REPLACE_WITH = "itemValueToReplaceWith";
-	}
-
-	/**
-	 * Request attribute names.
-	 */
-	public static class WorkspaceItemAim {
-		public static final String ForAssignmentAdjustmentsConsole = "ForAssignmentAdjustmentsConsole";
-		public static final String ForAssignmentOfficeSettlement = "ForAssignmentOfficeSettlement";
-		public static final String ForAssignmentReleaseFunds = "ForAssignmentReleaseFunds";
-	}
-
-	/**
-	 * Log a user into the Design Dashboard.
+	 * Initial event when JSF Bean is initialised.
+	 * Each of the View Groups will be mapped to {@code this.viewGroupPlacings}.
+	 * Further customised grouping may be done by overriding the {@code this#getViewGroupForUI(String,String)} method.
+	 * 
+	 * The following will be loaded;
+	 * -> The {@code JobView}'s the logged in user has access to.
+	 * -> The list of {@code UserQuery}'s the logged in user has access to.
 	 *
-	 * @return navigation {@code dashboard}
+	 * @see com.fluidbpm.program.api.vo.userquery.UserQuery
+	 * @see JobView
 	 */
 	@PostConstruct
 	public void actionPopulateInit() {
@@ -200,25 +187,27 @@ public abstract class ABaseWorkspaceBean extends ABaseManagedBean {
 	}
 
 	/**
-	 * 
-	 * @param viewGroupParam
-	 * @param viewParam
-	 * @return
+	 * Over-ride this method to change the default behaviour when assigning views to groups.
+	 *
+	 * @param viewGroupParam The name of the group as configured in Fluid.
+	 * @param viewParam The name of the group as configured in Fluid.
+	 *
+	 * @return {@code String} - Will always return {@code viewGroupParam}.
 	 */
 	protected String getViewGroupForUI(String viewGroupParam, String viewParam) {
 		return viewGroupParam;
 	}
 
 	/**
+	 * Get the list of {@code JobView} Ids as String where groups {@code uiGroupsParam}.
 	 *
-	 * @param uiGroupsParam
-	 * @return
+	 * @param uiGroupsParam The array of groups to fetch {@code JobView} listing for.
+	 * @return The comma separated list of {@code JobView} ids which belongs to {@code uiGroupsParam}.
 	 */
 	public String getQueryStringForUIGroups(String ... uiGroupsParam) {
 		if (uiGroupsParam == null || uiGroupsParam.length == 0) {
 			return null;
 		}
-
 		if (this.viewGroupPlacings == null) {
 			return null;
 		}
@@ -230,12 +219,15 @@ public abstract class ABaseWorkspaceBean extends ABaseManagedBean {
 				forAll.addAll(localGroup);
 			}
 		}
+
 		return this.getViewsFor(forAll);
 	}
 
 	/**
-	 * @param jobViewsParam
-	 * @return
+	 * Get the view query string from {@code jobViewsParam}.
+	 * 
+	 * @param jobViewsParam The {@code JobView}'s to create query text from.
+	 * @return String - Comma separated list of {@code JobView} Ids for {@code jobViewsParam}.
 	 */
 	public String getViewsFor(List<JobView> jobViewsParam) {
 		StringBuffer returnVal = new StringBuffer();
@@ -252,7 +244,7 @@ public abstract class ABaseWorkspaceBean extends ABaseManagedBean {
 		if (returnValStr.trim().isEmpty()) {
 			return returnValStr.trim();
 		}
-		returnValStr = returnValStr.substring(0,returnValStr.length() -1);
+		returnValStr = returnValStr.substring(0, returnValStr.length() -1);
 
 		try {
 			return URLEncoder.encode(returnValStr, Globals.CHARSET_UTF8);
@@ -262,10 +254,10 @@ public abstract class ABaseWorkspaceBean extends ABaseManagedBean {
 	}
 
 	/**
+	 * JSF action to fire when a form close action is fired.
 	 * When the main page for the workspace is opened or refreshed.
 	 *
-	 * oncomplete="PF('varPanelSettlementDesign').close();"
-	 *
+	 * oncomplete="PF('panelToClose').close();"
 	 */
 	public void actionCloseOpenForm() {
 		this.actionOpenMainPage();
@@ -273,6 +265,9 @@ public abstract class ABaseWorkspaceBean extends ABaseManagedBean {
 
 	/**
 	 * Open an 'Form' for editing or viewing.
+	 * Custom functionality needs to be placed in {@code this#actionOpenFormForEditingFromWorkspace}.
+	 *
+	 * @see this#actionOpenFormForEditingFromWorkspace(JobView, Long, FormContainerClient, SQLUtilWebSocketExecuteNativeSQLClient)
 	 */
 	public void actionOpenFormForEditingFromWorkspace() {
 		this.setAreaToUpdateForDialogAfterSubmit(null);
@@ -307,6 +302,7 @@ public abstract class ABaseWorkspaceBean extends ABaseManagedBean {
 	}
 
 	/**
+	 * Custom functionality for when a Form is clicked on to be opened.
 	 * Open an 'Form' for editing or viewing.
 	 */
 	public abstract void actionOpenFormForEditingFromWorkspace(
@@ -317,6 +313,13 @@ public abstract class ABaseWorkspaceBean extends ABaseManagedBean {
 
 	/**
 	 * When the main page for the workspace is opened or refreshed.
+	 * Custom sub {@code ABaseWebVO} object may be created via {@code createABaseWebVO}.
+	 *
+	 * The {@code actionOpenMainPage} will create the 'Content View' while the
+	 * {@code createABaseWebVO} method will map each one of the custom objects.
+	 *
+	 * @see this#actionOpenMainPage(String)
+	 * @see this#createABaseWebVO(SQLUtilWebSocketRESTWrapper, FluidItem)
 	 */
 	public void actionOpenMainPage() {
 		this.areaToUpdateForDialogAfterSubmit = null;
@@ -325,18 +328,17 @@ public abstract class ABaseWorkspaceBean extends ABaseManagedBean {
 		String workspaceAim = this.getStringRequestParam(RequestParam.WORKSPACE_AIM);
 
 		User loggedInUser = this.getLoggedInUser();
+
 		//Clear the content view...
 		if (this.contentView != null) {
 			this.contentView.refreshData(null);
 		}
 
 		//Make use of cache...
-		if (OpenPageLastCache.shouldUseCache(
-				workspaceAim, selectedJobViews) && this.openPageLastCache != null) {
+		if (OpenPageLastCache.shouldUseCache(workspaceAim, selectedJobViews) && this.openPageLastCache != null) {
 			selectedJobViews = this.openPageLastCache.selectedJobViews;
 			workspaceAim = this.openPageLastCache.workspaceItemAim;
 		}
-
 		this.openPageLastCache = new OpenPageLastCache(workspaceAim, selectedJobViews);
 
 		try {
@@ -423,31 +425,42 @@ public abstract class ABaseWorkspaceBean extends ABaseManagedBean {
 			FacesMessage fMsg = new FacesMessage(FacesMessage.SEVERITY_ERROR,
 					"Failed to fetch items for View. ", except.getMessage());
 			FacesContext.getCurrentInstance().addMessage(null, fMsg);
-		} finally {
-			//Do nothing for now...
-		}
+		} finally { /*Do nothing for now...*/ }
 	}
 
 	/**
+	 * Custom functionality for when a workspace is loaded.
+	 * The menu-option clicked by the user will be passed through as {@code workspaceAimParam}.
 	 * 
-	 * @param workspaceAimParam
-	 * @return
+	 * @param workspaceAimParam The specific workspace that was requested.
+	 * @return ABaseContentView to use based on {@code workspaceAimParam}.
+	 *
+	 * @see ABaseContentView
 	 */
 	protected abstract ABaseContentView actionOpenMainPage(String workspaceAimParam);
 
 	/**
+	 * Create a custom value object based on {@code wrapperParam} and {@code fluidItemParam}.
 	 * 
-	 * @param wrapperParam
-	 * @param fluidItemParam
-	 * @return
+	 * @param wrapperParam The SQLUtil to fetch additional information from.
+	 * @param fluidItemParam The Fluid {@code FluidItem} to map from.
+	 *
+	 * @return ABaseWebVO subclass based on {@code fluidItemParam}.
+	 *
+	 * @see ABaseWebVO
+	 * @see SQLUtilWebSocketRESTWrapper
+	 * @see FluidItem
 	 */
 	protected abstract ABaseWebVO createABaseWebVO(SQLUtilWebSocketRESTWrapper wrapperParam, FluidItem fluidItemParam);
 
 	/**
+	 * Find the {@code JobView} with id {@code idToGetParam} from {@code jobViewsParam}.
 	 * 
-	 * @param jobViewsParam
-	 * @param idToGetParam
-	 * @return
+	 * @param jobViewsParam The views to search through.
+	 * @param idToGetParam The {@code JobView} Id of the {@code JobView} to find.
+	 * @return {@code JobView} The {@code JobView} with Id {@code idToGetParam} or {@code null}.
+	 *
+	 * @see JobView
 	 */
 	protected JobView getJobViewFromListingWithId(List<JobView> jobViewsParam, Long idToGetParam) {
 		if (idToGetParam == null) {
@@ -471,10 +484,12 @@ public abstract class ABaseWorkspaceBean extends ABaseManagedBean {
 	}
 
 	/**
+	 * Creates a {@code |} delimited {@code String} from {@code firstValueParam} and {@code nextValueParam}.
 	 *
-	 * @param firstValueParam
-	 * @param nextValueParam
-	 * @return
+	 * @param firstValueParam The value left from the |.
+	 * @param nextValueParam The value that will follow the |.
+	 *    
+	 * @return The combined value of {@code firstValueParam} and {@code nextValueParam}.
 	 */
 	public String addPipeIfApplicable(String firstValueParam, String nextValueParam) {
 		String returnVal = firstValueParam;
@@ -491,40 +506,50 @@ public abstract class ABaseWorkspaceBean extends ABaseManagedBean {
 	}
 
 	/**
-	 *
-	 * @return
+	 * Get if a item is currently open from the main workspace screen.
+	 * @return {@code true} if a item is open, otherwise {@code false}.
 	 */
 	public boolean isCurrentlyHaveItemOpen() {
 		return this.currentlyHaveItemOpen;
 	}
 
 	/**
+	 * Set if a item is currently open from the main workspace screen.
+	 * The {@code currentlyHaveItemOpen} will automatically be set to {@code true}
+	 * in the event of {@code this#actionOpenFormForEditingFromWorkspace}.
+	 * 
+	 * @param currentlyHaveItemOpenParam Set whether an item is currently open.
 	 *
-	 * @param currentlyHaveItemOpenParam
+	 * @see this#actionOpenFormForEditingFromWorkspace()    
+	 * @see this#actionOpenFormForEditingFromWorkspace(JobView, Long, FormContainerClient, SQLUtilWebSocketExecuteNativeSQLClient)
 	 */
 	public void setCurrentlyHaveItemOpen(boolean currentlyHaveItemOpenParam) {
 		this.currentlyHaveItemOpen = currentlyHaveItemOpenParam;
 	}
 
 	/**
+	 * Get active {@code ABaseContentView}.
 	 *
-	 * @return
+	 * @return {@code ABaseContentView} subclass for view.
+	 * @see ABaseContentView
 	 */
 	public ABaseContentView getContentView() {
 		return this.contentView;
 	}
 
 	/**
+	 * Get area to update after a submission has taken place.
 	 *
-	 * @return
+	 * @return {@code String} areaToUpdateForDialogAfterSubmit.
 	 */
 	public String getAreaToUpdateForDialogAfterSubmit() {
 		return this.areaToUpdateForDialogAfterSubmit;
 	}
 
 	/**
+	 * Set area to update after a submission has taken place.
 	 *
-	 * @param areaToUpdateForDialogAfterSubmitParam
+	 * @param areaToUpdateForDialogAfterSubmitParam areaToUpdateForDialogAfterSubmit.
 	 */
 	public void setAreaToUpdateForDialogAfterSubmit(String areaToUpdateForDialogAfterSubmitParam) {
 		this.areaToUpdateForDialogAfterSubmit = areaToUpdateForDialogAfterSubmitParam;

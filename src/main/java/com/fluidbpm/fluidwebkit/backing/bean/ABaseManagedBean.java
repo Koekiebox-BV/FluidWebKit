@@ -38,7 +38,7 @@ import java.util.Map;
 import java.util.UUID;
 
 /**
- * Base back bean for JSF components.
+ * Base backing bean for all JSF beans.
  *
  * @author jasonbruwer on 2018-06-03
  * @since 1.0

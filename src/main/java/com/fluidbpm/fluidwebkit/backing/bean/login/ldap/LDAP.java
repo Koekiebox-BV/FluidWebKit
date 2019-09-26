@@ -26,7 +26,7 @@ import javax.naming.ldap.LdapContext;
 import java.util.Hashtable;
 
 /**
- * Test the LDAP connection.
+ * Class for using LDAP authentication.
  *
  * @author jasonbruwer on 10/29/18.
  * @since 1.0
@@ -37,10 +37,11 @@ public class LDAP {
 	public static String SEARCH_BASE = null;
 
 	/**
+	 * Authenticate using the LDAP protocol.
 	 *
-	 * @param ldapUsernameParam
-	 * @param ldapPasswordParam
-	 * @throws NamingException
+	 * @param ldapUsernameParam Username (Domain is optional).
+	 * @param ldapPasswordParam The user password.
+	 * @throws NamingException For JNDI lookup failures.
 	 */
 	public static void authenticateLDAP(String ldapUsernameParam, String ldapPasswordParam)
 	throws NamingException {
@@ -48,18 +49,13 @@ public class LDAP {
 			ldapUsernameParam = (DOMAIN+ldapUsernameParam);
 		}
 
-		final String ldapUsername = ldapUsernameParam;//myLdapUsername
-		final String ldapPassword = ldapPasswordParam;//myLdapPassword
-
-		//final String ldapAccountToLookup = "myOtherLdapUsername";
-
 		Hashtable<String, Object> env = new Hashtable<String, Object>();
 		env.put(Context.SECURITY_AUTHENTICATION, "simple");
-		if (ldapUsername != null) {
-			env.put(Context.SECURITY_PRINCIPAL, ldapUsername);
+		if (ldapUsernameParam != null) {
+			env.put(Context.SECURITY_PRINCIPAL, ldapUsernameParam);
 		}
-		if (ldapPassword != null) {
-			env.put(Context.SECURITY_CREDENTIALS, ldapPassword);
+		if (ldapPasswordParam != null) {
+			env.put(Context.SECURITY_CREDENTIALS, ldapPasswordParam);
 		}
 		env.put(Context.INITIAL_CONTEXT_FACTORY, "com.sun.jndi.ldap.LdapCtxFactory");
 		env.put(Context.PROVIDER_URL, AD_SERVER);
@@ -77,23 +73,19 @@ public class LDAP {
 
 		//1) lookup the ldap account
 		SearchResult srLdapUser = ldap.findAccountByAccountName(
-				ctx, SEARCH_BASE, ldapUsername);
+				ctx, SEARCH_BASE, ldapUsernameParam);
 
 		System.out.println("Login valid. LDAP: "+((srLdapUser == null) ? "[No SearchResult]" : srLdapUser.getAttributes()));
-
-		//2) get the SID of the users primary group
-		//TODO String primaryGroupSID = ldap.getPrimaryGroupSID(srLdapUser);
-
-		//3) get the users Primary Group
-		//TODO String primaryGroupName = ldap.findGroupBySID(ctx, ldapSearchBase, primaryGroupSID);
 	}
 
 	/**
+	 * Lookup the account by its mane.
 	 *
-	 * @param ctx
-	 * @param ldapSearchBase
-	 * @param accountName
-	 * @return
+	 * @param ctx The JNDI DirContext.
+	 * @param ldapSearchBase The LDAP Search base.
+	 * @param accountName The name of the account to lookup.
+	 * @return {@code SearchResult} For JNDI lookup failures.
+	 * 
 	 * @throws NamingException
 	 */
 	public SearchResult findAccountByAccountName(
@@ -111,11 +103,11 @@ public class LDAP {
 				ctx.search(ldapSearchBase, searchFilter, searchControls);
 
 		SearchResult searchResult = null;
-		if(results.hasMoreElements()) {
+		if (results.hasMoreElements()) {
 			searchResult = results.nextElement();
 
 			//make sure there is not another item available, there should be only 1 match
-			if(results.hasMoreElements()) {
+			if (results.hasMoreElements()) {
 				System.err.println("Matched multiple users for the accountName: " + accountName);
 				return null;
 			}
@@ -123,92 +115,4 @@ public class LDAP {
 
 		return searchResult;
 	}
-
-    /**
-     * 
-     * @param ctx
-     * @param ldapSearchBase
-     * @param sid
-     * @return
-     * @throws NamingException
-     */
-	public String findGroupBySID(DirContext ctx, String ldapSearchBase, String sid) throws NamingException {
-
-		String searchFilter = "(&(objectClass=group)(objectSid=" + sid + "))";
-
-		SearchControls searchControls = new SearchControls();
-		searchControls.setSearchScope(SearchControls.SUBTREE_SCOPE);
-
-		NamingEnumeration<SearchResult> results = ctx.search(ldapSearchBase, searchFilter, searchControls);
-
-		if(results.hasMoreElements()) {
-			SearchResult searchResult = (SearchResult) results.nextElement();
-
-			//make sure there is not another item available, there should be only 1 match
-			if(results.hasMoreElements()) {
-				System.err.println("Matched multiple groups for the group with SID: " + sid);
-				return null;
-			} else {
-				return (String)searchResult.getAttributes().get("sAMAccountName").get();
-			}
-		}
-		return null;
-	}
-
-	public String getPrimaryGroupSID(SearchResult srLdapUser) throws NamingException {
-		byte[] objectSID = (byte[])srLdapUser.getAttributes().get("objectSid").get();
-		String strPrimaryGroupID = (String)srLdapUser.getAttributes().get("primaryGroupID").get();
-
-		String strObjectSid = decodeSID(objectSID);
-
-		return strObjectSid.substring(0, strObjectSid.lastIndexOf('-') + 1) + strPrimaryGroupID;
-	}
-
-	/**
-	 * The binary data is in the form:
-	 * byte[0] - revision level
-	 * byte[1] - count of sub-authorities
-	 * byte[2-7] - 48 bit authority (big-endian)
-	 * and then count x 32 bit sub authorities (little-endian)
-	 *
-	 * The String value is: S-Revision-Authority-SubAuthority[n]...
-	 *
-	 * Based on code from here - http://forums.oracle.com/forums/thread.jspa?threadID=1155740&tstart=0
-	 */
-	public static String decodeSID(byte[] sid) {
-		final StringBuilder strSid = new StringBuilder("S-");
-		// get version
-		final int revision = sid[0];
-		strSid.append(Integer.toString(revision));
-
-		//next byte is the count of sub-authorities
-		final int countSubAuths = sid[1] & 0xFF;
-
-		//get the authority
-		long authority = 0;
-		//String rid = "";
-		for(int i = 2; i <= 7; i++) {
-			authority |= ((long)sid[i]) << (8 * (5 - (i - 2)));
-		}
-		strSid.append("-");
-		strSid.append(Long.toHexString(authority));
-
-		//iterate all the sub-auths
-		int offset = 8;
-		int size = 4; //4 bytes for each sub auth
-		for (int j = 0; j < countSubAuths; j++) {
-			long subAuthority = 0;
-			for (int k = 0; k < size; k++) {
-				subAuthority |= (long)(sid[offset + k] & 0xFF) << (8 * k);
-			}
-
-			strSid.append("-");
-			strSid.append(subAuthority);
-
-			offset += size;
-		}
-
-		return strSid.toString();
-	}
-
 }

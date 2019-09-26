@@ -13,7 +13,7 @@
  * forbidden unless prior written permission is obtained from Koekiebox Innovations.
  */
 
-package com.fluidbpm.fluidwebkit.backing.bean;
+package com.fluidbpm.fluidwebkit.backing.vo;
 
 import com.fluidbpm.program.api.vo.field.Field;
 import com.fluidbpm.program.api.vo.form.Form;

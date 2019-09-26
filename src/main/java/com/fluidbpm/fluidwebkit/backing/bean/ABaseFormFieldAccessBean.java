@@ -60,7 +60,6 @@ public abstract class ABaseFormFieldAccessBean extends ABaseManagedBean {
 	 */
 	@PostConstruct
 	public void actionPopulateInit() {
-
 		if (this.fieldCachingDone) {
 			this.getLogger().info("FFC-Bean: Fields ALREADY CACHED.");
 			return;

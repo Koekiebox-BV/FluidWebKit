@@ -28,8 +28,13 @@ import java.util.*;
 /**
  * Super class for all content view classes.
  *
+ * The content view classes are used by the workspace bean to
+ * indicate which sections should be displayed.
+ *
  * @author jasonbruwer on 3/21/18.
  * @since 1.0
+ *
+ * @see com.fluidbpm.fluidwebkit.backing.bean.workspace.ABaseWorkspaceBean
  */
 public abstract class ABaseContentView implements Serializable{
 
@@ -49,13 +54,13 @@ public abstract class ABaseContentView implements Serializable{
 	private List<WorkspaceFluidItem> fluidItemsSelectedList;
 
 	protected User loggedInUser;
-
 	private String textToFilterBy;
 
 	/**
-	 *
-	 * @param loggedInUserParam
-	 * @param sectionsParam
+	 * Base to set logged in user and applicable sections.
+	 * 
+	 * @param loggedInUserParam The currently logged in user.
+	 * @param sectionsParam The list of sections applicable to the view.
 	 */
 	public ABaseContentView(User loggedInUserParam, Collection<String> sectionsParam) {
 		this(loggedInUserParam,
@@ -64,43 +69,53 @@ public abstract class ABaseContentView implements Serializable{
 	}
 
 	/**
-	 *
-	 * @param loggedInUserParam
-	 * @param sectionsParam
+	 * Base to set logged in user and applicable sections.
+	 * 
+	 * @param loggedInUserParam The currently logged in user.
+	 * @param sectionsParam The list of sections applicable to the view.
 	 */
 	public ABaseContentView(
 			User loggedInUserParam,
-			String[] sectionsParam) {
-
+			String[] sectionsParam
+	) {
 		this(loggedInUserParam, sectionsParam, null);
 	}
 
 	/**
+	 * Base to set logged in user and applicable sections.
 	 *
-	 * @param loggedInUserParam
-	 * @param sectionsParam
-	 * @param fluidItemsForViewsParam
+	 * @param loggedInUserParam The currently logged in user.
+	 * @param sectionsParam The list of sections applicable to the view.
+	 * @param fluidItemsForViewsParam The mapped fluid items per view.
+	 *
+	 * @see JobView
+	 * @see WorkspaceFluidItem
 	 */
 	public ABaseContentView(
-			User loggedInUserParam,
-			Collection<String> sectionsParam,
-			Map<JobView, List<WorkspaceFluidItem>> fluidItemsForViewsParam) {
+		User loggedInUserParam,
+		Collection<String> sectionsParam,
+		Map<JobView, List<WorkspaceFluidItem>> fluidItemsForViewsParam
+	) {
 		this(loggedInUserParam,
 				sectionsParam == null ? null : sectionsParam.toArray(new String[]{}),
 				fluidItemsForViewsParam);
 	}
 
 	/**
+	 * Base to set logged in user and applicable sections.
 	 *
-	 * @param loggedInUserParam
-	 * @param sectionsParam
-	 * @param fluidItemsForViewsParam
+	 * @param loggedInUserParam The currently logged in user.
+	 * @param sectionsParam The list of sections applicable to the view.
+	 * @param fluidItemsForViewsParam The mapped fluid items per view.
+	 *
+	 * @see JobView
+	 * @see WorkspaceFluidItem
 	 */
 	public ABaseContentView(
-			User loggedInUserParam,
-			String[] sectionsParam,
-			Map<JobView, List<WorkspaceFluidItem>> fluidItemsForViewsParam) {
-
+		User loggedInUserParam,
+		String[] sectionsParam,
+		Map<JobView, List<WorkspaceFluidItem>> fluidItemsForViewsParam
+	) {
 		this.loggedInUser = loggedInUserParam;
 		this.sections = sectionsParam;
 
@@ -127,9 +142,13 @@ public abstract class ABaseContentView implements Serializable{
 	}
 
 	/**
+	 * Retrieve all the column models for section {@code sectionAliasParam}.
 	 *
-	 * @param sectionAliasParam
-	 * @return
+	 * @param sectionAliasParam The section to retrieve column model headers for.
+	 * @return ABaseManagedBean.ColumnModel list.
+	 *
+	 * @see ABaseManagedBean.ColumnModel
+	 * @see List
 	 */
 	public List<ABaseManagedBean.ColumnModel> getColumnHeadersForSection(String sectionAliasParam) {
 		List<ABaseManagedBean.ColumnModel> returnVal = new ArrayList<>();
@@ -176,28 +195,34 @@ public abstract class ABaseContentView implements Serializable{
 		return returnVal;
 	}
 
-
 	/**
-	 *
 	 * Method executed during data refresh to map the objects correctly.
 	 *
-	 * @param sectionParam
-	 * @param fluidItemsForViewsParam
-	 * @return
+	 * @param sectionParam The section to retrieve data for.
+	 * @param fluidItemsForViewsParam All items and their views.
+	 *
+	 * @return List of {@code WorkspaceFluidItem} items.
+	 *
+	 * @see WorkspaceFluidItem
+	 * @see JobView
 	 */
 	public abstract List<WorkspaceFluidItem> getWorkspaceFluidItemsFor(
 			String sectionParam,
 			Map<JobView, List<WorkspaceFluidItem>> fluidItemsForViewsParam);
 
-
 	/**
-	 * Set the filtered results.
+	 * The JSF event to be fired when the list of filter items need to be updated.
+	 * The {@code textToFilterBy} value needs to be set.
+	 *
+	 * The filtered listing value {@code this.fluidItemsForSectionFiltered} will be updated with the
+	 * filtered data.
+	 * 
+	 * @see #getTextToFilterBy
 	 */
 	public void actionSetFilteredList() {
 		this.fluidItemsForSectionFiltered.clear();
 
-		if(this.getTextToFilterBy() == null ||
-				this.getTextToFilterBy().trim().isEmpty()) {
+		if(this.getTextToFilterBy() == null || this.getTextToFilterBy().trim().isEmpty()) {
 			this.fluidItemsForSectionFiltered.putAll(this.fluidItemsForSection);
 		}
 
@@ -231,23 +256,17 @@ public abstract class ABaseContentView implements Serializable{
 
 				//Form Type...
 				if(item.getFluidItem().getForm().getFormType() != null &&
-						item.getFluidItem().getForm().getFormType().trim().toLowerCase().contains(filterByTextLower))
-				{
+						item.getFluidItem().getForm().getFormType().trim().toLowerCase().contains(filterByTextLower)) {
 					itemsInSectionFiltered.add(item);
-				}
-				//Then Form and Route Fields...
-				else if(!combinedFields.isEmpty()) {
-
-					combinedFields.forEach(field ->
-					{
-						if(field.getFieldValue() != null)
-						{
+				} else if(!combinedFields.isEmpty()) {
+					//Then Form and Route Fields...
+					combinedFields.forEach(field -> {
+						if (field.getFieldValue() != null) {
 							String fieldValueTextLower =
 									(field.getFieldValue().toString() == null ? null :
 											field.getFieldValue().toString().trim().toLowerCase());
 
-							if(fieldValueTextLower.contains(filterByTextLower))
-							{
+							if (fieldValueTextLower.contains(filterByTextLower)) {
 								itemsInSectionFiltered.add(item);
 								return;
 							}
@@ -261,12 +280,14 @@ public abstract class ABaseContentView implements Serializable{
 	}
 
 	/**
+	 * The method to tie to the PrimeFaces {@code <p:dataTable/>} in order to map each section
+	 * to its PrimeFaces datatable.
 	 *
 	 * #{empty workspaceBean.contentView.textToFilterBy ?
-	 workspaceBean.contentView.fluidItemsForSection[sectionRptItem]:
-	 workspaceBean.contentView.fluidItemsForSectionFiltered[sectionRptItem]
-
-	 * @return
+	 * workspaceBean.contentView.fluidItemsForSection[sectionRptItem]:
+	 * workspaceBean.contentView.fluidItemsForSectionFiltered[sectionRptItem]
+	 *
+	 * @return Map of sections and their {@code WorkspaceFluidItem}'s.
 	 */
 	public Map<String, List<WorkspaceFluidItem>> getActiveMapBasedOnFilterCriteria() {
 		if (this.getTextToFilterBy() == null || this.getTextToFilterBy().trim().isEmpty()) {
@@ -281,15 +302,14 @@ public abstract class ABaseContentView implements Serializable{
 	 * [Section][0].fieldNameAndValMap['']
 	 * Section->FieldName->RowIndex
 	 *
-	 * @param sectionItemParam
-	 * @param fluidFieldNameParam
-	 * @param rowIndexParam
-	 * @return
+	 * @param sectionItemParam The section/datatable to retrieve data from.
+	 * @param fluidFieldNameParam The name of the Fluid field.
+	 * @param rowIndexParam The row the column should be fetched from.
+	 *    
+	 * @return Value as a java {@code Object}
 	 */
 	public Object getColumnValueFor(String sectionItemParam, String fluidFieldNameParam, int rowIndexParam) {
-		List<WorkspaceFluidItem> workspaceItems =
-				this.getWorkspaceFluidItemsForSection(sectionItemParam);
-
+		List<WorkspaceFluidItem> workspaceItems = this.getWorkspaceFluidItemsForSection(sectionItemParam);
 		if (workspaceItems == null || (rowIndexParam >= workspaceItems.size())) {
 			return null;
 		}
@@ -300,18 +320,18 @@ public abstract class ABaseContentView implements Serializable{
 	}
 
 	/**
+	 * Retrieve the list of possible select items for a field in a datatable.
+	 * 
+	 * @param sectionNameParam The section to retrieve the combo-box values from.
+	 * @param comboFieldNameParam The name of the field.
+	 * @return List of {@code SelectItem}'s.
 	 *
-	 * @param sectionNameParam
-	 * @param comboFieldNameParam
-	 * @return
+	 * @see SelectItem
 	 */
 	public List<SelectItem> getPossibleOptionsForSectionAndComboFieldName(
-			String sectionNameParam,
-			String comboFieldNameParam
+			String sectionNameParam, String comboFieldNameParam
 	) {
-		List<WorkspaceFluidItem> allItemsForSection =
-				this.getWorkspaceFluidItemsForSection(sectionNameParam);
-
+		List<WorkspaceFluidItem> allItemsForSection = this.getWorkspaceFluidItemsForSection(sectionNameParam);
 		if (allItemsForSection == null || allItemsForSection.isEmpty()) {
 			return null;
 		}
@@ -319,8 +339,7 @@ public abstract class ABaseContentView implements Serializable{
 		Set<String> comboItem = new HashSet<>();
 		for (WorkspaceFluidItem itm : allItemsForSection) {
 			if (itm.getFluidItem() != null && itm.getFluidItem().getForm() != null) {
-				String valAsTxt =
-						itm.getFluidItem().getForm().getFieldValueAsString(comboFieldNameParam);
+				String valAsTxt = itm.getFluidItem().getForm().getFieldValueAsString(comboFieldNameParam);
 				if (valAsTxt == null) {
 					continue;
 				}
@@ -330,7 +349,6 @@ public abstract class ABaseContentView implements Serializable{
 		}
 
 		List<SelectItem> returnVal = new ArrayList<>();
-
 		comboItem.forEach(cmbItm -> {
 			returnVal.add(new SelectItem(cmbItm,cmbItm));
 		});
@@ -339,41 +357,48 @@ public abstract class ABaseContentView implements Serializable{
 	}
 
 	/**
+	 * Retrieve the filtered list of items if a filter is active.
+	 * The text lookup is a global filter. While each {@code p:dataTable} also has a filter.
 	 *
-	 * @return
+	 * @return {@code Map<String,List<WorkspaceFluidItem>>} mapping of data table items filtered.
 	 */
 	public Map<String,List<WorkspaceFluidItem>> getFluidItemsForSectionFiltered() {
 		return this.fluidItemsForSectionFiltered;
 	}
 
 	/**
+	 * Retrieve the filtered list of items if a filter is active.
+	 * The text lookup is a global filter. While each {@code p:dataTable} also has a filter.
 	 *
-	 * @param fluidItemsForSectionFilteredParam
+	 * @param fluidItemsForSectionFilteredParam = {@code Map<String,List<WorkspaceFluidItem>>} mapping of data table items filtered.
 	 */
 	public void setFluidItemsForSectionFiltered(Map<String,List<WorkspaceFluidItem>> fluidItemsForSectionFilteredParam) {
 		this.fluidItemsForSectionFiltered = fluidItemsForSectionFilteredParam;
 	}
 
 	/**
+	 * Get the list of selected items.
 	 *
-	 * @return
+	 * @return {@code List<WorkspaceFluidItem>} of selected {@code WorkspaceFluidItem}'s.
 	 */
 	public List<WorkspaceFluidItem> getFluidItemsSelectedList() {
 		return this.fluidItemsSelectedList;
 	}
 
 	/**
+	 * Set the list of selected items.
 	 *
-	 * @param fluidItemsSelectedListParam
+	 * @param fluidItemsSelectedListParam {@code List<WorkspaceFluidItem>} of selected {@code WorkspaceFluidItem}'s.
 	 */
 	public void setFluidItemsSelectedList(List<WorkspaceFluidItem> fluidItemsSelectedListParam) {
 		this.fluidItemsSelectedList = fluidItemsSelectedListParam;
 	}
 
 	/**
+	 * Get the list of workitems for section {@code sectionsParam}.
+	 * @param sectionParam The section to retrieve the {@code List} of {@code WorkspaceFluidItem} for.
 	 *
-	 * @param sectionParam
-	 * @return
+	 * @return List of {@code WorkspaceFluidItem}
 	 */
 	public List<WorkspaceFluidItem> getWorkspaceFluidItemsForSection(String sectionParam) {
 		if (this.fluidItemsForSection == null) {
@@ -389,12 +414,14 @@ public abstract class ABaseContentView implements Serializable{
 	}
 
 	/**
-	 *
-	 * @param sectionParam
-	 * @param newListParam
+	 * Update the {@code WorkspaceFluidItem}'s list for {@code Map} with key {@code sectionParam}.
+	 * 
+	 * @param sectionParam The section to update.
+	 * @param newListParam New list of items.
 	 */
 	public void putWorkspaceFluidItemsForSection(
-			String sectionParam, List<WorkspaceFluidItem> newListParam
+		String sectionParam,
+		List<WorkspaceFluidItem> newListParam
 	) {
 		if (this.fluidItemsForSection == null) {
 			return;
@@ -404,8 +431,12 @@ public abstract class ABaseContentView implements Serializable{
 	}
 
 	/**
+	 * Refresh the fluid items ({@code List<WorkspaceFluidItem>}) for {@code this} content view.
+	 * 
+	 * @param fluidItemsForViewsParam The updated list of {@code WorkspaceFluidItem}'s for each section.
 	 *
-	 * @param fluidItemsForViewsParam
+	 * @see JobView
+	 * @see WorkspaceFluidItem
 	 */
 	public void refreshData(Map<JobView, List<WorkspaceFluidItem>> fluidItemsForViewsParam) {
 		this.fluidItemsForViews = fluidItemsForViewsParam;
@@ -416,7 +447,6 @@ public abstract class ABaseContentView implements Serializable{
 		//Clear all data...
 		this.fluidItemsForSection.values().clear();
 		this.fluidItemsForSection.clear();
-
 		if (this.getSections() == null) {
 			return;
 		}
@@ -443,15 +473,15 @@ public abstract class ABaseContentView implements Serializable{
 	}
 
 	/**
+	 * Check if any one of the {@code booleansToCheckParam} values are {@code true}.
 	 *
-	 * @param booleansToCheckParam
-	 * @return
+	 * @param booleansToCheckParam The boolean values to check.
+	 * @return {@code true} If any one of the elements for {@code booleansToCheckParam} is {@code true}.
 	 */
 	protected final boolean isAnyTrue(boolean ... booleansToCheckParam) {
 		if (booleansToCheckParam == null || booleansToCheckParam.length == 0) {
 			return false;
 		}
-
 		for (boolean toCheck : booleansToCheckParam) {
 			if (toCheck) {
 				return true;
@@ -462,24 +492,27 @@ public abstract class ABaseContentView implements Serializable{
 	}
 
 	/**
-	 *
-	 * @return
+	 * Get all the sections.
+	 * Each section is usually a {@code p:dataTable}.
+	 * 
+	 * @return All of the available sections.
 	 */
 	public String[] getSections() {
 		return this.sections;
 	}
 
 	/**
-	 *
-	 * @param sectionParam
-	 * @return
+	 * Verify if a section has any workitems.
+	 * 
+	 * @param sectionParam Confirm whether the {@code sectionParam} has any workitems.
+	 * @return {@code true} if the section {@code sectionParam} is empty, otherwise {@code false}.
 	 */
 	public boolean areItemsForSectionEmpty(String sectionParam) {
 		if ((sectionParam == null || sectionParam.trim().isEmpty())) {
 			return true;
 		}
 
-		if(this.getWorkspaceFluidItemsForSection(sectionParam) == null ||
+		if (this.getWorkspaceFluidItemsForSection(sectionParam) == null ||
 				this.getWorkspaceFluidItemsForSection(sectionParam).isEmpty()) {
 			return true;
 		}
@@ -488,141 +521,114 @@ public abstract class ABaseContentView implements Serializable{
 	}
 
 	/**
+	 * Get all the items for a section.
 	 *
-	 * @return
+	 * @return {@code Map} of sections and their workitems.
+	 * @see WorkspaceFluidItem
 	 */
 	public Map<String, List<WorkspaceFluidItem>> getFluidItemsForSection() {
 		return this.fluidItemsForSection;
 	}
 
 	/**
+	 * Get the first item from the list of selected items.
 	 *
-	 * @param columnValueParam
-	 * @param filterValParam
-	 * @param localeParam
-	 * @return
-	 */
-	@Deprecated
-	public boolean filterByProvided(
-			Object columnValueParam,
-			Object filterValParam,
-			Locale localeParam
-	) {
-		//return true or false
-
-		String filterText = (filterValParam == null) ? null : filterValParam.toString().trim();
-		if (filterText == null || filterText.trim().isEmpty()) {
-			return true;
-		}
-
-		if (columnValueParam == null) {
-			return false;
-		}
-
-		return true;
-	}
-
-	/**
+	 * @return {@code WorkspaceFluidItem} First entry from the selected Fluid items.
 	 *
-	 * @return
+	 * @see this#getFluidItemsSelectedList
 	 */
 	public WorkspaceFluidItem getFirstSelectedWorkspaceFluidItem() {
 		List<WorkspaceFluidItem> selectedItems = this.getFluidItemsSelectedList();
 		if (selectedItems == null || selectedItems.isEmpty()) {
 			return null;
 		}
-
+		
 		return selectedItems.get(0);
 	}
 
 	/**
+	 * Get {@code WorkspaceFluidItem} where the Form id is {@code formIdParam}.
+	 * 
+	 * @param formIdParam The Form id to retrieve from view cache.
+	 * @return {@code WorkspaceFluidItem} with Form id {@code formIdParam}.
 	 *
-	 * @param formIdParam
-	 * @return
+	 * @see com.fluidbpm.program.api.vo.form.Form
+	 * @see WorkspaceFluidItem
 	 */
 	public WorkspaceFluidItem getWSFIItemByIdFromCache(Long formIdParam) {
 		return this.getWSFIItemByIdFromCache(formIdParam, null);
 	}
 
 	/**
+	 * Locates the {@code WorkspaceFluidItem} with Form ID {@code formIdParam} in all of the sections.
+	 * The {@code typeParam} may be {@code null}.
 	 *
-	 * @param formIdParam
-	 * @param typeParam
-	 * @return
+	 * @param formIdParam The ID of the form to retrieve.
+	 * @param typeParam The class type to filter by. May be {@code null}.
+	 * 
+	 * @return First {@code WorkspaceFluidItem} with Form Id {@code formIdParam} and of class type {@code typeParam}.
 	 */
-	public WorkspaceFluidItem getWSFIItemByIdFromCache(
-			Long formIdParam,
-			Class typeParam
-    ) {
+	public WorkspaceFluidItem getWSFIItemByIdFromCache(Long formIdParam, Class typeParam) {
 		if (this.fluidItemsForSection == null || this.fluidItemsForSection.isEmpty()) {
 			return null;
 		}
-
-		Set<String> keys = this.fluidItemsForSection.keySet();
-
-		String classTypeParam = (typeParam == null) ? null: typeParam.getName();
-
-		for (String key : keys) {
-			List<WorkspaceFluidItem> itemsInSection = this.fluidItemsForSection.get(key);
-			if (itemsInSection == null || itemsInSection.isEmpty()) {
-				continue;
-			}
-
-			for (WorkspaceFluidItem itemToCheck : itemsInSection) {
-				if ((classTypeParam == null || itemToCheck.getBaseWeb().getClass().getName().equals(classTypeParam))
-						&& itemToCheck.getFluidItem().getForm().getId().equals(formIdParam)) {
-					return itemToCheck;
-				}
-			}
-		}
-
-		return null;
+		String classTypeParam = (typeParam == null) ? null : typeParam.getName();
+		
+		return this.fluidItemsForSection.keySet().stream()
+				.map(itm -> this.fluidItemsForSection.get(itm))
+				.filter(itm -> itm != null && !itm.isEmpty())
+				.flatMap(toFlat -> toFlat.stream())
+				.filter(itm -> ((classTypeParam == null || itm.getBaseWeb().getClass().getName().equals(classTypeParam))
+						&& itm.getFluidItem().getForm().getId().equals(formIdParam)))
+				.findFirst()
+				.orElse(null);
 	}
 
 	/**
+	 * Retrieve the {@code JobView} with Id {@code jobViewIdParam}.
 	 *
-	 * @param jobViewIdParam
-	 * @return
+	 * @param jobViewIdParam The ID of the {@code JobView} to retrieve.
+	 * @return Retrieve the {@code JobView} with Id {@code jobViewIdParam}.
+	 *
+	 * @see JobView
 	 */
 	public JobView retrieveJobViewFromJobViewId(Long jobViewIdParam) {
 		if (jobViewIdParam == null) {
 			return null;
 		}
-
 		if (this.fluidItemsForViews == null) {
 			return null;
 		}
 
-		Set<JobView> resJobViewKeys = this.fluidItemsForViews.keySet();
-		for (JobView resJobView : resJobViewKeys) {
-			if (jobViewIdParam.equals(resJobView.getId())) {
-				return resJobView;
-			}
-		}
-
-		return null;
+		return this.fluidItemsForViews.keySet().stream()
+				.filter(itm -> jobViewIdParam.equals(itm.getId()))
+				.findFirst()
+				.orElse(null);
 	}
 
 	/**
-	 *
-	 * @return
+	 * Get the entered text to filter all items by.
+	 * 
+	 * @return String - Entered text as {@code String}.
 	 */
 	public String getTextToFilterBy() {
 		return this.textToFilterBy;
 	}
 
 	/**
-	 *
-	 * @param textToFilterByParam
+	 * Get the entered text to filter all items by.
+	 * 
+	 * @param textToFilterByParam String - Entered text as {@code String}.
 	 */
 	public void setTextToFilterBy(String textToFilterByParam) {
 		this.textToFilterBy = textToFilterByParam;
 	}
 
 	/**
-	 *
-	 * @param sectionNameParam
-	 * @return
+	 * Should the Action column be rendered for the section {@code sectionNameParam}.
+	 * 
+	 * @param sectionNameParam The name of the section to confirm if it should be rendered.
+	 * @return {@code true}
 	 */
 	public boolean isRenderActionColumn(String sectionNameParam){
 		return true;

@@ -15,7 +15,7 @@
 
 package com.fluidbpm.fluidwebkit.backing.bean.workspace;
 
-import com.fluidbpm.fluidwebkit.backing.bean.ABaseWebVO;
+import com.fluidbpm.fluidwebkit.backing.vo.ABaseWebVO;
 import com.fluidbpm.program.api.vo.field.Field;
 import com.fluidbpm.program.api.vo.flow.JobView;
 import com.fluidbpm.program.api.vo.form.Form;
@@ -26,7 +26,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * View item wrapped for {@code ABaseWebVO}.
+ * Workspace object to host the {@code JobView} and {@code ABaseWebVO}.
  *
  * @author jasonbruwer on 2018-05-31.
  * @since 1.0
@@ -37,8 +37,9 @@ public class WorkspaceFluidItem {
 	private JobView jobView;
 
 	/**
-	 *
-	 * @param baseWebParam
+	 * Default constructor to create a {@code WorkspaceFluidItem} without setting the view.
+	 * 
+	 * @param baseWebParam Subclass instance of {@code ABaseWebVO}.
 	 */
 	public WorkspaceFluidItem(ABaseWebVO baseWebParam) {
 		this.baseWeb = baseWebParam;
@@ -46,8 +47,9 @@ public class WorkspaceFluidItem {
 	}
 
 	/**
+	 * Get the {@code FluidItem} from the {@code ABaseWebVO}.
 	 *
-	 * @return
+	 * @return {@code this.baseWeb.getFluidItem()}
 	 */
 	public FluidItem getFluidItem() {
 		if (this.baseWeb == null) {
@@ -58,17 +60,21 @@ public class WorkspaceFluidItem {
 	}
 
 	/**
+	 * Get the {@code Form} from the {@code FluidItem}.
+	 * 
+	 * @return {@code this.baseWeb.getForm()}
 	 *
-	 * @return
+	 * @see Form
 	 */
 	public Form getFluidItemForm() {
-
 		return this.baseWeb.getForm();
 	}
 
 	/**
 	 * 
 	 * @return
+	 * 
+	 * @see Field
 	 */
 	public List<Field> getRouteFields() {
 		if (this.baseWeb == null || this.baseWeb.getFluidItem() == null) {
@@ -99,8 +105,10 @@ public class WorkspaceFluidItem {
 	}
 
 	/**
+	 * Refresh the local {@code fieldMap} based on the {@code FluidItem} route and form fields.
 	 *
-	 * @return
+	 * @see FluidItem
+	 * @see Field
 	 */
 	private void refreshFieldNameAndValueMap() {
 		if (this.getFluidItem() == null) {

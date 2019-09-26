@@ -33,24 +33,23 @@ import javax.servlet.http.HttpSession;
 import java.util.Map;
 
 /**
- * Bean to handle user authentication.
+ * Bean to handle user authentication for JSF application.
  * 
  * @author jasonbruwer on 2018-06-03
  * @since 1.0
  */
 public abstract class ABaseLoginBean extends ABaseManagedBean {
-    private String inputUsername = null;
+	private String inputUsername = null;
 	private String inputPassword = null;
 
 	/**
-	 * action="#{saibDashLoginBean.actionLogin}"
+	 * action="#{loginBean.actionLogin}"
 	 *
 	 * Log a user into the SAIB Dashboard.
 	 *
-	 * @return navigation {@code dashboard}
+	 * @return navigation {@code dashboard}.
 	 */
 	public String actionLogin() {
-
 		this.getLogger().debug("Login attempt ["+this.getInputUsername()+"]");
 
 		//Lets confirm username and password is set first...
@@ -72,7 +71,7 @@ public abstract class ABaseLoginBean extends ABaseManagedBean {
 			if (!this.isConfigUserLoginSuccess()) {
 				throw new ClientDashboardException(
 						"'Config User' not logged in. Please check logs!",
-                        ClientDashboardException.ErrorCode.ILLEGAL_STATE);
+						ClientDashboardException.ErrorCode.ILLEGAL_STATE);
 			}
 
 			//App Request Token ...
@@ -138,9 +137,9 @@ public abstract class ABaseLoginBean extends ABaseManagedBean {
 	}
 
 	/**
-	 * action="#{saibDashLoginBean.actionLogin}"
-	 *
-	 * Log a user into the SAIB Dashboard.
+	 * Log a user into the Dashboard using LDAP protocol.
+	 * 
+	 * action="#{loginBean.actionLoginLDAP}"
 	 *
 	 * @return navigation {@code dashboard}
 	 */
@@ -162,7 +161,7 @@ public abstract class ABaseLoginBean extends ABaseManagedBean {
 	}
 
 	/**
-	 * Log a user out of the Design Dashboard.
+	 * Log a user out of the Dashboard.
 	 *
 	 * @return navigation {@code dashboard}
 	 */
@@ -176,45 +175,49 @@ public abstract class ABaseLoginBean extends ABaseManagedBean {
 		return this.getLogoutOutcomePage();
 	}
 
-    /**
-     *
-     * @return
-     */
+	/**
+	 * Confirm whether the Fluid config user was logged in successfully.
+	 * @return {@code true} if logged in successfully. Otherwise {@code false}.
+	 */
 	public abstract boolean isConfigUserLoginSuccess();
 
-    /**
-     *
-     * @return
-     */
+	/**
+	 * The JSF {@code outcome} for when a logout action is performed.
+	 * @return JSF outcome.
+	 */
 	public abstract String getLogoutOutcomePage();
 
 	/**
+	 * The password provided by the user.
 	 *
-	 * @return
+	 * @return User password.
 	 */
 	public String getInputPassword() {
 		return this.inputPassword;
 	}
 
 	/**
+	 * The password provided by the user.
 	 *
-	 * @param inputPasswordParam
+	 * @param inputPasswordParam The JSF bean mapping for password.
 	 */
 	public void setInputPassword(String inputPasswordParam) {
 		this.inputPassword = inputPasswordParam;
 	}
 
 	/**
+	 * The username provided by the user.
 	 *
-	 * @return
+	 * @return The JSF bean mapping for username.
 	 */
 	public String getInputUsername() {
 		return this.inputUsername;
 	}
 
 	/**
-	 *
-	 * @param inputUsernameParam
+	 * The username provided by the user.
+	 * 
+	 * @param inputUsernameParam  The JSF bean mapping for username.
 	 */
 	public void setInputUsername(String inputUsernameParam) {
 		this.inputUsername = inputUsernameParam;

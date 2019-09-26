@@ -27,20 +27,22 @@ import javax.faces.context.FacesContext;
 import java.util.List;
 
 /**
- * Bean to handle notifications.
- * 
+ * Bean to handle Fluid notifications.
+ *
  * @author jasonbruwer on 2018-09-06
  * @since 1.0
+ *
+ * @see UserNotification
  */
 public abstract class ABaseNotificationsBean extends ABaseManagedBean {
-	private static final int MAX_COUNT_UNREAD = 10;
-	private static final int MAX_COUNT_READ = 200;
+	protected static final int MAX_COUNT_UNREAD = 10;
+	protected static final int MAX_COUNT_READ = 200;
 
 	private List<UserNotification> unreadUserNotifications;
 	private List<UserNotification> readUserNotifications;
 
 	/**
-	 *
+	 * When the bean is initialized, the pending notifications will be fetched.
 	 */
 	@PostConstruct
 	public void initBean() {
@@ -48,6 +50,8 @@ public abstract class ABaseNotificationsBean extends ABaseManagedBean {
 	}
 
 	/**
+	 * Action Event to update notifications.
+	 * 
 	 * When notifications are to be retrieved.
 	 */
 	public void actionUpdateNotifications() {
@@ -103,7 +107,7 @@ public abstract class ABaseNotificationsBean extends ABaseManagedBean {
 	}
 
 	/**
-	 * Mark the unread notifications as read.
+	 * Action to mark the unread notifications as read.
 	 */
 	public void actionMarkUnreadNotificationsAsRead() {
 		//Fluid Clients...
@@ -135,15 +139,16 @@ public abstract class ABaseNotificationsBean extends ABaseManagedBean {
 	}
 
 	/**
-	 *
+	 * Action to prepare to view messages.
 	 */
-	public void actionPrepareToViewReadMesssages(){
-
+	public void actionPrepareToViewReadMessages() {
+		//Do nothing...
 	}
 
 	/**
+	 * Getter for number of unread notifications.
 	 *
-	 * @return
+	 * @return int count for unread notifications.
 	 */
 	public int getNumberOfUnreadNotifications() {
 		return (this.unreadUserNotifications == null ? 0:
@@ -151,42 +156,50 @@ public abstract class ABaseNotificationsBean extends ABaseManagedBean {
 	}
 
 	/**
+	 * Getter for number of read notifications.
 	 *
-	 * @return
+	 * @return int count for read notifications.
 	 */
 	public int getNumberOfReadNotifications() {
-
 		return (this.readUserNotifications == null ? 0:
 				this.readUserNotifications.size());
 	}
 
 	/**
+	 * Getter for unread notifications.
 	 *
-	 * @return
+	 * @return Unread user notifications.
+	 *
+	 * @see UserNotification
 	 */
 	public List<UserNotification> getUnreadUserNotifications() {
 		return this.unreadUserNotifications;
 	}
 
 	/**
+	 * Setter for unread notifications.
 	 *
-	 * @param unreadUserNotificationsParam
+	 * @param unreadUserNotificationsParam Unread user notifications.
+	 *
+	 * @see UserNotification
 	 */
 	public void setUnreadUserNotifications(List<UserNotification> unreadUserNotificationsParam) {
 		this.unreadUserNotifications = unreadUserNotificationsParam;
 	}
 
 	/**
+	 * Getter for read notifications.
 	 *
-	 * @return
+	 * @return Read user notifications.
 	 */
 	public List<UserNotification> getReadUserNotifications() {
 		return this.readUserNotifications;
 	}
 
 	/**
+	 * Setter for read notifications.
 	 *
-	 * @param readUserNotificationsParam
+	 * @param readUserNotificationsParam Read user notifications.
 	 */
 	public void setReadUserNotifications(List<UserNotification> readUserNotificationsParam) {
 		this.readUserNotifications = readUserNotificationsParam;
