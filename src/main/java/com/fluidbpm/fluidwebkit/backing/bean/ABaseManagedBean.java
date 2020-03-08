@@ -128,7 +128,34 @@ public abstract class ABaseManagedBean implements Serializable {
 	 * {@code LoggerFactory.getLogger(this.getClass().getName())}
 	 * @return New logger instance.
 	 */
-	public abstract ILogger getLogger();
+	public ILogger getLogger() {
+		return new ILogger() {
+			@Override
+			public void info(String details, Object... args) {
+				System.out.print(getPrefix());
+				System.out.printf(details, args);
+				System.out.println();
+			}
+
+			@Override
+			public void debug(String details, Object... args) {
+				System.out.print(getPrefix());
+				System.out.printf(details, args);
+				System.out.println();
+			}
+
+			@Override
+			public void error(String details, Exception exception) {
+				System.err.print(getPrefix());
+				System.err.printf("%s . %s", details, exception.getMessage());
+				System.err.println();
+			}
+
+			private String getPrefix() {
+				return this.getClass().getSimpleName();
+			}
+		};
+	}
 
 	/**
 	 * 

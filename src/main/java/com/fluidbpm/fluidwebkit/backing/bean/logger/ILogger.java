@@ -15,28 +15,35 @@
 
 package com.fluidbpm.fluidwebkit.backing.bean.logger;
 
+import java.io.Serializable;
+
 /**
  * Interface for logging implementation.
  *
  * @author jasonbruwer on 08/03/2020.
  * @since 1.0
  */
-public interface ILogger {
+public interface ILogger extends Serializable {
 
 	/**
 	 * Log data with info log level.
+	 *
 	 * @param details Message to log.
 	 * @param args Additional arguments in case of template.
 	 */
 	public abstract void info(String details, Object ... args);
 
 	/**
+	 * Log data with debug log level.
+	 *
 	 * @param details Message to log.
 	 * @param args Additional arguments in case of template.
 	 */
 	public abstract void debug(String details, Object ... args);
 
 	/**
+	 * Log data with error log level.
+	 *
 	 * @param details Message to log.
 	 * @param exception Error to log.
 	 */
