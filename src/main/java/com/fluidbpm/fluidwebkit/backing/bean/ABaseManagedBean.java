@@ -16,6 +16,7 @@
 package com.fluidbpm.fluidwebkit.backing.bean;
 
 import com.fluidbpm.GitDescribe;
+import com.fluidbpm.fluidwebkit.backing.bean.logger.ILogger;
 import com.fluidbpm.fluidwebkit.backing.utility.Globals;
 import com.fluidbpm.fluidwebkit.exception.ClientDashboardException;
 import com.fluidbpm.fluidwebkit.exception.WebSessionExpiredException;
@@ -23,8 +24,6 @@ import com.fluidbpm.program.api.vo.field.Field;
 import com.fluidbpm.program.api.vo.user.User;
 import com.fluidbpm.program.api.vo.ws.auth.AppRequestToken;
 import org.primefaces.PrimeFaces;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.faces.context.ExternalContext;
 import javax.faces.context.FacesContext;
@@ -129,9 +128,7 @@ public abstract class ABaseManagedBean implements Serializable {
 	 * {@code LoggerFactory.getLogger(this.getClass().getName())}
 	 * @return New logger instance.
 	 */
-	public Logger getLogger() {
-		return LoggerFactory.getLogger(this.getClass().getName());
-	}
+	public abstract ILogger getLogger();
 
 	/**
 	 * 

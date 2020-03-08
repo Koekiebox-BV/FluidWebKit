@@ -78,35 +78,11 @@
 			<version>${version.j2ee}</version>
 		</dependency>
 
-		<!-- Faces Implementation -->
-		<dependency>
-			<groupId>com.sun.faces</groupId>
-			<artifactId>jsf-impl</artifactId>
-			<version>2.2.8</version>
-			<scope>provided</scope>
-		</dependency>
-
-		<!-- Faces Library -->
-		<dependency>
-			<groupId>com.sun.faces</groupId>
-			<artifactId>jsf-api</artifactId>
-			<version>2.2.8</version>
-			<scope>provided</scope>
-		</dependency>
-
 		<!--JSP Prime Faces Dependencies-->
 		<dependency>
 			<groupId>org.primefaces</groupId>
 			<artifactId>primefaces</artifactId>
-			<version>6.2</version>
-			<scope>provided</scope>
-		</dependency>
-
-		<!--The Logger-->
-		<dependency>
-			<groupId>org.slf4j</groupId>
-			<artifactId>slf4j-api</artifactId>
-			<version>1.7.7</version>
+			<version>6.2.27</version>
 			<scope>provided</scope>
 		</dependency>
 

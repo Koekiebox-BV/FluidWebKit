@@ -16,9 +16,9 @@
 package com.fluidbpm.fluidwebkit.backing.bean.workspace;
 
 import com.fluidbpm.fluidwebkit.backing.bean.ABaseManagedBean;
-import com.fluidbpm.fluidwebkit.backing.vo.ABaseWebVO;
 import com.fluidbpm.fluidwebkit.backing.bean.workspace.contentview.ABaseContentView;
 import com.fluidbpm.fluidwebkit.backing.utility.Globals;
+import com.fluidbpm.fluidwebkit.backing.vo.ABaseWebVO;
 import com.fluidbpm.fluidwebkit.exception.ClientDashboardException;
 import com.fluidbpm.program.api.vo.flow.JobView;
 import com.fluidbpm.program.api.vo.flow.JobViewListing;
@@ -170,7 +170,6 @@ public abstract class ABaseWorkspaceBean extends ABaseManagedBean {
 		} catch (Exception fce) {
 			//We have a problem...
 			this.getLogger().error(fce.getMessage(),fce);
-
 			FacesMessage fMsg = new FacesMessage(FacesMessage.SEVERITY_ERROR,
 					"Failed to fetch User Queries and Views. ", fce.getMessage());
 			FacesContext.getCurrentInstance().addMessage(null, fMsg);
