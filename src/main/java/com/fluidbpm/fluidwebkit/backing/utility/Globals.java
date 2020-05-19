@@ -70,7 +70,6 @@ public class Globals {
 			loginClient.closeAndClean();
 		}
 	}
-	
 
 	/**
 	 *
@@ -100,5 +99,19 @@ public class Globals {
 		return System.getProperty(
 				"CONFIG_USER_PASSWORD",
 				FLUID_CONFIG_USER_PASSWORD);
+	}
+
+	/**
+	 * @return
+	 */
+	public static boolean isConfigBasicAuthFromSystemProperty() {
+		String useBasicAuth = System.getProperty(
+				"USE_BASIC_AUTH",
+				"false");
+		try {
+			return Boolean.parseBoolean(useBasicAuth);
+		} catch (NumberFormatException nfe) {
+			return false;
+		}
 	}
 }

@@ -488,8 +488,8 @@ public abstract class ABaseManagedBean implements Serializable {
 		if (isRootParam) {
 			pagesFolder = "/";
 		}
-		FacesContext facesContext = FacesContext.getCurrentInstance();
 
+		FacesContext facesContext = FacesContext.getCurrentInstance();
 		HttpServletResponse response = (HttpServletResponse) facesContext.getExternalContext().getResponse();
 		String servletContextPath = FacesContext.getCurrentInstance().getExternalContext().getRequestContextPath();
 
@@ -545,9 +545,7 @@ public abstract class ABaseManagedBean implements Serializable {
 			if (pgwExcept.getErrorCode() == ClientDashboardException.ErrorCode.SESSION_EXPIRED) {
 				try {
 					FacesContext facesContext = FacesContext.getCurrentInstance();
-
 					HttpServletResponse response = (HttpServletResponse) facesContext.getExternalContext().getResponse();
-
 					String servletContextPath = FacesContext.getCurrentInstance().getExternalContext().getRequestContextPath();
 
 					response.sendRedirect(servletContextPath + "/index.xhtml");

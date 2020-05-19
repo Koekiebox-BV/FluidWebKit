@@ -50,7 +50,9 @@ public abstract class ABaseLoginBean extends ABaseManagedBean {
 	 * @return navigation {@code dashboard}.
 	 */
 	public String actionLogin() {
-		this.getLogger().debug("Login attempt ["+this.getInputUsername()+"]");
+		this.getLogger().debug("Login attempt ["+
+				this.getInputUsername()+":"+
+				Globals.getConfigURLFromSystemProperty()+"]");
 
 		//Lets confirm username and password is set first...
 		if (this.getInputUsername() == null ||
@@ -75,16 +77,27 @@ public abstract class ABaseLoginBean extends ABaseManagedBean {
 			}
 
 			//App Request Token ...
-			AppRequestToken appReqToken =
-					loginClient.login(
-							this.getInputUsername(),
-							this.getInputPassword());
-			user.setServiceTicket(appReqToken.getServiceTicket());
-			user.setRoles(Role.convertToObjects(appReqToken.getRoleString()));
+			this.getLogger().debug("Performing login action.");
 
-			userClient = new UserClient(
-					this.getConfigURLFromSystemProperty(),
-					appReqToken.getServiceTicket());
+			final String serviceTicket;
+			if (Globals.isConfigBasicAuthFromSystemProperty()) {
+				this.getLogger().debug("Login using BASIC authentication.");
+				User loginBasicUser = loginClient.loginBasic(
+						this.getInputUsername(), this.getInputPassword());
+				serviceTicket = loginBasicUser.getServiceTicket();
+				user.setRoles(loginBasicUser.getRoles());
+			} else {
+				this.getLogger().debug("Login using TOKEN authentication.");
+				AppRequestToken appReqToken = loginClient.login(
+						this.getInputUsername(), this.getInputPassword());
+				serviceTicket = appReqToken.getServiceTicket();
+				user.setRoles(Role.convertToObjects(appReqToken.getRoleString()));
+			}
+
+			user.setServiceTicket(serviceTicket);
+
+			this.getLogger().debug("User logged in. Retrieving logged in user info.");
+			userClient = new UserClient(this.getConfigURLFromSystemProperty(), serviceTicket);
 
 			//Get logged in user info...
 			User loggedInUserInfo = userClient.getLoggedInUserInformation();
@@ -94,6 +107,7 @@ public abstract class ABaseLoginBean extends ABaseManagedBean {
 			user.setTimeFormat(loggedInUserInfo.getTimeFormat());
 			user.setId(loggedInUserInfo.getId());
 
+			this.getLogger().debug("Retrieving user field listing.");
 			try {
 				UserFieldListing fieldListing = userClient.getAllUserFieldValuesByUser(loggedInUserInfo);
 				if (!fieldListing.isListingEmpty()) {
@@ -104,6 +118,8 @@ public abstract class ABaseLoginBean extends ABaseManagedBean {
 						loggedInUserInfo.getUsername()+". "+fle.getMessage(),fle);
 			}
 		} catch (FluidClientException fce) {
+			this.getLogger().error(fce.getMessage(), fce);
+
 			if (FluidClientException.ErrorCode.LOGIN_FAILURE == fce.getErrorCode()) {
 				FacesMessage fMsg = new FacesMessage(FacesMessage.SEVERITY_ERROR,
 						"Failed to Login.", "");
@@ -115,9 +131,11 @@ public abstract class ABaseLoginBean extends ABaseManagedBean {
 					"Failed to Login. ", fce.getMessage());
 			FacesContext.getCurrentInstance().addMessage(null, fMsg);
 			return null;
-		} catch (ClientDashboardException reportExcept) {
+		} catch (ClientDashboardException dashExcept) {
+			this.getLogger().error(dashExcept.getMessage(), dashExcept);
+
 			FacesMessage fMsg = new FacesMessage(FacesMessage.SEVERITY_ERROR,
-					"Failed to Login. ", reportExcept.getMessage());
+					"Failed to Login. ", dashExcept.getMessage());
 			FacesContext.getCurrentInstance().addMessage(null, fMsg);
 
 			return null;
@@ -129,6 +147,7 @@ public abstract class ABaseLoginBean extends ABaseManagedBean {
 			}
 		}
 
+		this.getLogger().debug("Adding user to session.");
 		//Only put the user if success...
 		Map<String, Object> sessionMap = FacesContext.getCurrentInstance().getExternalContext().getSessionMap();
 		sessionMap.put(SessionVariable.USER, user);

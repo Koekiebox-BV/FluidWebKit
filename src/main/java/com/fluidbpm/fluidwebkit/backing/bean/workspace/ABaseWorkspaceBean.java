@@ -266,7 +266,7 @@ public abstract class ABaseWorkspaceBean extends ABaseManagedBean {
 	 * Open an 'Form' for editing or viewing.
 	 * Custom functionality needs to be placed in {@code this#actionOpenFormForEditingFromWorkspace}.
 	 *
-	 * @see this#actionOpenFormForEditingFromWorkspace(JobView, Long, FormContainerClient, SQLUtilWebSocketExecuteNativeSQLClient)
+	 * @see this#actionOpenFormForEditingFromWorkspace(JobView, Long, FormContainerClient, SQLUtilWebSocketRESTWrapper)
 	 */
 	public void actionOpenFormForEditingFromWorkspace() {
 		this.setAreaToUpdateForDialogAfterSubmit(null);
@@ -280,11 +280,10 @@ public abstract class ABaseWorkspaceBean extends ABaseManagedBean {
 		String confUrl = this.getConfigURLFromSystemProperty();
 
 		final FormContainerClient formContClient = new FormContainerClient(confUrl, loggedInUser.getServiceTicket());
-		final SQLUtilWebSocketExecuteNativeSQLClient nativeSQLClient =
-				new SQLUtilWebSocketExecuteNativeSQLClient(
+		final SQLUtilWebSocketRESTWrapper nativeSQLClient =
+				new SQLUtilWebSocketRESTWrapper(
 						confUrl,
-						null,
-						loggedInUser.getServiceTicketAsHexUpper(),
+						loggedInUser.getServiceTicket(),
 						Globals.WEB_SOCKET_TIMEOUT_MILLIS);
 		try {
 			this.actionOpenFormForEditingFromWorkspace(fromView, formIdToUpdate, formContClient, nativeSQLClient);
@@ -303,12 +302,17 @@ public abstract class ABaseWorkspaceBean extends ABaseManagedBean {
 	/**
 	 * Custom functionality for when a Form is clicked on to be opened.
 	 * Open an 'Form' for editing or viewing.
+	 *
+	 * @param fromView Opened from view.
+	 * @param formIdToUpdateParam Form ID to update.
+	 * @param formContClient Form Container Client.
+	 * @param wrapperParam Wrapper for lookups.
 	 */
 	public abstract void actionOpenFormForEditingFromWorkspace(
 			JobView fromView,
 			Long formIdToUpdateParam,
 			FormContainerClient formContClient,
-			SQLUtilWebSocketExecuteNativeSQLClient nativeSQLClientParam);
+			SQLUtilWebSocketRESTWrapper wrapperParam);
 
 	/**
 	 * When the main page for the workspace is opened or refreshed.
