@@ -12,7 +12,7 @@
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<version.fluid.api>1.10</version.fluid.api>
+		<version.fluid.api>1.11</version.fluid.api>
 		<version.j2ee>8.0</version.j2ee>
 
 		<!--Plugins-->

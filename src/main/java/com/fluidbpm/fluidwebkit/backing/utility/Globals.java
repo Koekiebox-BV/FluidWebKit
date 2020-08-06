@@ -20,7 +20,11 @@ import com.fluidbpm.ws.client.v1.sqlutil.wrapper.SQLUtilWebSocketRESTWrapper;
 import com.fluidbpm.ws.client.v1.user.LoginClient;
 import org.w3c.dom.Element;
 
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.concurrent.TimeUnit;
+
+import static java.lang.Class.forName;
 
 /**
  * Global accessible variables.
@@ -113,5 +117,31 @@ public class Globals {
 		} catch (NumberFormatException nfe) {
 			return false;
 		}
+	}
+
+	private static String JS_USER_TRACKING_FR = null;
+
+	/**
+	 * Retrieve the FusionReactor script for tracking user experience.
+	 * @return JS for user tracking
+	 */
+	public static String getFRUserTrackingScript() {
+		if (JS_USER_TRACKING_FR != null) {
+			return JS_USER_TRACKING_FR;
+		}
+
+		try {
+			Class clazz = forName("com.intergral.fusionreactor.api.FRAPI");
+			Method methodGetInst = clazz.getMethod("getInstance");
+			Method methodGetScript = clazz.getMethod("getUemTrackingScript");
+			Object frAPIInstance = methodGetInst.invoke(null, new Object[]{});
+			Object respObj = methodGetScript.invoke(frAPIInstance, new Object[]{});
+
+			String toString = respObj.toString();
+			JS_USER_TRACKING_FR = toString;
+		} catch (ClassNotFoundException | NoSuchMethodException | IllegalAccessException | InvocationTargetException eParam) {
+			JS_USER_TRACKING_FR = "";
+		}
+		return JS_USER_TRACKING_FR;
 	}
 }

@@ -31,14 +31,10 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import java.io.IOException;
 import java.io.Serializable;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-
-import static java.lang.Class.forName;
 
 /**
  * Base backing bean for all JSF beans.
@@ -629,29 +625,11 @@ public abstract class ABaseManagedBean implements Serializable {
 		PrimeFaces.current().executeScript(javascriptParam);
 	}
 
-	private static String JS_USER_TRACKING_FR = null;
-
 	/**
 	 * Retrieve the FusionReactor script for tracking user experience.
 	 * @return JS for user tracking
 	 */
 	public String getFRUserTrackingScript() {
-		if (JS_USER_TRACKING_FR != null) {
-			return JS_USER_TRACKING_FR;
-		}
-
-		try {
-			Class clazz = forName("com.intergral.fusionreactor.api.FRAPI");
-			Method methodGetInst = clazz.getMethod("getInstance");
-			Method methodGetScript = clazz.getMethod("getUemTrackingScript");
-			Object frAPIInstance = methodGetInst.invoke(null, new Object[]{});
-			Object respObj = methodGetScript.invoke(frAPIInstance, new Object[]{});
-
-			String toString = respObj.toString();
-			JS_USER_TRACKING_FR = toString;
-		} catch (ClassNotFoundException | NoSuchMethodException | IllegalAccessException | InvocationTargetException eParam) {
-			JS_USER_TRACKING_FR = "";
-		}
-		return JS_USER_TRACKING_FR;
+		return Globals.getFRUserTrackingScript();
 	}
 }
