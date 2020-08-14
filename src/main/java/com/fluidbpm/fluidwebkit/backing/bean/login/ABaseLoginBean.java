@@ -18,6 +18,7 @@ package com.fluidbpm.fluidwebkit.backing.bean.login;
 import com.fluidbpm.fluidwebkit.backing.bean.ABaseManagedBean;
 import com.fluidbpm.fluidwebkit.backing.bean.login.ldap.LDAP;
 import com.fluidbpm.fluidwebkit.backing.utility.Globals;
+import com.fluidbpm.fluidwebkit.ds.FluidClientDS;
 import com.fluidbpm.fluidwebkit.exception.ClientDashboardException;
 import com.fluidbpm.program.api.vo.role.Role;
 import com.fluidbpm.program.api.vo.user.User;
@@ -29,6 +30,7 @@ import com.fluidbpm.ws.client.v1.user.UserClient;
 
 import javax.faces.application.FacesMessage;
 import javax.faces.context.FacesContext;
+import javax.inject.Inject;
 import javax.servlet.http.HttpSession;
 import java.util.Map;
 
@@ -50,9 +52,7 @@ public abstract class ABaseLoginBean extends ABaseManagedBean {
 	 * @return navigation {@code dashboard}.
 	 */
 	public String actionLogin() {
-		this.getLogger().debug("Login attempt ["+
-				this.getInputUsername()+":"+
-				Globals.getConfigURLFromSystemProperty()+"]");
+		this.getLogger().debug("Login attempt ["+ this.getInputUsername()+":"+ Globals.getConfigURLFromSystemProperty()+"]");
 
 		//Lets confirm username and password is set first...
 		if (this.getInputUsername() == null ||
@@ -68,7 +68,6 @@ public abstract class ABaseLoginBean extends ABaseManagedBean {
 		User user = new User();
 		user.setUsername(this.getInputUsername());
 		LoginClient loginClient = new LoginClient(Globals.getConfigURLFromSystemProperty());
-		UserClient userClient = null;
 		try {
 			if (!this.isConfigUserLoginSuccess()) {
 				throw new ClientDashboardException(
@@ -94,13 +93,16 @@ public abstract class ABaseLoginBean extends ABaseManagedBean {
 				user.setRoles(Role.convertToObjects(appReqToken.getRoleString()));
 			}
 
+			//We have a valid login here...
 			user.setServiceTicket(serviceTicket);
+			this.bindFluidClientDSToSession(serviceTicket);
 
 			this.getLogger().debug("User logged in. Retrieving logged in user info.");
-			userClient = new UserClient(this.getConfigURLFromSystemProperty(), serviceTicket);
+
+			FluidClientDS fcDSConfig = this.getFluidClientDSConfig();
 
 			//Get logged in user info...
-			User loggedInUserInfo = userClient.getLoggedInUserInformation();
+			User loggedInUserInfo = fcDSConfig.getUserClient().getLoggedInUserInformation();
 
 			//Set the User Id...
 			user.setDateFormat(loggedInUserInfo.getDateFormat());
@@ -109,7 +111,7 @@ public abstract class ABaseLoginBean extends ABaseManagedBean {
 
 			this.getLogger().debug("Retrieving user field listing.");
 			try {
-				UserFieldListing fieldListing = userClient.getAllUserFieldValuesByUser(loggedInUserInfo);
+				UserFieldListing fieldListing = fcDSConfig.getUserClient().getAllUserFieldValuesByUser(loggedInUserInfo);
 				if (!fieldListing.isListingEmpty()) {
 					user.setUserFields(fieldListing.getListing());
 				}
@@ -141,10 +143,6 @@ public abstract class ABaseLoginBean extends ABaseManagedBean {
 			return null;
 		} finally {//Close the login after done...
 			loginClient.closeAndClean();
-
-			if (userClient != null) {
-				userClient.closeAndClean();
-			}
 		}
 
 		this.getLogger().debug("Adding user to session.");

@@ -18,15 +18,19 @@ package com.fluidbpm.fluidwebkit.backing.bean;
 import com.fluidbpm.GitDescribe;
 import com.fluidbpm.fluidwebkit.backing.bean.logger.ILogger;
 import com.fluidbpm.fluidwebkit.backing.utility.Globals;
+import com.fluidbpm.fluidwebkit.ds.FluidClientDS;
+import com.fluidbpm.fluidwebkit.ds.FluidClientPool;
 import com.fluidbpm.fluidwebkit.exception.ClientDashboardException;
 import com.fluidbpm.fluidwebkit.exception.WebSessionExpiredException;
 import com.fluidbpm.program.api.vo.field.Field;
 import com.fluidbpm.program.api.vo.user.User;
 import com.fluidbpm.program.api.vo.ws.auth.AppRequestToken;
+import lombok.Getter;
 import org.primefaces.PrimeFaces;
 
 import javax.faces.context.ExternalContext;
 import javax.faces.context.FacesContext;
+import javax.inject.Inject;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import java.io.IOException;
@@ -47,6 +51,12 @@ public abstract class ABaseManagedBean implements Serializable {
 
 	//App Request Token...
 	protected AppRequestToken configUserAppRequestToken;
+
+	@Inject
+	@Getter
+	private transient FluidClientPool fcp;
+
+	public static final String CONFIG_USER_GLOBAL_ID = "FCP_CONFIG_USER";
 
 	/**
 	 * Outcome JSF navigation outcomes.
@@ -236,10 +246,18 @@ public abstract class ABaseManagedBean implements Serializable {
 	 * @return
 	 */
 	public String getLoggedInUserUsername() {
+		return this.getLoggedInUserSafe().getUsername();
+	}
+
+	/**
+	 *
+	 * @return
+	 */
+	public User getLoggedInUserSafe() {
 		try {
-			return this.getLoggedInUser().getUsername();
+			return this.getLoggedInUser();
 		} catch (WebSessionExpiredException wsee) {
-			return null;
+			return new User();
 		}
 	}
 
@@ -315,6 +333,30 @@ public abstract class ABaseManagedBean implements Serializable {
 		}
 
 		return null;
+	}
+
+	protected String getSessionId() {
+		HttpSession session = this.getHttpSession();
+		if (session == null) {
+			return null;
+		}
+		return session.getId();
+	}
+
+	public FluidClientDS getFluidClientDS() {
+		return this.fcp.get(this.getSessionId());
+	}
+
+	public FluidClientDS getFluidClientDSConfig() {
+		return this.fcp.get(CONFIG_USER_GLOBAL_ID);
+	}
+
+	public void bindFluidClientDSToSession(String serviceTicket) {
+		this.fcp.init(this.getSessionId(), serviceTicket, Globals.getConfigURLFromSystemProperty());
+	}
+
+	public void bindConfigFluidClientDS(String serviceTicket) {
+		this.fcp.init(CONFIG_USER_GLOBAL_ID, serviceTicket, Globals.getConfigURLFromSystemProperty());
 	}
 
 	/**
@@ -538,6 +580,15 @@ public abstract class ABaseManagedBean implements Serializable {
 	 * @return
 	 */
 	protected boolean checkLoggedIn() {
+		return checkLoggedIn("/index.xhtml");
+	}
+
+	/**
+	 * Confirm whether user is logged in.
+	 *
+	 * @return
+	 */
+	protected boolean checkLoggedIn(String pagePath) {
 		try {
 			this.getLoggedInUser();
 			return true;
@@ -548,12 +599,12 @@ public abstract class ABaseManagedBean implements Serializable {
 					HttpServletResponse response = (HttpServletResponse) facesContext.getExternalContext().getResponse();
 					String servletContextPath = FacesContext.getCurrentInstance().getExternalContext().getRequestContextPath();
 
-					response.sendRedirect(servletContextPath + "/index.xhtml");
+					response.sendRedirect(servletContextPath + pagePath);
 					return false;
 				} catch (IOException ioExcept) {
 					throw new ClientDashboardException(
 							"Unable to dispatch. "
-							+ ioExcept.getMessage(),
+									+ ioExcept.getMessage(),
 							ioExcept, ClientDashboardException.ErrorCode.IO_ERROR);
 				}
 			} else {

@@ -53,28 +53,6 @@ public class Globals {
 
 	public static String EXCEL_WARNING = "WARNING: ";
 
-
-	/**
-	 * Create and return a new instance of the SQLUtil wrapper.
-	 * 
-	 * @return new instance of {@code SQLUtilWebSocketRESTWrapper}
-	 */
-	public static SQLUtilWebSocketRESTWrapper getConfigWrapperInstance() {
-		LoginClient loginClient = new LoginClient(Globals.getConfigURLFromSystemProperty());
-
-		try {
-			AppRequestToken requestToken = loginClient.login(
-					Globals.getConfigUserProperty(), Globals.getConfigUserPasswordProperty());
-
-			return new SQLUtilWebSocketRESTWrapper(
-					Globals.getConfigURLFromSystemProperty(),
-					requestToken.getServiceTicket(),
-					TimeUnit.SECONDS.toMillis(60));
-		} finally {
-			loginClient.closeAndClean();
-		}
-	}
-
 	/**
 	 *
 	 * @return

@@ -275,16 +275,9 @@ public abstract class ABaseWorkspaceBean extends ABaseManagedBean {
 		Long formIdToUpdate = this.getLongRequestParam(RequestParam.TO_UPDATE);
 		Long openedFromViewId = this.getLongRequestParam(RequestParam.OPENED_FROM_VIEW);
 		JobView fromView = this.getJobViewFromListingWithId(this.viewsAll, openedFromViewId);
-		User loggedInUser = this.getLoggedInUser();
 
-		String confUrl = this.getConfigURLFromSystemProperty();
-
-		final FormContainerClient formContClient = new FormContainerClient(confUrl, loggedInUser.getServiceTicket());
-		final SQLUtilWebSocketRESTWrapper nativeSQLClient =
-				new SQLUtilWebSocketRESTWrapper(
-						confUrl,
-						loggedInUser.getServiceTicket(),
-						Globals.WEB_SOCKET_TIMEOUT_MILLIS);
+		final FormContainerClient formContClient = this.getFluidClientDS().getFormContainerClient();
+		final SQLUtilWebSocketRESTWrapper nativeSQLClient = this.getFluidClientDS().getSQLUtilWrapper();
 		try {
 			this.actionOpenFormForEditingFromWorkspace(fromView, formIdToUpdate, formContClient, nativeSQLClient);
 			this.currentlyHaveItemOpen = true;
@@ -309,10 +302,11 @@ public abstract class ABaseWorkspaceBean extends ABaseManagedBean {
 	 * @param wrapperParam Wrapper for lookups.
 	 */
 	public abstract void actionOpenFormForEditingFromWorkspace(
-			JobView fromView,
-			Long formIdToUpdateParam,
-			FormContainerClient formContClient,
-			SQLUtilWebSocketRESTWrapper wrapperParam);
+		JobView fromView,
+		Long formIdToUpdateParam,
+		FormContainerClient formContClient,
+		SQLUtilWebSocketRESTWrapper wrapperParam
+	);
 
 	/**
 	 * When the main page for the workspace is opened or refreshed.
@@ -329,8 +323,6 @@ public abstract class ABaseWorkspaceBean extends ABaseManagedBean {
 
 		String selectedJobViews = this.getStringRequestParam(RequestParam.SELECTED_JOB_VIEWS);
 		String workspaceAim = this.getStringRequestParam(RequestParam.WORKSPACE_AIM);
-
-		User loggedInUser = this.getLoggedInUser();
 
 		//Clear the content view...
 		if (this.contentView != null) {
@@ -369,7 +361,7 @@ public abstract class ABaseWorkspaceBean extends ABaseManagedBean {
 						continue;
 					}
 
-					JobView viewToSetForm = this.getJobViewFromListingWithId(this.viewsAll, new Long(jobViewIdTxt));
+					JobView viewToSetForm = this.getJobViewFromListingWithId(this.viewsAll, Long.getLong(jobViewIdTxt));
 					if (viewToSetForm == null) {
 						continue;
 					}
@@ -378,11 +370,9 @@ public abstract class ABaseWorkspaceBean extends ABaseManagedBean {
 					CompletableFuture toAdd = CompletableFuture.runAsync(
 							() -> {
 								FluidItemListing listOfItems = null;
-								FlowItemClient flowItemClient = new FlowItemClient(
-										this.getConfigURLFromSystemProperty(),
-										loggedInUser.getServiceTicket());
+								FlowItemClient flowItemClient = this.getFluidClientDS().getFlowItemClient();
 								
-								final SQLUtilWebSocketRESTWrapper sqlUtilWSRESTWrapper = Globals.getConfigWrapperInstance();
+								final SQLUtilWebSocketRESTWrapper sqlUtilWSRESTWrapper = this.getFluidClientDSConfig().getSQLUtilWrapper();
 								List<WorkspaceFluidItem> itemsForTheView = new ArrayList<>();
 								try {
 									listOfItems = flowItemClient.getFluidItemsForView(
@@ -523,8 +513,8 @@ public abstract class ABaseWorkspaceBean extends ABaseManagedBean {
 	 * 
 	 * @param currentlyHaveItemOpenParam Set whether an item is currently open.
 	 *
-	 * @see this#actionOpenFormForEditingFromWorkspace()    
-	 * @see this#actionOpenFormForEditingFromWorkspace(JobView, Long, FormContainerClient, SQLUtilWebSocketExecuteNativeSQLClient)
+	 * @see this#actionOpenFormForEditingFromWorkspace()
+	 * @see this#actionOpenFormForEditingFromWorkspace(JobView, Long, FormContainerClient, SQLUtilWebSocketRESTWrapper)
 	 */
 	public void setCurrentlyHaveItemOpen(boolean currentlyHaveItemOpenParam) {
 		this.currentlyHaveItemOpen = currentlyHaveItemOpenParam;
