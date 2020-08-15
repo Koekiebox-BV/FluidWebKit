@@ -123,19 +123,13 @@ public abstract class ABaseWorkspaceBean extends ABaseManagedBean {
 	 */
 	@PostConstruct
 	public void actionPopulateInit() {
-		FlowStepClient flowStepClient = null;
-		UserQueryClient userQueryClient = null;
+		if (this.getFluidClientDS() == null) {
+			return;
+		}
+
+		FlowStepClient flowStepClient = this.getFluidClientDS().getFlowStepClient();
+		UserQueryClient userQueryClient = this.getFluidClientDS().getUserQueryClient();
 		try {
-			User loggedInUser = this.getLoggedInUser();
-
-			flowStepClient = new FlowStepClient(
-					this.getConfigURLFromSystemProperty(),
-					loggedInUser.getServiceTicket());
-
-			userQueryClient = new UserQueryClient(
-					this.getConfigURLFromSystemProperty(),
-					loggedInUser.getServiceTicket());
-
 			this.jobViewListing = flowStepClient.getJobViewsByLoggedInUser();
 			this.userQueryListing = userQueryClient.getAllUserQueriesByLoggedInUser();
 
@@ -173,15 +167,6 @@ public abstract class ABaseWorkspaceBean extends ABaseManagedBean {
 			FacesMessage fMsg = new FacesMessage(FacesMessage.SEVERITY_ERROR,
 					"Failed to fetch User Queries and Views. ", fce.getMessage());
 			FacesContext.getCurrentInstance().addMessage(null, fMsg);
-		} finally {
-			//Close the login after done...
-			if (flowStepClient != null) {
-				flowStepClient.closeAndClean();
-			}
-
-			if (userQueryClient != null) {
-				userQueryClient.closeAndClean();
-			}
 		}
 	}
 

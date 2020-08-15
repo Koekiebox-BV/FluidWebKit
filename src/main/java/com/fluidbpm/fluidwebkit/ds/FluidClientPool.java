@@ -54,6 +54,10 @@ public class FluidClientPool {
 		this.fluidDS.put(uiSessionId, new FluidClientDS(serviceTicket, endpoint));
 	}
 
+	/**
+	 * @param uiSessionId
+	 * @return
+	 */
 	public FluidClientDS get(String uiSessionId) {
 		if (uiSessionId == null) {
 			return null;

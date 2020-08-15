@@ -23,9 +23,9 @@ import javax.inject.Named;
 import java.util.List;
 
 /**
- * Bean storing
+ * Bean storing all access for the logged in user.
  */
-@Named("webKitFormAccess")
+@Named("webKitAccess")
 public class WebKitAccessBean extends ABaseFormFieldAccessBean {
 
 	/**

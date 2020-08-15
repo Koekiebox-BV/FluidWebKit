@@ -25,7 +25,9 @@ import com.fluidbpm.fluidwebkit.exception.WebSessionExpiredException;
 import com.fluidbpm.program.api.vo.field.Field;
 import com.fluidbpm.program.api.vo.user.User;
 import com.fluidbpm.program.api.vo.ws.auth.AppRequestToken;
+import com.fluidbpm.ws.client.v1.user.LoginClient;
 import lombok.Getter;
+import lombok.Setter;
 import org.primefaces.PrimeFaces;
 
 import javax.faces.context.ExternalContext;
@@ -39,6 +41,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Base backing bean for all JSF beans.
@@ -56,7 +59,13 @@ public abstract class ABaseManagedBean implements Serializable {
 	@Getter
 	private transient FluidClientPool fcp;
 
+	@Getter
+	@Setter
+	private String dialogHeaderTitle;
+
 	public static final String CONFIG_USER_GLOBAL_ID = "FCP_CONFIG_USER";
+	private static Long LAST_TIME_CONF_LOGGED_IN = 0L;
+	private static int LOGIN_DURATION_HOURS = 4;
 
 	/**
 	 * Outcome JSF navigation outcomes.
@@ -82,9 +91,9 @@ public abstract class ABaseManagedBean implements Serializable {
 		 * @param fluidFieldColumnTypeParam
 		 */
 		public ColumnModel(
-				String header,
-				String fluidFieldNameParam,
-				Field.Type fluidFieldColumnTypeParam
+			String header,
+			String fluidFieldNameParam,
+			Field.Type fluidFieldColumnTypeParam
 		) {
 			this.header = header;
 			this.fluidFieldName = fluidFieldNameParam;
@@ -355,8 +364,27 @@ public abstract class ABaseManagedBean implements Serializable {
 		this.fcp.init(this.getSessionId(), serviceTicket, Globals.getConfigURLFromSystemProperty());
 	}
 
-	public void bindConfigFluidClientDS(String serviceTicket) {
-		this.fcp.init(CONFIG_USER_GLOBAL_ID, serviceTicket, Globals.getConfigURLFromSystemProperty());
+	public void bindConfigFluidClientDS() {
+		long now = System.currentTimeMillis();
+		if ((LAST_TIME_CONF_LOGGED_IN + TimeUnit.HOURS.toMillis(LOGIN_DURATION_HOURS)) < now) {
+			synchronized (LAST_TIME_CONF_LOGGED_IN) {
+				LoginClient loginClient = new LoginClient(Globals.getConfigURLFromSystemProperty());
+				try {
+					String serviceTicket = loginClient.login(
+							Globals.getConfigUserProperty(),
+							Globals.getConfigUserPasswordProperty()).getServiceTicket();
+					LAST_TIME_CONF_LOGGED_IN = System.currentTimeMillis();
+
+					this.fcp.invalidate(CONFIG_USER_GLOBAL_ID);
+					this.fcp.init(CONFIG_USER_GLOBAL_ID, serviceTicket, Globals.getConfigURLFromSystemProperty());
+				} catch (Exception except) {
+					this.getLogger().error(except.getMessage(), except);
+					throw new IllegalStateException(except.getMessage(), except);
+				} finally {
+					loginClient.closeAndClean();
+				}
+			}
+		}
 	}
 
 	/**

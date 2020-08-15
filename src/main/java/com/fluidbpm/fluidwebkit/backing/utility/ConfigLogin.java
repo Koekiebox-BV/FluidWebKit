@@ -26,6 +26,7 @@ import java.util.concurrent.TimeUnit;
  * @author jasonbruwer on 2019-01-17.
  * @since 1.0
  */
+@Deprecated
 public class ConfigLogin {
 	public static String FLUID_WS_URL = "http://localhost:80/fluid-ws/";
 	public static String FLUID_CONFIG_USER = "admin";
@@ -33,7 +34,6 @@ public class ConfigLogin {
 
 	private static Long LAST_TIME_CONF_LOGGED_IN = 0L;
 	private static AppRequestToken CONFIG_USER_APP_REQ_TOKEN = null;
-
 	private static int LOGIN_DURATION_HOURS = 4;
 
 	/**

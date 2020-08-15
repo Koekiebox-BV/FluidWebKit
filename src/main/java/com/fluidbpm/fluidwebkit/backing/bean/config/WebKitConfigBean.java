@@ -10,10 +10,8 @@
 package com.fluidbpm.fluidwebkit.backing.bean.config;
 
 import com.fluidbpm.fluidwebkit.backing.bean.ABaseManagedBean;
-import com.fluidbpm.program.api.vo.config.Configuration;
 import com.fluidbpm.program.api.vo.config.ConfigurationListing;
 import com.fluidbpm.program.api.vo.ws.auth.AppRequestToken;
-import com.fluidbpm.ws.client.v1.config.ConfigurationClient;
 import com.fluidbpm.ws.client.v1.user.LoginClient;
 
 import javax.annotation.PostConstruct;
@@ -67,14 +65,8 @@ public class WebKitConfigBean extends ABaseManagedBean {
 	@PostConstruct
 	public void actionPopulateInit() {
 		this.configUserLoginSuccess = false;
-		LoginClient loginClient = new LoginClient(this.getConfigURLFromSystemProperty());
 		try {
-			//App Request Token ...
-			AppRequestToken appReqToken =
-					loginClient.login(
-							this.getConfigUserProperty(),
-							this.getConfigUserPasswordProperty());
-			this.bindConfigFluidClientDS(appReqToken.getServiceTicket());
+			this.bindConfigFluidClientDS();
 
 			//CONFIGS...
 			ConfigurationListing configurationListing =
@@ -85,8 +77,6 @@ public class WebKitConfigBean extends ABaseManagedBean {
 		} catch (Exception fce) {
 			//We have a problem...
 			this.getLogger().error(fce.getMessage(),fce);
-		} finally {
-			loginClient.closeAndClean();
 		}
 	}
 

@@ -17,6 +17,7 @@ package com.fluidbpm.fluidwebkit.backing.bean;
 
 import com.fluidbpm.program.api.vo.field.Field;
 import com.fluidbpm.program.api.vo.field.MultiChoice;
+import com.fluidbpm.program.api.vo.flow.JobView;
 import com.fluidbpm.program.api.vo.form.Form;
 import com.fluidbpm.program.api.vo.form.FormFieldListing;
 import com.fluidbpm.ws.client.v1.form.FormDefinitionClient;
@@ -27,6 +28,7 @@ import javax.faces.application.FacesMessage;
 import javax.faces.context.FacesContext;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
+import java.util.stream.Collectors;
 
 /**
  * Bean to handle the field permissions.
@@ -37,10 +39,10 @@ import java.util.concurrent.CompletableFuture;
 public abstract class ABaseFormFieldAccessBean extends ABaseManagedBean {
 
 	//Fields for Edit and View...
-	private Map<String,List<Field>> fieldsForViewing;
-	private Map<String,List<Field>> fieldsForEditing;
+	private Map<String, List<Field>> fieldsForViewing;
+	private Map<String, List<Field>> fieldsForEditing;
 
-	private Set<String> formDefinitionsCanCreateInstanceOf;
+	private List<Form> formDefinitionsCanCreateInstanceOf;
 
 	private boolean fieldCachingDone = false;
 
@@ -64,26 +66,23 @@ public abstract class ABaseFormFieldAccessBean extends ABaseManagedBean {
 			this.getLogger().info("FFC-Bean: Fields ALREADY CACHED.");
 			return;
 		}
+
+		if (this.getFluidClientDS() == null) {
+			return;
+		}
+
 		realtimeCounter = 0;
-
 		this.getLogger().info("FFC-Bean: Starting Caching.");
-
-		String serviceTicket = this.getLoggedInUser().getServiceTicket();
-
-		FormDefinitionClient formDefinitionClient = new FormDefinitionClient(
-				this.getConfigURLFromSystemProperty(),
-				serviceTicket);
+		FormDefinitionClient formDefinitionClient = this.getFluidClientDS().getFormDefinitionClient();
 
 		this.fieldsForViewing = new Hashtable<>();
 		this.fieldsForEditing = new Hashtable<>();
-		this.formDefinitionsCanCreateInstanceOf = new HashSet<>();
+		this.formDefinitionsCanCreateInstanceOf = new ArrayList<>();
 
 		try {
-			List<Form> formDefsWhereUserCanCreateNewInstance = formDefinitionClient.getAllByLoggedInUserWhereCanCreateInstanceOf(true);
-			if (formDefsWhereUserCanCreateNewInstance != null) {
-				formDefsWhereUserCanCreateNewInstance.forEach(formDefItm -> {
-					this.formDefinitionsCanCreateInstanceOf.add(formDefItm.getFormType());
-				});
+			this.formDefinitionsCanCreateInstanceOf = formDefinitionClient.getAllByLoggedInUserWhereCanCreateInstanceOf(true);
+			if (this.formDefinitionsCanCreateInstanceOf != null) {
+				Collections.sort(this.formDefinitionsCanCreateInstanceOf, Comparator.comparing(Form::getTitle));
 			}
 
 			this.getLogger().info("FFC-Bean: PART-1-COMPLETE.");
@@ -98,12 +97,12 @@ public abstract class ABaseFormFieldAccessBean extends ABaseManagedBean {
 
 			//Set all the field definitions...
 			List<CompletableFuture> allAsyncs = new ArrayList<>();
+			final FormFieldClient formFieldClient = this.getFluidClientDS().getFormFieldClient();
+
 			for (Form formDef : allFormDefinitions) {
 				//Ignore any configuration [Form Definitions]...
 				String formDefTitle = formDef.getFormType();
-
-				if (this.getFormDefsToIgnore() != null &&
-						this.getFormDefsToIgnore().contains(formDefTitle)) {
+				if (this.getFormDefsToIgnore() != null && this.getFormDefsToIgnore().contains(formDefTitle)) {
 					continue;
 				}
 
@@ -111,39 +110,23 @@ public abstract class ABaseFormFieldAccessBean extends ABaseManagedBean {
 				CompletableFuture toAdd = CompletableFuture.runAsync(
 				() -> {
 					long starting = System.currentTimeMillis();
-					FormFieldClient formFieldClient = new FormFieldClient(
-							this.getConfigURLFromSystemProperty(),
-							serviceTicket);
-
 					List<Field> formFieldsForView = new ArrayList<>();
 					List<Field> formFieldsForEdit = new ArrayList<>();
 
-					this.setFieldsForEditAndViewing(
-							formFieldClient,
-							formDefTitle,
-							formFieldsForView,
-							formFieldsForEdit);
+					this.setFieldsForEditAndViewing(formFieldClient, formDefTitle, formFieldsForView, formFieldsForEdit);
 
-					formFieldClient.closeAndClean();
+					this.fieldsForViewing.put(formDefTitle, formFieldsForView);
+					this.fieldsForEditing.put(formDefTitle, formFieldsForEdit);
 
-					this.fieldsForViewing.put(
-							formDefTitle, formFieldsForView);
-					this.fieldsForEditing.put(
-							formDefTitle, formFieldsForEdit);
-
-					this.getLogger().info("FFC-Bean: PART-2-[{}]-COMPLETE TK({})",
-							formDefTitle,
+					this.getLogger().info("FFC-Bean: PART-2-[{}]-COMPLETE TK({})", formDefTitle,
 							(System.currentTimeMillis() - starting));
-
 					realtimeCounter += (System.currentTimeMillis() - starting);
 				});
-
 				allAsyncs.add(toAdd);
 			}
 
 			//We are waiting for all of them to complete...
 			CompletableFuture.allOf(allAsyncs.toArray(new CompletableFuture[]{})).join();
-
 			this.getLogger().info("FFC-Bean: PART-3-COMPLETE: {} millis. Total of {} items. " +
 							"Should have taken {}.",
 					(System.currentTimeMillis() - now),
@@ -154,12 +137,10 @@ public abstract class ABaseFormFieldAccessBean extends ABaseManagedBean {
 		} catch (Exception except) {
 			//log it...
 			this.getLogger().error(except.getMessage(), except);
-
 			FacesMessage fMsg = new FacesMessage(FacesMessage.SEVERITY_ERROR,
 					"Failed to populate.", except.getMessage());
 			FacesContext.getCurrentInstance().addMessage(null, fMsg);
 		} finally {
-			formDefinitionClient.closeAndClean();
 			this.getLogger().info("FFC-Bean: DONE");
 		}
 	}
@@ -243,8 +224,17 @@ public abstract class ABaseFormFieldAccessBean extends ABaseManagedBean {
 	 *
 	 * @return
 	 */
-	public Set<String> getFormDefinitionsCanCreateInstanceOf() {
+	public List<Form> getFormDefinitionsCanCreateInstanceOfSorted() {
 		return this.formDefinitionsCanCreateInstanceOf;
+	}
+
+	/**
+	 *
+	 * @return
+	 */
+	public int getNumberOfFormDefinitionsCanCreateInstanceOf() {
+		return (this.formDefinitionsCanCreateInstanceOf == null) ? 0 :
+				this.formDefinitionsCanCreateInstanceOf.size();
 	}
 
 	/**
@@ -329,11 +319,14 @@ public abstract class ABaseFormFieldAccessBean extends ABaseManagedBean {
 			return false;
 		}
 
-		Set<String> formDefs = this.getFormDefinitionsCanCreateInstanceOf();
+		List<Form> formDefs = this.getFormDefinitionsCanCreateInstanceOfSorted();
 		if (formDefs == null || formDefs.isEmpty()) {
 			return false;
 		}
 
-		return formDefs.contains(formToCheckForParam);
+		List<String> formDefTitles = formDefs.stream()
+				.map(itm -> itm.getTitle())
+				.collect(Collectors.toList());
+		return formDefTitles.contains(formToCheckForParam);
 	}
 }

@@ -18,7 +18,7 @@ package com.fluidbpm.fluidwebkit.infrastructure;
 import com.fluidbpm.fluidwebkit.ds.FluidClientDS;
 import com.fluidbpm.fluidwebkit.infrastructure.cache.ExitEventForFluidAPI;
 import com.fluidbpm.fluidwebkit.qualifier.WebKitResource;
-import com.fluidbpm.program.api.util.sql.ABaseSQLUtil;
+import com.fluidbpm.ws.client.v1.ABaseClientWS;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 
@@ -29,9 +29,8 @@ import java.util.concurrent.TimeUnit;
  * CDI for resources.
  */
 public class Resources {
-
 	private static final Cache<String, FluidClientDS> cacheFluidDS = CacheBuilder.newBuilder()
-			.expireAfterAccess(24, TimeUnit.HOURS)
+			.expireAfterAccess(3, TimeUnit.DAYS)
 			.removalListener(new ExitEventForFluidAPI())
 			.build();
 
@@ -40,8 +39,4 @@ public class Resources {
 	public Cache<String, FluidClientDS> getFluidClientDSCache() {
 		return Resources.cacheFluidDS;
 	}
-
-
-
-
 }

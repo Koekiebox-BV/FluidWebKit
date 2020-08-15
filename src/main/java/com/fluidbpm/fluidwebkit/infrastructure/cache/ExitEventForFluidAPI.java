@@ -35,14 +35,13 @@ public class ExitEventForFluidAPI implements RemovalListener {
 	 */
 	@Override
 	public void onRemoval(RemovalNotification notificationParam) {
-
 		Object oldVal = notificationParam.getValue();
-		if (oldVal instanceof Closeable) {
-			Closeable casted = (Closeable)oldVal;
+		if (oldVal instanceof AutoCloseable) {
+			AutoCloseable casted = (AutoCloseable)oldVal;
 			try {
 				casted.close();
-			} catch (IOException io) {
-				throw new FluidCacheException("Unable to close and cleanup '"+oldVal.getClass()+"'. "+io.getMessage());
+			} catch (Exception io) {
+				throw new FluidCacheException("Unable to close and cleanup '"+oldVal.getClass()+"'. "+io.getMessage(), io);
 			}
 		} else {
 			throw new FluidCacheException("Unable to process '"+oldVal.getClass()+"'.");

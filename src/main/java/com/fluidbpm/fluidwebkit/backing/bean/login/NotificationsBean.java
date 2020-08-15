@@ -17,29 +17,33 @@ package com.fluidbpm.fluidwebkit.backing.bean.login;
 
 import com.fluidbpm.fluidwebkit.backing.bean.ABaseManagedBean;
 import com.fluidbpm.fluidwebkit.exception.WebSessionExpiredException;
+import com.fluidbpm.program.api.util.UtilGlobal;
 import com.fluidbpm.program.api.vo.user.UserNotification;
 import com.fluidbpm.ws.client.FluidClientException;
 import com.fluidbpm.ws.client.v1.user.UserNotificationClient;
 
 import javax.annotation.PostConstruct;
+import javax.enterprise.context.SessionScoped;
 import javax.faces.application.FacesMessage;
 import javax.faces.context.FacesContext;
+import javax.inject.Named;
+import java.text.SimpleDateFormat;
 import java.util.List;
 
 /**
  * Bean to handle Fluid notifications.
- *
- * @author jasonbruwer on 2018-09-06
- * @since 1.0
- *
  * @see UserNotification
  */
-public abstract class ABaseNotificationsBean extends ABaseManagedBean {
+@SessionScoped
+@Named("webKitNotificationsBean")
+public class NotificationsBean extends ABaseManagedBean {
 	protected static final int MAX_COUNT_UNREAD = 10;
 	protected static final int MAX_COUNT_READ = 200;
 
 	private List<UserNotification> unreadUserNotifications;
 	private List<UserNotification> readUserNotifications;
+
+	private SimpleDateFormat dateSDF;
 
 	/**
 	 * When the bean is initialized, the pending notifications will be fetched.
@@ -47,6 +51,37 @@ public abstract class ABaseNotificationsBean extends ABaseManagedBean {
 	@PostConstruct
 	public void initBean() {
 		this.actionUpdateNotifications();
+		this.dateSDF = new SimpleDateFormat(this.getDateFormat());
+	}
+
+	public String getDescriptionForType(int notiType) {
+		switch (notiType) {
+			case UserNotification.UserNotificationType.GLOBAL: return "Global";
+			case UserNotification.UserNotificationType.EMAIL_PROCESSED: return "Email Processed";
+			case UserNotification.UserNotificationType.COLLEAGUE_COLLABORATION: return "Collaboration";
+			case UserNotification.UserNotificationType.VERSION_RELEASE: return "Version Release";
+			case UserNotification.UserNotificationType.SYSTEM_ADMINISTRATIVE_CHANGE: return "Admin Change";
+			case UserNotification.UserNotificationType.CRITICAL: return "Critical";
+			default: return UtilGlobal.EMPTY;
+		}
+	}
+
+	public String getPFIconForType(int notiType) {
+		switch (notiType) {
+			case UserNotification.UserNotificationType.GLOBAL: return "pi-globe";
+			case UserNotification.UserNotificationType.EMAIL_PROCESSED: return "pi-cog";
+			case UserNotification.UserNotificationType.COLLEAGUE_COLLABORATION: return "pi-users";
+			case UserNotification.UserNotificationType.VERSION_RELEASE: return "pi-github";
+			case UserNotification.UserNotificationType.SYSTEM_ADMINISTRATIVE_CHANGE: return "pi-id-card";
+			case UserNotification.UserNotificationType.CRITICAL: return "pi-exclamation-circle";
+			default: return UtilGlobal.EMPTY;
+		}
+	}
+
+	public String getUnreadDisplayDescriptionForType(UserNotification userNotification) {
+		return String.format("<strong>%s</strong> - %s",
+				this.getDescriptionForType(userNotification.getUserNotificationType()),
+				this.dateSDF.format(userNotification.getDateCreated()));
 	}
 
 	/**
@@ -55,17 +90,13 @@ public abstract class ABaseNotificationsBean extends ABaseManagedBean {
 	 * When notifications are to be retrieved.
 	 */
 	public void actionUpdateNotifications() {
-		//Fluid Clients...
-		UserNotificationClient userNotificationsClient = null;
-
-		try {
-			userNotificationsClient = new UserNotificationClient(
-					this.getConfigURLFromSystemProperty(),
-					this.getLoggedInUser().getServiceTicket());
-
-		} catch (WebSessionExpiredException wse){
+		if (this.getFluidClientDS() == null) {
 			return;
 		}
+
+		//Fluid Clients...
+		UserNotificationClient userNotificationsClient =
+				this.getFluidClientDS().getUserNotificationClient();
 
 		this.unreadUserNotifications = null;
 		this.readUserNotifications = null;
@@ -74,11 +105,9 @@ public abstract class ABaseNotificationsBean extends ABaseManagedBean {
 			//Read...
 			try {
 				this.unreadUserNotifications =
-						userNotificationsClient.getAllUnReadByLoggedInUser(
-								MAX_COUNT_READ,0);
+						userNotificationsClient.getAllUnReadByLoggedInUser(MAX_COUNT_READ,0);
 			} catch (FluidClientException fce) {
-				if(fce.getErrorCode() != FluidClientException.ErrorCode.NO_RESULT)
-				{
+				if (fce.getErrorCode() != FluidClientException.ErrorCode.NO_RESULT) {
 					throw fce;
 				}
 			}
@@ -86,23 +115,18 @@ public abstract class ABaseNotificationsBean extends ABaseManagedBean {
 			//Unread...
 			try {
 				this.readUserNotifications =
-						userNotificationsClient.getAllReadByLoggedInUser(
-								MAX_COUNT_UNREAD,0);
+						userNotificationsClient.getAllReadByLoggedInUser(MAX_COUNT_UNREAD,0);
 			} catch (FluidClientException fce) {
-				if(fce.getErrorCode() != FluidClientException.ErrorCode.NO_RESULT)
-				{
+				if (fce.getErrorCode() != FluidClientException.ErrorCode.NO_RESULT) {
 					throw fce;
 				}
 			}
 		} catch (Exception except) {
 			this.getLogger().error("Unable to fetch Notifications. "+except.getMessage(),except);
-
 			FacesContext.getCurrentInstance().addMessage(null,
 					new FacesMessage(FacesMessage.SEVERITY_ERROR,
 							"Unable to fetch Notifications.",
 							except.getMessage()));
-		} finally {
-			userNotificationsClient.closeAndClean();
 		}
 	}
 
@@ -110,15 +134,14 @@ public abstract class ABaseNotificationsBean extends ABaseManagedBean {
 	 * Action to mark the unread notifications as read.
 	 */
 	public void actionMarkUnreadNotificationsAsRead() {
-		//Fluid Clients...
-		final UserNotificationClient userNotificationsClient =
-				new UserNotificationClient(
-						this.getConfigURLFromSystemProperty(),
-						this.getLoggedInUser().getServiceTicket());
+		if (this.getFluidClientDS() == null) {
+			return;
+		}
 
+		//Fluid Clients...
+		final UserNotificationClient userNotificationsClient = this.getFluidClientDS().getUserNotificationClient();
 		try {
-			if(this.getUnreadUserNotifications() == null ||
-					this.getUnreadUserNotifications().isEmpty()) {
+			if (this.getUnreadUserNotifications() == null || this.getUnreadUserNotifications().isEmpty()) {
 				return;
 			}
 
@@ -128,13 +151,10 @@ public abstract class ABaseNotificationsBean extends ABaseManagedBean {
 			});
 		} catch (Exception except) {
 			this.getLogger().error("Unable to mark Notifications as READ. "+except.getMessage(),except);
-
 			FacesContext.getCurrentInstance().addMessage(null,
 					new FacesMessage(FacesMessage.SEVERITY_ERROR,
 							"Unable to mark Notifications as READ. ",
 							except.getMessage()));
-		} finally {
-			userNotificationsClient.closeAndClean();
 		}
 	}
 
@@ -163,6 +183,15 @@ public abstract class ABaseNotificationsBean extends ABaseManagedBean {
 	public int getNumberOfReadNotifications() {
 		return (this.readUserNotifications == null ? 0:
 				this.readUserNotifications.size());
+	}
+
+	/**
+	 *
+	 * @return
+	 */
+	public boolean isNoUserNotifications() {
+		return this.getNumberOfReadNotifications() < 1 &&
+				this.getNumberOfUnreadNotifications() < 1;
 	}
 
 	/**
