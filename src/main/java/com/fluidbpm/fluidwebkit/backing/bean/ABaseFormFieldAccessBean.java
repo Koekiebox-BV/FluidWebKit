@@ -72,7 +72,6 @@ public abstract class ABaseFormFieldAccessBean extends ABaseManagedBean {
 		}
 
 		realtimeCounter = 0;
-		this.getLogger().info("FFC-Bean: Starting Caching.");
 		FormDefinitionClient formDefinitionClient = this.getFluidClientDS().getFormDefinitionClient();
 
 		this.fieldsForViewing = new Hashtable<>();
@@ -82,6 +81,11 @@ public abstract class ABaseFormFieldAccessBean extends ABaseManagedBean {
 		try {
 			this.formDefinitionsCanCreateInstanceOf = formDefinitionClient.getAllByLoggedInUserWhereCanCreateInstanceOf(true);
 			if (this.formDefinitionsCanCreateInstanceOf != null) {
+				if (this.getFormDefsToIgnore() != null) {
+					this.formDefinitionsCanCreateInstanceOf = this.formDefinitionsCanCreateInstanceOf.stream()
+							.filter(itm -> !this.getFormDefsToIgnore().contains(itm.getFormType()))
+							.collect(Collectors.toList());
+				}
 				Collections.sort(this.formDefinitionsCanCreateInstanceOf, Comparator.comparing(Form::getTitle));
 			}
 
@@ -118,8 +122,8 @@ public abstract class ABaseFormFieldAccessBean extends ABaseManagedBean {
 					this.fieldsForViewing.put(formDefTitle, formFieldsForView);
 					this.fieldsForEditing.put(formDefTitle, formFieldsForEdit);
 
-					this.getLogger().info("FFC-Bean: PART-2-[{}]-COMPLETE TK({})", formDefTitle,
-							(System.currentTimeMillis() - starting));
+					this.getLogger().info(String.format("FFC-Bean: PART-2-[%s]-COMPLETE TK(%d)",
+							formDefTitle, (System.currentTimeMillis() - starting)));
 					realtimeCounter += (System.currentTimeMillis() - starting);
 				});
 				allAsyncs.add(toAdd);
@@ -127,19 +131,14 @@ public abstract class ABaseFormFieldAccessBean extends ABaseManagedBean {
 
 			//We are waiting for all of them to complete...
 			CompletableFuture.allOf(allAsyncs.toArray(new CompletableFuture[]{})).join();
-			this.getLogger().info("FFC-Bean: PART-3-COMPLETE: {} millis. Total of {} items. " +
-							"Should have taken {}.",
+			this.getLogger().info(String.format("FFC-Bean: PART-3-COMPLETE: %d millis. Total of %d items. Should have taken %d.",
 					(System.currentTimeMillis() - now),
 					this.fieldsForViewing.size(),
-					realtimeCounter);
+					realtimeCounter));
 
 			this.fieldCachingDone = true;
 		} catch (Exception except) {
-			//log it...
-			this.getLogger().error(except.getMessage(), except);
-			FacesMessage fMsg = new FacesMessage(FacesMessage.SEVERITY_ERROR,
-					"Failed to populate.", except.getMessage());
-			FacesContext.getCurrentInstance().addMessage(null, fMsg);
+			this.raiseError(except);
 		} finally {
 			this.getLogger().info("FFC-Bean: DONE");
 		}
@@ -175,8 +174,8 @@ public abstract class ABaseFormFieldAccessBean extends ABaseManagedBean {
 	 * @return
 	 */
 	public Field getFieldBy(
-			String formDefinitionParam,
-			String formFieldParam
+		String formDefinitionParam,
+		String formFieldParam
 	) {
 		if (formDefinitionParam == null || formDefinitionParam.trim().isEmpty()) {
 			return null;

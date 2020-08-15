@@ -16,7 +16,6 @@
 package com.fluidbpm.fluidwebkit.backing.bean.login;
 
 import com.fluidbpm.fluidwebkit.backing.bean.ABaseManagedBean;
-import com.fluidbpm.fluidwebkit.backing.bean.login.ldap.LDAP;
 import com.fluidbpm.fluidwebkit.backing.utility.Globals;
 import com.fluidbpm.fluidwebkit.ds.FluidClientDS;
 import com.fluidbpm.fluidwebkit.exception.ClientDashboardException;
@@ -26,11 +25,9 @@ import com.fluidbpm.program.api.vo.user.UserFieldListing;
 import com.fluidbpm.program.api.vo.ws.auth.AppRequestToken;
 import com.fluidbpm.ws.client.FluidClientException;
 import com.fluidbpm.ws.client.v1.user.LoginClient;
-import com.fluidbpm.ws.client.v1.user.UserClient;
 
 import javax.faces.application.FacesMessage;
 import javax.faces.context.FacesContext;
-import javax.inject.Inject;
 import javax.servlet.http.HttpSession;
 import java.util.Map;
 
@@ -121,7 +118,6 @@ public abstract class ABaseLoginBean extends ABaseManagedBean {
 			}
 		} catch (FluidClientException fce) {
 			this.getLogger().error(fce.getMessage(), fce);
-
 			if (FluidClientException.ErrorCode.LOGIN_FAILURE == fce.getErrorCode()) {
 				FacesMessage fMsg = new FacesMessage(FacesMessage.SEVERITY_ERROR,
 						"Failed to Login.", "");
@@ -151,30 +147,6 @@ public abstract class ABaseLoginBean extends ABaseManagedBean {
 		sessionMap.put(SessionVariable.USER, user);
 
 		return Outcome.DASHBOARD;
-	}
-
-	/**
-	 * Log a user into the Dashboard using LDAP protocol.
-	 * 
-	 * action="#{loginBean.actionLoginLDAP}"
-	 *
-	 * @return navigation {@code dashboard}
-	 */
-	public String actionLoginLDAP() {
-		try {
-			LDAP.authenticateLDAP(
-					this.getInputUsername(),
-					this.getInputPassword());
-			this.getLogger().info("LDAP LOGIN IS GOOD -> !");
-		} catch (Exception exception) {
-			this.getLogger().error("Unable to login through LDAP. " +
-					exception.getMessage(),exception);
-			FacesMessage fMsg = new FacesMessage(FacesMessage.SEVERITY_ERROR,
-					"Failed to Login. ", exception.getMessage());
-			FacesContext.getCurrentInstance().addMessage(null, fMsg);
-		}
-
-		return null;
 	}
 
 	/**

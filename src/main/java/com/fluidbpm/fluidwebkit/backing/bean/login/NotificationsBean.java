@@ -16,16 +16,15 @@
 package com.fluidbpm.fluidwebkit.backing.bean.login;
 
 import com.fluidbpm.fluidwebkit.backing.bean.ABaseManagedBean;
-import com.fluidbpm.fluidwebkit.exception.WebSessionExpiredException;
 import com.fluidbpm.program.api.util.UtilGlobal;
 import com.fluidbpm.program.api.vo.user.UserNotification;
 import com.fluidbpm.ws.client.FluidClientException;
 import com.fluidbpm.ws.client.v1.user.UserNotificationClient;
+import lombok.Getter;
+import lombok.Setter;
 
 import javax.annotation.PostConstruct;
 import javax.enterprise.context.SessionScoped;
-import javax.faces.application.FacesMessage;
-import javax.faces.context.FacesContext;
 import javax.inject.Named;
 import java.text.SimpleDateFormat;
 import java.util.List;
@@ -37,13 +36,34 @@ import java.util.List;
 @SessionScoped
 @Named("webKitNotificationsBean")
 public class NotificationsBean extends ABaseManagedBean {
-	protected static final int MAX_COUNT_UNREAD = 10;
+	public static final int MAX_COUNT_UNREAD = 15;
 	protected static final int MAX_COUNT_READ = 200;
 
+	@Getter
+	@Setter
 	private List<UserNotification> unreadUserNotifications;
+
+	@Getter
+	@Setter
 	private List<UserNotification> readUserNotifications;
 
-	private SimpleDateFormat dateSDF;
+	@Getter
+	@Setter
+	private NotificationState notificationState = NotificationState.Unknown;
+
+	@Getter
+	@Setter
+	private long lastNotificationFetch = 0l;
+
+	private SimpleDateFormat dateTimeSDF;
+
+	public static enum NotificationState {
+		Unknown,
+		AllRead,
+		UnreadNotifications,
+		UnreadNotificationsFull,
+		NoNotifications
+	}
 
 	/**
 	 * When the bean is initialized, the pending notifications will be fetched.
@@ -51,7 +71,7 @@ public class NotificationsBean extends ABaseManagedBean {
 	@PostConstruct
 	public void initBean() {
 		this.actionUpdateNotifications();
-		this.dateSDF = new SimpleDateFormat(this.getDateFormat());
+		this.dateTimeSDF = new SimpleDateFormat(this.getDateAndTimeFormat());
 	}
 
 	public String getDescriptionForType(int notiType) {
@@ -81,7 +101,7 @@ public class NotificationsBean extends ABaseManagedBean {
 	public String getUnreadDisplayDescriptionForType(UserNotification userNotification) {
 		return String.format("<strong>%s</strong> - %s",
 				this.getDescriptionForType(userNotification.getUserNotificationType()),
-				this.dateSDF.format(userNotification.getDateCreated()));
+				this.dateTimeSDF.format(userNotification.getDateCreated()));
 	}
 
 	/**
@@ -91,13 +111,13 @@ public class NotificationsBean extends ABaseManagedBean {
 	 */
 	public void actionUpdateNotifications() {
 		if (this.getFluidClientDS() == null) {
+			this.lastNotificationFetch = System.currentTimeMillis();
 			return;
 		}
 
 		//Fluid Clients...
 		UserNotificationClient userNotificationsClient =
 				this.getFluidClientDS().getUserNotificationClient();
-
 		this.unreadUserNotifications = null;
 		this.readUserNotifications = null;
 
@@ -106,6 +126,9 @@ public class NotificationsBean extends ABaseManagedBean {
 			try {
 				this.unreadUserNotifications =
 						userNotificationsClient.getAllUnReadByLoggedInUser(MAX_COUNT_READ,0);
+				if (this.unreadUserNotifications.size() > MAX_COUNT_UNREAD) {
+					this.unreadUserNotifications = this.unreadUserNotifications.subList(0, MAX_COUNT_UNREAD);
+				}
 			} catch (FluidClientException fce) {
 				if (fce.getErrorCode() != FluidClientException.ErrorCode.NO_RESULT) {
 					throw fce;
@@ -122,11 +145,10 @@ public class NotificationsBean extends ABaseManagedBean {
 				}
 			}
 		} catch (Exception except) {
-			this.getLogger().error("Unable to fetch Notifications. "+except.getMessage(),except);
-			FacesContext.getCurrentInstance().addMessage(null,
-					new FacesMessage(FacesMessage.SEVERITY_ERROR,
-							"Unable to fetch Notifications.",
-							except.getMessage()));
+			this.raiseError(except);
+		} finally {
+			this.updateStateBasedOnNotifications();
+			this.lastNotificationFetch = System.currentTimeMillis();
 		}
 	}
 
@@ -139,22 +161,18 @@ public class NotificationsBean extends ABaseManagedBean {
 		}
 
 		//Fluid Clients...
-		final UserNotificationClient userNotificationsClient = this.getFluidClientDS().getUserNotificationClient();
 		try {
 			if (this.getUnreadUserNotifications() == null || this.getUnreadUserNotifications().isEmpty()) {
 				return;
 			}
 
+			final UserNotificationClient userNotificationsClient = this.getFluidClientDS().getUserNotificationClient();
 			//Mark the notifications as READ...
 			this.getUnreadUserNotifications().forEach(unreadMsg -> {
 				userNotificationsClient.markUserNotificationAsRead(unreadMsg);
 			});
 		} catch (Exception except) {
-			this.getLogger().error("Unable to mark Notifications as READ. "+except.getMessage(),except);
-			FacesContext.getCurrentInstance().addMessage(null,
-					new FacesMessage(FacesMessage.SEVERITY_ERROR,
-							"Unable to mark Notifications as READ. ",
-							except.getMessage()));
+			this.raiseError(except);
 		}
 	}
 
@@ -186,6 +204,14 @@ public class NotificationsBean extends ABaseManagedBean {
 	}
 
 	/**
+	 * Getter for number of notifications.
+	 * @return int count for notifications.
+	 */
+	public int getTotalNumberOfNotifications() {
+		return (this.getNumberOfReadNotifications() + this.getNumberOfUnreadNotifications());
+	}
+
+	/**
 	 *
 	 * @return
 	 */
@@ -195,42 +221,24 @@ public class NotificationsBean extends ABaseManagedBean {
 	}
 
 	/**
-	 * Getter for unread notifications.
-	 *
-	 * @return Unread user notifications.
-	 *
-	 * @see UserNotification
+	 * Update the current state of notifications.
 	 */
-	public List<UserNotification> getUnreadUserNotifications() {
-		return this.unreadUserNotifications;
-	}
+	public void updateStateBasedOnNotifications() {
+		if (this.isNoUserNotifications()) {
+			this.setNotificationState(NotificationState.NoNotifications);
+			return;
+		}
 
-	/**
-	 * Setter for unread notifications.
-	 *
-	 * @param unreadUserNotificationsParam Unread user notifications.
-	 *
-	 * @see UserNotification
-	 */
-	public void setUnreadUserNotifications(List<UserNotification> unreadUserNotificationsParam) {
-		this.unreadUserNotifications = unreadUserNotificationsParam;
-	}
+		if (this.getNumberOfUnreadNotifications() >= MAX_COUNT_UNREAD) {
+			this.setNotificationState(NotificationState.UnreadNotificationsFull);
+			return;
+		}
 
-	/**
-	 * Getter for read notifications.
-	 *
-	 * @return Read user notifications.
-	 */
-	public List<UserNotification> getReadUserNotifications() {
-		return this.readUserNotifications;
-	}
+		if (this.getNumberOfUnreadNotifications() > 0) {
+			this.setNotificationState(NotificationState.UnreadNotifications);
+			return;
+		}
 
-	/**
-	 * Setter for read notifications.
-	 *
-	 * @param readUserNotificationsParam Read user notifications.
-	 */
-	public void setReadUserNotifications(List<UserNotification> readUserNotificationsParam) {
-		this.readUserNotifications = readUserNotificationsParam;
+		this.setNotificationState(NotificationState.AllRead);
 	}
 }

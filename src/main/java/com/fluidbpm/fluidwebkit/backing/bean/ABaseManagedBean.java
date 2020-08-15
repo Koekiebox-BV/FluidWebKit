@@ -18,21 +18,22 @@ package com.fluidbpm.fluidwebkit.backing.bean;
 import com.fluidbpm.GitDescribe;
 import com.fluidbpm.fluidwebkit.backing.bean.logger.ILogger;
 import com.fluidbpm.fluidwebkit.backing.utility.Globals;
+import com.fluidbpm.fluidwebkit.backing.utility.RaygunUtil;
 import com.fluidbpm.fluidwebkit.ds.FluidClientDS;
 import com.fluidbpm.fluidwebkit.ds.FluidClientPool;
 import com.fluidbpm.fluidwebkit.exception.ClientDashboardException;
 import com.fluidbpm.fluidwebkit.exception.WebSessionExpiredException;
 import com.fluidbpm.program.api.vo.field.Field;
 import com.fluidbpm.program.api.vo.user.User;
-import com.fluidbpm.program.api.vo.ws.auth.AppRequestToken;
 import com.fluidbpm.ws.client.v1.user.LoginClient;
 import lombok.Getter;
 import lombok.Setter;
-import org.primefaces.PrimeFaces;
 
+import javax.faces.application.FacesMessage;
 import javax.faces.context.ExternalContext;
 import javax.faces.context.FacesContext;
 import javax.inject.Inject;
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import java.io.IOException;
@@ -52,9 +53,6 @@ import java.util.concurrent.TimeUnit;
 public abstract class ABaseManagedBean implements Serializable {
 	private final int pageSize = 15;
 
-	//App Request Token...
-	protected AppRequestToken configUserAppRequestToken;
-
 	@Inject
 	@Getter
 	private transient FluidClientPool fcp;
@@ -63,9 +61,58 @@ public abstract class ABaseManagedBean implements Serializable {
 	@Setter
 	private String dialogHeaderTitle;
 
+	@Getter
+	@Setter
+	private String sessionIdFallback;
+
 	public static final String CONFIG_USER_GLOBAL_ID = "FCP_CONFIG_USER";
 	private static Long LAST_TIME_CONF_LOGGED_IN = 0L;
 	private static int LOGIN_DURATION_HOURS = 4;
+
+	/**
+	 * Get the standard Raygun error tag.
+	 *
+	 * @return Standard Raygun UI tag.
+	 */
+	public String getRaygunUITag() {
+		return "FluidWebKit";
+	}
+
+	/**
+	 * @param exception
+	 */
+	public void raiseError(Exception exception) {
+		this.getLogger().error(exception.getMessage(), exception);
+		if (RaygunUtil.isRaygunEnabled()) {
+			new RaygunUtil(this.getRaygunUITag()).raiseErrorToRaygun(exception, this.getLoggedInUserSafe());
+		}
+		FacesMessage fMsg = new FacesMessage(
+				FacesMessage.SEVERITY_ERROR, "Failed.", exception.getMessage());
+		FacesContext.getCurrentInstance().addMessage(null, fMsg);
+	}
+
+
+	/**
+	 *
+	 * @param exception
+	 * @param httpServletRequest
+	 * @param httpServletResponse
+	 */
+	public void raiseError(
+		Exception exception,
+		HttpServletRequest httpServletRequest,
+		HttpServletResponse httpServletResponse
+	) {
+		this.getLogger().error(exception.getMessage(), exception);
+		if (!RaygunUtil.isRaygunEnabled()) {
+			return;
+		}
+
+		new RaygunUtil(this.getRaygunUITag()).raiseErrorToRaygun(
+				exception,
+				httpServletRequest,
+				httpServletResponse);
+	}
 
 	/**
 	 * Outcome JSF navigation outcomes.
@@ -140,6 +187,13 @@ public abstract class ABaseManagedBean implements Serializable {
 	public static class SessionVariable {
 		//User...
 		public static final String USER = "user";
+
+		//User Browser
+		public static final String USER_BROWSER_WINDOW_WIDTH = "ub_window_width";
+		public static final String USER_BROWSER_WINDOW_HEIGHT = "ub_window_height";
+
+		//Push Servlet...
+		public static final String PUSH_SERVLET_EVENT_BUS = "push_servlet_event_bus";
 	}
 
 	/**
@@ -168,6 +222,7 @@ public abstract class ABaseManagedBean implements Serializable {
 				System.err.print(getPrefix());
 				System.err.printf("%s . %s", details, exception.getMessage());
 				System.err.println();
+				exception.printStackTrace();
 			}
 
 			private String getPrefix() {
@@ -347,13 +402,20 @@ public abstract class ABaseManagedBean implements Serializable {
 	protected String getSessionId() {
 		HttpSession session = this.getHttpSession();
 		if (session == null) {
+			if (this.getSessionIdFallback() != null) {
+				return this.getSessionIdFallback();
+			}
 			return null;
 		}
 		return session.getId();
 	}
 
 	public FluidClientDS getFluidClientDS() {
-		return this.fcp.get(this.getSessionId());
+		try {
+			return this.fcp.get(this.getSessionId());
+		} catch (WebSessionExpiredException weExcept) {
+			return null;
+		}
 	}
 
 	public FluidClientDS getFluidClientDSConfig() {
@@ -664,51 +726,5 @@ public abstract class ABaseManagedBean implements Serializable {
 	 */
 	protected String getConfigUserPasswordProperty() {
 		return Globals.getConfigUserPasswordProperty();
-	}
-
-	/**
-	 *
-	 * @param roleParam
-	 * @return
-	 */
-	protected boolean doesUserHaveAccessToRole(String roleParam) {
-		if (this.getLoggedInUser().getUsername().equals("admin")) {
-			return true;
-		}
-
-		return this.getLoggedInUser().doesUserHaveAccessToRole(roleParam);
-	}
-
-	/**
-	 *
-	 * @return
-	 */
-	public AppRequestToken getConfigUserAppRequestToken() {
-		return this.configUserAppRequestToken;
-	}
-
-	/**
-	 * Execute the JavaScript on the users browser.
-	 *
-	 * @param javascriptParam
-	 */
-	public void executeJavaScript(String javascriptParam) {
-		if (javascriptParam == null || javascriptParam.trim().isEmpty()) {
-			return;
-		}
-
-		//For PF 6.1
-		//RequestContext.getCurrentInstance().execute(javascriptParam);
-
-		//For PF 6.2
-		PrimeFaces.current().executeScript(javascriptParam);
-	}
-
-	/**
-	 * Retrieve the FusionReactor script for tracking user experience.
-	 * @return JS for user tracking
-	 */
-	public String getFRUserTrackingScript() {
-		return Globals.getFRUserTrackingScript();
 	}
 }

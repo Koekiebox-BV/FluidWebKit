@@ -17,18 +17,21 @@ package com.fluidbpm.fluidwebkit.backing.bean.login;
 
 import com.fluidbpm.fluidwebkit.backing.bean.ABaseManagedBean;
 import com.fluidbpm.program.api.vo.user.User;
+import com.fluidbpm.program.api.vo.user.UserFieldListing;
 import com.fluidbpm.ws.client.v1.user.UserClient;
+import lombok.Getter;
+import lombok.Setter;
 import org.primefaces.model.DefaultStreamedContent;
 import org.primefaces.model.StreamedContent;
 
 import javax.enterprise.context.SessionScoped;
-import javax.faces.application.FacesMessage;
 import javax.faces.context.FacesContext;
 import javax.faces.event.PhaseId;
 import javax.inject.Named;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
 
 /**
  * Bean to handle user profile related operations.
@@ -36,6 +39,11 @@ import java.io.InputStream;
 @SessionScoped
 @Named("webKitProfileBean")
 public class ProfileBean extends ABaseManagedBean {
+
+	@Getter
+	@Setter
+	private String inputEmailToAdd;
+
 	/**
 	 * Return the currently logged in users Gravator as {@code StreamedContent}
 	 *
@@ -43,18 +51,29 @@ public class ProfileBean extends ABaseManagedBean {
 	 * @see StreamedContent
 	 */
 	public StreamedContent getUserProfileImageForLoggedInUser() {
-		return this.getUserProfileImageForUser(this.getLoggedInUserSafe());
+		return this.getUserProfileImageForUser(this.getLoggedInUserSafe(), 45);
+	}
+
+	/**
+	 * Return the currently logged in users Gravator as {@code StreamedContent}
+	 *
+	 * @return StreamedContent
+	 * @see StreamedContent
+	 */
+	public StreamedContent getUserProfileImageForLoggedInUserLarger() {
+		return this.getUserProfileImageForUser(this.getLoggedInUserSafe(), 250);
 	}
 
 	/**
 	 * Return the {@code user} User Gravator as {@code StreamedContent}
 	 *
 	 * @param user User to retrieve profile image for.
+	 * @param size The width.
 	 * @return StreamedContent
 	 * @see StreamedContent
 	 * @see User
 	 */
-	public StreamedContent getUserProfileImageForUser(User user) {
+	public StreamedContent getUserProfileImageForUser(User user, int size) {
 		if (user == null || (user.getId() == null || user.getId() < 1L)) {
 			return new DefaultStreamedContent();
 		}
@@ -70,14 +89,14 @@ public class ProfileBean extends ABaseManagedBean {
 			UserClient userClient = this.getFluidClientDS().getUserClient();
 			//Get the bytes by user...
 			try {
-				final byte[] imageBytes = userClient.getGravatarForUser(user, 45);
+				final byte[] imageBytes = userClient.getGravatarForUser(user, size);
 				if (imageBytes == null || imageBytes.length < 1) {
 					return this.getNoGravatarStreamContent();
 				}
 
 				return DefaultStreamedContent.builder()
 						.stream(() -> new ByteArrayInputStream(imageBytes))
-						.name(String.format("profile_image_%d.jpg", user.getId()))
+						.name(String.format("profile_image_%d_%d.jpg", user.getId(), size))
 						.contentType("image/jpeg")
 						.contentLength(imageBytes.length)
 						.build();
@@ -94,7 +113,7 @@ public class ProfileBean extends ABaseManagedBean {
 	 * @return new instance of {@code DefaultStreamedContent}.
 	 */
 	protected DefaultStreamedContent getNoGravatarStreamContent() {
-		String path = "/image/no_profile_logo.png";
+		String path = "/image/no_profile_logo.svg";
 		try {
 			InputStream inputStream = getClass().getClassLoader().getResourceAsStream(path);
 			if (inputStream == null) {
@@ -104,20 +123,31 @@ public class ProfileBean extends ABaseManagedBean {
 			return DefaultStreamedContent.builder()
 					.stream(() -> inputStream)
 					.name("no_profile_logo.png")
-					.contentType("image/png")
+					.contentType("image/svg+xml")
 					.build();
 		} catch (IOException ioExcept) {
-			FacesMessage fMsg = new FacesMessage(
-					FacesMessage.SEVERITY_ERROR, "Failed. " + ioExcept.getMessage(), "");
-			FacesContext.getCurrentInstance().addMessage(null, fMsg);
+			this.raiseError(ioExcept);
 			return null;
 		}
 	}
 
 	/**
-	 *
+	 * Prepare to display profile for user.
 	 */
 	public void actionPrepareLoggedInUserProfileDialog() {
+		try {
+			final UserClient userClient = this.getFluidClientDS().getUserClient();
 
+			//User Fields...
+			User userFromWS = userClient.getUserById(this.getLoggedInUser().getId());
+			UserFieldListing ufList = userClient.getAllUserFieldValuesByUser(userFromWS);
+			userFromWS.setUserFields(ufList.isListingEmpty() ? new ArrayList(): ufList.getListing());
+
+			//Update the logged in user fields...
+			this.getLoggedInUser().setUserFields(userFromWS.getUserFields());
+			this.setDialogHeaderTitle(String.format("Profile - %s", this.getLoggedInUserUsername()));
+		} catch (Exception err) {
+			this.raiseError(err);
+		}
 	}
 }

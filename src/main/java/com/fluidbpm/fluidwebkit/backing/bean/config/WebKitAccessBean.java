@@ -19,12 +19,14 @@ import com.fluidbpm.ws.client.v1.user.LoginClient;
 
 import javax.annotation.PostConstruct;
 import javax.enterprise.context.ApplicationScoped;
+import javax.enterprise.context.SessionScoped;
 import javax.inject.Named;
 import java.util.List;
 
 /**
  * Bean storing all access for the logged in user.
  */
+@SessionScoped
 @Named("webKitAccess")
 public class WebKitAccessBean extends ABaseFormFieldAccessBean {
 
@@ -34,6 +36,7 @@ public class WebKitAccessBean extends ABaseFormFieldAccessBean {
 	 */
 	@Override
 	protected List<String> getFormDefsToIgnore() {
+		//TODO need to fetch this from the web kit client...
 		return null;
 	}
 }

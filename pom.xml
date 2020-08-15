@@ -46,6 +46,22 @@
 	</scm>
 
 	<dependencies>
+		<!--Raygun - https://mvnrepository.com/artifact/com.mindscapehq/core -->
+		<dependency>
+			<groupId>com.mindscapehq</groupId>
+			<artifactId>core</artifactId>
+			<version>3.0.0</version>
+			<scope>provided</scope>
+		</dependency>
+
+		<!--Raygun - https://mvnrepository.com/artifact/com.mindscapehq/webprovider -->
+		<dependency>
+			<groupId>com.mindscapehq</groupId>
+			<artifactId>webprovider</artifactId>
+			<version>3.0.0</version>
+			<scope>provided</scope>
+		</dependency>
+
 		<!--JUnit Testing-->
 		<dependency>
 			<groupId>junit</groupId>
