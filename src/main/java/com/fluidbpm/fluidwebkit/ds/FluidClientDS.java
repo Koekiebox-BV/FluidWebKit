@@ -127,6 +127,8 @@ public class FluidClientDS implements Closeable {
 			return new UserNotificationClient(this.endpoint, this.serviceTicket);
 		} else if (clazz.isAssignableFrom(FormDefinitionClient.class)) {
 			return new FormDefinitionClient(this.endpoint, this.serviceTicket);
+		}  else if (clazz.isAssignableFrom(FormFieldClient.class)) {
+			return new FormFieldClient(this.endpoint, this.serviceTicket);
 		}
 
 		return null;
