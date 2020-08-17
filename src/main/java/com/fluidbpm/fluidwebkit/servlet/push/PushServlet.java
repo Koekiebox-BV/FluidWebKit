@@ -33,6 +33,7 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.Date;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -53,10 +54,19 @@ public class PushServlet extends HttpServlet {
 	@Inject
 	private transient NotificationsBean notificationsBean;
 
-	private static final long WAIT_TIME_NOTI_FETCH_MILLIS = TimeUnit.SECONDS.toMillis(60);
+	private static final long WAIT_TIME_NOTI_FETCH_MILLIS = TimeUnit.SECONDS.toMillis(5);
 
 	public static final class ErrorCode {
 		public static final int USER_NOT_LOGGED_IN = 1;
+	}
+
+	/**
+	 *
+	 */
+	public static class Commands {
+		public static final String NONE = "none";
+		//Refresh User Notification...
+		public static final String REFRESH_USER_NOTIFICATION = "refresh_user_notification";
 	}
 
 	/**
@@ -135,14 +145,13 @@ public class PushServlet extends HttpServlet {
 			} else {
 				//User Logged in...
 				this.notificationsBean.setSessionIdFallback(httpSession.getId());
-				PushSessionUtil pushSessionUtil = new PushSessionUtil();
 				boolean anyProcessed = false;
 
 				//Check and Notify of any new User Notifications...
 				anyProcessed = this.processWindowSize(httpServletRequestParam, httpSession) ? true: anyProcessed;
-				anyProcessed = this.processUserNotifications(httpServletRequestParam, httpSession) ? true: anyProcessed;
+				anyProcessed = this.processUserNotifications(returnObject) ? true: anyProcessed;
 				if (anyProcessed) {
-					pushSessionUtil.clearEventBus(httpSession);
+					//Do something...
 				}
 			}
 		} catch (JSONException jsonExcept) {
@@ -162,32 +171,61 @@ public class PushServlet extends HttpServlet {
 
 	/**
 	 *
-	 * @param httpServletRequestParam
-	 * @param httpSessionParam
+	 * @param jsonCmdObject
 	 * @return
 	 * @throws JSONException
 	 */
 	private boolean processUserNotifications(
-		HttpServletRequest httpServletRequestParam,
-		HttpSession httpSessionParam
+		JSONObject jsonCmdObject
 	) throws JSONException {
 		switch (this.notificationsBean.getNotificationState()) {
 			case UnreadNotificationsFull:
 				return false;
+			case UnreadNotificationsNowRead:
+				this.notificationsBean.actionUpdateNotifications();
+				this.addRefreshNotificationCommandObjectToArray(jsonCmdObject, TimeUnit.SECONDS.toMillis(20));
+				return false;
 			default:
 				if ((this.notificationsBean.getLastNotificationFetch() + WAIT_TIME_NOTI_FETCH_MILLIS) < System.currentTimeMillis()) {
-					int lastUnreadCount = this.notificationsBean.getTotalNumberOfNotifications();
+					int lastUnreadCount = this.notificationsBean.getNumberOfUnreadNotifications();
+					int lastReadCount = this.notificationsBean.getNumberOfReadNotifications();
 					this.notificationsBean.actionUpdateNotifications();
-					int lastUnreadCountUpdated = this.notificationsBean.getTotalNumberOfNotifications();
-					if (lastUnreadCount != lastUnreadCountUpdated) {
-						new PushSessionUtil().publishCommandToEventBus(
-								httpSessionParam,
-								PushSessionUtil.Commands.REFRESH_USER_NOTIFICATION);
+					int lastUnreadCountUpdated = this.notificationsBean.getNumberOfUnreadNotifications();
+					int lastReadCountUpdated = this.notificationsBean.getNumberOfReadNotifications();
+
+					if ((lastUnreadCount != lastUnreadCountUpdated) || lastReadCount != lastReadCountUpdated) {
+						this.addRefreshNotificationCommandObjectToArray(jsonCmdObject, 0);
+						this.notificationsBean.getLogger().info(String.format(
+							"%s: Sent update for '%s'.",
+							new Date().toString(), Commands.REFRESH_USER_NOTIFICATION
+						));
 					}
 				}
 		}
-
 		return false;
+	}
+
+	/**
+	 *
+	 * @param returnObjectParam
+	 * @throws JSONException
+	 */
+	private void addRefreshNotificationCommandObjectToArray(
+		JSONObject returnObjectParam,
+		long delayMillis
+	) throws JSONException {
+		if (!returnObjectParam.has(FieldMapping.COMMANDS)) {
+			returnObjectParam.put(FieldMapping.COMMANDS, new JSONArray());
+		}
+		JSONArray jsonCommandsArray = returnObjectParam.getJSONArray(FieldMapping.COMMANDS);
+		JSONObject commandObject = new JSONObject();
+		commandObject.put(
+				FieldMapping.COMMAND,
+				Commands.REFRESH_USER_NOTIFICATION);
+		commandObject.put(FieldMapping.DELAY, delayMillis);
+
+		//Add to the array...
+		jsonCommandsArray.put(commandObject);
 	}
 	
 	private boolean processWindowSize(

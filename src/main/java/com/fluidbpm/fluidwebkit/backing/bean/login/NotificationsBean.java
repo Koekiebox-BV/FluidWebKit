@@ -27,6 +27,8 @@ import javax.annotation.PostConstruct;
 import javax.enterprise.context.SessionScoped;
 import javax.inject.Named;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -37,7 +39,7 @@ import java.util.List;
 @Named("webKitNotificationsBean")
 public class NotificationsBean extends ABaseManagedBean {
 	public static final int MAX_COUNT_UNREAD = 15;
-	protected static final int MAX_COUNT_READ = 200;
+	protected static final int MAX_COUNT_READ = 60;
 
 	@Getter
 	@Setter
@@ -62,7 +64,8 @@ public class NotificationsBean extends ABaseManagedBean {
 		AllRead,
 		UnreadNotifications,
 		UnreadNotificationsFull,
-		NoNotifications
+		NoNotifications,
+		UnreadNotificationsNowRead
 	}
 
 	/**
@@ -104,6 +107,10 @@ public class NotificationsBean extends ABaseManagedBean {
 				this.dateTimeSDF.format(userNotification.getDateCreated()));
 	}
 
+	public String getReadDisplayDescriptionForType(UserNotification userNotification) {
+		return String.format("<o class=\"fa fa-eye\"></i> %s", this.dateTimeSDF.format(userNotification.getDateRead()));
+	}
+
 	/**
 	 * Action Event to update notifications.
 	 * 
@@ -126,7 +133,7 @@ public class NotificationsBean extends ABaseManagedBean {
 			try {
 				this.unreadUserNotifications =
 						userNotificationsClient.getAllUnReadByLoggedInUser(MAX_COUNT_READ,0);
-				if (this.unreadUserNotifications.size() > MAX_COUNT_UNREAD) {
+				if (this.unreadUserNotifications != null && this.unreadUserNotifications.size() > MAX_COUNT_UNREAD) {
 					this.unreadUserNotifications = this.unreadUserNotifications.subList(0, MAX_COUNT_UNREAD);
 				}
 			} catch (FluidClientException fce) {
@@ -168,9 +175,18 @@ public class NotificationsBean extends ABaseManagedBean {
 
 			final UserNotificationClient userNotificationsClient = this.getFluidClientDS().getUserNotificationClient();
 			//Mark the notifications as READ...
+			final Date dateRead = new Date(System.currentTimeMillis());
 			this.getUnreadUserNotifications().forEach(unreadMsg -> {
 				userNotificationsClient.markUserNotificationAsRead(unreadMsg);
+				unreadMsg.setDateRead(dateRead);
+				if (this.getReadUserNotifications() == null) {
+					this.setReadUserNotifications(new ArrayList<>());
+				}
+				this.getReadUserNotifications().add(unreadMsg);
 			});
+			this.getUnreadUserNotifications().clear();
+			this.getLogger().info("actionMarkUnreadNotificationsAsRead(DONE)");
+			this.setNotificationState(NotificationState.UnreadNotificationsNowRead);
 		} catch (Exception except) {
 			this.raiseError(except);
 		}
@@ -216,8 +232,7 @@ public class NotificationsBean extends ABaseManagedBean {
 	 * @return
 	 */
 	public boolean isNoUserNotifications() {
-		return this.getNumberOfReadNotifications() < 1 &&
-				this.getNumberOfUnreadNotifications() < 1;
+		return this.getTotalNumberOfNotifications() < 1;
 	}
 
 	/**

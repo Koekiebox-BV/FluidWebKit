@@ -133,11 +133,25 @@ public class WebKitConfigHelperBean extends ABaseManagedBean {
 	 *
 	 * @return
 	 */
+	public int getUserBrowserSessionDialogHeight() {
+		return (this.getUserBrowserSessionWindowHeight() - 330);
+	}
+
+	/**
+	 *
+	 * @return
+	 */
+	public int getUserBrowserSessionScrollableHeight() {
+		return (this.getUserBrowserSessionWindowHeight() - 100);
+	}
+
+	/**
+	 *
+	 * @return
+	 */
 	public int getUserBrowserSessionWindowHeight() {
 		Object httpSessionObj =
-				FacesContext.getCurrentInstance().getExternalContext().getSession(
-						false);
-
+				FacesContext.getCurrentInstance().getExternalContext().getSession(false);
 		if (httpSessionObj instanceof HttpSession) {
 			HttpSession casted = (HttpSession)httpSessionObj;
 
@@ -147,11 +161,11 @@ public class WebKitConfigHelperBean extends ABaseManagedBean {
 				return ((Number)heightValue).intValue();
 			}
 		}
-
-		return 600;
+		return 900;
 	}
 
 	public void actionDoNothing() {
 		//Do nothing...
+		this.getLogger().debug("Action fired to do nothing.");
 	}
 }
