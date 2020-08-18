@@ -16,6 +16,7 @@
 package com.fluidbpm.fluidwebkit.backing.bean.login;
 
 import com.fluidbpm.fluidwebkit.backing.bean.ABaseManagedBean;
+import com.fluidbpm.program.api.vo.field.Field;
 import com.fluidbpm.program.api.vo.user.User;
 import com.fluidbpm.program.api.vo.user.UserFieldListing;
 import com.fluidbpm.ws.client.v1.user.UserClient;
@@ -32,6 +33,10 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Bean to handle user profile related operations.
@@ -39,6 +44,15 @@ import java.util.ArrayList;
 @SessionScoped
 @Named("webKitProfileBean")
 public class ProfileBean extends ABaseManagedBean {
+
+	private static final List<String> USER_PROF_IGNORE = new ArrayList<>();
+	static {
+		USER_PROF_IGNORE.add("Username");
+		USER_PROF_IGNORE.add("Roles");
+		USER_PROF_IGNORE.add("Email Addresses");
+		USER_PROF_IGNORE.add("Date Created");
+		USER_PROF_IGNORE.add("Date Last Updated");
+	}
 
 	@Getter
 	@Setter
@@ -149,5 +163,14 @@ public class ProfileBean extends ABaseManagedBean {
 		} catch (Exception err) {
 			this.raiseError(err);
 		}
+	}
+
+	public List<Field> getLoggedInUserFieldsProfile() {
+		List<Field> allUserFields = this.getLoggedInUserSafe().getUserFields();
+		List<Field> returnVal = allUserFields.stream()
+				.filter(itm -> !USER_PROF_IGNORE.contains(itm.getFieldName()))
+				.collect(Collectors.toList());
+		Collections.sort(returnVal, Comparator.comparing(Field::getFieldName));
+		return returnVal;
 	}
 }

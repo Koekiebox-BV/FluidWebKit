@@ -108,7 +108,7 @@ public class NotificationsBean extends ABaseManagedBean {
 	}
 
 	public String getReadDisplayDescriptionForType(UserNotification userNotification) {
-		return String.format("<o class=\"fa fa-eye\"></i> %s", this.dateTimeSDF.format(userNotification.getDateRead()));
+		return String.format("<o class=\"fa fa-eye\"></o> %s", this.dateTimeSDF.format(userNotification.getDateRead()));
 	}
 
 	/**
