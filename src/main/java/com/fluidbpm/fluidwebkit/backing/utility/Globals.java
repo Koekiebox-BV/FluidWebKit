@@ -122,4 +122,26 @@ public class Globals {
 		}
 		return JS_USER_TRACKING_FR;
 	}
+
+	/**
+	 * Create and return a new instance of the SQLUtil wrapper.
+	 *
+	 * @return new instance of {@code SQLUtilWebSocketRESTWrapper}
+	 */
+	@Deprecated
+	public static SQLUtilWebSocketRESTWrapper getConfigWrapperInstance() {
+		LoginClient loginClient = new LoginClient(Globals.getConfigURLFromSystemProperty());
+
+		try {
+			AppRequestToken requestToken = loginClient.login(
+					Globals.getConfigUserProperty(), Globals.getConfigUserPasswordProperty());
+
+			return new SQLUtilWebSocketRESTWrapper(
+					Globals.getConfigURLFromSystemProperty(),
+					requestToken.getServiceTicket(),
+					TimeUnit.SECONDS.toMillis(60));
+		} finally {
+			loginClient.closeAndClean();
+		}
+	}
 }

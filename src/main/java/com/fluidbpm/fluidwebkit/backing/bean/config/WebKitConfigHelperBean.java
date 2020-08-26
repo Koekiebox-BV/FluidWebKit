@@ -46,32 +46,6 @@ public class WebKitConfigHelperBean extends ABaseManagedBean {
 	}
 
 	/**
-	 *
-	 * @param roleParam
-	 * @return
-	 */
-	protected boolean doesUserHaveAccessToRole(String roleParam) {
-		if (this.getLoggedInUser().getUsername().equals("admin")) {
-			return true;
-		}
-
-		return this.getLoggedInUser().doesUserHaveAccessToRole(roleParam);
-	}
-
-	/**
-	 * Execute the JavaScript on the users browser.
-	 *
-	 * @param javascriptParam
-	 */
-	public void executeJavaScript(String javascriptParam) {
-		if (javascriptParam == null || javascriptParam.trim().isEmpty()) {
-			return;
-		}
-		//For PF 6.2
-		PrimeFaces.current().executeScript(javascriptParam);
-	}
-
-	/**
 	 * Retrieve the FusionReactor script for tracking user experience.
 	 * @return JS for user tracking
 	 */

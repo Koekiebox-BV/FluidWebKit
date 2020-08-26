@@ -173,4 +173,9 @@ public class ProfileBean extends ABaseManagedBean {
 		Collections.sort(returnVal, Comparator.comparing(Field::getFieldName));
 		return returnVal;
 	}
+
+	public int getLoggedInUserFieldsProfileSize() {
+		return this.getLoggedInUserFieldsProfile() == null ? 0 :
+				this.getLoggedInUserFieldsProfile().size();
+	}
 }

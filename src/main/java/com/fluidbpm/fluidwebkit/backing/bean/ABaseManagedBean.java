@@ -28,6 +28,7 @@ import com.fluidbpm.program.api.vo.user.User;
 import com.fluidbpm.ws.client.v1.user.LoginClient;
 import lombok.Getter;
 import lombok.Setter;
+import org.primefaces.PrimeFaces;
 
 import javax.faces.application.FacesMessage;
 import javax.faces.context.ExternalContext;
@@ -702,6 +703,36 @@ public abstract class ABaseManagedBean implements Serializable {
 				throw pgwExcept;
 			}
 		}
+	}
+
+
+	/**
+	 *
+	 * @param roleParam
+	 * @return
+	 */
+	protected boolean doesUserHaveAccessToRole(String roleParam) {
+		try {
+			if (this.getLoggedInUser().getUsername().equals("admin")) {
+				return true;
+			}
+			return this.getLoggedInUser().doesUserHaveAccessToRole(roleParam);
+		} catch (WebSessionExpiredException exp) {
+			return false;
+		}
+	}
+
+	/**
+	 * Execute the JavaScript on the users browser.
+	 *
+	 * @param javascriptParam
+	 */
+	public void executeJavaScript(String javascriptParam) {
+		if (javascriptParam == null || javascriptParam.trim().isEmpty()) {
+			return;
+		}
+		//For PF 6.2 >
+		PrimeFaces.current().executeScript(javascriptParam);
 	}
 
 	/**

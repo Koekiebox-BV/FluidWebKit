@@ -24,6 +24,8 @@ import com.fluidbpm.ws.client.v1.flowitem.FlowItemClient;
 import com.fluidbpm.ws.client.v1.form.FormContainerClient;
 import com.fluidbpm.ws.client.v1.form.FormDefinitionClient;
 import com.fluidbpm.ws.client.v1.form.FormFieldClient;
+import com.fluidbpm.ws.client.v1.report.ReportSystemClient;
+import com.fluidbpm.ws.client.v1.report.ReportUserClient;
 import com.fluidbpm.ws.client.v1.sqlutil.wrapper.SQLUtilWebSocketRESTWrapper;
 import com.fluidbpm.ws.client.v1.user.PersonalInventoryClient;
 import com.fluidbpm.ws.client.v1.user.UserClient;
@@ -85,6 +87,14 @@ public class FluidClientDS implements Closeable {
 		return this.getClientFor(UserNotificationClient.class);
 	}
 
+	public ReportUserClient getReportUserClient() {
+		return this.getClientFor(ReportUserClient.class);
+	}
+
+	public ReportSystemClient getReportSystemClient() {
+		return this.getClientFor(ReportSystemClient.class);
+	}
+
 	public FormContainerClient getFormContainerClient() {
 		return this.getClientFor(FormContainerClient.class);
 	}
@@ -110,7 +120,7 @@ public class FluidClientDS implements Closeable {
 		if (returnVal == null) {
 			ABaseClientWS fromKey = this.defaultForClass(clazz);
 			if (fromKey == null) {
-				throw new FluidCacheException(String.format("Unable to create client from '%s'.", keyToUse));
+				throw new FluidCacheException(String.format("Unable to create client from '%s'. Please MAP!", keyToUse));
 			}
 			this.clientCache.put(keyToUse, fromKey);
 			return (T)this.clientCache.getIfPresent(keyToUse);
@@ -127,8 +137,12 @@ public class FluidClientDS implements Closeable {
 			return new UserNotificationClient(this.endpoint, this.serviceTicket);
 		} else if (clazz.isAssignableFrom(FormDefinitionClient.class)) {
 			return new FormDefinitionClient(this.endpoint, this.serviceTicket);
-		}  else if (clazz.isAssignableFrom(FormFieldClient.class)) {
+		} else if (clazz.isAssignableFrom(FormFieldClient.class)) {
 			return new FormFieldClient(this.endpoint, this.serviceTicket);
+		} else if (clazz.isAssignableFrom(ReportUserClient.class)) {
+			return new ReportUserClient(this.endpoint, this.serviceTicket);
+		} else if (clazz.isAssignableFrom(ReportSystemClient.class)) {
+			return new ReportSystemClient(this.endpoint, this.serviceTicket);
 		}
 
 		return null;
