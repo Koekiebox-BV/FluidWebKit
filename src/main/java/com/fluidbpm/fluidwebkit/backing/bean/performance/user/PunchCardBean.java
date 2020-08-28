@@ -16,8 +16,8 @@
 package com.fluidbpm.fluidwebkit.backing.bean.performance.user;
 
 import com.fluidbpm.fluidwebkit.backing.bean.ABaseManagedBean;
+import com.fluidbpm.fluidwebkit.backing.bean.performance.ABasePerformanceBean;
 import com.fluidbpm.fluidwebkit.backing.bean.performance.PerformanceBean;
-import com.fluidbpm.program.api.util.UtilGlobal;
 import com.fluidbpm.program.api.vo.report.userstats.PunchCardEntry;
 import lombok.Getter;
 import lombok.Setter;
@@ -26,11 +26,10 @@ import org.primefaces.model.chart.ChartModel;
 import org.primefaces.model.chart.OhlcChartModel;
 import org.primefaces.model.chart.OhlcChartSeries;
 
+import javax.annotation.PostConstruct;
 import javax.enterprise.context.RequestScoped;
-import javax.enterprise.context.SessionScoped;
 import javax.inject.Inject;
 import javax.inject.Named;
-import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
@@ -38,7 +37,7 @@ import java.util.concurrent.TimeUnit;
 @Named("webKitPunchCardBean")
 @Getter
 @Setter
-public class PunchCardBean extends ABaseManagedBean {
+public class PunchCardBean extends ABasePerformanceBean {
 	public static String DATE_FORMAT_YEAR_MONTH = "yyyy MMM";
 
 	//CHARTS...
@@ -57,7 +56,8 @@ public class PunchCardBean extends ABaseManagedBean {
 	@Inject
 	private PerformanceBean performanceBean;
 
-	public boolean createUserPunchCardModel() {
+	@PostConstruct
+	public void createUserPunchCardModel() {
 		this.userPunchcardCharts = new ArrayList();
 		this.loggedInForATotalOfDays = 0;
 		this.loggedInForATotalOfHours = 0;
@@ -105,10 +105,7 @@ public class PunchCardBean extends ABaseManagedBean {
 
 			//Add the Summary data...
 			this.populateSummary(punchCardEntries);
-			return true;
 		}
-
-		return false;
 	}
 
 	/**
@@ -123,10 +120,8 @@ public class PunchCardBean extends ABaseManagedBean {
 		}
 
 		Date defaultFirstLogin = null,defaultLastLogout = null;
-
-		for(PunchCardEntry entry:punchCardEntriesParam) {
-			if(defaultFirstLogin != null && defaultLastLogout != null)
-			{
+		for (PunchCardEntry entry:punchCardEntriesParam) {
+			if (defaultFirstLogin != null && defaultLastLogout != null) {
 				break;
 			}
 			defaultFirstLogin = (defaultFirstLogin == null) ?
@@ -323,14 +318,4 @@ public class PunchCardBean extends ABaseManagedBean {
 		return returnVal;
 	}
 
-	/**
-	 *
-	 * @param chartModelParam
-	 */
-	private void setChartBasics(ChartModel chartModelParam) {
-		if (chartModelParam == null) {
-			return;
-		}
-		chartModelParam.setSeriesColors("1399F1,E41751,3B9F3F,FDB309,864CD2,FD8B47,A8CC53,58629F,149C9C,237CDE,EB953C");
-	}
 }

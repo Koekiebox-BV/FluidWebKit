@@ -36,6 +36,7 @@ import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 
 @RequestScoped
 @Named("webKitSystemUptimeBean")
@@ -48,17 +49,16 @@ public class SystemUptimeBean extends ABaseManagedBean {
 	 * Return a mappig of dowmtime. If value for day is {@code true}, there was downtime.
 	 * @return
 	 */
-	public Map<String, Boolean> getDowntimeMapping() {
+	public Map<String, Integer> getDowntimeMapping() {
 		SystemUptimeReport sysUptimeReport = this.performanceBean.getSystemUptimeReport();
-		Map<String, Boolean> returnVal = new HashMap<>();
+		Map<String, Integer> returnVal = new HashMap<>();
 		if (sysUptimeReport.getUptimeEntries() != null) {
 			sysUptimeReport.getUptimeEntries().forEach(itmYearDay -> {
-				AtomicBoolean downtimeForDay = new AtomicBoolean(true);
+				AtomicInteger downtimeForDay = new AtomicInteger(0);
 				if (itmYearDay.getSystemUpHourMins() != null && !itmYearDay.getSystemUpHourMins().isEmpty()) {
-					downtimeForDay.set(false);
 					itmYearDay.getSystemUpHourMins().forEach(hourMinItm -> {
 						if (hourMinItm.getState() == SystemUpHourMin.State.Down) {
-							downtimeForDay.set(true);
+							downtimeForDay.incrementAndGet();//Add 1 minute for downtime...
 							return;
 						}
 					});
@@ -69,9 +69,9 @@ public class SystemUptimeBean extends ABaseManagedBean {
 		return returnVal;
 	}
 
-	public List<Boolean> getDowntimeMappingValues() {
-		Map<String, Boolean> downtimeMapping = this.getDowntimeMapping();
-		List<Boolean> returnVal = new ArrayList<>();
+	public List<Integer> getDowntimeMappingValues() {
+		Map<String, Integer> downtimeMapping = this.getDowntimeMapping();
+		List<Integer> returnVal = new ArrayList<>();
 		downtimeMapping.keySet().stream()
 				.sorted(Comparator.comparing(String::toString))
 				.forEach(yearDayItm -> {
@@ -79,6 +79,14 @@ public class SystemUptimeBean extends ABaseManagedBean {
 				});
 		Collections.reverse(returnVal);//Last day at the end...
 		return returnVal;
+	}
+
+	public List<String> getDowntimeMappingKeys() {
+		Map<String, Integer> downtimeMapping = this.getDowntimeMapping();
+		List<String> returnVal = new ArrayList<>();
+		return downtimeMapping.keySet().stream()
+				.sorted(Comparator.comparing(String::toString))
+				.collect(Collectors.toList());
 	}
 
 	public int getDowntimeMappingValuesSize() {
