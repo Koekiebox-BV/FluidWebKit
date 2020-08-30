@@ -11,8 +11,10 @@ package com.fluidbpm.fluidwebkit.backing.bean.workspace;
 
 import com.fluidbpm.fluidwebkit.backing.bean.ABaseFormFieldAccessBean;
 import com.fluidbpm.fluidwebkit.backing.bean.ABaseManagedBean;
+import com.fluidbpm.fluidwebkit.backing.bean.performance.PerformanceBean;
 
 import javax.enterprise.context.SessionScoped;
+import javax.inject.Inject;
 import javax.inject.Named;
 import java.util.List;
 
@@ -20,9 +22,18 @@ import java.util.List;
  * Bean storing personal inventory related items.
  */
 @SessionScoped
-@Named("webKitPersonalInv")
+@Named("webKitPersonalInvBean")
 public class PersonalInventoryBean extends ABaseManagedBean {
 
+	@Inject
+	private PerformanceBean performanceBean;
 
+	public int getNumberOfPersonalInventoryItems() {
+		return performanceBean.getUserStatsReport().getPiCount();
+	}
+
+	public int getNumberOfPersonalInventoryLockedItems() {
+		return performanceBean.getUserStatsReport().getPiLockedCount();
+	}
 
 }

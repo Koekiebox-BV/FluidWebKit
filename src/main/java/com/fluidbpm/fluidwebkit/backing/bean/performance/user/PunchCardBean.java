@@ -284,22 +284,17 @@ public class PunchCardBean extends ABasePerformanceBean {
 		if (punchCardEntriesParam == null || punchCardEntriesParam.isEmpty()) {
 			return returnVal;
 		}
-
 		int currentMonth = PerformanceBean.getMonthAsInt(
 				punchCardEntriesParam.get(0).getPunchCardDay());
-
 		String yearAndMonth = PerformanceBean.getYearMonthAsString(
 				punchCardEntriesParam.get(0).getPunchCardDay());
 
 		List<PunchCardEntry> keyValues = new ArrayList<PunchCardEntry>();
-
 		Date punchCardDayForEntry = null;
-		for(PunchCardEntry entry: punchCardEntriesParam)
-		{
+		for (PunchCardEntry entry: punchCardEntriesParam) {
 			punchCardDayForEntry = entry.getPunchCardDay();
 			int currentEntryDateMonth = PerformanceBean.getMonthAsInt(punchCardDayForEntry);
-			if(currentMonth != currentEntryDateMonth)
-			{
+			if (currentMonth != currentEntryDateMonth) {
 				returnVal.put(yearAndMonth, keyValues);
 
 				//Refresh...
@@ -316,6 +311,14 @@ public class PunchCardBean extends ABasePerformanceBean {
 		}
 
 		return returnVal;
+	}
+
+	public int getNumberOfLogins() {
+		return this.performanceBean.getUserStatsReport().getNumberOfLogins();
+	}
+
+	public int getNumberOfLoginsPrevCycle() {
+		return this.performanceBean.getUserStatsReport().getNumberOfLoginsPrevCycle();
 	}
 
 }

@@ -32,6 +32,7 @@ public class WebKitConfigBean extends ABaseManagedBean {
 	private String clientSecret;
 	private String domain;
 	private String fluidServerURL;
+	private String whiteLabel;
 
 	private boolean configUserLoginSuccess = false;
 
@@ -50,7 +51,10 @@ public class WebKitConfigBean extends ABaseManagedBean {
 		public static final String Auth0_Domain = "Auth0_Domain";
 
 		//Fluid URL
-		public static final String FluidServerURL = "System Server URL";
+		public static final String FluidServerURL = "FluidServerURL";
+
+		//Other
+		public static final String WhiteLabel = "WhiteLabel";
 	}
 
 	/**
@@ -84,11 +88,9 @@ public class WebKitConfigBean extends ABaseManagedBean {
 				configuration -> {
 					String configName = configuration.getKey();
 					if (ConfigKey.DisableTraditionalLogin.equals(configName)) {
-						this.setDisableTraditionalLogin(
-								Boolean.parseBoolean(configuration.getValue()));
+						this.setDisableTraditionalLogin(Boolean.parseBoolean(configuration.getValue()));
 					} else if (ConfigKey.Auth0_Enabled.equals(configName)) {
-						this.setEnableAuth0(
-								Boolean.parseBoolean(configuration.getValue()));
+						this.setEnableAuth0(Boolean.parseBoolean(configuration.getValue()));
 					} else if (ConfigKey.Auth0_ClientId.equals(configName)) {
 						this.setClientId(configuration.getValue());
 					} else if (ConfigKey.Auth0_ClientSecret.equals(configName)) {
@@ -97,17 +99,20 @@ public class WebKitConfigBean extends ABaseManagedBean {
 						this.setDomain(configuration.getValue());
 					} else if (ConfigKey.FluidServerURL.equals(configName)) {
 						this.setFluidServerURL(configuration.getValue());
+					}  else if (ConfigKey.WhiteLabel.equals(configName)) {
+						this.setWhiteLabel(configuration.getValue());
 					}
 				}
 		);
 	}
 
-	/**
-	 *
-	 * @return
-	 */
 	public String getDirectFromConfigHtmlContainerId()
 	{
 		return "loginFrm";
+	}
+
+	public String getWhiteLabelUpper() {
+		return this.getWhiteLabel() == null ? null :
+				this.getWhiteLabel().toUpperCase();
 	}
 }
