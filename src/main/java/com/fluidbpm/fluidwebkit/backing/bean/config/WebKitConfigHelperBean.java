@@ -97,9 +97,7 @@ public class WebKitConfigHelperBean extends ABaseManagedBean {
 		String infoMessageHeader = reqParamMap.get(WebParam.InfoMessageHeader);
 		String infoMessage = reqParamMap.get(WebParam.InfoMessage);
 
-		FacesMessage fMsg = new FacesMessage(FacesMessage.SEVERITY_INFO,
-				infoMessageHeader, infoMessage);
-
+		FacesMessage fMsg = new FacesMessage(FacesMessage.SEVERITY_INFO, infoMessageHeader, infoMessage);
 		FacesContext.getCurrentInstance().addMessage(null, fMsg);
 	}
 

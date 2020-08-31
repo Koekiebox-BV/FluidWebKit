@@ -143,6 +143,10 @@ public class FluidClientDS implements Closeable {
 			return new ReportUserClient(this.endpoint, this.serviceTicket);
 		} else if (clazz.isAssignableFrom(ReportSystemClient.class)) {
 			return new ReportSystemClient(this.endpoint, this.serviceTicket);
+		} else if (clazz.isAssignableFrom(UserQueryClient.class)) {
+			return new UserQueryClient(this.endpoint, this.serviceTicket);
+		} else if (clazz.isAssignableFrom(FormContainerClient.class)) {
+			return new FormContainerClient(this.endpoint, this.serviceTicket);
 		}
 
 		return null;

@@ -88,8 +88,7 @@ public class ResetPasswordBean extends ABaseManagedBean {
 			//All config is set, now we will attempt to send the reset notification...
 			dsConfig.getUserClient().sendPasswordResetRequest(this.getInputEmailUsername());
 			FacesMessage fMsg = new FacesMessage(FacesMessage.SEVERITY_INFO,
-					"Success",
-					String.format("See Inbox '%s' for reset Email.", this.getInputEmailUsername()));
+					"Success", String.format("See Inbox '%s' for reset Email.", this.getInputEmailUsername()));
 			FacesContext.getCurrentInstance().addMessage(null, fMsg);
 			this.setInputEmailUsername(null);
 		} catch (FluidClientException err) {

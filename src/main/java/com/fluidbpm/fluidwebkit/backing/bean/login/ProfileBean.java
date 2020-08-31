@@ -19,6 +19,7 @@ import com.fluidbpm.fluidwebkit.backing.bean.ABaseManagedBean;
 import com.fluidbpm.program.api.vo.field.Field;
 import com.fluidbpm.program.api.vo.user.User;
 import com.fluidbpm.program.api.vo.user.UserFieldListing;
+import com.fluidbpm.ws.client.FluidClientException;
 import com.fluidbpm.ws.client.v1.user.UserClient;
 import lombok.Getter;
 import lombok.Setter;
@@ -26,6 +27,7 @@ import org.primefaces.model.DefaultStreamedContent;
 import org.primefaces.model.StreamedContent;
 
 import javax.enterprise.context.SessionScoped;
+import javax.faces.application.FacesMessage;
 import javax.faces.context.FacesContext;
 import javax.faces.event.PhaseId;
 import javax.inject.Named;
@@ -44,7 +46,6 @@ import java.util.stream.Collectors;
 @SessionScoped
 @Named("webKitProfileBean")
 public class ProfileBean extends ABaseManagedBean {
-
 	private static final List<String> USER_PROF_IGNORE = new ArrayList<>();
 	static {
 		USER_PROF_IGNORE.add("Username");
@@ -57,6 +58,18 @@ public class ProfileBean extends ABaseManagedBean {
 	@Getter
 	@Setter
 	private String inputEmailToAdd;
+
+	@Getter
+	@Setter
+	private String inputPasswordCurrent;
+
+	@Getter
+	@Setter
+	private String inputPasswordA;
+
+	@Getter
+	@Setter
+	private String inputPasswordB;
 
 	/**
 	 * Return the currently logged in users Gravator as {@code StreamedContent}
@@ -163,6 +176,36 @@ public class ProfileBean extends ABaseManagedBean {
 		} catch (Exception err) {
 			this.raiseError(err);
 		}
+	}
+
+	/**
+	 * Change the password for the logged in user.
+	 */
+	public void actionChangePassword() {
+		try {
+			final UserClient userClient = this.getFluidClientDS().getUserClient();
+			userClient.changePasswordForLoggedInUser(
+				this.getInputPasswordCurrent(),
+				this.getInputPasswordA(),
+				this.getInputPasswordB()
+			);
+			this.executeJavaScript("PF('varDialogResetPassword').hide()");
+			FacesMessage fMsg = new FacesMessage(FacesMessage.SEVERITY_INFO,
+					"Success", "Password Changed.");
+			FacesContext.getCurrentInstance().addMessage(null, fMsg);
+		} catch (Exception except) {
+			this.raiseError(except);
+		}
+	}
+
+	/**
+	 * Prepare to change password for user.
+	 */
+	public void actionPrepareLoggedInUserChangePasswordDialog() {
+		this.setDialogHeaderTitle(String.format("Change Password - %s", this.getLoggedInUserUsername()));
+		this.setInputPasswordCurrent(null);
+		this.setInputPasswordA(null);
+		this.setInputPasswordB(null);
 	}
 
 	public List<Field> getLoggedInUserFieldsProfile() {

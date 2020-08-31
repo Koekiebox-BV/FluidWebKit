@@ -24,6 +24,7 @@ import com.fluidbpm.fluidwebkit.ds.FluidClientPool;
 import com.fluidbpm.fluidwebkit.exception.ClientDashboardException;
 import com.fluidbpm.fluidwebkit.exception.WebSessionExpiredException;
 import com.fluidbpm.program.api.vo.field.Field;
+import com.fluidbpm.program.api.vo.role.Role;
 import com.fluidbpm.program.api.vo.user.User;
 import com.fluidbpm.ws.client.v1.user.LoginClient;
 import lombok.Getter;
@@ -44,6 +45,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Base backing bean for all JSF beans.
@@ -301,8 +303,7 @@ public abstract class ABaseManagedBean implements Serializable {
 	 *
 	 * @return
 	 */
-	public int getDateFormatLength()
-	{
+	public int getDateFormatLength() {
 		return getDateFormat().length();
 	}
 
@@ -500,7 +501,7 @@ public abstract class ABaseManagedBean implements Serializable {
 	 * @param permissionParam
 	 * @return
 	 */
-	public boolean doesUserHavePermissionArray(String... permissionParam) {
+	public boolean doesUserHavePermissionArray(String ... permissionParam) {
 		if (permissionParam == null || permissionParam.length == 0) {
 			return false;
 		}
@@ -512,26 +513,45 @@ public abstract class ABaseManagedBean implements Serializable {
 			if (except.getErrorCode() != ClientDashboardException.ErrorCode.SESSION_EXPIRED) {
 				this.getLogger().error("Unable to get logged in user. "+except.getMessage(), except);
 			}
-		}
-
-		if (loggedInUser == null) {
 			return false;
 		}
 
-		//When not the admin user...
-		if(!"admin".equals(loggedInUser.getUsername().toLowerCase())) {
-			FacesContext facCont = FacesContext.getCurrentInstance();
-			ExternalContext externalContext = (facCont == null) ? null : facCont.getExternalContext();
-			Map<String, Object> sessionMap = (externalContext == null) ? null : externalContext.getSessionMap();
-
-			if (sessionMap == null) {
-				return false;
-			}
-
-			sessionMap.put(SessionVariable.USER, loggedInUser);
+		if (User.ADMIN_USERNAME.equals(loggedInUser.getUsername().toLowerCase())) {
+			return true;
 		}
 
-		return false;
+		//When not the admin user...
+		List<Role> roles = loggedInUser.getRoles();
+		if (roles == null || roles.isEmpty()) {
+			return false;
+		}
+
+		Map<String, Boolean> accessMap = new HashMap<>();
+		for (String param : permissionParam) {
+			accessMap.put(param, Boolean.FALSE);
+		}
+
+		for (Role role : roles) {
+			if (role.getAdminPermissions() == null) {
+				continue;
+			}
+
+			for (String param : permissionParam) {
+				if (role.getAdminPermissions().contains(param)) {
+					accessMap.put(param, Boolean.TRUE);
+				}
+			}
+		}
+
+		AtomicBoolean returnVal = new AtomicBoolean(true);
+		accessMap.values().stream().forEach(bool -> {
+			if (!bool) {
+				returnVal.set(false);
+				return;
+			}
+		});
+
+		return returnVal.get();
 	}
 
 	/**

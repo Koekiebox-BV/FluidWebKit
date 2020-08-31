@@ -68,11 +68,12 @@ public class UserViewVsItemOpenedBean extends ABasePerformanceBean {
 		this.openAndCompletePercentage = 0;
 		this.mostPopularView = UtilGlobal.EMPTY;
 		this.mostProductiveView = UtilGlobal.EMPTY;
+		this.bubbleChartModel = new BubbleChartModel();
+
 		if (viewOpenedAndSentOnEntries == null || viewOpenedAndSentOnEntries.isEmpty()) {
 			return;
 		}
 
-		this.bubbleChartModel = new BubbleChartModel();
 		this.setChartBasics(this.bubbleChartModel);
 
 		this.bubbleChartModel.setTitle("The size of the balloon represents effectiveness.");

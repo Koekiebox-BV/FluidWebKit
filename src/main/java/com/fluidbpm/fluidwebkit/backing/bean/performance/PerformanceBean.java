@@ -53,6 +53,10 @@ public class PerformanceBean extends ABaseManagedBean {
 		this.userStatsReport = new UserStatsReport();
 		this.systemUptimeReport = new SystemUptimeReport();
 
+		if (this.getFluidClientDS() == null) {
+			return;
+		}
+
 		//Fluid Clients...
 		ReportUserClient userClient = this.getFluidClientDS().getReportUserClient();
 		ReportSystemClient systemClient = this.getFluidClientDS().getReportSystemClient();
