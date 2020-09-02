@@ -111,4 +111,16 @@ public class SystemUptimeBean extends ABaseManagedBean {
 		}
 		return returnVal.get();
 	}
+
+	public String getNumberOfDowntimeLabel() {
+		int downtimeTotal = this.getNumberOfDowntimeMinutes();
+		if (downtimeTotal > 480) {
+			int downtimeHours = (downtimeTotal / 60);
+			if (downtimeHours > 48) {
+				return String.format("%d days", (downtimeHours / 24));
+			}
+			return String.format("%d hours", downtimeHours);
+		}
+		return String.format("%d minutes", downtimeTotal);
+	}
 }

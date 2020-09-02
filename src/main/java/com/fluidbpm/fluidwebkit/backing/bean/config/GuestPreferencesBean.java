@@ -93,7 +93,9 @@ public class GuestPreferencesBean extends ABaseManagedBean {
 	}
 
 	public WebKitGlobal populateWebKitGlobal(String json) {
-		if (json == null || json.trim().isEmpty()) {
+		JSONObject jsonObj = (json == null || json.trim().isEmpty()) ?
+				new JSONObject() : new JSONObject(json);
+		if (jsonObj.isEmpty()) {
 			WebKitGlobal defaultWebKit = new WebKitGlobal(new JSONObject());
 			defaultWebKit.setLayoutMode("light");//darkMode
 			defaultWebKit.setFormType("outlined");//inputStyle
@@ -126,7 +128,7 @@ public class GuestPreferencesBean extends ABaseManagedBean {
 	}
 
 	public String getLayout() {
-		return "layout-" + this.webKitGlobal.getLayoutColors() + '-' + this.getDarkMode() ;
+		return String.format("layout-%s-%s", this.webKitGlobal.getLayoutColors(), this.getDarkMode());
 	}
 
 	public String getTheme() {
