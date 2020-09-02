@@ -11,8 +11,10 @@ package com.fluidbpm.fluidwebkit.backing.bean.config;
 
 import com.fluidbpm.fluidwebkit.backing.bean.ABaseManagedBean;
 import com.fluidbpm.program.api.vo.config.ConfigurationListing;
+import com.fluidbpm.program.api.vo.webkit.WebKitGlobal;
 import lombok.Getter;
 import lombok.Setter;
+import org.json.JSONObject;
 
 import javax.annotation.PostConstruct;
 import javax.enterprise.context.ApplicationScoped;
@@ -33,13 +35,14 @@ public class WebKitConfigBean extends ABaseManagedBean {
 	private String domain;
 	private String fluidServerURL;
 	private String whiteLabel;
+	private String webKitGlobalJSON;
 
 	private boolean configUserLoginSuccess = false;
 
 	/**
 	 * Login related configuration keys.
 	 */
-	private static final class ConfigKey {
+	public static final class ConfigKey {
 		//Disable Traditional...
 		public static final String DisableTraditionalLogin = "DisableTraditionalLogin";
 
@@ -55,13 +58,9 @@ public class WebKitConfigBean extends ABaseManagedBean {
 
 		//Other
 		public static final String WhiteLabel = "WhiteLabel";
+		public static final String WebKit = "WebKit";
 	}
 
-	/**
-	 * Log a user into the Design Dashboard.
-	 *
-	 * @return navigation {@code dashboard}
-	 */
 	@PostConstruct
 	public void actionPopulateInit() {
 		this.configUserLoginSuccess = false;
@@ -79,10 +78,6 @@ public class WebKitConfigBean extends ABaseManagedBean {
 		}
 	}
 
-	/**
-	 *
-	 * @param propertiesBasedOnListingParam
-	 */
 	private void setPropertiesBasedOnListing(ConfigurationListing propertiesBasedOnListingParam) {
 		propertiesBasedOnListingParam.getListing().forEach(
 				configuration -> {
@@ -99,8 +94,10 @@ public class WebKitConfigBean extends ABaseManagedBean {
 						this.setDomain(configuration.getValue());
 					} else if (ConfigKey.FluidServerURL.equals(configName)) {
 						this.setFluidServerURL(configuration.getValue());
-					}  else if (ConfigKey.WhiteLabel.equals(configName)) {
+					} else if (ConfigKey.WhiteLabel.equals(configName)) {
 						this.setWhiteLabel(configuration.getValue());
+					} else if (ConfigKey.WebKit.equals(configName)) {
+						this.setWebKitGlobalJSON(configuration.getValue());
 					}
 				}
 		);
