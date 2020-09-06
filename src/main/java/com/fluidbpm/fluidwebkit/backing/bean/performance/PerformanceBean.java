@@ -67,7 +67,7 @@ public class PerformanceBean extends ABaseManagedBean {
 		}
 
 		try {
-			this.systemUptimeReport = systemClient.getSystemReport();
+			this.systemUptimeReport = systemClient.getSystemReport(true, null);
 		} catch (Exception except) {
 			this.raiseError(except);
 		}
