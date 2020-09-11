@@ -33,6 +33,9 @@ import com.fluidbpm.ws.client.v1.form.FormContainerClient;
 import com.fluidbpm.ws.client.v1.sqlutil.sqlnative.SQLUtilWebSocketExecuteNativeSQLClient;
 import com.fluidbpm.ws.client.v1.sqlutil.wrapper.SQLUtilWebSocketRESTWrapper;
 import com.fluidbpm.ws.client.v1.userquery.UserQueryClient;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 import javax.annotation.PostConstruct;
 import javax.faces.application.FacesMessage;
@@ -51,7 +54,7 @@ import java.util.concurrent.CompletableFuture;
  * @author jasonbruwer on 2017-12-30
  * @since 1.0
  */
-public abstract class ABaseWorkspaceBean extends ABaseManagedBean {
+public abstract class ABaseWorkspaceBean<T extends ABaseWebVO, J extends ABaseContentView> extends ABaseManagedBean {
 	private JobViewListing jobViewListing = new JobViewListing();
 	protected UserQueryListing userQueryListing = new UserQueryListing();
 	//Views...
@@ -59,7 +62,8 @@ public abstract class ABaseWorkspaceBean extends ABaseManagedBean {
 	protected Map<String, List<JobView>> viewGroupPlacings;
 
 	//Selected Content View...
-	private ABaseContentView contentView;
+	@Getter
+	protected J contentView;
 
 	//Config...
 	protected boolean currentlyHaveItemOpen;
@@ -70,20 +74,11 @@ public abstract class ABaseWorkspaceBean extends ABaseManagedBean {
 	/**
 	 * Cached items in case of a page refresh.
 	 */
+	@AllArgsConstructor
+	@NoArgsConstructor
 	private static class OpenPageLastCache implements Serializable {
 		public String workspaceItemAim;
 		public String selectedJobViews;
-
-		/**
-		 * Default constructor to store aim and comma separated list of {@code JobView} Id's.
-		 *
-		 * @param workspaceItemAimParam The aim of the action fired.
-		 * @param selectedJobViewsParam The comma separated list of selected views.
-		 */
-		public OpenPageLastCache(String workspaceItemAimParam, String selectedJobViewsParam) {
-			this.workspaceItemAim = workspaceItemAimParam;
-			this.selectedJobViews = selectedJobViewsParam;
-		}
 
 		/**
 		 * Verify if cache should be used in the event of {@code workspaceItemAimParam} and {@code selectedJobViewsParam}
@@ -162,11 +157,7 @@ public abstract class ABaseWorkspaceBean extends ABaseManagedBean {
 				});
 			}
 		} catch (Exception fce) {
-			//We have a problem...
-			this.getLogger().error(fce.getMessage(),fce);
-			FacesMessage fMsg = new FacesMessage(FacesMessage.SEVERITY_ERROR,
-					"Failed to fetch User Queries and Views. ", fce.getMessage());
-			FacesContext.getCurrentInstance().addMessage(null, fMsg);
+			this.raiseError(fce);
 		}
 	}
 
@@ -251,7 +242,7 @@ public abstract class ABaseWorkspaceBean extends ABaseManagedBean {
 	 * Open an 'Form' for editing or viewing.
 	 * Custom functionality needs to be placed in {@code this#actionOpenFormForEditingFromWorkspace}.
 	 *
-	 * @see this#actionOpenFormForEditingFromWorkspace(JobView, Long, FormContainerClient, SQLUtilWebSocketRESTWrapper)
+	 * @see this#actionOpenFormForEditingFromWorkspace(JobView, Long)
 	 */
 	public void actionOpenFormForEditingFromWorkspace() {
 		this.setAreaToUpdateForDialogAfterSubmit(null);
@@ -261,19 +252,11 @@ public abstract class ABaseWorkspaceBean extends ABaseManagedBean {
 		Long openedFromViewId = this.getLongRequestParam(RequestParam.OPENED_FROM_VIEW);
 		JobView fromView = this.getJobViewFromListingWithId(this.viewsAll, openedFromViewId);
 
-		final FormContainerClient formContClient = this.getFluidClientDS().getFormContainerClient();
-		final SQLUtilWebSocketRESTWrapper nativeSQLClient = this.getFluidClientDS().getSQLUtilWrapper();
 		try {
-			this.actionOpenFormForEditingFromWorkspace(fromView, formIdToUpdate, formContClient, nativeSQLClient);
+			this.actionOpenFormForEditingFromWorkspace(fromView, formIdToUpdate);
 			this.currentlyHaveItemOpen = true;
 		} catch (Exception except) {
-			this.getLogger().error(except.getMessage(), except);
-			FacesMessage fMsg = new FacesMessage(FacesMessage.SEVERITY_ERROR,
-					"Failed to Open '"+formIdToUpdate+"'. ", except.getMessage());
-			FacesContext.getCurrentInstance().addMessage(null, fMsg);
-		} finally {
-			formContClient.closeAndClean();
-			nativeSQLClient.closeAndClean();
+			this.raiseError(except);
 		}
 	}
 
@@ -283,14 +266,10 @@ public abstract class ABaseWorkspaceBean extends ABaseManagedBean {
 	 *
 	 * @param fromView Opened from view.
 	 * @param formIdToUpdateParam Form ID to update.
-	 * @param formContClient Form Container Client.
-	 * @param wrapperParam Wrapper for lookups.
 	 */
 	public abstract void actionOpenFormForEditingFromWorkspace(
 		JobView fromView,
-		Long formIdToUpdateParam,
-		FormContainerClient formContClient,
-		SQLUtilWebSocketRESTWrapper wrapperParam
+		Long formIdToUpdateParam
 	);
 
 	/**
@@ -301,7 +280,7 @@ public abstract class ABaseWorkspaceBean extends ABaseManagedBean {
 	 * {@code createABaseWebVO} method will map each one of the custom objects.
 	 *
 	 * @see this#actionOpenMainPage(String)
-	 * @see this#createABaseWebVO(SQLUtilWebSocketRESTWrapper, FluidItem)
+	 * @see this#createABaseWebVO(FluidItem)
 	 */
 	public void actionOpenMainPage() {
 		this.areaToUpdateForDialogAfterSubmit = null;
@@ -372,7 +351,7 @@ public abstract class ABaseWorkspaceBean extends ABaseManagedBean {
 
 									//Add each of the items...
 									listOfItems.getListing().forEach(itm -> {
-										ABaseWebVO baseWebToAdd = this.createABaseWebVO(sqlUtilWSRESTWrapper, itm);
+										T baseWebToAdd = this.createABaseWebVO(itm);
 										itemsForTheView.add(new WorkspaceFluidItem(baseWebToAdd));
 									});
 								} catch (FluidClientException fluidClientExcept) {
@@ -415,12 +394,11 @@ public abstract class ABaseWorkspaceBean extends ABaseManagedBean {
 	 *
 	 * @see ABaseContentView
 	 */
-	protected abstract ABaseContentView actionOpenMainPage(String workspaceAimParam);
+	protected abstract J actionOpenMainPage(String workspaceAimParam);
 
 	/**
 	 * Create a custom value object based on {@code wrapperParam} and {@code fluidItemParam}.
 	 * 
-	 * @param wrapperParam The SQLUtil to fetch additional information from.
 	 * @param fluidItemParam The Fluid {@code FluidItem} to map from.
 	 *
 	 * @return ABaseWebVO subclass based on {@code fluidItemParam}.
@@ -429,7 +407,7 @@ public abstract class ABaseWorkspaceBean extends ABaseManagedBean {
 	 * @see SQLUtilWebSocketRESTWrapper
 	 * @see FluidItem
 	 */
-	protected abstract ABaseWebVO createABaseWebVO(SQLUtilWebSocketRESTWrapper wrapperParam, FluidItem fluidItemParam);
+	protected abstract T createABaseWebVO(FluidItem fluidItemParam);
 
 	/**
 	 * Find the {@code JobView} with id {@code idToGetParam} from {@code jobViewsParam}.
@@ -499,20 +477,10 @@ public abstract class ABaseWorkspaceBean extends ABaseManagedBean {
 	 * @param currentlyHaveItemOpenParam Set whether an item is currently open.
 	 *
 	 * @see this#actionOpenFormForEditingFromWorkspace()
-	 * @see this#actionOpenFormForEditingFromWorkspace(JobView, Long, FormContainerClient, SQLUtilWebSocketRESTWrapper)
+	 * @see this#actionOpenFormForEditingFromWorkspace(JobView, Long)
 	 */
 	public void setCurrentlyHaveItemOpen(boolean currentlyHaveItemOpenParam) {
 		this.currentlyHaveItemOpen = currentlyHaveItemOpenParam;
-	}
-
-	/**
-	 * Get active {@code ABaseContentView}.
-	 *
-	 * @return {@code ABaseContentView} subclass for view.
-	 * @see ABaseContentView
-	 */
-	public ABaseContentView getContentView() {
-		return this.contentView;
 	}
 
 	/**

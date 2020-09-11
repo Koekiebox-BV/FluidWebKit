@@ -19,6 +19,8 @@ import com.fluidbpm.program.api.vo.field.Field;
 import com.fluidbpm.program.api.vo.form.Form;
 import com.fluidbpm.program.api.vo.item.FluidItem;
 import com.fluidbpm.program.api.vo.user.User;
+import lombok.Getter;
+import lombok.Setter;
 
 import javax.faces.model.SelectItem;
 import java.io.Serializable;
@@ -34,14 +36,24 @@ import java.util.List;
 public class ABaseWebVO implements Serializable {
 	private FluidItem fluidItem;
 
+	@Getter
+	@Setter
 	private boolean justReviewed;
 
+	@Getter
+	@Setter
 	protected List<Field> fieldsViewable;
+
+	@Getter
+	@Setter
 	protected List<Field> fieldsEditable;
 
 	private String openModeMessage = null;
 
 	private Long assignedUserId;
+
+	@Getter
+	@Setter
 	private List<User> allUsers;
 
 	/**
@@ -106,14 +118,6 @@ public class ABaseWebVO implements Serializable {
 
 	/**
 	 *
-	 * @return
-	 */
-	public List<Field> getFieldsViewable() {
-		return this.fieldsViewable;
-	}
-
-	/**
-	 *
 	 * @param fieldNameParam
 	 * @return
 	 */
@@ -141,30 +145,6 @@ public class ABaseWebVO implements Serializable {
 
 	/**
 	 *
-	 * @param fieldsViewableParam
-	 */
-	public void setFieldsViewable(List<Field> fieldsViewableParam) {
-		this.fieldsViewable = fieldsViewableParam;
-	}
-
-	/**
-	 *
-	 * @return
-	 */
-	public List<Field> getFieldsEditable() {
-		return this.fieldsEditable;
-	}
-
-	/**
-	 *
-	 * @param fieldsEditableParam
-	 */
-	public void setFieldsEditable(List<Field> fieldsEditableParam) {
-		this.fieldsEditable = fieldsEditableParam;
-	}
-
-	/**
-	 *
 	 * @param fieldNameParam
 	 * @return
 	 */
@@ -181,8 +161,7 @@ public class ABaseWebVO implements Serializable {
 	 * @param fieldNameParam
 	 * @return
 	 */
-	public boolean isFieldEditable(String fieldNameParam)
-	{
+	public boolean isFieldEditable(String fieldNameParam) {
 		Field fieldWithName = this.getFieldWithName(
 				this.fieldsEditable,
 				fieldNameParam);
@@ -262,36 +241,5 @@ public class ABaseWebVO implements Serializable {
 	 */
 	public void setAssignedUserId(Long assignedUserIdParam) {
 		this.assignedUserId = assignedUserIdParam;
-	}
-
-	/**
-	 *
-	 * @return
-	 */
-	public List<User> getAllUsers() {
-		return this.allUsers;
-	}
-
-	/**
-	 *
-	 * @param allUsersParam
-	 */
-	public void setAllUsers(List<User> allUsersParam) {
-		this.allUsers = allUsersParam;
-	}
-
-	/**
-	 *
-	 * @return
-	 */
-	public boolean isJustReviewed() {
-		return this.justReviewed;
-	}
-
-	/**
-	 * @param justReviewedParam
-	 */
-	public void setJustReviewed(boolean justReviewedParam) {
-		this.justReviewed = justReviewedParam;
 	}
 }

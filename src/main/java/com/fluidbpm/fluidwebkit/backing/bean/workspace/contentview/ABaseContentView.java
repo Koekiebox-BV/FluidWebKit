@@ -20,6 +20,10 @@ import com.fluidbpm.fluidwebkit.backing.bean.workspace.WorkspaceFluidItem;
 import com.fluidbpm.program.api.vo.field.Field;
 import com.fluidbpm.program.api.vo.flow.JobView;
 import com.fluidbpm.program.api.vo.user.User;
+import lombok.Getter;
+import lombok.Setter;
+import org.primefaces.event.ToggleEvent;
+import org.primefaces.model.Visibility;
 
 import javax.faces.model.SelectItem;
 import java.io.Serializable;
@@ -36,7 +40,7 @@ import java.util.*;
  *
  * @see com.fluidbpm.fluidwebkit.backing.bean.workspace.ABaseWorkspaceBean
  */
-public abstract class ABaseContentView implements Serializable{
+public abstract class ABaseContentView implements Serializable {
 
 	private Map<JobView, List<WorkspaceFluidItem>> fluidItemsForViews;
 
@@ -51,6 +55,8 @@ public abstract class ABaseContentView implements Serializable{
 	private Map<String,List<WorkspaceFluidItem>> fluidItemsForSectionFiltered;
 
 	//Selected...
+	@Getter
+	@Setter
 	private List<WorkspaceFluidItem> fluidItemsSelectedList;
 
 	protected User loggedInUser;
@@ -75,8 +81,8 @@ public abstract class ABaseContentView implements Serializable{
 	 * @param sectionsParam The list of sections applicable to the view.
 	 */
 	public ABaseContentView(
-			User loggedInUserParam,
-			String[] sectionsParam
+		User loggedInUserParam,
+		String[] sectionsParam
 	) {
 		this(loggedInUserParam, sectionsParam, null);
 	}
@@ -211,6 +217,31 @@ public abstract class ABaseContentView implements Serializable{
 			Map<JobView, List<WorkspaceFluidItem>> fluidItemsForViewsParam);
 
 	/**
+	 *
+	 * @param event
+	 */
+	public void actionOnRowToggle(ToggleEvent event) {
+		if (event.getVisibility() == Visibility.VISIBLE) {
+			Object data = event.getData();
+
+		}
+	}
+
+
+	public String getDeleteButtonMessage() {
+		if (this.hasSelectedItems()) {
+			int size = this.fluidItemsSelectedList.size();
+			return size > 1 ? size + " items selected" : "1 item selected";
+		}
+
+		return "Remove";
+	}
+
+	public boolean hasSelectedItems() {
+		return this.fluidItemsSelectedList != null && !this.fluidItemsSelectedList.isEmpty();
+	}
+
+	/**
 	 * The JSF event to be fired when the list of filter items need to be updated.
 	 * The {@code textToFilterBy} value needs to be set.
 	 *
@@ -221,8 +252,7 @@ public abstract class ABaseContentView implements Serializable{
 	 */
 	public void actionSetFilteredList() {
 		this.fluidItemsForSectionFiltered.clear();
-
-		if(this.getTextToFilterBy() == null || this.getTextToFilterBy().trim().isEmpty()) {
+		if (this.getTextToFilterBy() == null || this.getTextToFilterBy().trim().isEmpty()) {
 			this.fluidItemsForSectionFiltered.putAll(this.fluidItemsForSection);
 		}
 
@@ -230,9 +260,9 @@ public abstract class ABaseContentView implements Serializable{
 
 		for (String section : this.getSections()) {
 			List<WorkspaceFluidItem> itemsInSection = null;
-			if(!this.fluidItemsForSection.containsKey(section) ||
-					((itemsInSection = this.fluidItemsForSection.get(section)) == null))
-			{
+			if (!this.fluidItemsForSection.containsKey(section) ||
+					((itemsInSection = this.fluidItemsForSection.get(section)) == null)
+			) {
 				continue;
 			}
 
@@ -245,20 +275,20 @@ public abstract class ABaseContentView implements Serializable{
 				List<Field> combinedFields = new ArrayList<>();
 
 				//Form Fields...
-				if(formFields != null){
+				if (formFields != null) {
 					combinedFields.addAll(formFields);
 				}
 
 				//Route Fields...
-				if(routeFields != null){
+				if (routeFields != null) {
 					combinedFields.addAll(routeFields);
 				}
 
 				//Form Type...
-				if(item.getFluidItem().getForm().getFormType() != null &&
+				if (item.getFluidItem().getForm().getFormType() != null &&
 						item.getFluidItem().getForm().getFormType().trim().toLowerCase().contains(filterByTextLower)) {
 					itemsInSectionFiltered.add(item);
-				} else if(!combinedFields.isEmpty()) {
+				} else if (!combinedFields.isEmpty()) {
 					//Then Form and Route Fields...
 					combinedFields.forEach(field -> {
 						if (field.getFieldValue() != null) {
@@ -329,7 +359,7 @@ public abstract class ABaseContentView implements Serializable{
 	 * @see SelectItem
 	 */
 	public List<SelectItem> getPossibleOptionsForSectionAndComboFieldName(
-			String sectionNameParam, String comboFieldNameParam
+		String sectionNameParam, String comboFieldNameParam
 	) {
 		List<WorkspaceFluidItem> allItemsForSection = this.getWorkspaceFluidItemsForSection(sectionNameParam);
 		if (allItemsForSection == null || allItemsForSection.isEmpty()) {
@@ -374,24 +404,6 @@ public abstract class ABaseContentView implements Serializable{
 	 */
 	public void setFluidItemsForSectionFiltered(Map<String,List<WorkspaceFluidItem>> fluidItemsForSectionFilteredParam) {
 		this.fluidItemsForSectionFiltered = fluidItemsForSectionFilteredParam;
-	}
-
-	/**
-	 * Get the list of selected items.
-	 *
-	 * @return {@code List<WorkspaceFluidItem>} of selected {@code WorkspaceFluidItem}'s.
-	 */
-	public List<WorkspaceFluidItem> getFluidItemsSelectedList() {
-		return this.fluidItemsSelectedList;
-	}
-
-	/**
-	 * Set the list of selected items.
-	 *
-	 * @param fluidItemsSelectedListParam {@code List<WorkspaceFluidItem>} of selected {@code WorkspaceFluidItem}'s.
-	 */
-	public void setFluidItemsSelectedList(List<WorkspaceFluidItem> fluidItemsSelectedListParam) {
-		this.fluidItemsSelectedList = fluidItemsSelectedListParam;
 	}
 
 	/**
@@ -463,7 +475,6 @@ public abstract class ABaseContentView implements Serializable{
 
 			List<WorkspaceFluidItem> itemsForSection =
 					this.getWorkspaceFluidItemsFor(section, fluidItemsForViewsParam);
-
 			if (itemsForSection == null || itemsForSection.isEmpty()) {
 				continue;
 			}

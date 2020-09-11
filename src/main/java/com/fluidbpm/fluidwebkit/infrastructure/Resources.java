@@ -18,11 +18,15 @@ package com.fluidbpm.fluidwebkit.infrastructure;
 import com.fluidbpm.fluidwebkit.ds.FluidClientDS;
 import com.fluidbpm.fluidwebkit.infrastructure.cache.ExitEventForFluidAPI;
 import com.fluidbpm.fluidwebkit.qualifier.WebKitResource;
-import com.fluidbpm.ws.client.v1.ABaseClientWS;
+import com.fluidbpm.fluidwebkit.qualifier.cache.FormAttachmentsCache;
+import com.fluidbpm.fluidwebkit.qualifier.cache.FormImageCache;
+import com.fluidbpm.fluidwebkit.servlet.content.ImageStreamedContent;
+import com.fluidbpm.program.api.vo.attachment.Attachment;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 
 import javax.enterprise.inject.Produces;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -34,9 +38,28 @@ public class Resources {
 			.removalListener(new ExitEventForFluidAPI())
 			.build();
 
+	private static Cache<String, ImageStreamedContent> imageServletImageCache =
+			CacheBuilder.newBuilder().expireAfterWrite(60, TimeUnit.MINUTES).build();
+
+	public static Cache<Long, List<Attachment>> imageAttachmentsByFormCache =
+			CacheBuilder.newBuilder().expireAfterWrite(60, TimeUnit.MINUTES).build();
+
 	@Produces
 	@WebKitResource
 	public Cache<String, FluidClientDS> getFluidClientDSCache() {
 		return Resources.cacheFluidDS;
 	}
+
+	@Produces
+	@FormImageCache
+	public Cache<String, ImageStreamedContent> getFormImageServletCache(){
+		return Resources.imageServletImageCache;
+	}
+
+	@Produces
+	@FormAttachmentsCache
+	public Cache<Long, List<Attachment>> getFormAttachmentsCache(){
+		return Resources.imageAttachmentsByFormCache;
+	}
+
 }

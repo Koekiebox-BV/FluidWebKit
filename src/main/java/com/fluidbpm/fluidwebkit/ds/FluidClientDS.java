@@ -18,6 +18,7 @@ package com.fluidbpm.fluidwebkit.ds;
 import com.fluidbpm.fluidwebkit.infrastructure.cache.ExitEventForFluidAPI;
 import com.fluidbpm.program.api.util.cache.exception.FluidCacheException;
 import com.fluidbpm.ws.client.v1.ABaseClientWS;
+import com.fluidbpm.ws.client.v1.attachment.AttachmentClient;
 import com.fluidbpm.ws.client.v1.config.ConfigurationClient;
 import com.fluidbpm.ws.client.v1.flow.FlowStepClient;
 import com.fluidbpm.ws.client.v1.flowitem.FlowItemClient;
@@ -103,6 +104,10 @@ public class FluidClientDS implements Closeable {
 		return this.getClientFor(ConfigurationClient.class);
 	}
 
+	public AttachmentClient getAttachmentClient() {
+		return this.getClientFor(AttachmentClient.class);
+	}
+
 	public PersonalInventoryClient getPersonalInventoryClient() {
 		return this.getClientFor(PersonalInventoryClient.class);
 	}
@@ -147,6 +152,10 @@ public class FluidClientDS implements Closeable {
 			return new UserQueryClient(this.endpoint, this.serviceTicket);
 		} else if (clazz.isAssignableFrom(FormContainerClient.class)) {
 			return new FormContainerClient(this.endpoint, this.serviceTicket);
+		} else if (clazz.isAssignableFrom(PersonalInventoryClient.class)) {
+			return new PersonalInventoryClient(this.endpoint, this.serviceTicket);
+		} else if (clazz.isAssignableFrom(AttachmentClient.class)) {
+			return new AttachmentClient(this.endpoint, this.serviceTicket);
 		}
 
 		return null;

@@ -38,7 +38,6 @@ public class WebUtil {
 	 * @return Redirect URL.
 	 */
 	public String getConstructCompleteCallbackURL(boolean forceHTTPSParam) {
-
 		Object request = FacesContext.getCurrentInstance().getExternalContext().getRequest();
 		if (request instanceof HttpServletRequest) {
 			HttpServletRequest httpServletRequest = ((HttpServletRequest) request);

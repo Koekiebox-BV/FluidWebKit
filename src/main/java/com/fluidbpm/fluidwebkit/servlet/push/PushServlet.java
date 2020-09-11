@@ -20,6 +20,8 @@ import com.fluidbpm.fluidwebkit.backing.bean.login.NotificationsBean;
 import com.fluidbpm.fluidwebkit.ds.FluidClientDS;
 import com.fluidbpm.fluidwebkit.ds.FluidClientPool;
 import com.fluidbpm.fluidwebkit.exception.WebSessionExpiredException;
+import com.fluidbpm.fluidwebkit.servlet.ABaseFWKServlet;
+import com.fluidbpm.program.api.vo.user.User;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -44,12 +46,8 @@ import java.util.concurrent.TimeUnit;
 		asyncSupported = false,
 		displayName = "WebKit Push Servlet",
 		loadOnStartup = 1)
-public class PushServlet extends HttpServlet {
-
+public class PushServlet extends ABaseFWKServlet {
 	public static final String APPLICATION_JSON_STRING = "application/json";
-
-	@Inject
-	private transient FluidClientPool fcp;
 
 	@Inject
 	private transient NotificationsBean notificationsBean;
@@ -127,11 +125,7 @@ public class PushServlet extends HttpServlet {
 	) throws ServletException, IOException {
 		this.notificationsBean.setSessionIdFallback(null);
 		HttpSession httpSession = httpServletRequestParam.getSession(false);
-		Object loggedInUser = null;
-		if (httpSession != null) {
-			loggedInUser = httpSession.getAttribute(ABaseManagedBean.SessionVariable.USER);
-		}
-
+		User loggedInUser = this.getLoggedInUser(httpServletRequestParam);
 		JSONObject returnObject = new JSONObject();
 		try {
 			//User not logged in...

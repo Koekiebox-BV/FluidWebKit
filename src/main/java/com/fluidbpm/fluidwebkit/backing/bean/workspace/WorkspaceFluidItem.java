@@ -70,6 +70,11 @@ public class WorkspaceFluidItem {
 		return this.baseWeb.getForm();
 	}
 
+	public Long getFluidItemFormId() {
+		if (this.getFluidItemForm() == null) return null;
+		return this.getFluidItemForm().getId();
+	}
+
 	/**
 	 * 
 	 * @return
