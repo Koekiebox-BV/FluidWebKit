@@ -72,6 +72,10 @@ public class ImageUtil {
 	}
 
 	public static byte[] getContentForPath(String path) throws IOException {
+		if (path == null || path.isEmpty()) {
+			throw new IOException("Path to content in package is not set!");
+		}
+
 		InputStream inputStream = ImageUtil.class.getClassLoader().getResourceAsStream(path);
 		if (inputStream == null) {
 			throw new IOException("Unable to find '"+ path+"'.");

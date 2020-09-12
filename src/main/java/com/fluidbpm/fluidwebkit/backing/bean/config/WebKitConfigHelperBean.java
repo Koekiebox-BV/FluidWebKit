@@ -15,22 +15,18 @@
 
 package com.fluidbpm.fluidwebkit.backing.bean.config;
 
-import com.fluidbpm.fluidwebkit.backing.bean.ABaseFormFieldAccessBean;
 import com.fluidbpm.fluidwebkit.backing.bean.ABaseManagedBean;
 import com.fluidbpm.fluidwebkit.backing.utility.Globals;
 import com.fluidbpm.fluidwebkit.backing.utility.WebUtil;
 import com.fluidbpm.program.api.util.UtilGlobal;
-import org.primefaces.PrimeFaces;
 
 import javax.enterprise.context.RequestScoped;
-import javax.enterprise.context.SessionScoped;
 import javax.faces.application.FacesMessage;
 import javax.faces.context.ExternalContext;
 import javax.faces.context.FacesContext;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.servlet.http.HttpSession;
-import java.util.List;
 import java.util.Map;
 
 /**

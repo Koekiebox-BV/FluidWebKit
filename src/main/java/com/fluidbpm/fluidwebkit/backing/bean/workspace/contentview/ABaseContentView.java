@@ -227,14 +227,20 @@ public abstract class ABaseContentView implements Serializable {
 		}
 	}
 
+	public String getRemoveButtonMessage() {
+		if (this.hasSelectedItems()) {
+			int size = this.fluidItemsSelectedList.size();
+			return size > 1 ? size + " Items" : "1 Item";
+		}
+		return "Remove";
+	}
 
 	public String getDeleteButtonMessage() {
 		if (this.hasSelectedItems()) {
 			int size = this.fluidItemsSelectedList.size();
-			return size > 1 ? size + " items selected" : "1 item selected";
+			return size > 1 ? size + " Items" : "1 Item";
 		}
-
-		return "Remove";
+		return "Delete";
 	}
 
 	public boolean hasSelectedItems() {

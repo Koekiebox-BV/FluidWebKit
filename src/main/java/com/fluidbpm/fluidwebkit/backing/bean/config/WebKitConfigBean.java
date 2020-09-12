@@ -17,10 +17,8 @@ package com.fluidbpm.fluidwebkit.backing.bean.config;
 
 import com.fluidbpm.fluidwebkit.backing.bean.ABaseManagedBean;
 import com.fluidbpm.program.api.vo.config.ConfigurationListing;
-import com.fluidbpm.program.api.vo.webkit.WebKitGlobal;
 import lombok.Getter;
 import lombok.Setter;
-import org.json.JSONObject;
 
 import javax.annotation.PostConstruct;
 import javax.enterprise.context.ApplicationScoped;

@@ -15,6 +15,7 @@
 
 package com.fluidbpm.fluidwebkit.servlet.content;
 
+import com.fluidbpm.fluidwebkit.backing.bean.config.WebKitAccessBean;
 import com.fluidbpm.fluidwebkit.backing.utility.ImageUtil;
 import com.fluidbpm.fluidwebkit.ds.FluidClientDS;
 import com.fluidbpm.fluidwebkit.qualifier.cache.FormAttachmentsCache;
@@ -38,6 +39,7 @@ import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.*;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Servlet used to retrieve image content for a form.
@@ -57,14 +59,27 @@ public class ImageServlet extends ABaseFWKServlet {
 	@FormAttachmentsCache
 	private Cache<Long, List<Attachment>> attachmentCache;
 
+	@Inject
+	private WebKitAccessBean webKitAccessBean;
+
 	private static final String PARAM_FORM_ID = "formId";
+	private static final String PARAM_FORM_DEFINITION = "formDefinition";
+	private static final String PARAM_ATTACHMENT_ID = "attachmentId";
 	private static final String PARAM_THUMBNAIL_SCALE = "thumbnailScale";
 
 	@Override
 	protected void doGet(HttpServletRequest reqParam, HttpServletResponse respParam) throws ServletException, IOException {
 		String formId = reqParam.getParameter(PARAM_FORM_ID);
-		if (formId == null || formId.trim().isEmpty()) {
+		String formDef = reqParam.getParameter(PARAM_FORM_DEFINITION);
+		if ((formId == null || formId.trim().isEmpty()) || (formDef == null || formDef.trim().isEmpty())) {
 			return;
+		}
+		String attachmentId = reqParam.getParameter(PARAM_ATTACHMENT_ID);
+		Long attachmentIdLong = -1L;
+		if (attachmentId == null) {
+			attachmentId = UtilGlobal.EMPTY;
+		} else {
+			attachmentIdLong = Long.valueOf(attachmentId.trim());
 		}
 
 		String thumbnailScale = reqParam.getParameter(PARAM_THUMBNAIL_SCALE);
@@ -74,7 +89,18 @@ public class ImageServlet extends ABaseFWKServlet {
 		}
 
 		Long formIdParam = Long.valueOf(formId.trim());
-		String imageKey = this.getImageCacheKey(formIdParam, thumbScale);
+		Form form = new Form(formIdParam);
+		form.setFormType(formDef);
+
+		if (this.webKitAccessBean == null || !this.webKitAccessBean.isCanUserAttachmentsView(formDef)) {
+			byte[] placeholderImageBytes = ImageUtil.getThumbnailPlaceholderImageForNoAccess();
+			ImageStreamedContent noAccessContent = new ImageStreamedContent(
+					placeholderImageBytes, "image/png", "no_access.png");
+			this.writeImageToResponseOutput(respParam, noAccessContent);
+			return;
+		}
+
+		String imageKey = this.getImageCacheKey(formIdParam, attachmentIdLong, thumbScale);
 		ImageStreamedContent cacheImageStreamedContent = this.formImageCache.getIfPresent(imageKey);
 		if (cacheImageStreamedContent != null) {
 			this.writeImageToResponseOutput(
@@ -94,7 +120,7 @@ public class ImageServlet extends ABaseFWKServlet {
 		final AttachmentClient attachmentClient = fcp.getAttachmentClient();
 		try {
 			ImageStreamedContent imageStreamedContent = this.getImageStreamedContentForFirstImageAttachmentForForm(
-					attachmentClient, new Form(formIdParam), thumbScale);
+					attachmentClient, new Form(formIdParam), attachmentIdLong, thumbScale);
 			if (imageStreamedContent == null) {
 				return;
 			}
@@ -113,8 +139,8 @@ public class ImageServlet extends ABaseFWKServlet {
 	 * @param streamedContentParam
 	 */
 	private void writeImageToResponseOutput(
-			HttpServletResponse respParam,
-			StreamedContent streamedContentParam
+		HttpServletResponse respParam,
+		StreamedContent streamedContentParam
 	) throws IOException {
 		respParam.setContentType(streamedContentParam.getContentType());
 		InputStream is = streamedContentParam.getStream();
@@ -133,11 +159,11 @@ public class ImageServlet extends ABaseFWKServlet {
 	public ImageStreamedContent getImageStreamedContentForFirstImageAttachmentForForm(
 		AttachmentClient attachmentClientParam,
 		Form formToCheckForParam,
+		Long attachmentId,
 		int thumbnailScale
 	) throws IOException {
 		List<Attachment> attachmentsForForm =
-				this.getImageAttachmentByFormNoDataUseCache(
-						attachmentClientParam, formToCheckForParam);
+				this.getImageAttachmentByFormNoDataUseCache(attachmentClientParam, formToCheckForParam);
 		if (attachmentsForForm == null || attachmentsForForm.isEmpty()) {
 			byte[] placeholderImageBytes = ImageUtil.getThumbnailPlaceholderImageForLost();
 			if (thumbnailScale > 0) placeholderImageBytes = this.scale(placeholderImageBytes, thumbnailScale, 0);
@@ -147,10 +173,26 @@ public class ImageServlet extends ABaseFWKServlet {
 					"lost.png");
 		}
 
-		Attachment imageAttachmentById =
-				attachmentClientParam.getAttachmentById(
-						attachmentsForForm.get(0).getId(),
-						true);
+		attachmentsForForm = attachmentsForForm.stream()
+				.filter(itm -> itm.isFileTypeImage())
+				.collect(Collectors.toList());
+		if (attachmentsForForm == null || attachmentsForForm.isEmpty()) {
+			byte[] placeholderImageBytes = ImageUtil.getThumbnailPlaceholderImageForLost();
+			if (thumbnailScale > 0) placeholderImageBytes = this.scale(placeholderImageBytes, thumbnailScale, 0);
+			return new ImageStreamedContent(
+					placeholderImageBytes,
+					"image/png",
+					"lost.png");
+		}
+
+		Attachment imageAttachmentById = null;
+		if (attachmentId > 0) {
+			imageAttachmentById = attachmentClientParam.getAttachmentById(
+					attachmentId, true);
+		} else {
+			imageAttachmentById = attachmentClientParam.getAttachmentById(
+							attachmentsForForm.get(0).getId(), true);
+		}
 
 		byte[] imageBytes =
 				UtilGlobal.decodeBase64(
@@ -176,7 +218,6 @@ public class ImageServlet extends ABaseFWKServlet {
 		this.attachmentCache.put(formToCheckForParam.getId(), attachmentsForForm);
 		return attachmentsForForm;
 	}
-
 
 	public byte[] scale(
 		byte[] fileDataParam,
@@ -206,7 +247,11 @@ public class ImageServlet extends ABaseFWKServlet {
 		return buffer.toByteArray();
 	}
 
-	private String getImageCacheKey(Long formId, int scale) {
-		return String.format("%d_%d", formId, scale);
+	private String getImageCacheKey(
+		Long formId,
+		Long attachmentId,
+		int scale
+	) {
+		return String.format("%d_%d_%d", formId, attachmentId, scale);
 	}
 }

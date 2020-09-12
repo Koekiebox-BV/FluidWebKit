@@ -15,19 +15,12 @@
 
 package com.fluidbpm.fluidwebkit.backing.bean.workspace.pi;
 
-import com.fluidbpm.fluidwebkit.backing.bean.ABaseFormFieldAccessBean;
-import com.fluidbpm.fluidwebkit.backing.bean.ABaseManagedBean;
 import com.fluidbpm.fluidwebkit.backing.bean.performance.PerformanceBean;
 import com.fluidbpm.fluidwebkit.backing.bean.workspace.ABaseWorkspaceBean;
 import com.fluidbpm.fluidwebkit.backing.bean.workspace.WorkspaceFluidItem;
-import com.fluidbpm.fluidwebkit.backing.bean.workspace.contentview.ABaseContentView;
-import com.fluidbpm.fluidwebkit.backing.vo.ABaseWebVO;
-import com.fluidbpm.program.api.vo.config.ConfigurationListing;
 import com.fluidbpm.program.api.vo.flow.JobView;
 import com.fluidbpm.program.api.vo.item.FluidItem;
 import com.fluidbpm.ws.client.FluidClientException;
-import com.fluidbpm.ws.client.v1.form.FormContainerClient;
-import com.fluidbpm.ws.client.v1.sqlutil.wrapper.SQLUtilWebSocketRESTWrapper;
 import com.fluidbpm.ws.client.v1.user.PersonalInventoryClient;
 import org.primefaces.PrimeFaces;
 

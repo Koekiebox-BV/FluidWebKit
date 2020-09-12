@@ -16,6 +16,7 @@
 package com.fluidbpm.fluidwebkit.backing.bean.workspace;
 
 import com.fluidbpm.fluidwebkit.backing.vo.ABaseWebVO;
+import com.fluidbpm.program.api.util.UtilGlobal;
 import com.fluidbpm.program.api.vo.field.Field;
 import com.fluidbpm.program.api.vo.flow.JobView;
 import com.fluidbpm.program.api.vo.form.Form;
@@ -74,6 +75,12 @@ public class WorkspaceFluidItem {
 		if (this.getFluidItemForm() == null) return null;
 		return this.getFluidItemForm().getId();
 	}
+
+	public String getFluidItemFormTypeURLSafe() {
+		if (this.getFluidItemForm() == null) return null;
+		return UtilGlobal.encodeURL(this.getFluidItemForm().getFormType());
+	}
+
 
 	/**
 	 * 
