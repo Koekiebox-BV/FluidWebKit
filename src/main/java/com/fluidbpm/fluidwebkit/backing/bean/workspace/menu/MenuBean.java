@@ -23,10 +23,12 @@ import com.fluidbpm.program.api.vo.flow.JobViewListing;
 import com.fluidbpm.program.api.vo.userquery.UserQuery;
 import com.fluidbpm.program.api.vo.userquery.UserQueryListing;
 import com.fluidbpm.program.api.vo.webkit.viewgroup.WebKitViewGroup;
+import com.fluidbpm.program.api.vo.webkit.viewgroup.WebKitViewSub;
 import com.fluidbpm.ws.client.FluidClientException;
 import com.fluidbpm.ws.client.v1.userquery.UserQueryClient;
 import lombok.Getter;
 import lombok.Setter;
+import org.primefaces.model.menu.DefaultMenuItem;
 import org.primefaces.model.menu.DefaultSubMenu;
 import org.primefaces.model.menu.Submenu;
 
@@ -34,7 +36,10 @@ import javax.annotation.PostConstruct;
 import javax.enterprise.context.SessionScoped;
 import javax.inject.Inject;
 import javax.inject.Named;
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
 @SessionScoped
 @Named("webKitMenuBean")
@@ -56,12 +61,8 @@ public class MenuBean extends ABaseManagedBean {
 		}
 
 		try {
-			this.webKitViewGroups =
-					this.getFluidClientDSConfig().getFlowClient().getViewGroupWebKit().getListing();
-
-			//TODO need to build the remainder of the menu based on the config...
-
-
+			this.webKitViewGroups = this.getFluidClientDSConfig().getFlowClient().getViewGroupWebKit().getListing();
+			this.buildWorkspaceMenu();
 		} catch (Exception fce) {
 			if (fce instanceof FluidClientException) {
 				FluidClientException casted = (FluidClientException)fce;
@@ -71,6 +72,93 @@ public class MenuBean extends ABaseManagedBean {
 			}
 			this.raiseError(fce);
 		}
+	}
+
+	private void buildWorkspaceMenu() {
+		if (this.webKitViewGroups == null || webKitViewGroups.isEmpty()) {
+			return;
+		}
+
+		List<JobView> jobViewsWithAccess = this.webKitAccessBean.getJobViewsCanAccess();
+		if (jobViewsWithAccess == null || jobViewsWithAccess.isEmpty()) {
+			DefaultMenuItem menuItem = new DefaultMenuItem();
+			menuItem.setValue("No Access");
+			menuItem.setIcon("fa ");
+			menuItem.setOutcome("/access");
+			this.submenuWorkspace.getElements().add(0, menuItem);
+			return;
+		}
+
+		this.webKitViewGroups.sort(Comparator.comparing(WebKitViewGroup::getGroupOrder));
+
+		AtomicInteger groupId = new AtomicInteger(1);
+		this.webKitViewGroups.forEach(webKitGroupItm -> {
+			String groupLabel = webKitGroupItm.getJobViewGroupName();
+			String groupIcon = webKitGroupItm.getJobViewGroupIcon();
+
+			if (webKitGroupItm.isEnableGroupSubsInMenu()) {
+
+			} else {
+				DefaultMenuItem menuItemGroup = new DefaultMenuItem();
+				menuItemGroup.setId(String.format("menGroupId%d", groupId.getAndIncrement()));
+				menuItemGroup.setIcon(groupIcon);
+				menuItemGroup.setValue(groupLabel);
+				menuItemGroup.setOutcome("/workspace");
+
+
+				menuItemGroup.setParam("workspaceViews", "1,2,3,4");
+
+			}
+
+			webKitGroupItm.getWebKitViewSubs()
+
+		});
+
+//		DefaultMenuItem menuItem = new DefaultMenuItem();
+//		menuItem.setId(ID_PREFIX_VIEWMENUITEMNOTIFICATIONS);
+//		menuItem.setValue(
+//				"Notifications (" + this.getNotificationsCount() + ")");
+//		menuItem.setIcon(GlobalVariable.Icon.CIRCLE);
+//		menuItem.setOnclick(ClickJavaScript);
+//		menuItem.setParam(WebParam.TypeOfInbox, CurrentDataViewType.Notifications.getAlias());
+//		menuItem.setCommand("#{jobViewItemListingBean.actionViewFilterSelectedPersonalInbox}");
+//		menuItem.setUpdate(ClickUpdate);
+//		groupMenuModel.getElements().add(menuItem);
+//
+
+
+
+
+	}
+
+	private boolean doesUserHaveAccessToItemInGroup() {
+		return false;
+	}
+
+	private List<Long> getViewIdsForGroup(WebKitViewGroup viewGroup) {
+		if (viewGroup == null) {
+			return null;
+		}
+
+		List<Long> returnVal = new ArrayList<>();
+
+		List<WebKitViewSub> subs = viewGroup.getWebKitViewSubs();
+		subs.forEach(viewSub -> {
+			List<JobView> views = viewSub.getJobViews();
+			if (views == null || views.isEmpty()) {
+				return;
+			}
+
+			views.sort(Comparator.comparing(JobView::getViewPriority));
+			views.forEach(viewItm -> {
+
+			});
+		});
+
+
+		subs.sort(Comparator.comparing(WebKitViewSub::getV));
+
+
 	}
 
 

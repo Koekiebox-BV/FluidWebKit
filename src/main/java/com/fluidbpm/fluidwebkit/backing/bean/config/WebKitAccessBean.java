@@ -56,7 +56,10 @@ public class WebKitAccessBean extends ABaseManagedBean {
 	@Getter
 	private List<Form> formDefinitionsAttachmentCanEdit;
 
+	@Getter
 	private List<UserQuery> userQueriesCanExecute;
+
+	@Getter
 	private List<JobView> jobViewsCanAccess;
 
 	private boolean cachingDone = false;

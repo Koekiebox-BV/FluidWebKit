@@ -22,6 +22,7 @@ import com.fluidbpm.ws.client.v1.attachment.AttachmentClient;
 import com.fluidbpm.ws.client.v1.config.ConfigurationClient;
 import com.fluidbpm.ws.client.v1.flow.FlowClient;
 import com.fluidbpm.ws.client.v1.flow.FlowStepClient;
+import com.fluidbpm.ws.client.v1.flow.RouteFieldClient;
 import com.fluidbpm.ws.client.v1.flowitem.FlowItemClient;
 import com.fluidbpm.ws.client.v1.form.FormContainerClient;
 import com.fluidbpm.ws.client.v1.form.FormDefinitionClient;
@@ -79,6 +80,10 @@ public class FluidClientDS implements Closeable {
 
 	public FlowClient getFlowClient() {
 		return this.getClientFor(FlowClient.class);
+	}
+
+	public RouteFieldClient getRouteFieldClient() {
+		return this.getClientFor(RouteFieldClient.class);
 	}
 
 	public FormDefinitionClient getFormDefinitionClient() {
@@ -163,6 +168,8 @@ public class FluidClientDS implements Closeable {
 			return new AttachmentClient(this.endpoint, this.serviceTicket);
 		} else if (clazz.isAssignableFrom(FlowClient.class)) {
 			return new FlowClient(this.endpoint, this.serviceTicket);
+		} else if (clazz.isAssignableFrom(RouteFieldClient.class)) {
+			return new RouteFieldClient(this.endpoint, this.serviceTicket);
 		}
 
 		return null;
