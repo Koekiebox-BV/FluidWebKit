@@ -32,6 +32,8 @@ import lombok.Setter;
 
 import javax.enterprise.context.RequestScoped;
 import javax.enterprise.context.SessionScoped;
+import javax.faces.application.FacesMessage;
+import javax.faces.context.FacesContext;
 import javax.inject.Inject;
 import javax.inject.Named;
 import java.util.*;
@@ -61,9 +63,16 @@ public class WorkspaceLookAndFeelBean extends ABaseManagedBean {
 	public void actionPrepareWorkspaceLookAndFeelUpdate() {
 		this.groupToViewMapping = new HashMap<>();
 		this.groupToRouteFieldMapping = new HashMap<>();
-		this.setDialogHeaderTitle("Workspace Look & Feel");
+		this.setDialogHeaderTitle("Workspace - Look & Feel");
 		try {
-			this.webKitViewGroups = this.getFluidClientDSConfig().getFlowClient().getViewGroupWebKit().getListing();
+			try {
+				this.webKitViewGroups = this.getFluidClientDSConfig().getFlowClient().getViewGroupWebKit().getListing();
+			} catch (FluidClientException fce) {
+				if (fce.getErrorCode() != FluidClientException.ErrorCode.NO_RESULT) {
+					throw fce;
+				}
+				return;
+			}
 			this.allJobViews = this.getFluidClientDSConfig().getFlowStepClient().getJobViewsByLoggedInUser().getListing();
 			RouteFieldClient routeFieldClient = this.getFluidClientDSConfig().getRouteFieldClient();
 
@@ -88,9 +97,21 @@ public class WorkspaceLookAndFeelBean extends ABaseManagedBean {
 						viewsForGroup.add(itm);
 						viewsForGroup.sort(Comparator.comparing(JobView::getViewStepName).thenComparing(JobView::getViewPriority));
 						this.groupToViewMapping.put(key, viewsForGroup);
-			});
+					});
 
 
+		} catch (Exception err) {
+			this.raiseError(err);
+		}
+	}
+
+	public void actionSaveWebKitViewGroups(String dialogToHideAfterSuccess) {
+		try {
+
+			this.executeJavaScript(String.format("PF('%s').hide()", dialogToHideAfterSuccess));
+			FacesMessage fMsg = new FacesMessage(FacesMessage.SEVERITY_INFO,
+					"Success", "Workspace Look and Feel Updated.");
+			FacesContext.getCurrentInstance().addMessage(null, fMsg);
 		} catch (Exception err) {
 			this.raiseError(err);
 		}

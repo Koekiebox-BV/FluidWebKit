@@ -37,6 +37,8 @@ import org.primefaces.model.menu.Submenu;
 
 import javax.annotation.PostConstruct;
 import javax.enterprise.context.SessionScoped;
+import javax.faces.component.UIParameter;
+import javax.faces.component.UIViewParameter;
 import javax.inject.Inject;
 import javax.inject.Named;
 import java.util.ArrayList;
@@ -104,25 +106,33 @@ public class MenuBean extends ABaseManagedBean {
 
 		this.webKitViewGroups.sort(Comparator.comparing(WebKitViewGroup::getGroupOrder));
 
-		AtomicInteger groupId = new AtomicInteger(1);
+		AtomicInteger groupCounter = new AtomicInteger(1);
 		this.webKitViewGroups.forEach(webKitGroupItm -> {
 			String groupLabel = webKitGroupItm.getJobViewGroupName();
+			Long groupId = webKitGroupItm.getJobViewGroupId();
 			String groupIcon = webKitGroupItm.getJobViewGroupIcon();
 
 			if (webKitGroupItm.isEnableGroupSubsInMenu()) {
+				//TODO need to sub this here...
 
 			} else {
-				DefaultMenuItem menuItemGroup = new DefaultMenuItem();
-				menuItemGroup.setId(String.format("menGroupId%d", groupId.getAndIncrement()));
+				UIMenuItem menuItemGroup = new UIMenuItem();
+				menuItemGroup.setId(String.format("menGroupId%d", groupCounter.getAndIncrement()));
 				menuItemGroup.setIcon(groupIcon);
 				menuItemGroup.setValue(groupLabel);
-				menuItemGroup.setOutcome("/workspace");
+				menuItemGroup.setAjax(true);
+				menuItemGroup.setOncomplete(
+						String.format("javascript:rcOpenWorkspaceItem([{name:'webKitItmClickedGroup', value:'%d'}, {name:'webKitItmClickedViews', value:'1,2,3,4'}]);", groupId));
+				//menuItemGroup.setActionExpression();
+				//menuItemGroup.setUrl("");
 				List<Long> jobViews = this.getViewIdsForGroup(webKitGroupItm);
-				String combinedViewsAsList = jobViews.stream()
-						.map(itm -> String.valueOf(itm))
-						.collect(Collectors.joining(","));
-				menuItemGroup.setParam("workspaceViews", combinedViewsAsList);
-
+				if (jobViews != null) {
+					String combinedViewsAsList = jobViews.stream()
+							.map(itm -> String.valueOf(itm))
+							.collect(Collectors.joining(","));
+					//menuItemGroup.setParam("workspaceViews", combinedViewsAsList);
+				}
+				this.submenuWorkspace.getElements().add(menuItemGroup);
 			}
 		});
 
@@ -160,7 +170,7 @@ public class MenuBean extends ABaseManagedBean {
 	}
 
 	private List<Long> getViewIdsForGroup(WebKitViewGroup viewGroup) {
-		if (viewGroup == null) {
+		if (viewGroup == null || viewGroup.getWebKitViewSubs() == null) {
 			return null;
 		}
 

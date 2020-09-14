@@ -41,6 +41,9 @@ public class ABaseFWKServlet extends HttpServlet {
 		if (RaygunUtil.isRaygunEnabled()) {
 			new RaygunUtil(this.webKitHelpBean.getRaygunUITag()).raiseErrorToRaygun(exception, this.getLoggedInUser(req));
 		}
+		if (FacesContext.getCurrentInstance() == null) {
+			return;
+		}
 		FacesMessage fMsg = new FacesMessage(
 				FacesMessage.SEVERITY_ERROR, "Failed.", exception.getMessage());
 		FacesContext.getCurrentInstance().addMessage(null, fMsg);

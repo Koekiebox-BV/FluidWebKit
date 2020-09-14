@@ -272,6 +272,11 @@ public abstract class ABaseWorkspaceBean<T extends ABaseWebVO, J extends ABaseCo
 		Long formIdToUpdateParam
 	);
 
+	public String actionOpenMainPageNonAjax() {
+		this.actionOpenMainPage();
+		return "workspace";
+	}
+
 	/**
 	 * When the main page for the workspace is opened or refreshed.
 	 * Custom sub {@code ABaseWebVO} object may be created via {@code createABaseWebVO}.

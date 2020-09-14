@@ -89,6 +89,9 @@ public abstract class ABaseManagedBean implements Serializable {
 		if (RaygunUtil.isRaygunEnabled()) {
 			new RaygunUtil(this.getRaygunUITag()).raiseErrorToRaygun(exception, this.getLoggedInUserSafe());
 		}
+		if (FacesContext.getCurrentInstance() == null) {
+			return;
+		}
 		FacesMessage fMsg = new FacesMessage(
 				FacesMessage.SEVERITY_ERROR, "Failed.", exception.getMessage());
 		FacesContext.getCurrentInstance().addMessage(null, fMsg);
