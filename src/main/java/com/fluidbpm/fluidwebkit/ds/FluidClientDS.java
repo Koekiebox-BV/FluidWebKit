@@ -170,6 +170,8 @@ public class FluidClientDS implements Closeable {
 			return new FlowClient(this.endpoint, this.serviceTicket);
 		} else if (clazz.isAssignableFrom(RouteFieldClient.class)) {
 			return new RouteFieldClient(this.endpoint, this.serviceTicket);
+		} else if (clazz.isAssignableFrom(FlowStepClient.class)) {
+			return new FlowStepClient(this.endpoint, this.serviceTicket);
 		}
 
 		return null;

@@ -23,11 +23,14 @@ import com.fluidbpm.program.api.vo.flow.JobViewListing;
 import com.fluidbpm.program.api.vo.userquery.UserQuery;
 import com.fluidbpm.program.api.vo.userquery.UserQueryListing;
 import com.fluidbpm.program.api.vo.webkit.viewgroup.WebKitViewGroup;
+import com.fluidbpm.program.api.vo.webkit.viewgroup.WebKitViewGroupListing;
 import com.fluidbpm.program.api.vo.webkit.viewgroup.WebKitViewSub;
 import com.fluidbpm.ws.client.FluidClientException;
 import com.fluidbpm.ws.client.v1.userquery.UserQueryClient;
 import lombok.Getter;
 import lombok.Setter;
+import org.primefaces.component.menuitem.UIMenuItem;
+import org.primefaces.component.submenu.UISubmenu;
 import org.primefaces.model.menu.DefaultMenuItem;
 import org.primefaces.model.menu.DefaultSubMenu;
 import org.primefaces.model.menu.Submenu;
@@ -40,6 +43,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 
 @SessionScoped
 @Named("webKitMenuBean")
@@ -52,7 +56,7 @@ public class MenuBean extends ABaseManagedBean {
 
 	@Getter
 	@Setter
-	private Submenu submenuWorkspace;
+	private UISubmenu submenuWorkspace;
 
 	@PostConstruct
 	public void actionPopulateInit() {
@@ -60,13 +64,25 @@ public class MenuBean extends ABaseManagedBean {
 			return;
 		}
 
+		this.submenuWorkspace = new UISubmenu();
+		this.submenuWorkspace.setId("om_workspace");
+		this.submenuWorkspace.setLabel("Workspace");
+		this.submenuWorkspace.setIcon("pi pi-compass");
+
+//				.id("om_workspace")//TODO need to fetch these from listing...
+//				.label("Workspace")
+//				.icon("pi pi-compass")
+//				.build();
+
 		try {
-			this.webKitViewGroups = this.getFluidClientDSConfig().getFlowClient().getViewGroupWebKit().getListing();
+			WebKitViewGroupListing listing = this.getFluidClientDSConfig().getFlowClient().getViewGroupWebKit();
+			this.webKitViewGroups = listing.getListing();
 			this.buildWorkspaceMenu();
 		} catch (Exception fce) {
 			if (fce instanceof FluidClientException) {
 				FluidClientException casted = (FluidClientException)fce;
 				if (casted.getErrorCode() == FluidClientException.ErrorCode.NO_RESULT) {
+					this.noGroups();
 					return;
 				}
 			}
@@ -76,16 +92,13 @@ public class MenuBean extends ABaseManagedBean {
 
 	private void buildWorkspaceMenu() {
 		if (this.webKitViewGroups == null || webKitViewGroups.isEmpty()) {
+			this.noGroups();
 			return;
 		}
 
 		List<JobView> jobViewsWithAccess = this.webKitAccessBean.getJobViewsCanAccess();
 		if (jobViewsWithAccess == null || jobViewsWithAccess.isEmpty()) {
-			DefaultMenuItem menuItem = new DefaultMenuItem();
-			menuItem.setValue("No Access");
-			menuItem.setIcon("fa ");
-			menuItem.setOutcome("/access");
-			this.submenuWorkspace.getElements().add(0, menuItem);
+			this.noAccess();
 			return;
 		}
 
@@ -104,14 +117,13 @@ public class MenuBean extends ABaseManagedBean {
 				menuItemGroup.setIcon(groupIcon);
 				menuItemGroup.setValue(groupLabel);
 				menuItemGroup.setOutcome("/workspace");
-
-
-				menuItemGroup.setParam("workspaceViews", "1,2,3,4");
+				List<Long> jobViews = this.getViewIdsForGroup(webKitGroupItm);
+				String combinedViewsAsList = jobViews.stream()
+						.map(itm -> String.valueOf(itm))
+						.collect(Collectors.joining(","));
+				menuItemGroup.setParam("workspaceViews", combinedViewsAsList);
 
 			}
-
-			webKitGroupItm.getWebKitViewSubs()
-
 		});
 
 //		DefaultMenuItem menuItem = new DefaultMenuItem();
@@ -125,10 +137,22 @@ public class MenuBean extends ABaseManagedBean {
 //		menuItem.setUpdate(ClickUpdate);
 //		groupMenuModel.getElements().add(menuItem);
 //
+	}
 
+	private void noAccess() {
+		UIMenuItem menuItem = new UIMenuItem();
+		menuItem.setValue("No Access");
+		menuItem.setIcon("pi pi-exclamation-triangle");
+		menuItem.setOutcome("access");
+		this.submenuWorkspace.getElements().add(this.submenuWorkspace.getElementsCount(), menuItem);
+	}
 
-
-
+	private void noGroups() {
+		UIMenuItem menuItem = new UIMenuItem();
+		menuItem.setValue("No Group Config");
+		menuItem.setIcon("pi pi-exclamation-triangle");
+		menuItem.setOutcome("noconfig");
+		this.submenuWorkspace.getElements().add(this.submenuWorkspace.getElementsCount(), menuItem);
 	}
 
 	private boolean doesUserHaveAccessToItemInGroup() {
@@ -141,7 +165,6 @@ public class MenuBean extends ABaseManagedBean {
 		}
 
 		List<Long> returnVal = new ArrayList<>();
-
 		List<WebKitViewSub> subs = viewGroup.getWebKitViewSubs();
 		subs.forEach(viewSub -> {
 			List<JobView> views = viewSub.getJobViews();
@@ -150,18 +173,13 @@ public class MenuBean extends ABaseManagedBean {
 			}
 
 			views.sort(Comparator.comparing(JobView::getViewPriority));
-			views.forEach(viewItm -> {
-
-			});
+			views.stream()
+					.filter(itm -> !returnVal.contains(itm.getId()))
+					.forEach(viewItm -> {
+						returnVal.add(viewItm.getId());
+					});
 		});
-
-
-		subs.sort(Comparator.comparing(WebKitViewSub::getV));
-
-
+		return returnVal;
 	}
-
-
-
 
 }
