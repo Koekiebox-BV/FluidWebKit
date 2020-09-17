@@ -18,6 +18,7 @@ package com.fluidbpm.fluidwebkit.backing.bean.workspace.menu;
 import com.fluidbpm.fluidwebkit.backing.bean.ABaseManagedBean;
 import com.fluidbpm.fluidwebkit.backing.bean.config.WebKitAccessBean;
 import com.fluidbpm.fluidwebkit.backing.bean.workspace.pi.ContentViewPI;
+import com.fluidbpm.program.api.util.UtilGlobal;
 import com.fluidbpm.program.api.vo.flow.JobView;
 import com.fluidbpm.program.api.vo.flow.JobViewListing;
 import com.fluidbpm.program.api.vo.userquery.UserQuery;
@@ -60,21 +61,24 @@ public class MenuBean extends ABaseManagedBean {
 	@Setter
 	private UISubmenu submenuWorkspace;
 
+	public static final class ReqParam {
+		public static final String CLICKED_GROUP = "webKitItmClickedGroup";
+		public static final String CLICKED_GROUP_ALIAS = "webKitItmClickedGroupAlias";
+		public static final String CLICKED_VIEWS = "webKitItmClickedViews";
+		public static final String MISSING_CONFIG_MSG = "missingConfigMessage";
+	}
+
 	@PostConstruct
 	public void actionPopulateInit() {
 		if (this.getFluidClientDS() == null) {
 			return;
 		}
 
+		//TODO need to fetch these from listing / config...
 		this.submenuWorkspace = new UISubmenu();
 		this.submenuWorkspace.setId("om_workspace");
 		this.submenuWorkspace.setLabel("Workspace");
 		this.submenuWorkspace.setIcon("pi pi-compass");
-
-//				.id("om_workspace")//TODO need to fetch these from listing...
-//				.label("Workspace")
-//				.icon("pi pi-compass")
-//				.build();
 
 		try {
 			WebKitViewGroupListing listing = this.getFluidClientDSConfig().getFlowClient().getViewGroupWebKit();
@@ -90,6 +94,10 @@ public class MenuBean extends ABaseManagedBean {
 			}
 			this.raiseError(fce);
 		}
+	}
+
+	public String actionOpenMissingConfig() {
+		return "noconfig";
 	}
 
 	private void buildWorkspaceMenu() {
@@ -114,24 +122,31 @@ public class MenuBean extends ABaseManagedBean {
 
 			if (webKitGroupItm.isEnableGroupSubsInMenu()) {
 				//TODO need to sub this here...
-
 			} else {
 				UIMenuItem menuItemGroup = new UIMenuItem();
 				menuItemGroup.setId(String.format("menGroupId%d", groupCounter.getAndIncrement()));
-				menuItemGroup.setIcon(groupIcon);
+				menuItemGroup.setIcon((groupIcon == null || groupIcon.trim().isEmpty()) ? "pi pi-list" : groupIcon);
 				menuItemGroup.setValue(groupLabel);
 				menuItemGroup.setAjax(true);
-				menuItemGroup.setOncomplete(
-						String.format("javascript:rcOpenWorkspaceItem([{name:'webKitItmClickedGroup', value:'%d'}, {name:'webKitItmClickedViews', value:'1,2,3,4'}]);", groupId));
-				//menuItemGroup.setActionExpression();
-				//menuItemGroup.setUrl("");
 				List<Long> jobViews = this.getViewIdsForGroup(webKitGroupItm);
-				if (jobViews != null) {
+				final String onCompleteJS;
+				if (jobViews == null || jobViews.isEmpty()) {
+					onCompleteJS = String.format("javascript:rcOpenNoConfig([{name:'%s', value:\"%s\"}]);",
+							ReqParam.MISSING_CONFIG_MSG,
+							String.format("No Views configured to render for '%s'.", groupLabel));
+				} else {
 					String combinedViewsAsList = jobViews.stream()
 							.map(itm -> String.valueOf(itm))
 							.collect(Collectors.joining(","));
-					//menuItemGroup.setParam("workspaceViews", combinedViewsAsList);
+					onCompleteJS = String.format("javascript:rcOpenWorkspaceItem([{name:'%s', value:'%d'}, {name:'%s', value:'%s'}, {name:'%s', value:\"%s\"}]);",
+							ReqParam.CLICKED_GROUP,
+							groupId,
+							ReqParam.CLICKED_VIEWS,
+							combinedViewsAsList,
+							ReqParam.CLICKED_GROUP_ALIAS,
+							groupLabel);
 				}
+				menuItemGroup.setOncomplete(onCompleteJS);
 				this.submenuWorkspace.getElements().add(menuItemGroup);
 			}
 		});

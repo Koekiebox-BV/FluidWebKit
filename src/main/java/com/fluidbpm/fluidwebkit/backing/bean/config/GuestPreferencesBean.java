@@ -205,6 +205,14 @@ public class GuestPreferencesBean extends ABaseManagedBean {
 		return this.getInputStyle().equals("filled") ? "ui-input-filled" : "";
 	}
 
+	public String getInputStyleAddition() {
+		return this.webKitGlobal.getInputStyleAddition();
+	}
+
+	public void setInputStyleAddition(String inputStyleAddition) {
+		this.webKitGlobal.setInputStyleAddition(inputStyleAddition);
+	}
+
 	public String 	getFluidLogoFilename() {
 		String topbarTheme = this.getTopbarTheme();
 		if (topbarTheme == null) {

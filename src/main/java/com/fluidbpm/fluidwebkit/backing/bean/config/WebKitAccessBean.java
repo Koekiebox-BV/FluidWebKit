@@ -121,7 +121,7 @@ public class WebKitAccessBean extends ABaseManagedBean {
 						.filter(itm -> !this.getFormDefsToIgnore().contains(itm.getFormType()))
 						.collect(Collectors.toList());
 			}
-			Collections.sort(this.formDefinitionsCanCreateInstanceOf, Comparator.comparing(Form::getTitle));
+			Collections.sort(this.formDefinitionsCanCreateInstanceOf, Comparator.comparing(Form::getFormType));
 		}
 
 		this.formDefinitionsAttachmentCanView = formDefinitionClient.getAllByLoggedInUserWhereCanViewAttachments();
