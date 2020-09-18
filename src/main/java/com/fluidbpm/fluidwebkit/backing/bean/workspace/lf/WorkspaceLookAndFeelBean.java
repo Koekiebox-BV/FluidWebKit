@@ -16,31 +16,25 @@
 package com.fluidbpm.fluidwebkit.backing.bean.workspace.lf;
 
 import com.fluidbpm.fluidwebkit.backing.bean.ABaseManagedBean;
-import com.fluidbpm.fluidwebkit.backing.bean.workspace.WorkspaceFluidItem;
 import com.fluidbpm.fluidwebkit.exception.ClientDashboardException;
-import com.fluidbpm.fluidwebkit.qualifier.cache.FormAttachmentsCache;
-import com.fluidbpm.program.api.vo.attachment.Attachment;
 import com.fluidbpm.program.api.vo.field.Field;
 import com.fluidbpm.program.api.vo.flow.JobView;
-import com.fluidbpm.program.api.vo.form.Form;
 import com.fluidbpm.program.api.vo.webkit.viewgroup.WebKitViewGroup;
 import com.fluidbpm.program.api.vo.webkit.viewgroup.WebKitViewSub;
+import com.fluidbpm.program.api.vo.webkit.viewgroup.WebKitWorkspaceJobView;
 import com.fluidbpm.program.api.vo.webkit.viewgroup.WebKitWorkspaceRouteField;
 import com.fluidbpm.ws.client.FluidClientException;
-import com.fluidbpm.ws.client.v1.attachment.AttachmentClient;
 import com.fluidbpm.ws.client.v1.flow.RouteFieldClient;
-import com.google.common.cache.Cache;
 import lombok.Getter;
 import lombok.Setter;
-import org.checkerframework.checker.units.qual.A;
+import org.primefaces.event.CellEditEvent;
 
-import javax.enterprise.context.RequestScoped;
 import javax.enterprise.context.SessionScoped;
 import javax.faces.application.FacesMessage;
 import javax.faces.context.FacesContext;
-import javax.inject.Inject;
 import javax.inject.Named;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
@@ -52,7 +46,7 @@ public class WorkspaceLookAndFeelBean extends ABaseManagedBean {
 	private List<JobView> allJobViews;
 
 	@Getter
-	private Map<String, List<JobView>> groupToViewMapping;
+	private Map<String, WebKitWorkspaceJobViewLDM> groupToViewMapping;
 
 	@Getter
 	private Map<String, List<WebKitWorkspaceRouteField>> groupToRouteFieldMapping;
@@ -91,10 +85,14 @@ public class WorkspaceLookAndFeelBean extends ABaseManagedBean {
 					.forEach(itm -> {
 						String viewGroupName = itm.getViewGroupName();
 						//Add the Job Views for the Group...
-						List<JobView> viewsForGroup = this.groupToViewMapping.getOrDefault(viewGroupName, new ArrayList<>());
-						viewsForGroup.add(itm);
-						viewsForGroup.sort(Comparator.comparing(JobView::getViewStepName).thenComparing(JobView::getViewPriority));
-						this.groupToViewMapping.put(viewGroupName, viewsForGroup);
+						WebKitWorkspaceJobViewLDM jobViewLDM = this.groupToViewMapping.getOrDefault(
+								viewGroupName, new WebKitWorkspaceJobViewLDM());
+						jobViewLDM.addToListing(new WebKitWorkspaceJobView(itm));
+						jobViewLDM.getDataListing().sort(Comparator
+								.comparing(WebKitWorkspaceJobView::getViewFlowName)
+								.thenComparing(WebKitWorkspaceJobView::getViewStepName)
+								.thenComparing(WebKitWorkspaceJobView::getViewOrder));
+						this.groupToViewMapping.put(viewGroupName, jobViewLDM);
 					});
 
 			//Set the Route Fields for the Groups...
@@ -177,6 +175,10 @@ public class WorkspaceLookAndFeelBean extends ABaseManagedBean {
 		}
 	}
 
+	public void actionClearMaxResultsTbl(WebKitViewGroup groupToRemoveFrom) {
+		groupToRemoveFrom.setTableMaxCountPerPage(null);
+	}
+
 	public void actionMoveViewSubUp(WebKitViewGroup groupToRemoveFrom, WebKitViewSub subToMove) {
 		try {
 			int fromPos = subToMove.getSubOrder();
@@ -241,8 +243,30 @@ public class WorkspaceLookAndFeelBean extends ABaseManagedBean {
 		}
 	}
 
+	public void actionSelectDeselectAllViews(WebKitViewSub viewSub) {
+		if (viewSub.getJobViews() == null) {
+			return;
+		}
+		AtomicBoolean toSetAllTo = new AtomicBoolean(false);
+		viewSub.getJobViews().stream().forEach(itm -> {
+			if (!itm.isSelected()) {
+				toSetAllTo.set(true);
+				return;
+			}
+		});
 
+		viewSub.getJobViews().stream().forEach(itm -> itm.setSelected(toSetAllTo.get()));
+	}
 
+	public void actionOnRouteFieldCellEdit(CellEditEvent event) {
+		Object oldValue = event.getOldValue();
+		Object newValue = event.getNewValue();
+
+		if (newValue != null && !newValue.equals(oldValue)) {
+			FacesMessage msg = new FacesMessage(FacesMessage.SEVERITY_INFO, "Cell Changed", "Old: " + oldValue + ", New:" + newValue);
+			FacesContext.getCurrentInstance().addMessage(null, msg);
+		}
+	}
 
 
 }

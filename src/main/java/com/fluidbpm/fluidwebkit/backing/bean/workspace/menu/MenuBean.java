@@ -26,6 +26,7 @@ import com.fluidbpm.program.api.vo.userquery.UserQueryListing;
 import com.fluidbpm.program.api.vo.webkit.viewgroup.WebKitViewGroup;
 import com.fluidbpm.program.api.vo.webkit.viewgroup.WebKitViewGroupListing;
 import com.fluidbpm.program.api.vo.webkit.viewgroup.WebKitViewSub;
+import com.fluidbpm.program.api.vo.webkit.viewgroup.WebKitWorkspaceJobView;
 import com.fluidbpm.ws.client.FluidClientException;
 import com.fluidbpm.ws.client.v1.userquery.UserQueryClient;
 import lombok.Getter;
@@ -192,13 +193,14 @@ public class MenuBean extends ABaseManagedBean {
 		List<Long> returnVal = new ArrayList<>();
 		List<WebKitViewSub> subs = viewGroup.getWebKitViewSubs();
 		subs.forEach(viewSub -> {
-			List<JobView> views = viewSub.getJobViews();
+			List<WebKitWorkspaceJobView> views = viewSub.getJobViews();
 			if (views == null || views.isEmpty()) {
 				return;
 			}
 
-			views.sort(Comparator.comparing(JobView::getViewPriority));
-			views.stream()
+			List<JobView> remapped = views.stream().map(itm -> itm.getJobView()).collect(Collectors.toList());
+			remapped.sort(Comparator.comparing(JobView::getViewPriority));
+			remapped.stream()
 					.filter(itm -> !returnVal.contains(itm.getId()))
 					.forEach(viewItm -> {
 						returnVal.add(viewItm.getId());
