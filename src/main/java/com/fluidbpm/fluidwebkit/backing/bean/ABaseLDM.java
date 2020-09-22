@@ -1,13 +1,14 @@
 package com.fluidbpm.fluidwebkit.backing.bean;
 
 import com.fluidbpm.program.api.vo.ABaseFluidVO;
-import com.fluidbpm.program.api.vo.webkit.viewgroup.WebKitWorkspaceJobView;
 import lombok.Getter;
+import lombok.Setter;
 import org.primefaces.model.FilterMeta;
 import org.primefaces.model.LazyDataModel;
 import org.primefaces.model.SortOrder;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 
@@ -15,6 +16,9 @@ public abstract class ABaseLDM<T extends ABaseFluidVO> extends LazyDataModel<T> 
 
 	@Getter
 	protected List<T> dataListing;
+
+	@Setter
+	private Comparator comparator;
 
 	public ABaseLDM() {
 		this(new ArrayList<>());
@@ -66,6 +70,10 @@ public abstract class ABaseLDM<T extends ABaseFluidVO> extends LazyDataModel<T> 
 		}
 		if (this.dataListing.isEmpty()) {
 			return this.dataListing;
+		}
+
+		if (this.comparator != null) {
+			this.dataListing.sort(this.comparator);
 		}
 
 		int totalSize = this.dataListing.size();

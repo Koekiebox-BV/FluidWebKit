@@ -19,19 +19,19 @@ import com.fluidbpm.fluidwebkit.backing.bean.ABaseManagedBean;
 import com.fluidbpm.fluidwebkit.exception.ClientDashboardException;
 import com.fluidbpm.program.api.vo.field.Field;
 import com.fluidbpm.program.api.vo.flow.JobView;
-import com.fluidbpm.program.api.vo.webkit.viewgroup.WebKitViewGroup;
-import com.fluidbpm.program.api.vo.webkit.viewgroup.WebKitViewSub;
-import com.fluidbpm.program.api.vo.webkit.viewgroup.WebKitWorkspaceJobView;
-import com.fluidbpm.program.api.vo.webkit.viewgroup.WebKitWorkspaceRouteField;
+import com.fluidbpm.program.api.vo.webkit.viewgroup.*;
 import com.fluidbpm.ws.client.FluidClientException;
 import com.fluidbpm.ws.client.v1.flow.RouteFieldClient;
 import lombok.Getter;
 import lombok.Setter;
+import org.primefaces.event.AbstractAjaxBehaviorEvent;
 import org.primefaces.event.CellEditEvent;
+import org.primefaces.event.data.PageEvent;
 
 import javax.enterprise.context.SessionScoped;
 import javax.faces.application.FacesMessage;
 import javax.faces.context.FacesContext;
+import javax.faces.event.AjaxBehaviorEvent;
 import javax.inject.Named;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -41,15 +41,18 @@ import java.util.stream.Collectors;
 @SessionScoped
 @Named("webKitWorkspaceLookAndFeelBean")
 public class WorkspaceLookAndFeelBean extends ABaseManagedBean {
-
-	@Getter
+	private Map<String, List<JobView>> groupToViewMapping;
+	private Map<String, List<Field>> groupToRouteFieldMapping;
 	private List<JobView> allJobViews;
 
 	@Getter
-	private Map<String, WebKitWorkspaceJobViewLDM> groupToViewMapping;
+	@Setter
+	private Map<String, WebKitWorkspaceJobViewLDM> inputSubToViewMapping;
 
 	@Getter
-	private Map<String, List<WebKitWorkspaceRouteField>> groupToRouteFieldMapping;
+	@Setter
+	private Map<String, WebKitWorkspaceRouteFieldLDM> inputSubToRouteFieldMapping;
+
 
 	@Getter
 	@Setter
@@ -60,12 +63,103 @@ public class WorkspaceLookAndFeelBean extends ABaseManagedBean {
 	@Setter
 	private String inputNewGroupSubName;
 
+	@Getter
+	@Setter
+	private Map<String, List<String>> inputVisibleColumns;
+
+	@Getter
+	@Setter
+	private Map<String, List<String>> inputVisibleButtons;
+
+	public enum VisibleColumnItems {
+		showColumnFormType,
+		showColumnTitle,
+		showColumnStepEntryTime,
+		showColumnCurrentFlow,
+		showColumnCurrentStep,
+		showColumnCurrentView,
+		showColumnProgressPercentage,
+		showColumnAttachment;
+
+		public static List<String> asListFrom(WebKitViewGroup group) {
+			List<String> returnVal = new ArrayList<>();
+			if (group == null) {
+				return returnVal;
+			}
+			if (group.isShowColumnFormType()) {
+				returnVal.add(VisibleColumnItems.showColumnFormType.name());
+			}
+			if (group.isShowColumnTitle()) {
+				returnVal.add(VisibleColumnItems.showColumnTitle.name());
+			}
+			if (group.isShowColumnStepEntryTime()) {
+				returnVal.add(VisibleColumnItems.showColumnStepEntryTime.name());
+			}
+			if (group.isShowColumnCurrentFlow()) {
+				returnVal.add(VisibleColumnItems.showColumnCurrentFlow.name());
+			}
+			if (group.isShowColumnCurrentStep()) {
+				returnVal.add(VisibleColumnItems.showColumnCurrentStep.name());
+			}
+			if (group.isShowColumnCurrentView()) {
+				returnVal.add(VisibleColumnItems.showColumnCurrentView.name());
+			}
+			if (group.isShowColumnProgressPercentage()) {
+				returnVal.add(VisibleColumnItems.showColumnProgressPercentage.name());
+			}
+			if (group.isShowColumnAttachment()) {
+				returnVal.add(VisibleColumnItems.showColumnAttachment.name());
+			}
+			return returnVal;
+		}
+	}
+
+	public enum VisibleButtonItems {
+		showButtonBulkUpdate,
+		showButtonExport,
+		showButtonSendOn,
+		showButtonDelete,
+		showButtonLock,
+		showButtonAddToPI,
+		;
+
+		public static List<String> asListFrom(WebKitViewGroup group) {
+			List<String> returnVal = new ArrayList<>();
+			if (group == null) {
+				return returnVal;
+			}
+			if (group.isShowButtonBulkUpdate()) {
+				returnVal.add(VisibleButtonItems.showButtonBulkUpdate.name());
+			}
+			if (group.isShowButtonExport()) {
+				returnVal.add(VisibleButtonItems.showButtonExport.name());
+			}
+			if (group.isShowButtonSendOn()) {
+				returnVal.add(VisibleButtonItems.showButtonSendOn.name());
+			}
+			if (group.isShowButtonDelete()) {
+				returnVal.add(VisibleButtonItems.showButtonDelete.name());
+			}
+			if (group.isShowButtonLock()) {
+				returnVal.add(VisibleButtonItems.showButtonLock.name());
+			}
+			if (group.isShowButtonAddToPI()) {
+				returnVal.add(VisibleButtonItems.showButtonAddToPI.name());
+			}
+			return returnVal;
+		}
+	}
+
 	/**
 	 * Prepare to change the look and feel for workspace.
 	 */
 	public void actionPrepareWorkspaceLookAndFeelUpdate() {
+		this.inputSubToViewMapping = new HashMap<>();
+		this.inputSubToRouteFieldMapping = new HashMap<>();
 		this.groupToViewMapping = new HashMap<>();
 		this.groupToRouteFieldMapping = new HashMap<>();
+		this.inputVisibleColumns = new HashMap<>();
+		this.inputVisibleButtons = new HashMap<>();
 		this.setDialogHeaderTitle("Workspace - Look & Feel");
 		try {
 			try {
@@ -85,18 +179,17 @@ public class WorkspaceLookAndFeelBean extends ABaseManagedBean {
 					.forEach(itm -> {
 						String viewGroupName = itm.getViewGroupName();
 						//Add the Job Views for the Group...
-						WebKitWorkspaceJobViewLDM jobViewLDM = this.groupToViewMapping.getOrDefault(
-								viewGroupName, new WebKitWorkspaceJobViewLDM());
-						jobViewLDM.addToListing(new WebKitWorkspaceJobView(itm));
-						jobViewLDM.getDataListing().sort(Comparator
-								.comparing(WebKitWorkspaceJobView::getViewFlowName)
-								.thenComparing(WebKitWorkspaceJobView::getViewStepName)
-								.thenComparing(WebKitWorkspaceJobView::getViewOrder));
-						this.groupToViewMapping.put(viewGroupName, jobViewLDM);
+						List<JobView> jobViewList = this.groupToViewMapping.getOrDefault(
+								viewGroupName, new ArrayList<>());
+						jobViewList.add(itm);
+						this.groupToViewMapping.put(viewGroupName, jobViewList);
 					});
 
 			//Set the Route Fields for the Groups...
 			this.groupToViewMapping.forEach((key, value) -> {
+				this.inputVisibleColumns.put(key, new ArrayList<>());
+				this.inputVisibleButtons.put(key, new ArrayList<>());
+
 				List<Field> routeFieldsForGroup = new ArrayList<>();
 				try {
 					routeFieldsForGroup = routeFieldClient.getFieldsByViewGroup(new WebKitViewGroup(key)).getListing();
@@ -105,19 +198,73 @@ public class WorkspaceLookAndFeelBean extends ABaseManagedBean {
 						throw fce;
 					}
 				}
-
-				List<WebKitWorkspaceRouteField> wsRouteFields = routeFieldsForGroup.stream()
-						.map(toMap -> {
-							WebKitWorkspaceRouteField wkRteField = new WebKitWorkspaceRouteField(toMap);
-							return wkRteField;
-						})
-						.collect(Collectors.toList());
-				this.groupToRouteFieldMapping.put(key, wsRouteFields);
+				this.groupToRouteFieldMapping.put(key, routeFieldsForGroup);
 			});
 
 			//Merged with existing configuration set...
+			if (this.webKitViewGroups == null || this.webKitViewGroups.isEmpty()) {
+				return;
+			}
 
+			//Merge the properties with what is stored...
+			this.webKitViewGroups.forEach(groupItm -> {
+				String groupName = groupItm.getJobViewGroupName();
+				this.inputVisibleColumns.put(groupName, VisibleColumnItems.asListFrom(groupItm));
+				this.inputVisibleButtons.put(groupName, VisibleButtonItems.asListFrom(groupItm));
 
+				List<WebKitViewSub> subsForGroup = groupItm.getWebKitViewSubs();
+				if (subsForGroup == null || subsForGroup.isEmpty()) {
+					return;
+				}
+
+				subsForGroup.forEach(subItm -> {
+					String keyForStorage = this.generateGroupSubKey(groupItm.getJobViewGroupName(), subItm.getLabel());
+					List<WebKitWorkspaceJobView> jobViewsToSet = new ArrayList<>();
+					List<WebKitWorkspaceRouteField> fieldsToSet = new ArrayList<>();
+
+					List<JobView> viewsInCore = this.groupToViewMapping.get(groupName);
+					if (viewsInCore != null && !viewsInCore.isEmpty()) {
+						List<WebKitWorkspaceJobView> subViews = subItm.getJobViews() == null ?
+								new ArrayList<>() : subItm.getJobViews();
+						viewsInCore.forEach(coreItem -> {
+							WebKitWorkspaceJobView viewFromSub = subViews.stream()
+									.filter(itm -> itm.getJobView().getId().equals(coreItem.getId()))
+									.findFirst()
+									.orElse(null);
+							if (viewFromSub == null) {
+								viewFromSub = new WebKitWorkspaceJobView(coreItem);
+							} else {
+								viewFromSub.setSelected(true);
+								viewFromSub.setJobView(coreItem);
+							}
+							jobViewsToSet.add(viewFromSub);
+						});
+					}
+					List<Field> fieldsInCore = this.groupToRouteFieldMapping.get(groupName);
+					if (fieldsInCore != null && !fieldsInCore.isEmpty()) {
+						List<WebKitWorkspaceRouteField> subFields = subItm.getRouteFields() == null ?
+								new ArrayList<>() : subItm.getRouteFields();
+						AtomicInteger order = new AtomicInteger(1);
+						fieldsInCore.forEach(coreItem -> {
+							WebKitWorkspaceRouteField fieldFromSub = subFields.stream()
+									.filter(itm -> itm.getRouteField().getId().equals(coreItem.getId()))
+									.findFirst()
+									.orElse(null);
+							if (fieldFromSub == null) {
+								fieldFromSub = new WebKitWorkspaceRouteField(coreItem);
+								fieldFromSub.setFieldOrder(order.getAndIncrement());
+							} else {
+								fieldFromSub.setSelected(true);
+								fieldFromSub.setRouteField(coreItem);
+							}
+							fieldsToSet.add(fieldFromSub);
+						});
+					}
+
+					this.inputSubToViewMapping.put(keyForStorage, new WebKitWorkspaceJobViewLDM(jobViewsToSet));
+					this.inputSubToRouteFieldMapping.put(keyForStorage, new WebKitWorkspaceRouteFieldLDM(fieldsToSet));
+				});
+			});
 
 		} catch (Exception err) {
 			this.raiseError(err);
@@ -147,6 +294,19 @@ public class WorkspaceLookAndFeelBean extends ABaseManagedBean {
 
 			groupToAddFor.getWebKitViewSubs().add(wkViewSubToAdd);
 
+			String groupName = groupToAddFor.getJobViewGroupName();
+			String subName = wkViewSubToAdd.getLabel();
+
+			WebKitWorkspaceJobViewLDM ldmJobViews = new WebKitWorkspaceJobViewLDM();
+			ldmJobViews.populateFromJobViews(this.groupToViewMapping.get(groupName));
+
+			WebKitWorkspaceRouteFieldLDM ldmRouteFields = new WebKitWorkspaceRouteFieldLDM();
+			ldmRouteFields.populateFromFields(this.groupToRouteFieldMapping.get(groupName));
+
+			String storageKey = this.generateGroupSubKey(groupName, subName);
+			this.inputSubToViewMapping.put(storageKey, ldmJobViews);
+			this.inputSubToRouteFieldMapping.put(storageKey, ldmRouteFields);
+
 			this.setInputNewGroupSubName(null);
 			FacesMessage fMsg = new FacesMessage(FacesMessage.SEVERITY_INFO,
 					"Success",
@@ -160,6 +320,11 @@ public class WorkspaceLookAndFeelBean extends ABaseManagedBean {
 
 	public void actionRemoveViewSub(WebKitViewGroup groupToRemoveFrom, WebKitViewSub subToRemove) {
 		try {
+			String keyToRemove = this.generateGroupSubKey(
+					groupToRemoveFrom.getJobViewGroupName(), subToRemove.getLabel());
+			this.inputSubToViewMapping.remove(keyToRemove);
+			this.inputSubToRouteFieldMapping.remove(keyToRemove);
+
 			groupToRemoveFrom.getWebKitViewSubs().remove(subToRemove);
 			AtomicInteger orderCounter = new AtomicInteger(1);
 			groupToRemoveFrom.getWebKitViewSubs().forEach(itm -> {
@@ -205,6 +370,16 @@ public class WorkspaceLookAndFeelBean extends ABaseManagedBean {
 		}
 	}
 
+	public void actionMoveRouteFieldDown(WebKitViewGroup groupToRemoveFrom, WebKitWorkspaceRouteField fieldToMove) {
+
+
+	}
+
+	public void actionMoveRouteFieldUp(WebKitViewGroup groupToRemoveFrom, WebKitWorkspaceRouteField fieldToMove) {
+
+
+	}
+
 	public void actionMoveViewSubDown(WebKitViewGroup groupToRemoveFrom, WebKitViewSub subToMove) {
 		try {
 			int fromPos = subToMove.getSubOrder();
@@ -233,8 +408,32 @@ public class WorkspaceLookAndFeelBean extends ABaseManagedBean {
 
 	public void actionSaveWebKitViewGroups(String dialogToHideAfterSuccess) {
 		try {
+			WebKitViewGroupListing listing = new WebKitViewGroupListing();
+			this.webKitViewGroups.forEach(groupItm -> {
+				String groupName = groupItm.getJobViewGroupName();
+				List<String> visibleColumns = new ArrayList<>();
+				List<String> visibleButtons = new ArrayList<>();
+				Object objVisibleColumns = this.inputVisibleColumns.get(groupName);
+				if (objVisibleColumns instanceof String[]) {
+					for (String selected : (String[])objVisibleColumns) {
+						visibleColumns.add(selected);
+					}
+				}
+				Object objVisibleButtons = this.inputVisibleButtons.get(groupName);
+				if (objVisibleButtons instanceof String[]) {
+					for (String selected : (String[])objVisibleButtons) {
+						visibleButtons.add(selected);
+					}
+				}
 
-			this.executeJavaScript(String.format("PF('%s').hide()", dialogToHideAfterSuccess));
+				this.updateGroupPropertyBasedOnSelected(visibleColumns, visibleButtons, groupItm);
+			});
+
+			listing.setListing(this.webKitViewGroups);
+			listing.setListingCount(this.webKitViewGroups.size());
+			this.getFluidClientDSConfig().getFlowClient().upsertViewGroupWebKit(listing);
+
+			this.executeJavaScript(String.format("PF('%s').hide();", dialogToHideAfterSuccess));
 			FacesMessage fMsg = new FacesMessage(FacesMessage.SEVERITY_INFO,
 					"Success", "Workspace Look and Feel Updated.");
 			FacesContext.getCurrentInstance().addMessage(null, fMsg);
@@ -263,10 +462,116 @@ public class WorkspaceLookAndFeelBean extends ABaseManagedBean {
 		Object newValue = event.getNewValue();
 
 		if (newValue != null && !newValue.equals(oldValue)) {
-			FacesMessage msg = new FacesMessage(FacesMessage.SEVERITY_INFO, "Cell Changed", "Old: " + oldValue + ", New:" + newValue);
+			FacesMessage msg = new FacesMessage(FacesMessage.SEVERITY_INFO,
+					"Cell Changed", "Old: " + oldValue + ", New:" + newValue);
 			FacesContext.getCurrentInstance().addMessage(null, msg);
 		}
 	}
 
+	public void actionOnPage(PageEvent pageEvent) {
 
+	}
+
+	public void actionOnBoolChange(AjaxBehaviorEvent boolEvent) {
+
+	}
+
+	private void updateGroupPropertyBasedOnSelected(
+		List<String> visibleColumns,
+		List<String> visibleButtons,
+		WebKitViewGroup groupToUpdate
+	) {
+		//Columns...
+		if (visibleColumns.contains(VisibleColumnItems.showColumnFormType.name())) {
+			groupToUpdate.setShowColumnFormType(true);
+		} else {
+			groupToUpdate.setShowColumnFormType(false);
+		}
+		if (visibleColumns.contains(VisibleColumnItems.showColumnTitle.name())) {
+			groupToUpdate.setShowColumnTitle(true);
+		} else {
+			groupToUpdate.setShowColumnTitle(false);
+		}
+		if (visibleColumns.contains(VisibleColumnItems.showColumnStepEntryTime.name())) {
+			groupToUpdate.setShowColumnStepEntryTime(true);
+		} else {
+			groupToUpdate.setShowColumnStepEntryTime(false);
+		}
+		if (visibleColumns.contains(VisibleColumnItems.showColumnCurrentFlow.name())) {
+			groupToUpdate.setShowColumnCurrentFlow(true);
+		} else {
+			groupToUpdate.setShowColumnCurrentFlow(false);
+		}
+		if (visibleColumns.contains(VisibleColumnItems.showColumnCurrentStep.name())) {
+			groupToUpdate.setShowColumnCurrentStep(true);
+		} else {
+			groupToUpdate.setShowColumnCurrentStep(false);
+		}
+		if (visibleColumns.contains(VisibleColumnItems.showColumnCurrentView.name())) {
+			groupToUpdate.setShowColumnCurrentView(true);
+		} else {
+			groupToUpdate.setShowColumnCurrentView(false);
+		}
+		if (visibleColumns.contains(VisibleColumnItems.showColumnProgressPercentage.name())) {
+			groupToUpdate.setShowColumnProgressPercentage(true);
+		} else {
+			groupToUpdate.setShowColumnProgressPercentage(false);
+		}
+		if (visibleColumns.contains(VisibleColumnItems.showColumnAttachment.name())) {
+			groupToUpdate.setShowColumnAttachment(true);
+		} else {
+			groupToUpdate.setShowColumnAttachment(false);
+		}
+
+		//Buttons...
+		if (visibleButtons.contains(VisibleButtonItems.showButtonBulkUpdate.name())) {
+			groupToUpdate.setShowButtonBulkUpdate(true);
+		} else {
+			groupToUpdate.setShowButtonBulkUpdate(false);
+		}
+		if (visibleButtons.contains(VisibleButtonItems.showButtonExport.name())) {
+			groupToUpdate.setShowButtonExport(true);
+		} else {
+			groupToUpdate.setShowButtonExport(false);
+		}
+		if (visibleButtons.contains(VisibleButtonItems.showButtonSendOn.name())) {
+			groupToUpdate.setShowButtonSendOn(true);
+		} else {
+			groupToUpdate.setShowButtonSendOn(false);
+		}
+		if (visibleButtons.contains(VisibleButtonItems.showButtonDelete.name())) {
+			groupToUpdate.setShowButtonDelete(true);
+		} else {
+			groupToUpdate.setShowButtonDelete(false);
+		}
+		if (visibleButtons.contains(VisibleButtonItems.showButtonLock.name())) {
+			groupToUpdate.setShowButtonLock(true);
+		} else {
+			groupToUpdate.setShowButtonLock(false);
+		}
+		if (visibleButtons.contains(VisibleButtonItems.showButtonAddToPI.name())) {
+			groupToUpdate.setShowButtonAddToPI(true);
+		} else {
+			groupToUpdate.setShowButtonAddToPI(false);
+		}
+
+		if (groupToUpdate.getWebKitViewSubs() != null) {
+			groupToUpdate.getWebKitViewSubs().forEach(subItm -> {
+				String key = this.generateGroupSubKey(groupToUpdate.getJobViewGroupName(), subItm.getLabel());
+
+				subItm.setRouteFields(
+						this.inputSubToRouteFieldMapping.get(key).getDataListing().stream()
+						.filter(itm -> itm.isSelected())
+						.collect(Collectors.toList()));
+				subItm.setJobViews(
+						this.inputSubToViewMapping.get(key).getDataListing().stream()
+								.filter(itm -> itm.isSelected())
+								.collect(Collectors.toList()));
+			});
+		}
+	}
+
+	public String generateGroupSubKey(String groupName, String subname) {
+		return String.format("%s_%s", groupName, subname).toLowerCase();
+	}
 }
