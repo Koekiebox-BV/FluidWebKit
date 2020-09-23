@@ -20,6 +20,7 @@ import com.fluidbpm.fluidwebkit.backing.bean.workspace.ABaseWorkspaceBean;
 import com.fluidbpm.fluidwebkit.backing.bean.workspace.WorkspaceFluidItem;
 import com.fluidbpm.program.api.vo.flow.JobView;
 import com.fluidbpm.program.api.vo.item.FluidItem;
+import com.fluidbpm.program.api.vo.webkit.viewgroup.WebKitViewGroup;
 import com.fluidbpm.ws.client.FluidClientException;
 import com.fluidbpm.ws.client.v1.user.PersonalInventoryClient;
 import org.primefaces.PrimeFaces;
@@ -62,11 +63,11 @@ public class PersonalInventoryBean extends ABaseWorkspaceBean<PersonalInventoryI
 
 	@Override
 	public void actionOpenMainPage() {
-		this.contentView = this.actionOpenMainPage(null);
+		this.contentView = this.actionOpenMainPage(null, null);
 	}
 
 	@Override
-	protected ContentViewPI actionOpenMainPage(String workspaceAimParam) {
+	protected ContentViewPI actionOpenMainPage(String workspaceAimParam, WebKitViewGroup webKitGroup) {
 		try {
 			if (this.getFluidClientDS() == null) {
 				return null;

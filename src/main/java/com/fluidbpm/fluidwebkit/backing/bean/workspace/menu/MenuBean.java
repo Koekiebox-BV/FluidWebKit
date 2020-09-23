@@ -32,6 +32,7 @@ import com.fluidbpm.ws.client.v1.userquery.UserQueryClient;
 import lombok.Getter;
 import lombok.Setter;
 import org.primefaces.component.menuitem.UIMenuItem;
+import org.primefaces.component.menuitem.UIMenuItemBase;
 import org.primefaces.component.submenu.UISubmenu;
 import org.primefaces.model.menu.DefaultMenuItem;
 import org.primefaces.model.menu.DefaultSubMenu;
@@ -39,6 +40,7 @@ import org.primefaces.model.menu.Submenu;
 
 import javax.annotation.PostConstruct;
 import javax.enterprise.context.SessionScoped;
+import javax.faces.component.UIComponentBase;
 import javax.faces.component.UIParameter;
 import javax.faces.component.UIViewParameter;
 import javax.inject.Inject;
@@ -56,15 +58,23 @@ public class MenuBean extends ABaseManagedBean {
 	@Inject
 	private WebKitAccessBean webKitAccessBean;
 
+	@Getter
 	private List<WebKitViewGroup> webKitViewGroups;
 
 	@Getter
 	@Setter
 	private UISubmenu submenuWorkspace;
 
+	public static final String ICON_DEFAULT_GROUP = "pi pi-list";
+	public static final String ICON_DEFAULT_SUB = "pi pi-table";
+	public static final String ICON_DEFAULT_WORKSPACE = "pi pi-compass";
+
 	public static final class ReqParam {
+		public static final String WORKSPACE_AIM = "workspaceAim";
 		public static final String CLICKED_GROUP = "webKitItmClickedGroup";
 		public static final String CLICKED_GROUP_ALIAS = "webKitItmClickedGroupAlias";
+		public static final String CLICKED_SUB_ORDER = "webKitItmClickedSubOrder";
+		public static final String CLICKED_SUB_ALIAS = "webKitItmClickedSubAlias";
 		public static final String CLICKED_VIEWS = "webKitItmClickedViews";
 		public static final String MISSING_CONFIG_MSG = "missingConfigMessage";
 	}
@@ -79,7 +89,7 @@ public class MenuBean extends ABaseManagedBean {
 		this.submenuWorkspace = new UISubmenu();
 		this.submenuWorkspace.setId("om_workspace");
 		this.submenuWorkspace.setLabel("Workspace");
-		this.submenuWorkspace.setIcon("pi pi-compass");
+		this.submenuWorkspace.setIcon(ICON_DEFAULT_WORKSPACE);
 
 		try {
 			WebKitViewGroupListing listing = this.getFluidClientDSConfig().getFlowClient().getViewGroupWebKit();
@@ -113,6 +123,7 @@ public class MenuBean extends ABaseManagedBean {
 			return;
 		}
 
+		//Sort the group...
 		this.webKitViewGroups.sort(Comparator.comparing(WebKitViewGroup::getGroupOrder));
 
 		AtomicInteger groupCounter = new AtomicInteger(1);
@@ -121,12 +132,55 @@ public class MenuBean extends ABaseManagedBean {
 			Long groupId = webKitGroupItm.getJobViewGroupId();
 			String groupIcon = webKitGroupItm.getJobViewGroupIcon();
 
+			final UIComponentBase groupBaseToAdd;
 			if (webKitGroupItm.isEnableGroupSubsInMenu()) {
-				//TODO need to sub this here...
+				UISubmenu menuItemGroup = new UISubmenu();
+				menuItemGroup.setLabel(groupLabel);
+				menuItemGroup.setIcon((groupIcon == null || groupIcon.trim().isEmpty()) ? ICON_DEFAULT_GROUP : groupIcon);
+
+				List<WebKitViewSub> subsForGroup = webKitGroupItm.getWebKitViewSubs();
+				if (subsForGroup != null && !subsForGroup.isEmpty()) {
+					subsForGroup.sort(Comparator.comparing(WebKitViewSub::getSubOrder));
+					subsForGroup.stream().forEach(sub -> {
+						String subLabel = sub.getLabel();
+						String subIcon = sub.getIcon();
+						UIMenuItem menuItemSub = new UIMenuItem();
+						menuItemSub.setId(String.format("menSubId%d", sub.getSubOrder()));
+						menuItemSub.setIcon((subIcon == null || subIcon.trim().isEmpty()) ? ICON_DEFAULT_SUB : subIcon);
+						menuItemSub.setValue(subLabel);
+						menuItemSub.setAjax(true);
+						List<Long> jobViews = this.getViewIdsForSub(sub);
+						final String onCompleteJS;
+						if (jobViews == null || jobViews.isEmpty()) {
+							onCompleteJS = String.format("javascript:rcOpenNoConfig([{name:'%s', value:\"%s\"}]);",
+									ReqParam.MISSING_CONFIG_MSG,
+									String.format("No Views configured to render for Group '%s' and Sub '%s'.",
+											groupLabel, sub.getLabel()));
+						} else {
+							String combinedViewsAsList = jobViews.stream()
+									.map(itm -> String.valueOf(itm))
+									.collect(Collectors.joining(","));
+							onCompleteJS = String.format("javascript:rcOpenWorkspaceItem" +
+											"([{name:'%s', value:'%d'}, {name:'%s', value:'%s'}, {name:'%s', value:\"%s\"}, {name:'%s', value:'%d'}, {name:'%s', value:\"%s\"}]);",
+									ReqParam.CLICKED_GROUP,
+									groupId,
+									ReqParam.CLICKED_VIEWS,
+									combinedViewsAsList,
+									ReqParam.CLICKED_GROUP_ALIAS,
+									groupLabel,
+									ReqParam.CLICKED_SUB_ORDER,
+									sub.getSubOrder(),
+									ReqParam.CLICKED_SUB_ALIAS,
+									subLabel);
+						}
+						menuItemSub.setOncomplete(onCompleteJS);
+						menuItemGroup.getElements().add(menuItemSub);
+					});
+				}
+				groupBaseToAdd = menuItemGroup;
 			} else {
 				UIMenuItem menuItemGroup = new UIMenuItem();
-				menuItemGroup.setId(String.format("menGroupId%d", groupCounter.getAndIncrement()));
-				menuItemGroup.setIcon((groupIcon == null || groupIcon.trim().isEmpty()) ? "pi pi-list" : groupIcon);
+				menuItemGroup.setIcon((groupIcon == null || groupIcon.trim().isEmpty()) ? ICON_DEFAULT_GROUP : groupIcon);
 				menuItemGroup.setValue(groupLabel);
 				menuItemGroup.setAjax(true);
 				List<Long> jobViews = this.getViewIdsForGroup(webKitGroupItm);
@@ -134,7 +188,7 @@ public class MenuBean extends ABaseManagedBean {
 				if (jobViews == null || jobViews.isEmpty()) {
 					onCompleteJS = String.format("javascript:rcOpenNoConfig([{name:'%s', value:\"%s\"}]);",
 							ReqParam.MISSING_CONFIG_MSG,
-							String.format("No Views configured to render for '%s'.", groupLabel));
+							String.format("No Views configured to render for Group '%s'.", groupLabel));
 				} else {
 					String combinedViewsAsList = jobViews.stream()
 							.map(itm -> String.valueOf(itm))
@@ -148,8 +202,10 @@ public class MenuBean extends ABaseManagedBean {
 							groupLabel);
 				}
 				menuItemGroup.setOncomplete(onCompleteJS);
-				this.submenuWorkspace.getElements().add(menuItemGroup);
+				groupBaseToAdd = menuItemGroup;
 			}
+			groupBaseToAdd.setId(String.format("menGroupId%d", groupCounter.getAndIncrement()));
+			this.submenuWorkspace.getElements().add(groupBaseToAdd);
 		});
 
 //		DefaultMenuItem menuItem = new DefaultMenuItem();
@@ -185,7 +241,7 @@ public class MenuBean extends ABaseManagedBean {
 		return false;
 	}
 
-	private List<Long> getViewIdsForGroup(WebKitViewGroup viewGroup) {
+	public List<Long> getViewIdsForGroup(WebKitViewGroup viewGroup) {
 		if (viewGroup == null || viewGroup.getWebKitViewSubs() == null) {
 			return null;
 		}
@@ -193,13 +249,28 @@ public class MenuBean extends ABaseManagedBean {
 		List<Long> returnVal = new ArrayList<>();
 		List<WebKitViewSub> subs = viewGroup.getWebKitViewSubs();
 		subs.forEach(viewSub -> {
-			List<WebKitWorkspaceJobView> views = viewSub.getJobViews();
-			if (views == null || views.isEmpty()) {
+			List<Long> viewIdsForSub = getViewIdsForSub(viewSub);
+			if (viewIdsForSub == null || viewIdsForSub.isEmpty()) {
 				return;
 			}
+			viewIdsForSub.stream()
+					.filter(itm -> !returnVal.contains(itm))
+					.forEach(viewItm -> {
+						returnVal.add(viewItm);
+					});
+		});
+		return returnVal;
+	}
 
+	public List<Long> getViewIdsForSub(WebKitViewSub viewSub) {
+		if (viewSub == null || viewSub.getJobViews() == null) {
+			return null;
+		}
+		List<Long> returnVal = new ArrayList<>();
+		List<WebKitWorkspaceJobView> views = viewSub.getJobViews();
+		views.sort(Comparator.comparing(WebKitWorkspaceJobView::getViewFlowStepViewOrder));
+		views.forEach(view -> {
 			List<JobView> remapped = views.stream().map(itm -> itm.getJobView()).collect(Collectors.toList());
-			remapped.sort(Comparator.comparing(JobView::getViewPriority));
 			remapped.stream()
 					.filter(itm -> !returnVal.contains(itm.getId()))
 					.forEach(viewItm -> {
@@ -207,6 +278,16 @@ public class MenuBean extends ABaseManagedBean {
 					});
 		});
 		return returnVal;
+	}
+
+	public WebKitViewGroup getGroupWithName(String groupName) {
+		if (groupName == null) {
+			return null;
+		}
+		return this.webKitViewGroups.stream()
+				.filter(itm -> groupName.equals(itm.getJobViewGroupName()))
+				.findFirst()
+				.orElse(null);
 	}
 
 }

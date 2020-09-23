@@ -16,10 +16,16 @@
 package com.fluidbpm.fluidwebkit.backing.bean.workspace;
 
 import com.fluidbpm.fluidwebkit.backing.bean.performance.PerformanceBean;
+import com.fluidbpm.fluidwebkit.backing.bean.workspace.jv.ContentViewJV;
+import com.fluidbpm.fluidwebkit.backing.bean.workspace.jv.JobViewItemVO;
+import com.fluidbpm.fluidwebkit.backing.bean.workspace.menu.MenuBean;
 import com.fluidbpm.fluidwebkit.backing.bean.workspace.pi.ContentViewPI;
 import com.fluidbpm.fluidwebkit.backing.bean.workspace.pi.PersonalInventoryItemVO;
+import com.fluidbpm.program.api.vo.field.Field;
 import com.fluidbpm.program.api.vo.flow.JobView;
 import com.fluidbpm.program.api.vo.item.FluidItem;
+import com.fluidbpm.program.api.vo.webkit.viewgroup.WebKitViewGroup;
+import com.fluidbpm.program.api.vo.webkit.viewgroup.WebKitViewSub;
 import com.fluidbpm.ws.client.FluidClientException;
 import com.fluidbpm.ws.client.v1.user.PersonalInventoryClient;
 import org.primefaces.PrimeFaces;
@@ -30,24 +36,14 @@ import javax.faces.application.FacesMessage;
 import javax.faces.context.FacesContext;
 import javax.inject.Inject;
 import javax.inject.Named;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Bean storing personal inventory related items.
  */
 @SessionScoped
 @Named("webKitWorkspaceBean")
-public class WorkspaceBean extends ABaseWorkspaceBean<PersonalInventoryItemVO, ContentViewPI> {
-
-	@Override
-	@PostConstruct
-	public void actionPopulateInit() {
-		//Do nothing...
-		//this.actionOpenMainPage();
-	}
+public class WorkspaceBean extends ABaseWorkspaceBean<JobViewItemVO, ContentViewJV> {
 
 	@Override
 	public void actionOpenFormForEditingFromWorkspace(
@@ -58,41 +54,64 @@ public class WorkspaceBean extends ABaseWorkspaceBean<PersonalInventoryItemVO, C
 	}
 
 	@Override
-	public void actionOpenMainPage() {
-		this.contentView = this.actionOpenMainPage(null);
-	}
-
-	@Override
-	protected ContentViewPI actionOpenMainPage(String workspaceAimParam) {
+	protected ContentViewJV actionOpenMainPage(String workspaceAimParam, WebKitViewGroup webKitGroup) {
 		try {
 			if (this.getFluidClientDS() == null) {
 				return null;
 			}
 
-			FacesContext current = FacesContext.getCurrentInstance();
-			Map<String,String> reqMapping = current.getExternalContext().getRequestParameterMap();
-			String clickedGroup = reqMapping.get("webKitItmClickedGroup");
-			String clickedWorkspaceViews = reqMapping.get("webKitItmClickedViews");
+			final String tgm = webKitGroup.getTableGenerateMode();
+			if (tgm == null) {
+				throw new FluidClientException(
+						"Unable to determine outcome for TGM not being set.",
+						FluidClientException.ErrorCode.FIELD_VALIDATE);
+			}
+			List<WebKitViewSub> subs = webKitGroup.getWebKitViewSubs();
+			Collections.sort(subs, Comparator.comparing(WebKitViewSub::getSubOrder));
+			List<String> sections = new ArrayList<>();
+			switch (tgm) {
+				//Group Level...
+				case WebKitViewGroup.TableGenerateMode.COMBINED:
+				case WebKitViewGroup.TableGenerateMode.COMBINED_NO_DUPLICATES:
+					sections.add(webKitGroup.getJobViewGroupName());
+				break;
+				//Sub Level...
+				case WebKitViewGroup.TableGenerateMode.TABLE_PER_SUB:
+				case WebKitViewGroup.TableGenerateMode.TABLE_PER_SUB_NO_DUPLICATES:
+					if (subs != null) {
+						subs.forEach(subItm -> {
+							sections.add(subItm.getLabel());
+						});
+					}
+				break;
+				//View Level...
+				case WebKitViewGroup.TableGenerateMode.TABLE_PER_VIEW:
+				case WebKitViewGroup.TableGenerateMode.TABLE_PER_VIEW_NO_DUPLICATES:
 
+					//TODO need to have a table per view, but also show the sub for the table...
+				break;
+			}
 
-
-			ContentViewPI contentViewPI = new ContentViewPI(this.getLoggedInUser());
-			return contentViewPI;
+			ContentViewJV contentViewJV = new ContentViewJV(this.getLoggedInUser(), sections);
+			return contentViewJV;
 		} catch (Exception fce) {
 			if (fce instanceof FluidClientException) {
 				FluidClientException casted = (FluidClientException)fce;
 				if (casted.getErrorCode() == FluidClientException.ErrorCode.NO_RESULT) {
-					return new ContentViewPI(this.getLoggedInUser());
+					return new ContentViewJV(this.getLoggedInUser());
 				}
 			}
 			this.raiseError(fce);
-			return new ContentViewPI(this.getLoggedInUser());
+			return new ContentViewJV(this.getLoggedInUser());
 		}
 	}
 
 	@Override
-	protected PersonalInventoryItemVO createABaseWebVO(FluidItem fluidItemParam) {
-		PersonalInventoryItemVO returnVal = new PersonalInventoryItemVO(fluidItemParam);
+	protected JobViewItemVO createABaseWebVO(FluidItem fluidItemParam) {
+
+
+
+		JobViewItemVO returnVal = new JobViewItemVO(fluidItemParam);
 		return returnVal;
 	}
 

@@ -52,7 +52,7 @@ public abstract class ABaseContentView implements Serializable {
 	private Map<String, List<WorkspaceFluidItem>> fluidItemsForSection;
 
 	//Filter...
-	private Map<String,List<WorkspaceFluidItem>> fluidItemsForSectionFiltered;
+	private Map<String, List<WorkspaceFluidItem>> fluidItemsForSectionFiltered;
 
 	//Selected...
 	@Getter

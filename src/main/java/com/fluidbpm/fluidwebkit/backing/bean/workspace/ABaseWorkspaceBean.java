@@ -17,6 +17,7 @@ package com.fluidbpm.fluidwebkit.backing.bean.workspace;
 
 import com.fluidbpm.fluidwebkit.backing.bean.ABaseManagedBean;
 import com.fluidbpm.fluidwebkit.backing.bean.workspace.contentview.ABaseContentView;
+import com.fluidbpm.fluidwebkit.backing.bean.workspace.menu.MenuBean;
 import com.fluidbpm.fluidwebkit.backing.utility.Globals;
 import com.fluidbpm.fluidwebkit.backing.vo.ABaseWebVO;
 import com.fluidbpm.fluidwebkit.exception.ClientDashboardException;
@@ -26,6 +27,7 @@ import com.fluidbpm.program.api.vo.item.FluidItem;
 import com.fluidbpm.program.api.vo.item.FluidItemListing;
 import com.fluidbpm.program.api.vo.user.User;
 import com.fluidbpm.program.api.vo.userquery.UserQueryListing;
+import com.fluidbpm.program.api.vo.webkit.viewgroup.WebKitViewGroup;
 import com.fluidbpm.ws.client.FluidClientException;
 import com.fluidbpm.ws.client.v1.flow.FlowStepClient;
 import com.fluidbpm.ws.client.v1.flowitem.FlowItemClient;
@@ -40,12 +42,14 @@ import lombok.NoArgsConstructor;
 import javax.annotation.PostConstruct;
 import javax.faces.application.FacesMessage;
 import javax.faces.context.FacesContext;
+import javax.inject.Inject;
 import java.io.Serializable;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
+import java.util.stream.Collectors;
 
 /**
  * Bean to handle a workspace.
@@ -59,7 +63,7 @@ public abstract class ABaseWorkspaceBean<T extends ABaseWebVO, J extends ABaseCo
 	protected UserQueryListing userQueryListing = new UserQueryListing();
 	//Views...
 	protected List<JobView> viewsAll;
-	protected Map<String, List<JobView>> viewGroupPlacings;
+	protected Map<String, List<JobView>> loggedInUsrViewGroupPlacings;
 
 	//Selected Content View...
 	@Getter
@@ -71,27 +75,20 @@ public abstract class ABaseWorkspaceBean<T extends ABaseWebVO, J extends ABaseCo
 
 	private String areaToUpdateForDialogAfterSubmit;
 
+	@Inject
+	protected MenuBean menuBean;
+
 	/**
 	 * Cached items in case of a page refresh.
 	 */
 	@AllArgsConstructor
 	@NoArgsConstructor
-	private static class OpenPageLastCache implements Serializable {
-		public String workspaceItemAim;
+	@Getter
+	public static class OpenPageLastCache implements Serializable {
+		public String clickedGroup;
+		public String clickedGroupAlias;
 		public String selectedJobViews;
-
-		/**
-		 * Verify if cache should be used in the event of {@code workspaceItemAimParam} and {@code selectedJobViewsParam}
-		 * not being set.
-		 *
-		 * @param workspaceItemAimParam The aim of the action fired.
-		 * @param selectedJobViewsParam The comma separated list of selected views.
-		 * 
-		 * @return {@code true} if {@code workspaceItemAimParam} and {@code selectedJobViewsParam} is not {@code null}.
-		 */
-		public static boolean shouldUseCache(String workspaceItemAimParam, String selectedJobViewsParam) {
-			return (workspaceItemAimParam == null && selectedJobViewsParam == null);
-		}
+		public String clickedSubAlias;
 	}
 
 	/**
@@ -131,7 +128,7 @@ public abstract class ABaseWorkspaceBean<T extends ABaseWebVO, J extends ABaseCo
 			//When not empty...
 			if (this.jobViewListing != null && !this.jobViewListing.isListingEmpty()) {
 				this.viewsAll = new ArrayList<>();
-				this.viewGroupPlacings = new HashMap<>();
+				this.loggedInUsrViewGroupPlacings = new HashMap<>();
 
 				for (JobView jobViewIter : this.jobViewListing.getListing()) {
 					this.viewsAll.add(jobViewIter);
@@ -143,16 +140,16 @@ public abstract class ABaseWorkspaceBean<T extends ABaseWebVO, J extends ABaseCo
 						continue;
 					}
 
-					List<JobView> jobViews = this.viewGroupPlacings.get(uiViewGroup);
+					List<JobView> jobViews = this.loggedInUsrViewGroupPlacings.get(uiViewGroup);
 					if (jobViews == null) {
 						jobViews = new ArrayList<>();
 					}
 					jobViews.add(jobViewIter);
-					this.viewGroupPlacings.put(uiViewGroup, jobViews);
+					this.loggedInUsrViewGroupPlacings.put(uiViewGroup, jobViews);
 				}
 
 				//Sort by 'View Priority'...
-				this.viewGroupPlacings.values().forEach(listingItm -> {
+				this.loggedInUsrViewGroupPlacings.values().forEach(listingItm -> {
 					Collections.sort(listingItm, Comparator.comparing(JobView::getViewPriority));
 				});
 			}
@@ -183,14 +180,14 @@ public abstract class ABaseWorkspaceBean<T extends ABaseWebVO, J extends ABaseCo
 		if (uiGroupsParam == null || uiGroupsParam.length == 0) {
 			return null;
 		}
-		if (this.viewGroupPlacings == null) {
+		if (this.loggedInUsrViewGroupPlacings == null) {
 			return null;
 		}
 
 		List<JobView> forAll = new ArrayList<>();
 		for (String uiGroupParam : uiGroupsParam) {
 			List<JobView> localGroup = null;
-			if ((localGroup = this.viewGroupPlacings.get(uiGroupParam)) != null) {
+			if ((localGroup = this.loggedInUsrViewGroupPlacings.get(uiGroupParam)) != null) {
 				forAll.addAll(localGroup);
 			}
 		}
@@ -289,33 +286,41 @@ public abstract class ABaseWorkspaceBean<T extends ABaseWebVO, J extends ABaseCo
 	 */
 	public void actionOpenMainPage() {
 		this.areaToUpdateForDialogAfterSubmit = null;
+		if (this.getFluidClientDS() == null) {
+			return;
+		}
 
-		String selectedJobViews = this.getStringRequestParam(RequestParam.SELECTED_JOB_VIEWS);
-		String workspaceAim = this.getStringRequestParam(RequestParam.WORKSPACE_AIM);
+		String workspaceAim = this.getStringRequestParam(MenuBean.ReqParam.WORKSPACE_AIM);
+		String clickedGroup = this.getStringRequestParam(MenuBean.ReqParam.CLICKED_GROUP);
+		String clickedGroupAlias = this.getStringRequestParam(MenuBean.ReqParam.CLICKED_GROUP_ALIAS);
+		String clickedSubAlias = this.getStringRequestParam(MenuBean.ReqParam.CLICKED_SUB_ALIAS);
+		String clickedWorkspaceViews = this.getStringRequestParam(MenuBean.ReqParam.CLICKED_VIEWS);
+		if ((clickedWorkspaceViews == null || !clickedWorkspaceViews.trim().isEmpty())
+				&& this.openPageLastCache != null) {
+			clickedGroup = this.openPageLastCache.clickedGroup;
+			clickedWorkspaceViews = this.openPageLastCache.selectedJobViews;
+			clickedSubAlias = this.openPageLastCache.clickedSubAlias;
+		}
+		this.openPageLastCache = new OpenPageLastCache(
+			clickedGroup,
+			clickedGroupAlias,
+			clickedWorkspaceViews,
+			clickedSubAlias
+		);
 
 		//Clear the content view...
 		if (this.contentView != null) {
 			this.contentView.refreshData(null);
 		}
 
-		//Make use of cache...
-		if (OpenPageLastCache.shouldUseCache(workspaceAim, selectedJobViews) && this.openPageLastCache != null) {
-			selectedJobViews = this.openPageLastCache.selectedJobViews;
-			workspaceAim = this.openPageLastCache.workspaceItemAim;
-		}
-		this.openPageLastCache = new OpenPageLastCache(workspaceAim, selectedJobViews);
-
 		try {
+			WebKitViewGroup groupWithName = this.menuBean.getGroupWithName(clickedGroupAlias);
+			List<Long> webKitViewsApplicable = this.menuBean.getViewIdsForGroup(groupWithName);
+
 			//Selected Job Views...
-			if (selectedJobViews != null && !selectedJobViews.trim().isEmpty()) {
-				selectedJobViews = URLDecoder.decode(selectedJobViews, Globals.CHARSET_UTF8);
-
-				String[] jobViewsAsTxtArr = selectedJobViews.split("\\,");
-				if (jobViewsAsTxtArr == null || jobViewsAsTxtArr.length < 1) {
-					return;
-				}
-
-				this.contentView = this.actionOpenMainPage(workspaceAim);
+			List<Long> viewsWithAccess = this.filterViewsForUserAccess(webKitViewsApplicable, clickedGroupAlias);
+			if (viewsWithAccess != null && !viewsWithAccess.isEmpty()) {
+				this.contentView = this.actionOpenMainPage(workspaceAim, groupWithName);
 				//Set the correct content view...
 				if (this.contentView == null) {
 					throw new ClientDashboardException(
@@ -325,30 +330,23 @@ public abstract class ABaseWorkspaceBean<T extends ABaseWebVO, J extends ABaseCo
 
 				List<CompletableFuture> allAsyncs = new ArrayList<>();
 				final Map<JobView, List<WorkspaceFluidItem>> mappingToSet = new Hashtable<>();
-				for (String jobViewIdTxt : jobViewsAsTxtArr) {
-					if (jobViewIdTxt.trim().isEmpty()) {
-						continue;
-					}
-
-					JobView viewToSetForm = this.getJobViewFromListingWithId(this.viewsAll, Long.getLong(jobViewIdTxt));
+				for (Long jobViewIdTxt : viewsWithAccess) {
+					JobView viewToSetForm = this.getJobViewFromListingWithId(this.viewsAll, jobViewIdTxt);
 					if (viewToSetForm == null) {
 						continue;
 					}
 
 					//Run the following asynchronous...
+					FlowItemClient flowItemClient = this.getFluidClientDS().getFlowItemClient();
 					CompletableFuture toAdd = CompletableFuture.runAsync(
 							() -> {
 								FluidItemListing listOfItems = null;
-								FlowItemClient flowItemClient = this.getFluidClientDS().getFlowItemClient();
-								
-								final SQLUtilWebSocketRESTWrapper sqlUtilWSRESTWrapper = this.getFluidClientDSConfig().getSQLUtilWrapper();
 								List<WorkspaceFluidItem> itemsForTheView = new ArrayList<>();
 								try {
 									listOfItems = flowItemClient.getFluidItemsForView(
 											viewToSetForm,
-											1000,
+											1000,//TODO need to fetch limit from config...
 											0);
-
 									if (listOfItems == null || (listOfItems.getListing() == null ||
 											listOfItems.getListing().isEmpty())) {
 										return;
@@ -367,9 +365,6 @@ public abstract class ABaseWorkspaceBean<T extends ABaseWebVO, J extends ABaseCo
 								} finally {
 									//Set the items for the view...
 									mappingToSet.put(viewToSetForm, itemsForTheView);
-
-									flowItemClient.closeAndClean();
-									sqlUtilWSRESTWrapper.closeAndClean();
 								}
 							});
 					allAsyncs.add(toAdd);
@@ -390,6 +385,30 @@ public abstract class ABaseWorkspaceBean<T extends ABaseWebVO, J extends ABaseCo
 		} finally { /*Do nothing for now...*/ }
 	}
 
+	private List<Long> filterViewsForUserAccess(
+		List<Long> webKitConfigViews,
+		String group
+	) {
+		if (webKitConfigViews == null || webKitConfigViews.isEmpty()) {
+			return new ArrayList<>();
+		}
+
+		if (this.loggedInUsrViewGroupPlacings == null) {
+			return null;
+		}
+
+		List<JobView> allowed =
+				this.loggedInUsrViewGroupPlacings.getOrDefault(group, new ArrayList<>());
+		List<Long> allowedIds = allowed.stream().map(toMap -> toMap.getId()).collect(Collectors.toList());
+		List<Long> returnList = new ArrayList<>();
+		for (Long fromConfig : webKitConfigViews) {
+			if (allowedIds.contains(fromConfig)) {
+				returnList.add(fromConfig);
+			}
+		}
+		return returnList;
+	}
+
 	/**
 	 * Custom functionality for when a workspace is loaded.
 	 * The menu-option clicked by the user will be passed through as {@code workspaceAimParam}.
@@ -399,7 +418,8 @@ public abstract class ABaseWorkspaceBean<T extends ABaseWebVO, J extends ABaseCo
 	 *
 	 * @see ABaseContentView
 	 */
-	protected abstract J actionOpenMainPage(String workspaceAimParam);
+	protected abstract J actionOpenMainPage(
+			String workspaceAimParam, WebKitViewGroup webKitGroup);
 
 	/**
 	 * Create a custom value object based on {@code wrapperParam} and {@code fluidItemParam}.
@@ -427,21 +447,14 @@ public abstract class ABaseWorkspaceBean<T extends ABaseWebVO, J extends ABaseCo
 		if (idToGetParam == null) {
 			return null;
 		}
-
 		if (jobViewsParam == null || jobViewsParam.isEmpty()) {
 			return null;
 		}
 
-		//Set the Active Job View...
-		if (jobViewsParam != null && !jobViewsParam.isEmpty()) {
-			for(JobView view : jobViewsParam) {
-				if(idToGetParam.equals(view.getId())) {
-					return view;
-				}
-			}
-		}
-
-		return null;
+		return jobViewsParam.stream()
+				.filter(itm -> idToGetParam.equals(itm.getId()))
+				.findFirst()
+				.orElse(null);
 	}
 
 	/**
