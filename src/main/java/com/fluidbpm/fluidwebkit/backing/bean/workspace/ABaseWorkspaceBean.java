@@ -28,6 +28,8 @@ import com.fluidbpm.program.api.vo.item.FluidItemListing;
 import com.fluidbpm.program.api.vo.user.User;
 import com.fluidbpm.program.api.vo.userquery.UserQueryListing;
 import com.fluidbpm.program.api.vo.webkit.viewgroup.WebKitViewGroup;
+import com.fluidbpm.program.api.vo.webkit.viewgroup.WebKitViewSub;
+import com.fluidbpm.program.api.vo.webkit.viewgroup.WebKitWorkspaceJobView;
 import com.fluidbpm.ws.client.FluidClientException;
 import com.fluidbpm.ws.client.v1.flow.FlowStepClient;
 import com.fluidbpm.ws.client.v1.flowitem.FlowItemClient;
@@ -281,8 +283,8 @@ public abstract class ABaseWorkspaceBean<T extends ABaseWebVO, J extends ABaseCo
 	 * The {@code actionOpenMainPage} will create the 'Content View' while the
 	 * {@code createABaseWebVO} method will map each one of the custom objects.
 	 *
-	 * @see this#actionOpenMainPage(String)
-	 * @see this#createABaseWebVO(FluidItem)
+	 * @see this#actionOpenMainPage(String, WebKitViewGroup, WebKitViewSub)
+	 * @see this#createABaseWebVO(FluidItem, WebKitViewSub, WebKitWorkspaceJobView)
 	 */
 	public void actionOpenMainPage() {
 		this.areaToUpdateForDialogAfterSubmit = null;
@@ -315,66 +317,110 @@ public abstract class ABaseWorkspaceBean<T extends ABaseWebVO, J extends ABaseCo
 
 		try {
 			WebKitViewGroup groupWithName = this.menuBean.getGroupWithName(clickedGroupAlias);
-			List<Long> webKitViewsApplicable = this.menuBean.getViewIdsForGroup(groupWithName);
+			WebKitViewSub subFilter = (groupWithName == null) ? null :
+					groupWithName.getViewSubWithName(clickedSubAlias);
+			List<WebKitWorkspaceJobView> viewToFetchFor = null;
+			if (groupWithName.isEnableGroupSubsInMenu()) {
+				viewToFetchFor = this.menuBean.getViewsForSub(subFilter);
+			} else {
+				viewToFetchFor = this.menuBean.getUniqueViewsForGroup(groupWithName);
+				subFilter = null;//force no sub selection to pull all items...
+			}
 
-			//Selected Job Views...
-			List<Long> viewsWithAccess = this.filterViewsForUserAccess(webKitViewsApplicable, clickedGroupAlias);
+			List<WebKitWorkspaceJobView> viewsWithAccess = this.filterViewsForUserAccess(viewToFetchFor, clickedGroupAlias);
 			if (viewsWithAccess != null && !viewsWithAccess.isEmpty()) {
-				this.contentView = this.actionOpenMainPage(workspaceAim, groupWithName);
+				List<CompletableFuture> allAsyncs = new ArrayList<>();
+				final Map<WebKitWorkspaceJobView, List<FluidItem>> mappingRawViewFetch = new Hashtable<>();
+
+				//Fetch all the view data...
+				for (WebKitWorkspaceJobView jobViewWK : viewsWithAccess) {
+					//Run the following asynchronous...
+					FlowItemClient flowItemClient = this.getFluidClientDS().getFlowItemClient();
+					CompletableFuture toAdd = CompletableFuture.runAsync(() -> {
+						FluidItemListing listOfItems = null;
+						try {
+							int fetchLimit = jobViewWK.getFetchLimit() == null ? 100 : jobViewWK.getFetchLimit();
+							listOfItems = flowItemClient.getFluidItemsForView(
+									jobViewWK.getJobView(),
+									fetchLimit,
+									0);
+							if (listOfItems == null || (listOfItems.getListing() == null ||
+									listOfItems.getListing().isEmpty())) {
+								return;
+							}
+						} catch (FluidClientException fluidClientExcept) {
+							if (fluidClientExcept.getErrorCode() == FluidClientException.ErrorCode.NO_RESULT) {
+								return;
+							}
+							throw fluidClientExcept;
+						} finally {
+							//Set the items for the view...
+							if (listOfItems != null && !listOfItems.isListingEmpty()) {
+								mappingRawViewFetch.put(jobViewWK, listOfItems.getListing());
+							}
+						}
+					});
+					allAsyncs.add(toAdd);
+				}
+				//Run them all...
+				CompletableFuture.allOf(allAsyncs.toArray(new CompletableFuture[]{})).join();
+
+				//Selected Job Views...
+				//Group -> Sub -> View -> Items...
+				Map<WebKitViewSub, Map<WebKitWorkspaceJobView, List<WorkspaceFluidItem>>> data = new HashMap<>();
+				List<WebKitViewSub> subs = groupWithName.getWebKitViewSubs();
+				if (subFilter != null) {
+					subs = new ArrayList<>();
+					subs.add(subFilter);
+				}
+
+				subs.sort(Comparator.comparing(WebKitViewSub::getSubOrder));
+				subs.stream()
+						.filter(itm -> itm.getJobViews() != null)
+						.forEach(sub -> {
+							Map<WebKitWorkspaceJobView, List<WorkspaceFluidItem>> viewMapForSub = new Hashtable<>();
+							List<WebKitWorkspaceJobView> views = sub.getJobViews();
+							List<Long> fluidItemAdded = new ArrayList<>();
+
+							//FIXME 001 List<CompletableFuture> subProcessorSyncs = new ArrayList<>();
+							//Assign a processor for each of the views
+							//FIXME 001 CompletableFuture subAsync = CompletableFuture.runAsync(() -> {
+								views.stream()
+										.filter(itm -> mappingRawViewFetch.get(itm) != null)
+										.sorted(Comparator.comparing(WebKitWorkspaceJobView::getViewOrder))
+										.forEach(viewWithResults -> {
+											List<FluidItem> viewResults = mappingRawViewFetch.get(viewWithResults);
+											List<WorkspaceFluidItem> wfiList = new ArrayList<>();
+											viewResults.forEach(fldItem -> {
+												if (groupWithName.isTGMNoDuplicates()) {
+													Long toCheck = fldItem.getId();
+													if (fluidItemAdded.contains(toCheck)) {
+														return;
+													} else {
+														fluidItemAdded.add(toCheck);
+													}
+												}
+												T baseWebToAdd = this.createABaseWebVO(fldItem, sub, viewWithResults);
+												wfiList.add(new WorkspaceFluidItem(baseWebToAdd));
+											});
+											viewMapForSub.put(viewWithResults, wfiList);
+										});
+							//FIXME 001 });
+							//FIXME 001 subProcessorSyncs.add(subAsync);
+							//FIXME 001 CompletableFuture.allOf(subProcessorSyncs.toArray(new CompletableFuture[]{})).join();
+							data.put(sub, viewMapForSub);
+						});
+
+				//Map the layout...
+				this.contentView = this.actionOpenMainPage(workspaceAim, groupWithName, subFilter);
 				//Set the correct content view...
 				if (this.contentView == null) {
 					throw new ClientDashboardException(
 							"Unable to set Content View for "+ workspaceAim+"'. Not supported.",
 							ClientDashboardException.ErrorCode.VALIDATION);
 				}
-
-				List<CompletableFuture> allAsyncs = new ArrayList<>();
-				final Map<JobView, List<WorkspaceFluidItem>> mappingToSet = new Hashtable<>();
-				for (Long jobViewIdTxt : viewsWithAccess) {
-					JobView viewToSetForm = this.getJobViewFromListingWithId(this.viewsAll, jobViewIdTxt);
-					if (viewToSetForm == null) {
-						continue;
-					}
-
-					//Run the following asynchronous...
-					FlowItemClient flowItemClient = this.getFluidClientDS().getFlowItemClient();
-					CompletableFuture toAdd = CompletableFuture.runAsync(
-							() -> {
-								FluidItemListing listOfItems = null;
-								List<WorkspaceFluidItem> itemsForTheView = new ArrayList<>();
-								try {
-									listOfItems = flowItemClient.getFluidItemsForView(
-											viewToSetForm,
-											1000,//TODO need to fetch limit from config...
-											0);
-									if (listOfItems == null || (listOfItems.getListing() == null ||
-											listOfItems.getListing().isEmpty())) {
-										return;
-									}
-
-									//Add each of the items...
-									listOfItems.getListing().forEach(itm -> {
-										T baseWebToAdd = this.createABaseWebVO(itm);
-										itemsForTheView.add(new WorkspaceFluidItem(baseWebToAdd));
-									});
-								} catch (FluidClientException fluidClientExcept) {
-									if(fluidClientExcept.getErrorCode() == FluidClientException.ErrorCode.NO_RESULT) {
-										return;
-									}
-									throw fluidClientExcept;
-								} finally {
-									//Set the items for the view...
-									mappingToSet.put(viewToSetForm, itemsForTheView);
-								}
-							});
-					allAsyncs.add(toAdd);
-				}
-
-				//Run them all...
-				CompletableFuture.allOf(allAsyncs.toArray(new CompletableFuture[]{})).join();
-
 				//Refresh the data...
-				this.contentView.refreshData(mappingToSet);
+				this.contentView.refreshData(data);
 			}
 		} catch (Exception except) {
 			//log it...
@@ -385,8 +431,10 @@ public abstract class ABaseWorkspaceBean<T extends ABaseWebVO, J extends ABaseCo
 		} finally { /*Do nothing for now...*/ }
 	}
 
-	private List<Long> filterViewsForUserAccess(
-		List<Long> webKitConfigViews,
+
+
+	private List<WebKitWorkspaceJobView> filterViewsForUserAccess(
+		List<WebKitWorkspaceJobView> webKitConfigViews,
 		String group
 	) {
 		if (webKitConfigViews == null || webKitConfigViews.isEmpty()) {
@@ -400,9 +448,9 @@ public abstract class ABaseWorkspaceBean<T extends ABaseWebVO, J extends ABaseCo
 		List<JobView> allowed =
 				this.loggedInUsrViewGroupPlacings.getOrDefault(group, new ArrayList<>());
 		List<Long> allowedIds = allowed.stream().map(toMap -> toMap.getId()).collect(Collectors.toList());
-		List<Long> returnList = new ArrayList<>();
-		for (Long fromConfig : webKitConfigViews) {
-			if (allowedIds.contains(fromConfig)) {
+		List<WebKitWorkspaceJobView> returnList = new ArrayList<>();
+		for (WebKitWorkspaceJobView fromConfig : webKitConfigViews) {
+			if (allowedIds.contains(fromConfig.getId())) {
 				returnList.add(fromConfig);
 			}
 		}
@@ -419,12 +467,12 @@ public abstract class ABaseWorkspaceBean<T extends ABaseWebVO, J extends ABaseCo
 	 * @see ABaseContentView
 	 */
 	protected abstract J actionOpenMainPage(
-			String workspaceAimParam, WebKitViewGroup webKitGroup);
+			String workspaceAimParam, WebKitViewGroup webKitGroup, WebKitViewSub selectedSub);
 
 	/**
 	 * Create a custom value object based on {@code wrapperParam} and {@code fluidItemParam}.
 	 * 
-	 * @param fluidItemParam The Fluid {@code FluidItem} to map from.
+	 * @param item The Fluid {@code FluidItem} to map from.
 	 *
 	 * @return ABaseWebVO subclass based on {@code fluidItemParam}.
 	 *
@@ -432,7 +480,7 @@ public abstract class ABaseWorkspaceBean<T extends ABaseWebVO, J extends ABaseCo
 	 * @see SQLUtilWebSocketRESTWrapper
 	 * @see FluidItem
 	 */
-	protected abstract T createABaseWebVO(FluidItem fluidItemParam);
+	protected abstract T createABaseWebVO(FluidItem item, WebKitViewSub sub, WebKitWorkspaceJobView view);
 
 	/**
 	 * Find the {@code JobView} with id {@code idToGetParam} from {@code jobViewsParam}.

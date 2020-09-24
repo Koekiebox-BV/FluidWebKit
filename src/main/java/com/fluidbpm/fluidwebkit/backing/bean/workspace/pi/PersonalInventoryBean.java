@@ -21,6 +21,8 @@ import com.fluidbpm.fluidwebkit.backing.bean.workspace.WorkspaceFluidItem;
 import com.fluidbpm.program.api.vo.flow.JobView;
 import com.fluidbpm.program.api.vo.item.FluidItem;
 import com.fluidbpm.program.api.vo.webkit.viewgroup.WebKitViewGroup;
+import com.fluidbpm.program.api.vo.webkit.viewgroup.WebKitViewSub;
+import com.fluidbpm.program.api.vo.webkit.viewgroup.WebKitWorkspaceJobView;
 import com.fluidbpm.ws.client.FluidClientException;
 import com.fluidbpm.ws.client.v1.user.PersonalInventoryClient;
 import org.primefaces.PrimeFaces;
@@ -63,11 +65,15 @@ public class PersonalInventoryBean extends ABaseWorkspaceBean<PersonalInventoryI
 
 	@Override
 	public void actionOpenMainPage() {
-		this.contentView = this.actionOpenMainPage(null, null);
+		this.contentView = this.actionOpenMainPage(null, null, null);
 	}
 
 	@Override
-	protected ContentViewPI actionOpenMainPage(String workspaceAimParam, WebKitViewGroup webKitGroup) {
+	protected ContentViewPI actionOpenMainPage(
+		String workspaceAimParam,
+		WebKitViewGroup webKitGroup,
+		WebKitViewSub selectedSub
+	) {
 		try {
 			if (this.getFluidClientDS() == null) {
 				return null;
@@ -76,7 +82,7 @@ public class PersonalInventoryBean extends ABaseWorkspaceBean<PersonalInventoryI
 			List<FluidItem> piItems = persInvClient.getPersonalInventoryItems();
 			List<WorkspaceFluidItem> wsFldItms = new ArrayList<>();
 			piItems.forEach(flItm -> {
-				wsFldItms.add(new WorkspaceFluidItem(createABaseWebVO(flItm)));
+				wsFldItms.add(new WorkspaceFluidItem(this.createABaseWebVO(flItm, null, null)));
 			});
 
 			Map<JobView, List<WorkspaceFluidItem>> wsFluidItmsMap = new HashMap<>();
@@ -98,8 +104,8 @@ public class PersonalInventoryBean extends ABaseWorkspaceBean<PersonalInventoryI
 	}
 
 	@Override
-	protected PersonalInventoryItemVO createABaseWebVO(FluidItem fluidItemParam) {
-		PersonalInventoryItemVO returnVal = new PersonalInventoryItemVO(fluidItemParam);
+	protected PersonalInventoryItemVO createABaseWebVO(FluidItem item, WebKitViewSub sub, WebKitWorkspaceJobView view) {
+		PersonalInventoryItemVO returnVal = new PersonalInventoryItemVO(item);
 		return returnVal;
 	}
 

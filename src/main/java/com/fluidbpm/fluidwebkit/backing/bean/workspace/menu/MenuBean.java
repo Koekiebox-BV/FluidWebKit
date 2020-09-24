@@ -248,8 +248,9 @@ public class MenuBean extends ABaseManagedBean {
 
 		List<Long> returnVal = new ArrayList<>();
 		List<WebKitViewSub> subs = viewGroup.getWebKitViewSubs();
+		subs.sort(Comparator.comparing(WebKitViewSub::getSubOrder));
 		subs.forEach(viewSub -> {
-			List<Long> viewIdsForSub = getViewIdsForSub(viewSub);
+			List<Long> viewIdsForSub = this.getViewIdsForSub(viewSub);
 			if (viewIdsForSub == null || viewIdsForSub.isEmpty()) {
 				return;
 			}
@@ -277,6 +278,37 @@ public class MenuBean extends ABaseManagedBean {
 						returnVal.add(viewItm.getId());
 					});
 		});
+		return returnVal;
+	}
+
+	public List<WebKitWorkspaceJobView> getUniqueViewsForGroup(WebKitViewGroup viewGroup) {
+		if (viewGroup == null || viewGroup.getWebKitViewSubs() == null) {
+			return null;
+		}
+
+		List<WebKitWorkspaceJobView> returnVal = new ArrayList<>();
+		List<Long> addedViewIds = new ArrayList<>();
+		viewGroup.getWebKitViewSubs().stream()
+				.sorted(Comparator.comparing(WebKitViewSub::getSubOrder))
+				.forEach(viewSub -> {
+					List<WebKitWorkspaceJobView> viewsForSub = this.getViewsForSub(viewSub);
+					if (viewsForSub == null || viewsForSub.isEmpty()) return;
+					viewsForSub.stream()
+							.filter(itm -> !addedViewIds.contains(itm.getId()))
+							.forEach(viewItm -> {
+								returnVal.add(viewItm);
+								addedViewIds.add(viewItm.getId());
+							});
+		});
+		return returnVal;
+	}
+
+	public List<WebKitWorkspaceJobView> getViewsForSub(WebKitViewSub viewSub) {
+		if (viewSub == null || viewSub.getJobViews() == null) {
+			return null;
+		}
+		List<WebKitWorkspaceJobView> returnVal = viewSub.getJobViews();
+		returnVal.sort(Comparator.comparing(WebKitWorkspaceJobView::getViewFlowStepViewOrder));
 		return returnVal;
 	}
 

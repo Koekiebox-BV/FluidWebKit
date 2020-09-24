@@ -26,6 +26,7 @@ import com.fluidbpm.program.api.vo.flow.JobView;
 import com.fluidbpm.program.api.vo.item.FluidItem;
 import com.fluidbpm.program.api.vo.webkit.viewgroup.WebKitViewGroup;
 import com.fluidbpm.program.api.vo.webkit.viewgroup.WebKitViewSub;
+import com.fluidbpm.program.api.vo.webkit.viewgroup.WebKitWorkspaceJobView;
 import com.fluidbpm.ws.client.FluidClientException;
 import com.fluidbpm.ws.client.v1.user.PersonalInventoryClient;
 import org.primefaces.PrimeFaces;
@@ -54,7 +55,11 @@ public class WorkspaceBean extends ABaseWorkspaceBean<JobViewItemVO, ContentView
 	}
 
 	@Override
-	protected ContentViewJV actionOpenMainPage(String workspaceAimParam, WebKitViewGroup webKitGroup) {
+	protected ContentViewJV actionOpenMainPage(
+		String workspaceAimParam,
+		WebKitViewGroup webKitGroup,
+		WebKitViewSub selectedSub
+	) {
 		try {
 			if (this.getFluidClientDS() == null) {
 				return null;
@@ -69,27 +74,29 @@ public class WorkspaceBean extends ABaseWorkspaceBean<JobViewItemVO, ContentView
 			List<WebKitViewSub> subs = webKitGroup.getWebKitViewSubs();
 			Collections.sort(subs, Comparator.comparing(WebKitViewSub::getSubOrder));
 			List<String> sections = new ArrayList<>();
-			switch (tgm) {
-				//Group Level...
-				case WebKitViewGroup.TableGenerateMode.COMBINED:
-				case WebKitViewGroup.TableGenerateMode.COMBINED_NO_DUPLICATES:
-					sections.add(webKitGroup.getJobViewGroupName());
-				break;
-				//Sub Level...
-				case WebKitViewGroup.TableGenerateMode.TABLE_PER_SUB:
-				case WebKitViewGroup.TableGenerateMode.TABLE_PER_SUB_NO_DUPLICATES:
-					if (subs != null) {
-						subs.forEach(subItm -> {
-							sections.add(subItm.getLabel());
-						});
-					}
-				break;
-				//View Level...
-				case WebKitViewGroup.TableGenerateMode.TABLE_PER_VIEW:
-				case WebKitViewGroup.TableGenerateMode.TABLE_PER_VIEW_NO_DUPLICATES:
-
-					//TODO need to have a table per view, but also show the sub for the table...
-				break;
+			if (webKitGroup.isTGMCombined()) {
+				sections.add(webKitGroup.getJobViewGroupName());
+			} else if (webKitGroup.isTGMTablePerSub()) {
+				if (subs != null) {
+					subs.forEach(subItm -> {
+						sections.add(subItm.getLabel());
+					});
+				}
+			} else if (webKitGroup.isTGMTablePerView()) {
+				if (subs != null) {
+					subs.stream().filter(itm -> itm.getJobViews() != null)
+							.forEach(subItm -> {
+								List<WebKitWorkspaceJobView> viewsForSub = subItm.getJobViews();
+								Collections.sort(viewsForSub, Comparator.comparing(WebKitWorkspaceJobView::getViewOrder));
+								viewsForSub.forEach(viewItm -> {
+									sections.add(String.format("%s - %s", subItm.getLabel(), viewItm.getJobView().getViewName()));
+								});
+					});
+				}
+			} else {
+				throw new FluidClientException(
+						String.format("Unable to determine outcome for TGM ''.", webKitGroup.getTableGenerateMode()),
+						FluidClientException.ErrorCode.FIELD_VALIDATE);
 			}
 
 			ContentViewJV contentViewJV = new ContentViewJV(this.getLoggedInUser(), sections);
@@ -107,11 +114,8 @@ public class WorkspaceBean extends ABaseWorkspaceBean<JobViewItemVO, ContentView
 	}
 
 	@Override
-	protected JobViewItemVO createABaseWebVO(FluidItem fluidItemParam) {
-
-
-
-		JobViewItemVO returnVal = new JobViewItemVO(fluidItemParam);
+	protected JobViewItemVO createABaseWebVO(FluidItem item,WebKitViewSub sub, WebKitWorkspaceJobView view) {
+		JobViewItemVO returnVal = new JobViewItemVO(item);
 		return returnVal;
 	}
 

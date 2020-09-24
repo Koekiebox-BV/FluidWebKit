@@ -20,6 +20,8 @@ import com.fluidbpm.fluidwebkit.backing.bean.workspace.WorkspaceFluidItem;
 import com.fluidbpm.program.api.vo.field.Field;
 import com.fluidbpm.program.api.vo.flow.JobView;
 import com.fluidbpm.program.api.vo.user.User;
+import com.fluidbpm.program.api.vo.webkit.viewgroup.WebKitViewSub;
+import com.fluidbpm.program.api.vo.webkit.viewgroup.WebKitWorkspaceJobView;
 import lombok.Getter;
 import lombok.Setter;
 import org.primefaces.event.ToggleEvent;
@@ -456,7 +458,7 @@ public abstract class ABaseContentView implements Serializable {
 	 * @see JobView
 	 * @see WorkspaceFluidItem
 	 */
-	public void refreshData(Map<JobView, List<WorkspaceFluidItem>> fluidItemsForViewsParam) {
+	public void refreshData(Map<WebKitViewSub, Map<WebKitWorkspaceJobView, List<WorkspaceFluidItem>>> data) {
 		this.fluidItemsForViews = fluidItemsForViewsParam;
 		if (this.fluidItemsForSection == null) {
 			this.fluidItemsForSection = new HashMap<>();
