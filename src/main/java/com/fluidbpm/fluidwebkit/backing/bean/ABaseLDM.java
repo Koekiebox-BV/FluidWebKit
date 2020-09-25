@@ -46,14 +46,19 @@ public abstract class ABaseLDM<T extends ABaseFluidVO> extends LazyDataModel<T> 
 		return object.getId();
 	}
 
-	public void addToListing(List<T> listingToAdd) {
+	public void addToInitialListing(List<T> listingToAdd) {
 		if (listingToAdd == null || listingToAdd.isEmpty()) return;
 		this.dataListing.addAll(listingToAdd);
 	}
 
-	public void addToListing(T toAdd) {
+	public void addToInitialListing(T toAdd) {
 		if (toAdd == null) return;
 		this.dataListing.add(toAdd);
+	}
+
+	public void clearInitialListing() {
+		if (dataListing == null) return;
+		this.dataListing.clear();
 	}
 
 	@Override

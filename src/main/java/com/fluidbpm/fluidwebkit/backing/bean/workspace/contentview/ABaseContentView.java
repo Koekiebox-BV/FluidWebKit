@@ -44,7 +44,7 @@ import java.util.*;
  */
 public abstract class ABaseContentView implements Serializable {
 
-	private Map<JobView, List<WorkspaceFluidItem>> fluidItemsForViews;
+	private Map<WebKitViewSub, Map<WebKitWorkspaceJobView, List<WorkspaceFluidItem>>> data;
 
 	//Header and Column Names
 	private String[] sections;
@@ -94,7 +94,7 @@ public abstract class ABaseContentView implements Serializable {
 	 *
 	 * @param loggedInUserParam The currently logged in user.
 	 * @param sectionsParam The list of sections applicable to the view.
-	 * @param fluidItemsForViewsParam The mapped fluid items per view.
+	 * @param data The mapped fluid items per view.
 	 *
 	 * @see JobView
 	 * @see WorkspaceFluidItem
@@ -102,11 +102,9 @@ public abstract class ABaseContentView implements Serializable {
 	public ABaseContentView(
 		User loggedInUserParam,
 		Collection<String> sectionsParam,
-		Map<JobView, List<WorkspaceFluidItem>> fluidItemsForViewsParam
+		Map<WebKitViewSub, Map<WebKitWorkspaceJobView, List<WorkspaceFluidItem>>> data
 	) {
-		this(loggedInUserParam,
-				sectionsParam == null ? null : sectionsParam.toArray(new String[]{}),
-				fluidItemsForViewsParam);
+		this(loggedInUserParam, sectionsParam == null ? null : sectionsParam.toArray(new String[]{}), data);
 	}
 
 	/**
@@ -122,7 +120,7 @@ public abstract class ABaseContentView implements Serializable {
 	public ABaseContentView(
 		User loggedInUserParam,
 		String[] sectionsParam,
-		Map<JobView, List<WorkspaceFluidItem>> fluidItemsForViewsParam
+		Map<WebKitViewSub, Map<WebKitWorkspaceJobView, List<WorkspaceFluidItem>>> fluidItemsForViewsParam
 	) {
 		this.loggedInUser = loggedInUserParam;
 		this.sections = sectionsParam;
@@ -216,7 +214,7 @@ public abstract class ABaseContentView implements Serializable {
 	 */
 	public abstract List<WorkspaceFluidItem> getWorkspaceFluidItemsFor(
 			String sectionParam,
-			Map<JobView, List<WorkspaceFluidItem>> fluidItemsForViewsParam);
+			Map<WebKitViewSub, Map<WebKitWorkspaceJobView, List<WorkspaceFluidItem>>> fluidItemsForViewsParam);
 
 	/**
 	 *
@@ -331,7 +329,6 @@ public abstract class ABaseContentView implements Serializable {
 		if (this.getTextToFilterBy() == null || this.getTextToFilterBy().trim().isEmpty()) {
 			return this.getFluidItemsForSection();
 		}
-
 		return this.getFluidItemsForSectionFiltered();
 	}
 
@@ -453,13 +450,13 @@ public abstract class ABaseContentView implements Serializable {
 	/**
 	 * Refresh the fluid items ({@code List<WorkspaceFluidItem>}) for {@code this} content view.
 	 * 
-	 * @param fluidItemsForViewsParam The updated list of {@code WorkspaceFluidItem}'s for each section.
+	 * @param data The updated list of {@code WorkspaceFluidItem}'s for each section.
 	 *
 	 * @see JobView
 	 * @see WorkspaceFluidItem
 	 */
 	public void refreshData(Map<WebKitViewSub, Map<WebKitWorkspaceJobView, List<WorkspaceFluidItem>>> data) {
-		this.fluidItemsForViews = fluidItemsForViewsParam;
+		this.data = data;
 		if (this.fluidItemsForSection == null) {
 			this.fluidItemsForSection = new HashMap<>();
 		}
@@ -471,7 +468,7 @@ public abstract class ABaseContentView implements Serializable {
 			return;
 		}
 
-		if (fluidItemsForViewsParam == null || fluidItemsForViewsParam.isEmpty()) {
+		if (data == null || data.isEmpty()) {
 			return;
 		}
 
@@ -480,13 +477,11 @@ public abstract class ABaseContentView implements Serializable {
 			if (section == null || section.trim().isEmpty()) {
 				continue;
 			}
-
 			List<WorkspaceFluidItem> itemsForSection =
-					this.getWorkspaceFluidItemsFor(section, fluidItemsForViewsParam);
+					this.getWorkspaceFluidItemsFor(section, data);
 			if (itemsForSection == null || itemsForSection.isEmpty()) {
 				continue;
 			}
-
 			this.fluidItemsForSection.put(section, itemsForSection);
 		}
 	}
@@ -611,18 +606,83 @@ public abstract class ABaseContentView implements Serializable {
 	 *
 	 * @see JobView
 	 */
-	public JobView retrieveJobViewFromJobViewId(Long jobViewIdParam) {
+	public WebKitWorkspaceJobView retrieveJobViewFromId(Long jobViewIdParam) {
 		if (jobViewIdParam == null) {
 			return null;
 		}
-		if (this.fluidItemsForViews == null) {
+		if (this.data == null) {
 			return null;
 		}
 
-		return this.fluidItemsForViews.keySet().stream()
+		return this.data.keySet().stream()
+				.map(itm -> itm.getJobViews())
+				.flatMap(List::stream)
 				.filter(itm -> jobViewIdParam.equals(itm.getId()))
 				.findFirst()
 				.orElse(null);
+	}
+
+	/**
+	 *
+	 * @param sectionAliasParam
+	 * @param columnIndexParam
+	 * @return
+	 */
+	public ABaseManagedBean.ColumnModel getCHForSecCM(
+			String sectionAliasParam,
+			int columnIndexParam
+	) {
+		List<ABaseManagedBean.ColumnModel> headers = this.getColumnHeadersForSection(sectionAliasParam);
+		int headerSize = (headers == null) ? 0:headers.size();
+		if ((columnIndexParam + 1) > headerSize){
+			return null;
+		}
+		return headers.get(columnIndexParam);
+	}
+
+	/**
+	 * @param sectionRptItem
+	 * @param indexParam
+	 * @return
+	 */
+	public boolean shouldRenderColumnForSectionAndIndex(
+		String sectionRptItem,
+		int indexParam
+	) {
+		ABaseManagedBean.ColumnModel columnModel =
+				this.getCHForSecCM(sectionRptItem, indexParam);
+		if (columnModel == null) {
+			return false;
+		}
+
+		return this.shouldRenderColumnForSectionAndModel(sectionRptItem, columnModel);
+	}
+
+	/**
+	 * @param sectionRptItem
+	 * @param columnModelParam
+	 * @return
+	 */
+	public boolean shouldRenderColumnForSectionAndModel(
+			String sectionRptItem,
+			ABaseManagedBean.ColumnModel columnModelParam
+	) {
+		if (sectionRptItem == null ||
+				(columnModelParam == null || columnModelParam.getHeader() == null)) {
+			return false;
+		}
+
+		List<ABaseManagedBean.ColumnModel> columnsForSection = this.columnModels.get(sectionRptItem);
+		if (columnsForSection == null || columnsForSection.isEmpty()) {
+			return false;
+		}
+
+		for (ABaseManagedBean.ColumnModel toCheckAgainst : columnsForSection) {
+			if (toCheckAgainst.getHeader().equals(columnModelParam.getHeader())) {
+				return toCheckAgainst.isVisible();
+			}
+		}
+		return true;
 	}
 
 	/**

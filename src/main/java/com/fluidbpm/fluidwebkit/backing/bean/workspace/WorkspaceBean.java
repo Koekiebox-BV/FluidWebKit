@@ -46,6 +46,9 @@ import java.util.*;
 @Named("webKitWorkspaceBean")
 public class WorkspaceBean extends ABaseWorkspaceBean<JobViewItemVO, ContentViewJV> {
 
+	public static final String TGM_TABLE_PER_VIEW_SECTION_FORMAT = "%s - %s";
+	public static final String TGM_TABLE_PER_VIEW_SECTION_DEL = " - ";
+
 	@Override
 	public void actionOpenFormForEditingFromWorkspace(
 		JobView fromView,
@@ -56,50 +59,46 @@ public class WorkspaceBean extends ABaseWorkspaceBean<JobViewItemVO, ContentView
 
 	@Override
 	protected ContentViewJV actionOpenMainPage(
-		String workspaceAimParam,
-		WebKitViewGroup webKitGroup,
-		WebKitViewSub selectedSub
+		WebKitViewGroup wkGroup,
+		WebKitViewSub wkSub
 	) {
 		try {
 			if (this.getFluidClientDS() == null) {
 				return null;
 			}
 
-			final String tgm = webKitGroup.getTableGenerateMode();
+			final String tgm = wkGroup.getTableGenerateMode();
 			if (tgm == null) {
 				throw new FluidClientException(
 						"Unable to determine outcome for TGM not being set.",
 						FluidClientException.ErrorCode.FIELD_VALIDATE);
 			}
-			List<WebKitViewSub> subs = webKitGroup.getWebKitViewSubs();
+			List<WebKitViewSub> subs = wkGroup.getWebKitViewSubs();
 			Collections.sort(subs, Comparator.comparing(WebKitViewSub::getSubOrder));
 			List<String> sections = new ArrayList<>();
-			if (webKitGroup.isTGMCombined()) {
-				sections.add(webKitGroup.getJobViewGroupName());
-			} else if (webKitGroup.isTGMTablePerSub()) {
-				if (subs != null) {
-					subs.forEach(subItm -> {
-						sections.add(subItm.getLabel());
-					});
-				}
-			} else if (webKitGroup.isTGMTablePerView()) {
-				if (subs != null) {
-					subs.stream().filter(itm -> itm.getJobViews() != null)
-							.forEach(subItm -> {
-								List<WebKitWorkspaceJobView> viewsForSub = subItm.getJobViews();
-								Collections.sort(viewsForSub, Comparator.comparing(WebKitWorkspaceJobView::getViewOrder));
-								viewsForSub.forEach(viewItm -> {
-									sections.add(String.format("%s - %s", subItm.getLabel(), viewItm.getJobView().getViewName()));
-								});
-					});
-				}
+			if (wkGroup.isTGMCombined()) {
+				sections.add(wkGroup.getJobViewGroupName());
+			} else if (wkGroup.isTGMTablePerSub()) {
+				subs.forEach(subItm -> {
+					sections.add(subItm.getLabel());
+				});
+			} else if (wkGroup.isTGMTablePerView()) {
+				subs.stream().filter(itm -> itm.getJobViews() != null)
+						.forEach(subItm -> {
+							List<WebKitWorkspaceJobView> viewsForSub = subItm.getJobViews();
+							Collections.sort(viewsForSub, Comparator.comparing(WebKitWorkspaceJobView::getViewOrder));
+							viewsForSub.forEach(viewItm -> {
+								sections.add(String.format(TGM_TABLE_PER_VIEW_SECTION_FORMAT,
+										subItm.getLabel(), viewItm.getJobView().getViewName()));
+							});
+						});
 			} else {
 				throw new FluidClientException(
-						String.format("Unable to determine outcome for TGM ''.", webKitGroup.getTableGenerateMode()),
+						String.format("Unable to determine outcome for TGM ''.", wkGroup.getTableGenerateMode()),
 						FluidClientException.ErrorCode.FIELD_VALIDATE);
 			}
 
-			ContentViewJV contentViewJV = new ContentViewJV(this.getLoggedInUser(), sections);
+			ContentViewJV contentViewJV = new ContentViewJV(this.getLoggedInUser(), sections, wkGroup, wkSub);
 			return contentViewJV;
 		} catch (Exception fce) {
 			if (fce instanceof FluidClientException) {
@@ -114,8 +113,14 @@ public class WorkspaceBean extends ABaseWorkspaceBean<JobViewItemVO, ContentView
 	}
 
 	@Override
-	protected JobViewItemVO createABaseWebVO(FluidItem item,WebKitViewSub sub, WebKitWorkspaceJobView view) {
+	protected JobViewItemVO createABaseWebVO(FluidItem item, WebKitViewSub sub, WebKitWorkspaceJobView view) {
 		JobViewItemVO returnVal = new JobViewItemVO(item);
+
+		//FIXME @jason, need map the route fields here...
+		//FIXME @jason, need to map Route field webkit to normal route field...
+
+
+
 		return returnVal;
 	}
 

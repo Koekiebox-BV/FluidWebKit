@@ -142,4 +142,8 @@ public class WebKitConfigHelperBean extends ABaseManagedBean {
 		//Do nothing...
 		this.getLogger().debug("Action fired to do nothing.");
 	}
+
+	public String convertToUpper(String toConvert) {
+		return toConvert.toUpperCase();
+	}
 }

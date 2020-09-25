@@ -17,6 +17,7 @@ package com.fluidbpm.fluidwebkit.backing.bean.workspace.menu;
 
 import com.fluidbpm.fluidwebkit.backing.bean.ABaseManagedBean;
 import com.fluidbpm.fluidwebkit.backing.bean.config.WebKitAccessBean;
+import com.fluidbpm.fluidwebkit.backing.bean.workspace.lf.WorkspaceLookAndFeelBean;
 import com.fluidbpm.fluidwebkit.backing.bean.workspace.pi.ContentViewPI;
 import com.fluidbpm.program.api.util.UtilGlobal;
 import com.fluidbpm.program.api.vo.flow.JobView;
@@ -58,8 +59,8 @@ public class MenuBean extends ABaseManagedBean {
 	@Inject
 	private WebKitAccessBean webKitAccessBean;
 
-	@Getter
-	private List<WebKitViewGroup> webKitViewGroups;
+	@Inject
+	private WorkspaceLookAndFeelBean lookAndFeelBean;
 
 	@Getter
 	@Setter
@@ -91,20 +92,8 @@ public class MenuBean extends ABaseManagedBean {
 		this.submenuWorkspace.setLabel("Workspace");
 		this.submenuWorkspace.setIcon(ICON_DEFAULT_WORKSPACE);
 
-		try {
-			WebKitViewGroupListing listing = this.getFluidClientDSConfig().getFlowClient().getViewGroupWebKit();
-			this.webKitViewGroups = listing.getListing();
-			this.buildWorkspaceMenu();
-		} catch (Exception fce) {
-			if (fce instanceof FluidClientException) {
-				FluidClientException casted = (FluidClientException)fce;
-				if (casted.getErrorCode() == FluidClientException.ErrorCode.NO_RESULT) {
-					this.noGroups();
-					return;
-				}
-			}
-			this.raiseError(fce);
-		}
+		this.lookAndFeelBean.actionPrepareWorkspaceLookAndFeelUpdate();
+		this.buildWorkspaceMenu();
 	}
 
 	public String actionOpenMissingConfig() {
@@ -112,7 +101,7 @@ public class MenuBean extends ABaseManagedBean {
 	}
 
 	private void buildWorkspaceMenu() {
-		if (this.webKitViewGroups == null || webKitViewGroups.isEmpty()) {
+		if (this.getJobViewGroups() == null || this.getJobViewGroups().isEmpty()) {
 			this.noGroups();
 			return;
 		}
@@ -123,11 +112,8 @@ public class MenuBean extends ABaseManagedBean {
 			return;
 		}
 
-		//Sort the group...
-		this.webKitViewGroups.sort(Comparator.comparing(WebKitViewGroup::getGroupOrder));
-
 		AtomicInteger groupCounter = new AtomicInteger(1);
-		this.webKitViewGroups.forEach(webKitGroupItm -> {
+		this.getJobViewGroups().stream().forEach(webKitGroupItm -> {
 			String groupLabel = webKitGroupItm.getJobViewGroupName();
 			Long groupId = webKitGroupItm.getJobViewGroupId();
 			String groupIcon = webKitGroupItm.getJobViewGroupIcon();
@@ -207,18 +193,6 @@ public class MenuBean extends ABaseManagedBean {
 			groupBaseToAdd.setId(String.format("menGroupId%d", groupCounter.getAndIncrement()));
 			this.submenuWorkspace.getElements().add(groupBaseToAdd);
 		});
-
-//		DefaultMenuItem menuItem = new DefaultMenuItem();
-//		menuItem.setId(ID_PREFIX_VIEWMENUITEMNOTIFICATIONS);
-//		menuItem.setValue(
-//				"Notifications (" + this.getNotificationsCount() + ")");
-//		menuItem.setIcon(GlobalVariable.Icon.CIRCLE);
-//		menuItem.setOnclick(ClickJavaScript);
-//		menuItem.setParam(WebParam.TypeOfInbox, CurrentDataViewType.Notifications.getAlias());
-//		menuItem.setCommand("#{jobViewItemListingBean.actionViewFilterSelectedPersonalInbox}");
-//		menuItem.setUpdate(ClickUpdate);
-//		groupMenuModel.getElements().add(menuItem);
-//
 	}
 
 	private void noAccess() {
@@ -316,10 +290,14 @@ public class MenuBean extends ABaseManagedBean {
 		if (groupName == null) {
 			return null;
 		}
-		return this.webKitViewGroups.stream()
+		return this.getJobViewGroups().stream()
 				.filter(itm -> groupName.equals(itm.getJobViewGroupName()))
 				.findFirst()
 				.orElse(null);
+	}
+
+	public List<WebKitViewGroup> getJobViewGroups() {
+		return this.lookAndFeelBean.getWebKitViewGroups();
 	}
 
 }

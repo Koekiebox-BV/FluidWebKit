@@ -65,12 +65,11 @@ public class PersonalInventoryBean extends ABaseWorkspaceBean<PersonalInventoryI
 
 	@Override
 	public void actionOpenMainPage() {
-		this.contentView = this.actionOpenMainPage(null, null, null);
+		this.contentView = this.actionOpenMainPage(null, null);
 	}
 
 	@Override
 	protected ContentViewPI actionOpenMainPage(
-		String workspaceAimParam,
 		WebKitViewGroup webKitGroup,
 		WebKitViewSub selectedSub
 	) {
@@ -85,11 +84,13 @@ public class PersonalInventoryBean extends ABaseWorkspaceBean<PersonalInventoryI
 				wsFldItms.add(new WorkspaceFluidItem(this.createABaseWebVO(flItm, null, null)));
 			});
 
-			Map<JobView, List<WorkspaceFluidItem>> wsFluidItmsMap = new HashMap<>();
-			wsFluidItmsMap.put(new JobView(ContentViewPI.PI), wsFldItms);
+			Map<WebKitViewSub, Map<WebKitWorkspaceJobView, List<WorkspaceFluidItem>>> data = new HashMap<>();
+			Map<WebKitWorkspaceJobView, List<WorkspaceFluidItem>> wsFluidItmsMap = new HashMap<>();
+			wsFluidItmsMap.put(new WebKitWorkspaceJobView(new JobView(ContentViewPI.PI)), wsFldItms);
+			data.put(new WebKitViewSub(), wsFluidItmsMap);
 
 			ContentViewPI contentViewPI = new ContentViewPI(this.getLoggedInUser());
-			contentViewPI.refreshData(wsFluidItmsMap);
+			contentViewPI.refreshData(data);
 			return contentViewPI;
 		} catch (Exception fce) {
 			if (fce instanceof FluidClientException) {

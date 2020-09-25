@@ -17,6 +17,7 @@ package com.fluidbpm.fluidwebkit.backing.bean.workspace;
 
 import com.fluidbpm.fluidwebkit.backing.vo.ABaseWebVO;
 import com.fluidbpm.program.api.util.UtilGlobal;
+import com.fluidbpm.program.api.vo.ABaseFluidVO;
 import com.fluidbpm.program.api.vo.field.Field;
 import com.fluidbpm.program.api.vo.flow.JobView;
 import com.fluidbpm.program.api.vo.form.Form;
@@ -28,11 +29,8 @@ import java.util.Map;
 
 /**
  * Workspace object to host the {@code JobView} and {@code ABaseWebVO}.
- *
- * @author jasonbruwer on 2018-05-31.
- * @since 1.0
  */
-public class WorkspaceFluidItem {
+public class WorkspaceFluidItem extends ABaseFluidVO {
 	private ABaseWebVO baseWeb;
 	private Map<String, Object> fieldMap;
 	private JobView jobView;

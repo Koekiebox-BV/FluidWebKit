@@ -17,14 +17,18 @@ package com.fluidbpm.fluidwebkit.backing.bean.workspace.pi;
 
 import com.fluidbpm.fluidwebkit.backing.bean.workspace.WorkspaceFluidItem;
 import com.fluidbpm.fluidwebkit.backing.bean.workspace.contentview.ABaseContentView;
-import com.fluidbpm.program.api.vo.flow.JobView;
 import com.fluidbpm.program.api.vo.user.User;
+import com.fluidbpm.program.api.vo.webkit.viewgroup.WebKitViewSub;
+import com.fluidbpm.program.api.vo.webkit.viewgroup.WebKitWorkspaceJobView;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 public class ContentViewPI extends ABaseContentView {
 	public static final String PI = "Personal Inventory";
+	public static final String TO_ME = "Sent to Me";//TODO add the others....
 
 	public ContentViewPI(User loggedInUserParam) {
 		super(loggedInUserParam, new String[]{PI});
@@ -33,14 +37,18 @@ public class ContentViewPI extends ABaseContentView {
 	@Override
 	public List<WorkspaceFluidItem> getWorkspaceFluidItemsFor(
 		String sectionParam,
-		Map<JobView, List<WorkspaceFluidItem>> fluidItemsForViewsParam
+		Map<WebKitViewSub, Map<WebKitWorkspaceJobView, List<WorkspaceFluidItem>>> data
 	) {
-		if (fluidItemsForViewsParam.isEmpty()) {
+		if (data.isEmpty()) {
 			return null;
 		}
 
-		JobView firstKey = fluidItemsForViewsParam.keySet().stream().findFirst().orElse(new JobView(sectionParam));
-		List<WorkspaceFluidItem> returnVal = fluidItemsForViewsParam.get(firstKey);
-		return returnVal;
+		//FIXME need to break out for each of the personal inbox types...
+
+		return data.values().stream()
+				.map(itm -> itm.values())
+				.flatMap(Collection::stream)
+				.flatMap(Collection::stream)
+				.collect(Collectors.toList());
 	}
 }

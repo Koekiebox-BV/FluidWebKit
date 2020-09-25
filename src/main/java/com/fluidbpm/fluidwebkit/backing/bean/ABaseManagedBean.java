@@ -27,7 +27,9 @@ import com.fluidbpm.program.api.vo.field.Field;
 import com.fluidbpm.program.api.vo.role.Role;
 import com.fluidbpm.program.api.vo.user.User;
 import com.fluidbpm.ws.client.v1.user.LoginClient;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.primefaces.PrimeFaces;
 
@@ -132,10 +134,16 @@ public abstract class ABaseManagedBean implements Serializable {
 	/**
 	 * Any column model.
 	 */
+	@Getter
+	@Setter
+	@AllArgsConstructor
+	@NoArgsConstructor
 	public static class ColumnModel implements Serializable {
 		private String header;
 		private String fluidFieldName;
 		private Field.Type fluidFieldColumnType;
+
+		private boolean visible;
 
 		/**
 		 *
@@ -153,34 +161,6 @@ public abstract class ABaseManagedBean implements Serializable {
 			this.fluidFieldColumnType = fluidFieldColumnTypeParam;
 		}
 
-		/**
-		 *
-		 * @return
-		 */
-		public String getHeader() {
-			return this.header;
-		}
-
-		/**
-		 *
-		 * @return
-		 */
-		public String getFluidFieldName() {
-			return this.fluidFieldName;
-		}
-
-		/**
-		 *
-		 * @return
-		 */
-		public Field.Type getFluidFieldColumnType() {
-			return this.fluidFieldColumnType;
-		}
-
-		/**
-		 *
-		 * @return
-		 */
 		public String getFluidFieldColumnTypeTxt() {
 			return (this.getFluidFieldColumnType() == null) ? null:
 					this.getFluidFieldColumnType().toString();

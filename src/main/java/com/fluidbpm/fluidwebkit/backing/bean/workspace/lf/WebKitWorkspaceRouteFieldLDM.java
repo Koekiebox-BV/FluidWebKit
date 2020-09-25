@@ -25,7 +25,7 @@ public class WebKitWorkspaceRouteFieldLDM extends ABaseLDM<WebKitWorkspaceRouteF
 
 	public void populateFromFields(List<Field> allFields) {
 		AtomicInteger order = new AtomicInteger(1);
-		this.addToListing(allFields.stream().map(itm -> {
+		this.addToInitialListing(allFields.stream().map(itm -> {
 			WebKitWorkspaceRouteField rv = new WebKitWorkspaceRouteField(itm);
 			rv.setFieldOrder(order.getAndIncrement());
 			return rv;

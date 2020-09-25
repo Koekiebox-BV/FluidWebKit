@@ -24,7 +24,6 @@ import com.fluidbpm.ws.client.FluidClientException;
 import com.fluidbpm.ws.client.v1.flow.RouteFieldClient;
 import lombok.Getter;
 import lombok.Setter;
-import org.primefaces.event.AbstractAjaxBehaviorEvent;
 import org.primefaces.event.CellEditEvent;
 import org.primefaces.event.data.PageEvent;
 
@@ -265,7 +264,6 @@ public class WorkspaceLookAndFeelBean extends ABaseManagedBean {
 					this.inputSubToRouteFieldMapping.put(keyForStorage, new WebKitWorkspaceRouteFieldLDM(fieldsToSet));
 				});
 			});
-
 		} catch (Exception err) {
 			this.raiseError(err);
 		}
