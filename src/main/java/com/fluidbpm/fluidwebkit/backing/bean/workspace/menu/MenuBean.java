@@ -119,7 +119,7 @@ public class MenuBean extends ABaseManagedBean {
 			String groupIcon = webKitGroupItm.getJobViewGroupIcon();
 
 			final UIComponentBase groupBaseToAdd;
-			if (webKitGroupItm.isEnableGroupSubsInMenu()) {
+			if (!webKitGroupItm.isTGMCombined()) {
 				UISubmenu menuItemGroup = new UISubmenu();
 				menuItemGroup.setLabel(groupLabel);
 				menuItemGroup.setIcon((groupIcon == null || groupIcon.trim().isEmpty()) ? ICON_DEFAULT_GROUP : groupIcon);

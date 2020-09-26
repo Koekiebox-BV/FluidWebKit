@@ -74,11 +74,32 @@ public class WorkspaceFluidItem extends ABaseFluidVO {
 		return this.getFluidItemForm().getId();
 	}
 
+	public String getFluidItemFormType() {
+		if (this.getFluidItemForm() == null) return null;
+		return this.getFluidItemForm().getFormType();
+	}
+
+	public String getFluidItemTitle() {
+		if (this.getFluidItemForm() == null) return null;
+		return this.getFluidItemForm().getTitle();
+	}
+
+	public String getFluidItemFlow() {
+		if (this.getFluidItem() == null) return null;
+		return this.getFluidItem().getFlow();
+	}
+
+	public String getFluidItemStep() {
+		if (this.getFluidItem() == null) return null;
+		return this.getFluidItem().getStep();
+	}
+
+	//TODO Need to add the step entry time to Fluid Item...
+
 	public String getFluidItemFormTypeURLSafe() {
 		if (this.getFluidItemForm() == null) return null;
 		return UtilGlobal.encodeURL(this.getFluidItemForm().getFormType());
 	}
-
 
 	/**
 	 * 

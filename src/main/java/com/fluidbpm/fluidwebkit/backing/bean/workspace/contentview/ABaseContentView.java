@@ -629,8 +629,7 @@ public abstract class ABaseContentView implements Serializable {
 	 * @return
 	 */
 	public ABaseManagedBean.ColumnModel getCHForSecCM(
-			String sectionAliasParam,
-			int columnIndexParam
+		String sectionAliasParam, int columnIndexParam
 	) {
 		List<ABaseManagedBean.ColumnModel> headers = this.getColumnHeadersForSection(sectionAliasParam);
 		int headerSize = (headers == null) ? 0:headers.size();

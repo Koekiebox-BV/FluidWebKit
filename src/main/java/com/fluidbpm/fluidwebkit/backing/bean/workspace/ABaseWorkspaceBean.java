@@ -25,7 +25,6 @@ import com.fluidbpm.program.api.vo.flow.JobView;
 import com.fluidbpm.program.api.vo.flow.JobViewListing;
 import com.fluidbpm.program.api.vo.item.FluidItem;
 import com.fluidbpm.program.api.vo.item.FluidItemListing;
-import com.fluidbpm.program.api.vo.user.User;
 import com.fluidbpm.program.api.vo.userquery.UserQueryListing;
 import com.fluidbpm.program.api.vo.webkit.viewgroup.WebKitViewGroup;
 import com.fluidbpm.program.api.vo.webkit.viewgroup.WebKitViewSub;
@@ -33,8 +32,6 @@ import com.fluidbpm.program.api.vo.webkit.viewgroup.WebKitWorkspaceJobView;
 import com.fluidbpm.ws.client.FluidClientException;
 import com.fluidbpm.ws.client.v1.flow.FlowStepClient;
 import com.fluidbpm.ws.client.v1.flowitem.FlowItemClient;
-import com.fluidbpm.ws.client.v1.form.FormContainerClient;
-import com.fluidbpm.ws.client.v1.sqlutil.sqlnative.SQLUtilWebSocketExecuteNativeSQLClient;
 import com.fluidbpm.ws.client.v1.sqlutil.wrapper.SQLUtilWebSocketRESTWrapper;
 import com.fluidbpm.ws.client.v1.userquery.UserQueryClient;
 import lombok.AllArgsConstructor;
@@ -47,7 +44,6 @@ import javax.faces.context.FacesContext;
 import javax.inject.Inject;
 import java.io.Serializable;
 import java.io.UnsupportedEncodingException;
-import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
@@ -283,8 +279,8 @@ public abstract class ABaseWorkspaceBean<T extends ABaseWebVO, J extends ABaseCo
 	 * The {@code actionOpenMainPage} will create the 'Content View' while the
 	 * {@code createABaseWebVO} method will map each one of the custom objects.
 	 *
-	 * @see this#actionOpenMainPage(String, WebKitViewGroup, WebKitViewSub)
-	 * @see this#createABaseWebVO(FluidItem, WebKitViewSub, WebKitWorkspaceJobView)
+	 * @see this#actionOpenMainPage(WebKitViewGroup, WebKitViewSub)
+	 * @see this#createABaseWebVO(WebKitViewGroup,WebKitViewSub,WebKitWorkspaceJobView,FluidItem))
 	 */
 	public void actionOpenMainPage() {
 		this.areaToUpdateForDialogAfterSubmit = null;
@@ -320,11 +316,11 @@ public abstract class ABaseWorkspaceBean<T extends ABaseWebVO, J extends ABaseCo
 			WebKitViewSub subFilter = (groupWithName == null) ? null :
 					groupWithName.getViewSubWithName(clickedSubAlias);
 			List<WebKitWorkspaceJobView> viewToFetchFor = null;
-			if (groupWithName.isEnableGroupSubsInMenu()) {
-				viewToFetchFor = this.menuBean.getViewsForSub(subFilter);
-			} else {
+			if (groupWithName.isTGMCombined()) {
 				viewToFetchFor = this.menuBean.getUniqueViewsForGroup(groupWithName);
 				subFilter = null;//force no sub selection to pull all items...
+			} else {
+				viewToFetchFor = this.menuBean.getViewsForSub(subFilter);
 			}
 
 			List<WebKitWorkspaceJobView> viewsWithAccess = this.filterViewsForUserAccess(viewToFetchFor, clickedGroupAlias);
@@ -403,7 +399,7 @@ public abstract class ABaseWorkspaceBean<T extends ABaseWebVO, J extends ABaseCo
 												fluidItemIdsAdded.add(toCheck);
 											}
 										}
-										T baseWebToAdd = this.createABaseWebVO(fldItem, sub, viewWithResults);
+										T baseWebToAdd = this.createABaseWebVO(groupWithName, sub, viewWithResults, fldItem);
 										wfiList.add(new WorkspaceFluidItem(baseWebToAdd));
 									});
 									viewMapForSub.put(viewWithResults, wfiList);
@@ -480,7 +476,11 @@ public abstract class ABaseWorkspaceBean<T extends ABaseWebVO, J extends ABaseCo
 	 * @see SQLUtilWebSocketRESTWrapper
 	 * @see FluidItem
 	 */
-	protected abstract T createABaseWebVO(FluidItem item, WebKitViewSub sub, WebKitWorkspaceJobView view);
+	protected abstract T createABaseWebVO(
+			WebKitViewGroup group,
+			WebKitViewSub sub,
+			WebKitWorkspaceJobView view,
+			FluidItem item);
 
 	/**
 	 * Find the {@code JobView} with id {@code idToGetParam} from {@code jobViewsParam}.

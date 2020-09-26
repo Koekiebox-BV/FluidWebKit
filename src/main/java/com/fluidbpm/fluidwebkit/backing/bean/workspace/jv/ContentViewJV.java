@@ -22,6 +22,7 @@ import com.fluidbpm.program.api.vo.user.User;
 import com.fluidbpm.program.api.vo.webkit.viewgroup.WebKitViewGroup;
 import com.fluidbpm.program.api.vo.webkit.viewgroup.WebKitViewSub;
 import com.fluidbpm.program.api.vo.webkit.viewgroup.WebKitWorkspaceJobView;
+import lombok.Getter;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -29,8 +30,11 @@ import java.util.stream.Collectors;
 import static com.fluidbpm.fluidwebkit.backing.bean.workspace.WorkspaceBean.TGM_TABLE_PER_VIEW_SECTION_DEL;
 
 public class ContentViewJV extends ABaseContentView {
+	@Getter
 	private WebKitViewGroup wkGroup;
-	private WebKitViewSub selectedSub;
+
+	@Getter
+	private WebKitViewSub wkSub;
 
 	private Map<String, WorkspaceJobViewLDM> fluidItemsLazyModel = null;
 
@@ -46,7 +50,7 @@ public class ContentViewJV extends ABaseContentView {
 	) {
 		super(loggedInUserParam, subs);
 		this.wkGroup = webKitGroup;
-		this.selectedSub = selectedSub;
+		this.wkSub = selectedSub;
 	}
 
 	@Override
@@ -57,13 +61,14 @@ public class ContentViewJV extends ABaseContentView {
 		if (data.isEmpty()) {
 			return new ArrayList<>();
 		}
-
 		if (this.wkGroup.isTGMCombined()) {
-			return data.values().stream()
+			List<WorkspaceFluidItem> returnVal = new ArrayList<>();
+			returnVal.addAll(data.values().stream()
 					.map(itm -> itm.values())
 					.flatMap(Collection::stream)
 					.flatMap(Collection::stream)
-					.collect(Collectors.toList());
+					.collect(Collectors.toList()));
+			return returnVal;
 		} else if (this.wkGroup.isTGMTablePerSub()) {
 			List<WorkspaceFluidItem> returnVal = new ArrayList<>();
 			data.forEach((sub, viewMap) -> {

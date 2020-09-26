@@ -81,7 +81,7 @@ public class PersonalInventoryBean extends ABaseWorkspaceBean<PersonalInventoryI
 			List<FluidItem> piItems = persInvClient.getPersonalInventoryItems();
 			List<WorkspaceFluidItem> wsFldItms = new ArrayList<>();
 			piItems.forEach(flItm -> {
-				wsFldItms.add(new WorkspaceFluidItem(this.createABaseWebVO(flItm, null, null)));
+				wsFldItms.add(new WorkspaceFluidItem(this.createABaseWebVO(webKitGroup, selectedSub, null, flItm)));
 			});
 
 			Map<WebKitViewSub, Map<WebKitWorkspaceJobView, List<WorkspaceFluidItem>>> data = new HashMap<>();
@@ -105,7 +105,12 @@ public class PersonalInventoryBean extends ABaseWorkspaceBean<PersonalInventoryI
 	}
 
 	@Override
-	protected PersonalInventoryItemVO createABaseWebVO(FluidItem item, WebKitViewSub sub, WebKitWorkspaceJobView view) {
+	protected PersonalInventoryItemVO createABaseWebVO(
+			WebKitViewGroup group,
+			WebKitViewSub sub,
+			WebKitWorkspaceJobView view,
+			FluidItem item
+	) {
 		PersonalInventoryItemVO returnVal = new PersonalInventoryItemVO(item);
 		return returnVal;
 	}

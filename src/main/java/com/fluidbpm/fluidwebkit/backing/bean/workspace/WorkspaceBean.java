@@ -15,29 +15,21 @@
 
 package com.fluidbpm.fluidwebkit.backing.bean.workspace;
 
-import com.fluidbpm.fluidwebkit.backing.bean.performance.PerformanceBean;
 import com.fluidbpm.fluidwebkit.backing.bean.workspace.jv.ContentViewJV;
 import com.fluidbpm.fluidwebkit.backing.bean.workspace.jv.JobViewItemVO;
-import com.fluidbpm.fluidwebkit.backing.bean.workspace.menu.MenuBean;
-import com.fluidbpm.fluidwebkit.backing.bean.workspace.pi.ContentViewPI;
-import com.fluidbpm.fluidwebkit.backing.bean.workspace.pi.PersonalInventoryItemVO;
-import com.fluidbpm.program.api.vo.field.Field;
 import com.fluidbpm.program.api.vo.flow.JobView;
 import com.fluidbpm.program.api.vo.item.FluidItem;
 import com.fluidbpm.program.api.vo.webkit.viewgroup.WebKitViewGroup;
 import com.fluidbpm.program.api.vo.webkit.viewgroup.WebKitViewSub;
 import com.fluidbpm.program.api.vo.webkit.viewgroup.WebKitWorkspaceJobView;
 import com.fluidbpm.ws.client.FluidClientException;
-import com.fluidbpm.ws.client.v1.user.PersonalInventoryClient;
-import org.primefaces.PrimeFaces;
 
-import javax.annotation.PostConstruct;
 import javax.enterprise.context.SessionScoped;
-import javax.faces.application.FacesMessage;
-import javax.faces.context.FacesContext;
-import javax.inject.Inject;
 import javax.inject.Named;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
 
 /**
  * Bean storing personal inventory related items.
@@ -113,8 +105,15 @@ public class WorkspaceBean extends ABaseWorkspaceBean<JobViewItemVO, ContentView
 	}
 
 	@Override
-	protected JobViewItemVO createABaseWebVO(FluidItem item, WebKitViewSub sub, WebKitWorkspaceJobView view) {
+	protected JobViewItemVO createABaseWebVO(
+		WebKitViewGroup group,
+		WebKitViewSub sub,
+		WebKitWorkspaceJobView view,
+		FluidItem item
+	) {
 		JobViewItemVO returnVal = new JobViewItemVO(item);
+
+
 
 		//FIXME @jason, need map the route fields here...
 		//FIXME @jason, need to map Route field webkit to normal route field...
