@@ -66,6 +66,10 @@ public class MenuBean extends ABaseManagedBean {
 	@Setter
 	private UISubmenu submenuWorkspace;
 
+	@Getter
+	@Setter
+	private List<UISubmenu> submenusUserQuery;
+
 	public static final String ICON_DEFAULT_GROUP = "pi pi-list";
 	public static final String ICON_DEFAULT_SUB = "pi pi-table";
 	public static final String ICON_DEFAULT_WORKSPACE = "pi pi-compass";
@@ -85,6 +89,8 @@ public class MenuBean extends ABaseManagedBean {
 		if (this.getFluidClientDS() == null) {
 			return;
 		}
+
+		this.submenusUserQuery = new ArrayList<>();
 
 		//TODO need to fetch these from listing / config...
 		this.submenuWorkspace = new UISubmenu();

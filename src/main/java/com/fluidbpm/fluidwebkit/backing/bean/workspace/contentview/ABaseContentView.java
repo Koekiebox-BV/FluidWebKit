@@ -47,7 +47,7 @@ public abstract class ABaseContentView implements Serializable {
 	private Map<WebKitViewSub, Map<WebKitWorkspaceJobView, List<WorkspaceFluidItem>>> data;
 
 	//Header and Column Names
-	private String[] sections;
+	protected String[] sections;
 	private Map<String, List<ABaseManagedBean.ColumnModel>> columnModels;
 
 	//Initial Data...

@@ -40,6 +40,7 @@ public class WorkspaceBean extends ABaseWorkspaceBean<JobViewItemVO, ContentView
 
 	public static final String TGM_TABLE_PER_VIEW_SECTION_FORMAT = "%s - %s";
 	public static final String TGM_TABLE_PER_VIEW_SECTION_DEL = " - ";
+	public static final int TGM_TABLE_PER_VIEW_SECTION_DEL_LEN = TGM_TABLE_PER_VIEW_SECTION_DEL.length();
 
 	@Override
 	public void actionOpenFormForEditingFromWorkspace(
@@ -71,9 +72,13 @@ public class WorkspaceBean extends ABaseWorkspaceBean<JobViewItemVO, ContentView
 			if (wkGroup.isTGMCombined()) {
 				sections.add(wkGroup.getJobViewGroupName());
 			} else if (wkGroup.isTGMTablePerSub()) {
-				subs.forEach(subItm -> {
-					sections.add(subItm.getLabel());
-				});
+				if (wkSub == null) {
+					subs.forEach(subItm -> {
+						sections.add(subItm.getLabel());
+					});
+				} else {
+					sections.add(wkSub.getLabel());
+				}
 			} else if (wkGroup.isTGMTablePerView()) {
 				subs.stream().filter(itm -> itm.getJobViews() != null)
 						.forEach(subItm -> {

@@ -293,7 +293,7 @@ public abstract class ABaseWorkspaceBean<T extends ABaseWebVO, J extends ABaseCo
 		String clickedGroupAlias = this.getStringRequestParam(MenuBean.ReqParam.CLICKED_GROUP_ALIAS);
 		String clickedSubAlias = this.getStringRequestParam(MenuBean.ReqParam.CLICKED_SUB_ALIAS);
 		String clickedWorkspaceViews = this.getStringRequestParam(MenuBean.ReqParam.CLICKED_VIEWS);
-		if ((clickedWorkspaceViews == null || !clickedWorkspaceViews.trim().isEmpty())
+		if ((clickedWorkspaceViews == null || clickedWorkspaceViews.trim().isEmpty())
 				&& this.openPageLastCache != null) {
 			clickedGroup = this.openPageLastCache.clickedGroup;
 			clickedWorkspaceViews = this.openPageLastCache.selectedJobViews;

@@ -28,6 +28,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import static com.fluidbpm.fluidwebkit.backing.bean.workspace.WorkspaceBean.TGM_TABLE_PER_VIEW_SECTION_DEL;
+import static com.fluidbpm.fluidwebkit.backing.bean.workspace.WorkspaceBean.TGM_TABLE_PER_VIEW_SECTION_DEL_LEN;
 
 public class ContentViewJV extends ABaseContentView {
 	@Getter
@@ -80,10 +81,11 @@ public class ContentViewJV extends ABaseContentView {
 				}
 			});
 			return returnVal;
-		} else if (wkGroup.isTGMTablePerView()) {
-			StringTokenizer st = new StringTokenizer(sectionParam, TGM_TABLE_PER_VIEW_SECTION_DEL);
-			if (st.countTokens() == 2) {
-				String subLabel = st.nextToken(), viewName = st.nextToken();
+		} else if (this.wkGroup.isTGMTablePerView()) {
+			int indexOfSeparator = sectionParam.indexOf(TGM_TABLE_PER_VIEW_SECTION_DEL);
+			if (indexOfSeparator > -1) {
+				String subLabel = sectionParam.substring(0,indexOfSeparator),
+						viewName = sectionParam.substring(indexOfSeparator + TGM_TABLE_PER_VIEW_SECTION_DEL_LEN);
 				List<WorkspaceFluidItem> returnVal = new ArrayList<>();
 				data.forEach((sub, viewMap) -> {
 					if (subLabel.equals(sub.getLabel())) {
@@ -121,6 +123,7 @@ public class ContentViewJV extends ABaseContentView {
 		}
 
 		//Load Items for each section...
+		List<String> sectionsToKeep = new ArrayList<>();
 		for (String section : this.getSections()) {
 			List<WorkspaceFluidItem> items = this.getFluidItemsForSection().get(section);
 			WorkspaceJobViewLDM workFluidItmLazy =
@@ -129,7 +132,13 @@ public class ContentViewJV extends ABaseContentView {
 			if (items != null) {
 				workFluidItmLazy.addToInitialListing(items);
 			}
+
 			this.fluidItemsLazyModel.put(section, workFluidItmLazy);
+			if ((this.getWkGroup() == null || this.getWkGroup().isEnableRenderEmptyTable()) ||
+					!workFluidItmLazy.getDataListing().isEmpty()) {
+				sectionsToKeep.add(section);
+			}
 		}
+		this.sections = sectionsToKeep.toArray(new String[]{});
 	}
 }

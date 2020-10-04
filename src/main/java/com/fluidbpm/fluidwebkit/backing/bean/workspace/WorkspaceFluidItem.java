@@ -54,7 +54,6 @@ public class WorkspaceFluidItem extends ABaseFluidVO {
 		if (this.baseWeb == null) {
 			return null;
 		}
-
 		return this.baseWeb.getFluidItem();
 	}
 
@@ -92,6 +91,11 @@ public class WorkspaceFluidItem extends ABaseFluidVO {
 	public String getFluidItemStep() {
 		if (this.getFluidItem() == null) return null;
 		return this.getFluidItem().getStep();
+	}
+
+	public String getFluidItemView() {
+		if (this.getJobView() == null) return null;
+		return this.getJobView().getViewName();
 	}
 
 	//TODO Need to add the step entry time to Fluid Item...

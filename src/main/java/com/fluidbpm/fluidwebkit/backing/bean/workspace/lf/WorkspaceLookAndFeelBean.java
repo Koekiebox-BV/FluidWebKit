@@ -16,16 +16,24 @@
 package com.fluidbpm.fluidwebkit.backing.bean.workspace.lf;
 
 import com.fluidbpm.fluidwebkit.backing.bean.ABaseManagedBean;
+import com.fluidbpm.fluidwebkit.backing.bean.config.WebKitConfigBean;
 import com.fluidbpm.fluidwebkit.exception.ClientDashboardException;
+import com.fluidbpm.program.api.vo.config.Configuration;
+import com.fluidbpm.program.api.vo.config.ConfigurationListing;
 import com.fluidbpm.program.api.vo.field.Field;
 import com.fluidbpm.program.api.vo.flow.JobView;
+import com.fluidbpm.program.api.vo.webkit.WebKitGlobal;
+import com.fluidbpm.program.api.vo.webkit.userquery.WebKitMenuItem;
 import com.fluidbpm.program.api.vo.webkit.viewgroup.*;
 import com.fluidbpm.ws.client.FluidClientException;
 import com.fluidbpm.ws.client.v1.flow.RouteFieldClient;
 import lombok.Getter;
 import lombok.Setter;
+import org.json.JSONObject;
 import org.primefaces.event.CellEditEvent;
 import org.primefaces.event.data.PageEvent;
+import org.primefaces.model.DefaultTreeNode;
+import org.primefaces.model.TreeNode;
 
 import javax.enterprise.context.SessionScoped;
 import javax.faces.application.FacesMessage;
@@ -69,6 +77,12 @@ public class WorkspaceLookAndFeelBean extends ABaseManagedBean {
 	@Getter
 	@Setter
 	private Map<String, List<String>> inputVisibleButtons;
+
+	private WebKitGlobal webKitGlobal;
+
+	@Getter
+	@Setter
+	private TreeNode treeNodeUserQueryMenuRoot;
 
 	public enum VisibleColumnItems {
 		showColumnFormType,
@@ -169,6 +183,10 @@ public class WorkspaceLookAndFeelBean extends ABaseManagedBean {
 				}
 				return;
 			}
+
+			//Populate the menu items...
+			this.populateUserQueryMenu();
+
 			this.allJobViews = this.getFluidClientDSConfig().getFlowStepClient().getJobViewsByLoggedInUser().getListing();
 			RouteFieldClient routeFieldClient = this.getFluidClientDSConfig().getRouteFieldClient();
 
@@ -267,6 +285,66 @@ public class WorkspaceLookAndFeelBean extends ABaseManagedBean {
 		} catch (Exception err) {
 			this.raiseError(err);
 		}
+	}
+
+	private void populateUserQueryMenu() {
+		ConfigurationListing configurationListing =
+				this.getFluidClientDSConfig().getConfigurationClient().getAllConfigurations();
+		Configuration webKitGlobal = configurationListing.getListing().stream()
+				.filter(itm -> WebKitConfigBean.ConfigKey.WebKit.equals(itm.getKey()))
+				.findFirst()
+				.orElse(null);
+		String jsonVal = (webKitGlobal == null ||
+				(webKitGlobal.getValue() == null || webKitGlobal.getValue().trim().isEmpty())) ? "{}" :
+				webKitGlobal.getValue();
+		this.webKitGlobal = new WebKitGlobal(new JSONObject(jsonVal));
+		if (this.webKitGlobal.getWebKitMenuItems() == null) {
+			this.webKitGlobal.setWebKitMenuItems(new ArrayList<>());
+		}
+		this.constructTreeNode();
+	}
+
+	private void constructTreeNode() {
+		WebKitMenuItem menuItemRoot = new WebKitMenuItem();
+		menuItemRoot.setMenuLabel("ROOT");
+		this.treeNodeUserQueryMenuRoot = new DefaultTreeNode(menuItemRoot, null);
+		List<WebKitMenuItem> menuItems = this.webKitGlobal.getWebKitMenuItems();
+		menuItems.stream()
+				.filter(itm -> itm.getParentMenuId() == null || itm.getParentMenuId().trim().isEmpty())
+				.forEach(itm -> {
+					new DefaultTreeNode(itm, this.treeNodeUserQueryMenuRoot);
+				});
+		menuItems.stream()
+				.filter(itm -> itm.getParentMenuId() != null && !itm.getParentMenuId().trim().isEmpty())
+				.forEach(itm -> {
+					placeMenuForParent(this.treeNodeUserQueryMenuRoot.getChildren());
+				});
+
+
+	}
+
+	private void placeMenuForParent(List<TreeNode> children) {
+		if (children == null) return;
+
+		//1. find where parent....
+		for (TreeNode node : children) {
+			WebKitMenuItem data = (WebKitMenuItem)node.getData();
+
+			//Find all where parent is...
+			List<WebKitMenuItem> menusWithNodeAsParent = this.webKitGlobal.getWebKitMenuItems().stream()
+					.filter(itm -> itm.getParentMenuId() != null && itm.getParentMenuId().equals(data.getMenuId()))
+					.collect(Collectors.toList());
+			menusWithNodeAsParent.forEach(menuItmWhereParent -> {
+				new DefaultTreeNode(menuItmWhereParent, node);
+			});
+
+			this.placeMenuForParent(node.getChildren());
+		}
+	}
+
+	private void populateUserQuerySelectedValues() {
+
+
 	}
 
 	public void actionAddNewViewSub(WebKitViewGroup groupToAddFor) {
@@ -370,11 +448,9 @@ public class WorkspaceLookAndFeelBean extends ABaseManagedBean {
 
 	public void actionMoveRouteFieldDown(WebKitViewGroup groupToRemoveFrom, WebKitWorkspaceRouteField fieldToMove) {
 
-
 	}
 
 	public void actionMoveRouteFieldUp(WebKitViewGroup groupToRemoveFrom, WebKitWorkspaceRouteField fieldToMove) {
-
 
 	}
 

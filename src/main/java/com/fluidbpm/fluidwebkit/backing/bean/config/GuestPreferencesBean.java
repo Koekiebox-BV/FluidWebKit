@@ -213,7 +213,7 @@ public class GuestPreferencesBean extends ABaseManagedBean {
 		this.webKitGlobal.setInputStyleAddition(inputStyleAddition);
 	}
 
-	public String 	getFluidLogoFilename() {
+	public String getFluidLogoFilename() {
 		String topbarTheme = this.getTopbarTheme();
 		if (topbarTheme == null) {
 			return null;
