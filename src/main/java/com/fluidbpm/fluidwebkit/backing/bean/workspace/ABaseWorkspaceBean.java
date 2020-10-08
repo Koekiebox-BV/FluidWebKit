@@ -17,7 +17,7 @@ package com.fluidbpm.fluidwebkit.backing.bean.workspace;
 
 import com.fluidbpm.fluidwebkit.backing.bean.ABaseManagedBean;
 import com.fluidbpm.fluidwebkit.backing.bean.workspace.contentview.ABaseContentView;
-import com.fluidbpm.fluidwebkit.backing.bean.workspace.menu.MenuBean;
+import com.fluidbpm.fluidwebkit.backing.bean.workspace.menu.WebKitMenuBean;
 import com.fluidbpm.fluidwebkit.backing.utility.Globals;
 import com.fluidbpm.fluidwebkit.backing.vo.ABaseWebVO;
 import com.fluidbpm.fluidwebkit.exception.ClientDashboardException;
@@ -74,7 +74,7 @@ public abstract class ABaseWorkspaceBean<T extends ABaseWebVO, J extends ABaseCo
 	private String areaToUpdateForDialogAfterSubmit;
 
 	@Inject
-	protected MenuBean menuBean;
+	protected WebKitMenuBean webKitMenuBean;
 
 	/**
 	 * Cached items in case of a page refresh.
@@ -288,11 +288,11 @@ public abstract class ABaseWorkspaceBean<T extends ABaseWebVO, J extends ABaseCo
 			return;
 		}
 
-		String workspaceAim = this.getStringRequestParam(MenuBean.ReqParam.WORKSPACE_AIM);
-		String clickedGroup = this.getStringRequestParam(MenuBean.ReqParam.CLICKED_GROUP);
-		String clickedGroupAlias = this.getStringRequestParam(MenuBean.ReqParam.CLICKED_GROUP_ALIAS);
-		String clickedSubAlias = this.getStringRequestParam(MenuBean.ReqParam.CLICKED_SUB_ALIAS);
-		String clickedWorkspaceViews = this.getStringRequestParam(MenuBean.ReqParam.CLICKED_VIEWS);
+		String workspaceAim = this.getStringRequestParam(WebKitMenuBean.ReqParam.WORKSPACE_AIM);
+		String clickedGroup = this.getStringRequestParam(WebKitMenuBean.ReqParam.CLICKED_GROUP);
+		String clickedGroupAlias = this.getStringRequestParam(WebKitMenuBean.ReqParam.CLICKED_GROUP_ALIAS);
+		String clickedSubAlias = this.getStringRequestParam(WebKitMenuBean.ReqParam.CLICKED_SUB_ALIAS);
+		String clickedWorkspaceViews = this.getStringRequestParam(WebKitMenuBean.ReqParam.CLICKED_VIEWS);
 		if ((clickedWorkspaceViews == null || clickedWorkspaceViews.trim().isEmpty())
 				&& this.openPageLastCache != null) {
 			clickedGroup = this.openPageLastCache.clickedGroup;
@@ -312,15 +312,15 @@ public abstract class ABaseWorkspaceBean<T extends ABaseWebVO, J extends ABaseCo
 		}
 
 		try {
-			WebKitViewGroup groupWithName = this.menuBean.getGroupWithName(clickedGroupAlias);
+			WebKitViewGroup groupWithName = this.webKitMenuBean.getGroupWithName(clickedGroupAlias);
 			WebKitViewSub subFilter = (groupWithName == null) ? null :
 					groupWithName.getViewSubWithName(clickedSubAlias);
 			List<WebKitWorkspaceJobView> viewToFetchFor = null;
 			if (groupWithName.isTGMCombined()) {
-				viewToFetchFor = this.menuBean.getUniqueViewsForGroup(groupWithName);
+				viewToFetchFor = this.webKitMenuBean.getUniqueViewsForGroup(groupWithName);
 				subFilter = null;//force no sub selection to pull all items...
 			} else {
-				viewToFetchFor = this.menuBean.getViewsForSub(subFilter);
+				viewToFetchFor = this.webKitMenuBean.getViewsForSub(subFilter);
 			}
 
 			List<WebKitWorkspaceJobView> viewsWithAccess = this.filterViewsForUserAccess(viewToFetchFor, clickedGroupAlias);

@@ -17,33 +17,19 @@ package com.fluidbpm.fluidwebkit.backing.bean.workspace.menu;
 
 import com.fluidbpm.fluidwebkit.backing.bean.ABaseManagedBean;
 import com.fluidbpm.fluidwebkit.backing.bean.config.WebKitAccessBean;
-import com.fluidbpm.fluidwebkit.backing.bean.workspace.lf.WorkspaceLookAndFeelBean;
-import com.fluidbpm.fluidwebkit.backing.bean.workspace.pi.ContentViewPI;
-import com.fluidbpm.program.api.util.UtilGlobal;
+import com.fluidbpm.fluidwebkit.backing.bean.workspace.lf.WebKitWorkspaceLookAndFeelBean;
 import com.fluidbpm.program.api.vo.flow.JobView;
-import com.fluidbpm.program.api.vo.flow.JobViewListing;
-import com.fluidbpm.program.api.vo.userquery.UserQuery;
-import com.fluidbpm.program.api.vo.userquery.UserQueryListing;
 import com.fluidbpm.program.api.vo.webkit.viewgroup.WebKitViewGroup;
-import com.fluidbpm.program.api.vo.webkit.viewgroup.WebKitViewGroupListing;
 import com.fluidbpm.program.api.vo.webkit.viewgroup.WebKitViewSub;
 import com.fluidbpm.program.api.vo.webkit.viewgroup.WebKitWorkspaceJobView;
-import com.fluidbpm.ws.client.FluidClientException;
-import com.fluidbpm.ws.client.v1.userquery.UserQueryClient;
 import lombok.Getter;
 import lombok.Setter;
 import org.primefaces.component.menuitem.UIMenuItem;
-import org.primefaces.component.menuitem.UIMenuItemBase;
 import org.primefaces.component.submenu.UISubmenu;
-import org.primefaces.model.menu.DefaultMenuItem;
-import org.primefaces.model.menu.DefaultSubMenu;
-import org.primefaces.model.menu.Submenu;
 
 import javax.annotation.PostConstruct;
 import javax.enterprise.context.SessionScoped;
 import javax.faces.component.UIComponentBase;
-import javax.faces.component.UIParameter;
-import javax.faces.component.UIViewParameter;
 import javax.inject.Inject;
 import javax.inject.Named;
 import java.util.ArrayList;
@@ -54,13 +40,13 @@ import java.util.stream.Collectors;
 
 @SessionScoped
 @Named("webKitMenuBean")
-public class MenuBean extends ABaseManagedBean {
+public class WebKitMenuBean extends ABaseManagedBean {
 
 	@Inject
 	private WebKitAccessBean webKitAccessBean;
 
 	@Inject
-	private WorkspaceLookAndFeelBean lookAndFeelBean;
+	private WebKitWorkspaceLookAndFeelBean lookAndFeelBean;
 
 	@Getter
 	@Setter

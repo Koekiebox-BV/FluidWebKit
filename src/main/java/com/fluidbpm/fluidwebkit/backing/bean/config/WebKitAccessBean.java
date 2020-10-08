@@ -41,9 +41,8 @@ import java.util.stream.Collectors;
  * Bean storing all access for the logged in user.
  */
 @SessionScoped
-@Named("webKitAccess")
+@Named("webKitAccessBean")
 public class WebKitAccessBean extends ABaseManagedBean {
-
 	//Fields for Edit and View...
 	private Map<String, List<Field>> fieldsForViewing;
 	private Map<String, List<Field>> fieldsForEditing;

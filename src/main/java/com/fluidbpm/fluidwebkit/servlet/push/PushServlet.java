@@ -16,9 +16,8 @@
 package com.fluidbpm.fluidwebkit.servlet.push;
 
 import com.fluidbpm.fluidwebkit.backing.bean.ABaseManagedBean;
-import com.fluidbpm.fluidwebkit.backing.bean.login.NotificationsBean;
+import com.fluidbpm.fluidwebkit.backing.bean.login.WebKitNotificationsBean;
 import com.fluidbpm.fluidwebkit.ds.FluidClientDS;
-import com.fluidbpm.fluidwebkit.ds.FluidClientPool;
 import com.fluidbpm.fluidwebkit.exception.WebSessionExpiredException;
 import com.fluidbpm.fluidwebkit.servlet.ABaseFWKServlet;
 import com.fluidbpm.program.api.vo.user.User;
@@ -29,7 +28,6 @@ import org.json.JSONObject;
 import javax.inject.Inject;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
-import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
@@ -50,7 +48,7 @@ public class PushServlet extends ABaseFWKServlet {
 	public static final String APPLICATION_JSON_STRING = "application/json";
 
 	@Inject
-	private transient NotificationsBean notificationsBean;
+	private transient WebKitNotificationsBean webKitNotificationsBean;
 
 	private static final long WAIT_TIME_NOTI_FETCH_MILLIS = TimeUnit.SECONDS.toMillis(5);
 
@@ -123,7 +121,7 @@ public class PushServlet extends ABaseFWKServlet {
 		HttpServletRequest httpServletRequestParam,
 		HttpServletResponse httpServletResponseParam
 	) throws ServletException, IOException {
-		this.notificationsBean.setSessionIdFallback(null);
+		this.webKitNotificationsBean.setSessionIdFallback(null);
 		HttpSession httpSession = httpServletRequestParam.getSession(false);
 		User loggedInUser = this.getLoggedInUser(httpServletRequestParam);
 		JSONObject returnObject = new JSONObject();
@@ -138,7 +136,7 @@ public class PushServlet extends ABaseFWKServlet {
 				}
 			} else {
 				//User Logged in...
-				this.notificationsBean.setSessionIdFallback(httpSession.getId());
+				this.webKitNotificationsBean.setSessionIdFallback(httpSession.getId());
 				boolean anyProcessed = false;
 
 				//Check and Notify of any new User Notifications...
@@ -150,7 +148,7 @@ public class PushServlet extends ABaseFWKServlet {
 			}
 		} catch (JSONException jsonExcept) {
 			//JSON issue...
-			this.notificationsBean.raiseError(jsonExcept);
+			this.webKitNotificationsBean.raiseError(jsonExcept);
 		}
 
 		PrintWriter printWriter = httpServletResponseParam.getWriter();
@@ -172,24 +170,24 @@ public class PushServlet extends ABaseFWKServlet {
 	private boolean processUserNotifications(
 		JSONObject jsonCmdObject
 	) throws JSONException {
-		switch (this.notificationsBean.getNotificationState()) {
+		switch (this.webKitNotificationsBean.getNotificationState()) {
 			case UnreadNotificationsFull:
 				return false;
 			case UnreadNotificationsNowRead:
-				this.notificationsBean.actionUpdateNotifications();
+				this.webKitNotificationsBean.actionUpdateNotifications();
 				this.addRefreshNotificationCommandObjectToArray(jsonCmdObject, TimeUnit.SECONDS.toMillis(20));
 				return false;
 			default:
-				if ((this.notificationsBean.getLastNotificationFetch() + WAIT_TIME_NOTI_FETCH_MILLIS) < System.currentTimeMillis()) {
-					int lastUnreadCount = this.notificationsBean.getNumberOfUnreadNotifications();
-					int lastReadCount = this.notificationsBean.getNumberOfReadNotifications();
-					this.notificationsBean.actionUpdateNotifications();
-					int lastUnreadCountUpdated = this.notificationsBean.getNumberOfUnreadNotifications();
-					int lastReadCountUpdated = this.notificationsBean.getNumberOfReadNotifications();
+				if ((this.webKitNotificationsBean.getLastNotificationFetch() + WAIT_TIME_NOTI_FETCH_MILLIS) < System.currentTimeMillis()) {
+					int lastUnreadCount = this.webKitNotificationsBean.getNumberOfUnreadNotifications();
+					int lastReadCount = this.webKitNotificationsBean.getNumberOfReadNotifications();
+					this.webKitNotificationsBean.actionUpdateNotifications();
+					int lastUnreadCountUpdated = this.webKitNotificationsBean.getNumberOfUnreadNotifications();
+					int lastReadCountUpdated = this.webKitNotificationsBean.getNumberOfReadNotifications();
 
 					if ((lastUnreadCount != lastUnreadCountUpdated) || lastReadCount != lastReadCountUpdated) {
 						this.addRefreshNotificationCommandObjectToArray(jsonCmdObject, 0);
-						this.notificationsBean.getLogger().info(String.format(
+						this.webKitNotificationsBean.getLogger().info(String.format(
 							"%s: Sent update for '%s'.",
 							new Date().toString(), Commands.REFRESH_USER_NOTIFICATION
 						));

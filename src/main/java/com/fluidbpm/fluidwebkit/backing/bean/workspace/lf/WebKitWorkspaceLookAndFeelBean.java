@@ -22,8 +22,10 @@ import com.fluidbpm.program.api.vo.config.Configuration;
 import com.fluidbpm.program.api.vo.config.ConfigurationListing;
 import com.fluidbpm.program.api.vo.field.Field;
 import com.fluidbpm.program.api.vo.flow.JobView;
+import com.fluidbpm.program.api.vo.userquery.UserQuery;
 import com.fluidbpm.program.api.vo.webkit.WebKitGlobal;
 import com.fluidbpm.program.api.vo.webkit.userquery.WebKitMenuItem;
+import com.fluidbpm.program.api.vo.webkit.userquery.WebKitUserQuery;
 import com.fluidbpm.program.api.vo.webkit.viewgroup.*;
 import com.fluidbpm.ws.client.FluidClientException;
 import com.fluidbpm.ws.client.v1.flow.RouteFieldClient;
@@ -39,6 +41,7 @@ import javax.enterprise.context.SessionScoped;
 import javax.faces.application.FacesMessage;
 import javax.faces.context.FacesContext;
 import javax.faces.event.AjaxBehaviorEvent;
+import javax.faces.model.SelectItem;
 import javax.inject.Named;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -47,7 +50,7 @@ import java.util.stream.Collectors;
 
 @SessionScoped
 @Named("webKitWorkspaceLookAndFeelBean")
-public class WorkspaceLookAndFeelBean extends ABaseManagedBean {
+public class WebKitWorkspaceLookAndFeelBean extends ABaseManagedBean {
 	private Map<String, List<JobView>> groupToViewMapping;
 	private Map<String, List<Field>> groupToRouteFieldMapping;
 	private List<JobView> allJobViews;
@@ -80,9 +83,17 @@ public class WorkspaceLookAndFeelBean extends ABaseManagedBean {
 
 	private WebKitGlobal webKitGlobal;
 
+	//User Query related objects...
 	@Getter
 	@Setter
 	private TreeNode treeNodeUserQueryMenuRoot;
+
+	private List<WebKitUserQuery> webKitUserQueries;
+
+	//Inputs....
+	@Getter
+	@Setter
+	private String inputNewRootMenuLabel;
 
 	public enum VisibleColumnItems {
 		showColumnFormType,
@@ -173,6 +184,7 @@ public class WorkspaceLookAndFeelBean extends ABaseManagedBean {
 		this.groupToRouteFieldMapping = new HashMap<>();
 		this.inputVisibleColumns = new HashMap<>();
 		this.inputVisibleButtons = new HashMap<>();
+		this.webKitUserQueries = new ArrayList<>();
 		this.setDialogHeaderTitle("Workspace - Look & Feel");
 		try {
 			try {
@@ -186,6 +198,15 @@ public class WorkspaceLookAndFeelBean extends ABaseManagedBean {
 
 			//Populate the menu items...
 			this.populateUserQueryMenu();
+
+			try {
+				this.webKitUserQueries =
+						this.getFluidClientDSConfig().getUserQueryClient().getUserQueryWebKit().getListing();
+			} catch (FluidClientException fce) {
+				if (fce.getErrorCode() != FluidClientException.ErrorCode.NO_RESULT) {
+					throw fce;
+				}
+			}
 
 			this.allJobViews = this.getFluidClientDSConfig().getFlowStepClient().getJobViewsByLoggedInUser().getListing();
 			RouteFieldClient routeFieldClient = this.getFluidClientDSConfig().getRouteFieldClient();
@@ -308,43 +329,47 @@ public class WorkspaceLookAndFeelBean extends ABaseManagedBean {
 		WebKitMenuItem menuItemRoot = new WebKitMenuItem();
 		menuItemRoot.setMenuLabel("ROOT");
 		this.treeNodeUserQueryMenuRoot = new DefaultTreeNode(menuItemRoot, null);
+		this.treeNodeUserQueryMenuRoot.setExpanded(true);
 		List<WebKitMenuItem> menuItems = this.webKitGlobal.getWebKitMenuItems();
 		menuItems.stream()
 				.filter(itm -> itm.getParentMenuId() == null || itm.getParentMenuId().trim().isEmpty())
 				.forEach(itm -> {
-					new DefaultTreeNode(itm, this.treeNodeUserQueryMenuRoot);
+					TreeNode toAdd = new DefaultTreeNode(itm, this.treeNodeUserQueryMenuRoot);
+					toAdd.setExpanded(true);
 				});
-		menuItems.stream()
-				.filter(itm -> itm.getParentMenuId() != null && !itm.getParentMenuId().trim().isEmpty())
-				.forEach(itm -> {
-					placeMenuForParent(this.treeNodeUserQueryMenuRoot.getChildren());
-				});
-
-
-	}
-
-	private void placeMenuForParent(List<TreeNode> children) {
-		if (children == null) return;
-
-		//1. find where parent....
-		for (TreeNode node : children) {
-			WebKitMenuItem data = (WebKitMenuItem)node.getData();
-
-			//Find all where parent is...
-			List<WebKitMenuItem> menusWithNodeAsParent = this.webKitGlobal.getWebKitMenuItems().stream()
-					.filter(itm -> itm.getParentMenuId() != null && itm.getParentMenuId().equals(data.getMenuId()))
-					.collect(Collectors.toList());
-			menusWithNodeAsParent.forEach(menuItmWhereParent -> {
-				new DefaultTreeNode(menuItmWhereParent, node);
-			});
-
-			this.placeMenuForParent(node.getChildren());
+		if (this.treeNodeUserQueryMenuRoot.getChildCount() > 0) {
+			this.treeNodeUserQueryMenuRoot.getChildren().forEach(itm -> this.placeMenuForParent(itm));
 		}
 	}
 
-	private void populateUserQuerySelectedValues() {
+	private void placeMenuForParent(TreeNode node) {
+		if (node == null) return;
 
+		WebKitMenuItem data = (WebKitMenuItem)node.getData();
+		//Find all where parent is...
+		List<WebKitMenuItem> menusWithNodeAsParent = this.webKitGlobal.getWebKitMenuItems().stream()
+				.filter(itm -> itm.getParentMenuId() != null && itm.getParentMenuId().equals(data.getMenuId()))
+				.collect(Collectors.toList());
+		menusWithNodeAsParent.forEach(menuItmWhereParent -> {
+			TreeNode addedNode = new DefaultTreeNode(menuItmWhereParent, node);
+			addedNode.setExpanded(true);
+		});
 
+		if (node.getChildCount() > 0) {
+			node.getChildren().forEach(itm -> this.placeMenuForParent(itm));
+		}
+	}
+
+	public boolean doesMenuHaveChildren(WebKitMenuItem toCheck) {
+		if (toCheck == null || this.webKitGlobal.getWebKitMenuItems() == null) return false;
+		String idToCheck = toCheck.getMenuId();
+		if (idToCheck == null || idToCheck.isEmpty()) return false;
+
+		WebKitMenuItem menuItm = this.webKitGlobal.getWebKitMenuItems().stream()
+				.filter(itm -> itm.getParentMenuId() != null && idToCheck.equals(itm.getParentMenuId()))
+				.findFirst()
+				.orElse(null);
+		return (menuItm == null) ? false : true;
 	}
 
 	public void actionAddNewViewSub(WebKitViewGroup groupToAddFor) {
@@ -516,6 +541,77 @@ public class WorkspaceLookAndFeelBean extends ABaseManagedBean {
 		}
 	}
 
+	public void actionAddNewRootMenuLabel() {
+		try {
+			if (this.getInputNewRootMenuLabel() == null || this.getInputNewRootMenuLabel().trim().isEmpty()) {
+				throw new ClientDashboardException(
+						"'Menu Label' cannot be empty.", ClientDashboardException.ErrorCode.VALIDATION);
+			}
+
+			WebKitMenuItem webKitMenuItem = new WebKitMenuItem();
+			webKitMenuItem.setMenuId(UUID.randomUUID().toString());
+			webKitMenuItem.setMenuLabel(this.getInputNewRootMenuLabel().trim());
+			webKitMenuItem.setMenuIcon("pi pi-ban");
+			webKitMenuItem.setParentMenuId(null);
+
+			this.webKitGlobal.getWebKitMenuItems().add(webKitMenuItem);
+			this.constructTreeNode();
+
+			this.setInputNewRootMenuLabel(null);
+			FacesMessage fMsg = new FacesMessage(FacesMessage.SEVERITY_INFO,
+					"Success",
+					String.format("Root Menu '%s' added.", webKitMenuItem.getMenuLabel()));
+			FacesContext.getCurrentInstance().addMessage(null, fMsg);
+		} catch (Exception err) {
+			this.raiseError(err);
+		}
+	}
+
+	public void actionOnMenuCellEdit(CellEditEvent event) {
+		Object oldValue = event.getOldValue();
+		Object newValue = event.getNewValue();
+		if (newValue != null && !newValue.equals(oldValue)) {
+			FacesMessage msg = new FacesMessage(FacesMessage.SEVERITY_INFO,
+					"Menu Updated", "Old: " + oldValue + ", New:" + newValue);
+			FacesContext.getCurrentInstance().addMessage(null, msg);
+		}
+		this.constructTreeNode();
+	}
+
+	public void actionRemoveMenuItem(WebKitMenuItem webKitMenuItem) {
+		try {
+			this.webKitGlobal.getWebKitMenuItems().remove(webKitMenuItem);
+			this.constructTreeNode();
+			FacesMessage fMsg = new FacesMessage(FacesMessage.SEVERITY_INFO,
+					"Success",
+					String.format("Removed Menu Item '%s'.", webKitMenuItem.getMenuLabel()));
+			FacesContext.getCurrentInstance().addMessage(null, fMsg);
+		} catch (Exception err) {
+			this.raiseError(err);
+		}
+	}
+
+	public void actionAddSubmenuFor(WebKitMenuItem webKitMenuItem) {
+		try {
+			WebKitMenuItem toAdd = new WebKitMenuItem();
+			toAdd.setMenuLabel("New...");
+			toAdd.setMenuId(UUID.randomUUID().toString());
+			toAdd.setParentMenuId(webKitMenuItem.getMenuId());
+			toAdd.setMenuIcon("pi pi-question");
+
+			this.webKitGlobal.getWebKitMenuItems().add(toAdd);
+			this.constructTreeNode();
+			FacesMessage fMsg = new FacesMessage(FacesMessage.SEVERITY_INFO,
+					"Success",
+					String.format("Added Sub Menu Item '%s' for '%s'.",
+							toAdd.getMenuLabel(),
+							webKitMenuItem.getMenuLabel()));
+			FacesContext.getCurrentInstance().addMessage(null, fMsg);
+		} catch (Exception err) {
+			this.raiseError(err);
+		}
+	}
+
 	public void actionSelectDeselectAllViews(WebKitViewSub viewSub) {
 		if (viewSub.getJobViews() == null) {
 			return;
@@ -647,5 +743,25 @@ public class WorkspaceLookAndFeelBean extends ABaseManagedBean {
 
 	public String generateGroupSubKey(String groupName, String subname) {
 		return String.format("%s_%s", groupName, subname).toLowerCase();
+	}
+
+	public List<SelectItem> getUserQueriesAsSelectItems() {
+		return this.webKitUserQueries.stream()
+				.map(itm -> {
+					UserQuery userQuery = itm.getUserQuery();
+					return new SelectItem(userQuery.getId(), userQuery.getName());
+				})
+				.collect(Collectors.toList());
+	}
+
+	public String getLabelForUserQueryId(Long userQueryId) {
+		if (userQueryId == null || userQueryId.longValue() < 1) {
+			return "[None]";
+		}
+		return this.webKitUserQueries.stream()
+				.filter(itm -> userQueryId.equals(itm.getUserQuery().getId()))
+				.map(itm -> itm.getUserQuery().getName())
+				.findFirst()
+				.orElse("[Missing]");
 	}
 }

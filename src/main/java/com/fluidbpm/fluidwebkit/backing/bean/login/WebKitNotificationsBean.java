@@ -37,7 +37,7 @@ import java.util.List;
  */
 @SessionScoped
 @Named("webKitNotificationsBean")
-public class NotificationsBean extends ABaseManagedBean {
+public class WebKitNotificationsBean extends ABaseManagedBean {
 	public static final int MAX_COUNT_UNREAD = 15;
 	protected static final int MAX_COUNT_READ = 60;
 
