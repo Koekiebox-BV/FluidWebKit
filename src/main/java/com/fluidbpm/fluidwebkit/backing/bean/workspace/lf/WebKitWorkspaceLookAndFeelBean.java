@@ -17,6 +17,7 @@ package com.fluidbpm.fluidwebkit.backing.bean.workspace.lf;
 
 import com.fluidbpm.fluidwebkit.backing.bean.ABaseManagedBean;
 import com.fluidbpm.fluidwebkit.backing.bean.config.WebKitConfigBean;
+import com.fluidbpm.fluidwebkit.ds.FluidClientDS;
 import com.fluidbpm.fluidwebkit.exception.ClientDashboardException;
 import com.fluidbpm.program.api.vo.config.Configuration;
 import com.fluidbpm.program.api.vo.config.ConfigurationListing;
@@ -28,6 +29,7 @@ import com.fluidbpm.program.api.vo.webkit.userquery.WebKitMenuItem;
 import com.fluidbpm.program.api.vo.webkit.userquery.WebKitUserQuery;
 import com.fluidbpm.program.api.vo.webkit.viewgroup.*;
 import com.fluidbpm.ws.client.FluidClientException;
+import com.fluidbpm.ws.client.v1.config.ConfigurationClient;
 import com.fluidbpm.ws.client.v1.flow.RouteFieldClient;
 import lombok.Getter;
 import lombok.Setter;
@@ -361,11 +363,15 @@ public class WebKitWorkspaceLookAndFeelBean extends ABaseManagedBean {
 	}
 
 	public boolean doesMenuHaveChildren(WebKitMenuItem toCheck) {
-		if (toCheck == null || this.webKitGlobal.getWebKitMenuItems() == null) return false;
+		return this.doesMenuHaveChildren(toCheck, this.webKitGlobal.getWebKitMenuItems());
+	}
+
+	public boolean doesMenuHaveChildren(WebKitMenuItem toCheck, List<WebKitMenuItem> webKitMenuItems) {
+		if (toCheck == null || webKitMenuItems == null) return false;
 		String idToCheck = toCheck.getMenuId();
 		if (idToCheck == null || idToCheck.isEmpty()) return false;
 
-		WebKitMenuItem menuItm = this.webKitGlobal.getWebKitMenuItems().stream()
+		WebKitMenuItem menuItm = webKitMenuItems.stream()
 				.filter(itm -> itm.getParentMenuId() != null && idToCheck.equals(itm.getParentMenuId()))
 				.findFirst()
 				.orElse(null);
@@ -524,13 +530,15 @@ public class WebKitWorkspaceLookAndFeelBean extends ABaseManagedBean {
 						visibleButtons.add(selected);
 					}
 				}
-
 				this.updateGroupPropertyBasedOnSelected(visibleColumns, visibleButtons, groupItm);
 			});
+			FluidClientDS configDs = this.getFluidClientDSConfig();
+			final ConfigurationClient configurationClient = configDs.getConfigurationClient();
+			configurationClient.upsertConfiguration(WebKitConfigBean.ConfigKey.WebKit, this.webKitGlobal.toString());
 
 			listing.setListing(this.webKitViewGroups);
 			listing.setListingCount(this.webKitViewGroups.size());
-			this.getFluidClientDSConfig().getFlowClient().upsertViewGroupWebKit(listing);
+			configDs.getFlowClient().upsertViewGroupWebKit(listing);
 
 			this.executeJavaScript(String.format("PF('%s').hide();", dialogToHideAfterSuccess));
 			FacesMessage fMsg = new FacesMessage(FacesMessage.SEVERITY_INFO,

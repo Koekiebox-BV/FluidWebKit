@@ -16,16 +16,25 @@
 package com.fluidbpm.fluidwebkit.backing.bean.workspace.menu;
 
 import com.fluidbpm.fluidwebkit.backing.bean.ABaseManagedBean;
+import com.fluidbpm.fluidwebkit.backing.bean.config.GuestPreferencesBean;
 import com.fluidbpm.fluidwebkit.backing.bean.config.WebKitAccessBean;
+import com.fluidbpm.fluidwebkit.backing.bean.config.WebKitConfigBean;
 import com.fluidbpm.fluidwebkit.backing.bean.workspace.lf.WebKitWorkspaceLookAndFeelBean;
 import com.fluidbpm.program.api.vo.flow.JobView;
+import com.fluidbpm.program.api.vo.userquery.UserQuery;
+import com.fluidbpm.program.api.vo.webkit.WebKitGlobal;
+import com.fluidbpm.program.api.vo.webkit.userquery.WebKitMenuItem;
+import com.fluidbpm.program.api.vo.webkit.userquery.WebKitUserQuery;
 import com.fluidbpm.program.api.vo.webkit.viewgroup.WebKitViewGroup;
 import com.fluidbpm.program.api.vo.webkit.viewgroup.WebKitViewSub;
 import com.fluidbpm.program.api.vo.webkit.viewgroup.WebKitWorkspaceJobView;
+import com.fluidbpm.ws.client.FluidClientException;
 import lombok.Getter;
 import lombok.Setter;
 import org.primefaces.component.menuitem.UIMenuItem;
 import org.primefaces.component.submenu.UISubmenu;
+import org.primefaces.model.DefaultTreeNode;
+import org.primefaces.model.TreeNode;
 
 import javax.annotation.PostConstruct;
 import javax.enterprise.context.SessionScoped;
@@ -35,6 +44,7 @@ import javax.inject.Named;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
@@ -48,6 +58,9 @@ public class WebKitMenuBean extends ABaseManagedBean {
 	@Inject
 	private WebKitWorkspaceLookAndFeelBean lookAndFeelBean;
 
+	@Inject
+	private GuestPreferencesBean guestPreferencesBean;
+
 	@Getter
 	@Setter
 	private UISubmenu submenuWorkspace;
@@ -55,6 +68,8 @@ public class WebKitMenuBean extends ABaseManagedBean {
 	@Getter
 	@Setter
 	private List<UISubmenu> submenusUserQuery;
+
+	private List<WebKitUserQuery> configWebKitUserQueries;
 
 	public static final String ICON_DEFAULT_GROUP = "pi pi-list";
 	public static final String ICON_DEFAULT_SUB = "pi pi-table";
@@ -76,7 +91,9 @@ public class WebKitMenuBean extends ABaseManagedBean {
 			return;
 		}
 
-		this.submenusUserQuery = new ArrayList<>();
+		this.populateWebKitUserQueries();
+		this.buildLeftMenu();
+
 
 		//TODO need to fetch these from listing / config...
 		this.submenuWorkspace = new UISubmenu();
@@ -90,6 +107,199 @@ public class WebKitMenuBean extends ABaseManagedBean {
 
 	public String actionOpenMissingConfig() {
 		return "noconfig";
+	}
+
+	private void populateWebKitUserQueries() {
+		this.configWebKitUserQueries = new ArrayList<>();
+		try {
+			this.configWebKitUserQueries =
+					this.getFluidClientDSConfig().getUserQueryClient().getUserQueryWebKit().getListing();
+		} catch (FluidClientException fce) {
+			if (fce.getErrorCode() != FluidClientException.ErrorCode.NO_RESULT) {
+				throw fce;
+			}
+		}
+	}
+
+	private void buildLeftMenu() {
+		this.submenusUserQuery = new ArrayList<>();
+		WebKitGlobal wkGlobal = this.guestPreferencesBean.getWebKitGlobal();
+		final List<WebKitMenuItem> menuItems = wkGlobal.getWebKitMenuItems();
+		if (menuItems == null || menuItems.isEmpty()) {
+			return;
+		}
+
+		menuItems.stream()
+				.filter(itm -> itm.getParentMenuId() == null || itm.getParentMenuId().trim().isEmpty())
+				.forEach(itm -> {
+					UISubmenu subMenToAdd = new UISubmenu();
+					subMenToAdd.setId(String.format("om_%s", itm.getMenuId()));
+					subMenToAdd.setLabel(itm.getMenuLabel());
+					subMenToAdd.setIcon(itm.getMenuIcon());
+					this.submenusUserQuery.add(subMenToAdd);
+				});
+		//Populate sub-menus
+		this.submenusUserQuery.forEach(subMenParent -> this.populateSubmenu(subMenParent, menuItems));
+	}
+
+	public boolean isSubmenusUserQueryAvailForIndex(int index) {
+		if (this.submenusUserQuery == null) return false;
+		return (index < this.submenusUserQuery.size());
+	}
+
+	public UISubmenu retrieveSubMenuForIndex(int index) {
+		if (!this.isSubmenusUserQueryAvailForIndex(index)) return new UISubmenu();
+		return this.submenusUserQuery.get(index);
+	}
+
+	public void writeSubMenuForIndex(int index, UISubmenu menu) {
+		if (!this.isSubmenusUserQueryAvailForIndex(index)) return;
+		this.submenusUserQuery.set(index, menu);
+	}
+
+	public UISubmenu getRetrieveSubMenuForIndexOne() {
+		return this.retrieveSubMenuForIndex(0);
+	}
+
+	public void setRetrieveSubMenuForIndexOne(UISubmenu menu) {
+		this.writeSubMenuForIndex(0, menu);
+	}
+
+	public UISubmenu getRetrieveSubMenuForIndexTwo() {
+		return this.retrieveSubMenuForIndex(1);
+	}
+
+	public void setRetrieveSubMenuForIndexTwo(UISubmenu menu) {
+		this.writeSubMenuForIndex(1, menu);
+	}
+
+	public UISubmenu getRetrieveSubMenuForIndexThree() {
+		return this.retrieveSubMenuForIndex(2);
+	}
+
+	public void setRetrieveSubMenuForIndexThree(UISubmenu menu) {
+		this.writeSubMenuForIndex(2, menu);
+	}
+
+	public UISubmenu getRetrieveSubMenuForIndexFour() {
+		return this.retrieveSubMenuForIndex(3);
+	}
+
+	public void setRetrieveSubMenuForIndexFour(UISubmenu menu) {
+		this.writeSubMenuForIndex(3, menu);
+	}
+
+	public UISubmenu getRetrieveSubMenuForIndexFive() {
+		return this.retrieveSubMenuForIndex(4);
+	}
+
+	public void setRetrieveSubMenuForIndexFive(UISubmenu menu) {
+		this.writeSubMenuForIndex(4, menu);
+	}
+
+	public UISubmenu getRetrieveSubMenuForIndexSix() {
+		return this.retrieveSubMenuForIndex(5);
+	}
+
+	public void setRetrieveSubMenuForIndexSix(UISubmenu menu) {
+		this.writeSubMenuForIndex(5, menu);
+	}
+
+	public UISubmenu getRetrieveSubMenuForIndexSeven() {
+		return this.retrieveSubMenuForIndex(6);
+	}
+
+	public void setRetrieveSubMenuForIndexSeven(UISubmenu menu) {
+		this.writeSubMenuForIndex(6, menu);
+	}
+
+	public UISubmenu getRetrieveSubMenuForIndexEight() {
+		return this.retrieveSubMenuForIndex(7);
+	}
+
+	public void setRetrieveSubMenuForIndexEight(UISubmenu menu) {
+		this.writeSubMenuForIndex(7, menu);
+	}
+
+	public UISubmenu getRetrieveSubMenuForIndexNine() {
+		return this.retrieveSubMenuForIndex(8);
+	}
+
+	public void setRetrieveSubMenuForIndexNine(UISubmenu menu) {
+		this.writeSubMenuForIndex(8, menu);
+	}
+
+	public UISubmenu getRetrieveSubMenuForIndexTen() {
+		return this.retrieveSubMenuForIndex(9);
+	}
+
+	public void setRetrieveSubMenuForIndexTen(UISubmenu menu) {
+		this.writeSubMenuForIndex(9, menu);
+	}
+
+	private void populateSubmenu(UISubmenu submenu, List<WebKitMenuItem> menuItems) {
+		if (submenu == null) return;
+
+		String idNoPrefix = submenu.getId().substring(3);//[om_] removed...
+		//Find all where parent is...
+		List<WebKitMenuItem> menusWithNodeAsParent = menuItems.stream()
+				.filter(itm -> idNoPrefix.equals(itm.getParentMenuId()))
+				.collect(Collectors.toList());
+		if (menusWithNodeAsParent == null) return;
+
+		menusWithNodeAsParent.forEach(menuItmWhereParent -> {
+			if (this.lookAndFeelBean.doesMenuHaveChildren(menuItmWhereParent, menuItems)) {
+				UISubmenu subMenToAdd = new UISubmenu();
+				subMenToAdd.setId(String.format("om_%s", menuItmWhereParent.getMenuId()));
+				subMenToAdd.setLabel(menuItmWhereParent.getMenuLabel());
+				subMenToAdd.setIcon(menuItmWhereParent.getMenuIcon());
+				submenu.getElements().add(subMenToAdd);
+				this.populateSubmenu(subMenToAdd, menuItems);
+			} else {
+				WebKitUserQuery wkUserQryByMenu = this.configWebKitUserQueries.stream()
+						.filter(itm -> menuItmWhereParent.getId() != null &&
+								menuItmWhereParent.getId().equals(itm.getUserQuery().getId()))
+						.findFirst()
+						.orElse(null);
+				UserQuery userQuery = null;
+				boolean foundByIdAccess = false;
+				if (wkUserQryByMenu != null && wkUserQryByMenu.getUserQuery() != null) {
+					userQuery = wkUserQryByMenu.getUserQuery();
+					foundByIdAccess = this.webKitAccessBean.getUserQueriesCanExecute().stream()
+							.filter(itm -> menuItmWhereParent.getId().equals(itm.getId()))
+							.findFirst()
+							.isPresent();
+				}
+
+				UIMenuItem menuItemSub = new UIMenuItem();
+				menuItemSub.setId(String.format("menUQId_%s", menuItmWhereParent.getMenuId()));
+				menuItemSub.setIcon(menuItmWhereParent.getMenuIcon());
+				menuItemSub.setValue(menuItmWhereParent.getMenuLabel());
+				menuItemSub.setAjax(true);
+				final String onCompleteJS;
+				if (userQuery == null) {
+					onCompleteJS = String.format("javascript:rcOpenNoConfig([{name:'%s', value:\"%s\"}]);",
+							ReqParam.MISSING_CONFIG_MSG,
+							String.format("No User Query configured for Menu '%s'.", menuItmWhereParent.getMenuLabel()));
+				} else if (foundByIdAccess) {
+					onCompleteJS = String.format("javascript:rcOpenNoConfig([{name:'%s', value:\"%s\"}]);",
+							ReqParam.MISSING_CONFIG_MSG,
+							String.format("Boom. Nice results. '%s'.", userQuery.getName()));
+				} else {
+					onCompleteJS = String.format("javascript:rcOpenNoConfig([{name:'%s', value:\"%s\"}]);",
+							ReqParam.MISSING_CONFIG_MSG,
+							String.format("No Access. Please request Access to User Query '%s'.", userQuery.getName()));
+				}
+				menuItemSub.setOncomplete(onCompleteJS);
+				submenu.getElements().add(menuItemSub);
+			}
+		});
+
+//		if (submenu.getElementsCount() > 0) {
+//			submenu.getElements().stream()
+//					.filter(itm -> itm instanceof UISubmenu)
+//					.forEach(itm -> this.populateSubmenu((UISubmenu)itm, menuItems));
+//		}
 	}
 
 	private void buildWorkspaceMenu() {

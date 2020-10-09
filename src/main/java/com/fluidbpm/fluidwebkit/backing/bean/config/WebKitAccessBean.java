@@ -178,9 +178,10 @@ public class WebKitAccessBean extends ABaseManagedBean {
 		UserQueryClient userQueryClient = this.getFluidClientDS().getUserQueryClient();
 		UserQueryListing userQueries = userQueryClient.getAllUserQueriesByLoggedInUser();
 		this.userQueriesCanExecute = userQueries.getListing();
-		if (this.userQueriesCanExecute != null) {
-			Collections.sort(this.userQueriesCanExecute, Comparator.comparing(UserQuery::getName));
+		if (this.userQueriesCanExecute == null) {
+			this.userQueriesCanExecute = new ArrayList<>();
 		}
+		Collections.sort(this.userQueriesCanExecute, Comparator.comparing(UserQuery::getName));
 	}
 
 	private void cacheJobViews() {
