@@ -241,7 +241,10 @@ public class ImageServlet extends ABaseFWKServlet {
 
 		Image scaledImage = img.getScaledInstance(widthParam, heightParam, Image.SCALE_SMOOTH);
 		BufferedImage imageBuff = new BufferedImage(widthParam, heightParam, BufferedImage.TYPE_INT_RGB);
-		imageBuff.getGraphics().drawImage(scaledImage, 0, 0, new Color(0,0,0), null);
+		Color black = new Color(0,0,0);
+		Color white = new Color(255,255,255);
+
+		imageBuff.getGraphics().drawImage(scaledImage, 0, 0, white, null);
 		ByteArrayOutputStream buffer = new ByteArrayOutputStream();
 		ImageIO.write(imageBuff, "jpg", buffer);
 		return buffer.toByteArray();

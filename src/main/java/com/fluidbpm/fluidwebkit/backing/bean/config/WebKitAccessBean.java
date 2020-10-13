@@ -15,6 +15,7 @@
 package com.fluidbpm.fluidwebkit.backing.bean.config;
 
 import com.fluidbpm.fluidwebkit.backing.bean.ABaseManagedBean;
+import com.fluidbpm.fluidwebkit.backing.utility.Globals;
 import com.fluidbpm.program.api.vo.field.Field;
 import com.fluidbpm.program.api.vo.field.MultiChoice;
 import com.fluidbpm.program.api.vo.flow.JobView;
@@ -137,8 +138,6 @@ public class WebKitAccessBean extends ABaseManagedBean {
 
 		//Set all the field definitions...
 		List<CompletableFuture> allAsyncs = new ArrayList<>();
-		final FormFieldClient formFieldClient = this.getFluidClientDS().getFormFieldClient();
-
 		for (Form formDef : allFormDefinitions) {
 			//Ignore any configuration [Form Definitions]...
 			String formDefTitle = formDef.getFormType();
@@ -147,20 +146,24 @@ public class WebKitAccessBean extends ABaseManagedBean {
 			}
 
 			//Run the following asynchronous...
+			String endpoint = this.getFluidClientDS().getEndpoint(),
+					serviceTicket = this.getFluidClientDS().getServiceTicket();
 			CompletableFuture toAdd = CompletableFuture.runAsync(
 					() -> {
-						long starting = System.currentTimeMillis();
-						List<Field> formFieldsForView = new ArrayList<>();
-						List<Field> formFieldsForEdit = new ArrayList<>();
+						try (FormFieldClient formFieldClient = new FormFieldClient(endpoint, serviceTicket)) {
+							long starting = System.currentTimeMillis();
+							List<Field> formFieldsForView = new ArrayList<>();
+							List<Field> formFieldsForEdit = new ArrayList<>();
 
-						this.setFieldsForEditAndViewing(formFieldClient, formDefTitle, formFieldsForView, formFieldsForEdit);
+							this.setFieldsForEditAndViewing(formFieldClient, formDefTitle, formFieldsForView, formFieldsForEdit);
 
-						this.fieldsForViewing.put(formDefTitle, formFieldsForView);
-						this.fieldsForEditing.put(formDefTitle, formFieldsForEdit);
+							this.fieldsForViewing.put(formDefTitle, formFieldsForView);
+							this.fieldsForEditing.put(formDefTitle, formFieldsForEdit);
 
-						this.getLogger().info(String.format("FFC-Bean: PART-2-[%s]-COMPLETE TK(%d)",
-								formDefTitle, (System.currentTimeMillis() - starting)));
-						realtimeCounter += (System.currentTimeMillis() - starting);
+							this.getLogger().info(String.format("FFC-Bean: PART-2-[%s]-COMPLETE TK(%d)",
+									formDefTitle, (System.currentTimeMillis() - starting)));
+							realtimeCounter += (System.currentTimeMillis() - starting);
+						}
 					});
 			allAsyncs.add(toAdd);
 		}

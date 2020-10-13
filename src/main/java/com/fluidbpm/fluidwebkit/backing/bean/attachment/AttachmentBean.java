@@ -95,8 +95,12 @@ public class AttachmentBean extends ABaseManagedBean {
 	}
 
 	public boolean actionDoesAttachmentExist(Form formToCheck) {
+		return (this.actionGetAttachmentCount(formToCheck) > 0);
+	}
+
+	public int actionGetAttachmentCount(Form formToCheck) {
 		List<Attachment> att = this.actionFetchAttachmentsForForm(formToCheck);
-		return (att != null && !att.isEmpty());
+		return (att == null) ? 0 : att.size();
 	}
 
 	public String actionGenerateURLForThumbnail(WorkspaceFluidItem wfItem, int thumbnailScale) {

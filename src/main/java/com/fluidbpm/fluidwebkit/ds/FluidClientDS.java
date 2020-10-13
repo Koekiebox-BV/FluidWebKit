@@ -36,6 +36,7 @@ import com.fluidbpm.ws.client.v1.user.UserNotificationClient;
 import com.fluidbpm.ws.client.v1.userquery.UserQueryClient;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
+import lombok.Getter;
 
 import java.io.Closeable;
 import java.util.concurrent.TimeUnit;
@@ -44,8 +45,12 @@ import java.util.concurrent.TimeUnit;
  * Data Source for all the Fluid API's.
  */
 public class FluidClientDS implements Closeable {
+	@Getter
 	private String serviceTicket;
+
+	@Getter
 	private String endpoint;
+
 	private Cache<String, ABaseClientWS> clientCache;
 
 	public FluidClientDS() {

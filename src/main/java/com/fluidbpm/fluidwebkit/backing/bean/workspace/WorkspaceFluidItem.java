@@ -73,6 +73,11 @@ public class WorkspaceFluidItem extends ABaseFluidVO {
 		return this.getFluidItemForm().getId();
 	}
 
+	public Long getFluidItemId() {
+		if (this.getFluidItem() == null) return null;
+		return this.getFluidItem().getId();
+	}
+
 	public String getFluidItemFormType() {
 		if (this.getFluidItemForm() == null) return null;
 		return this.getFluidItemForm().getFormType();
