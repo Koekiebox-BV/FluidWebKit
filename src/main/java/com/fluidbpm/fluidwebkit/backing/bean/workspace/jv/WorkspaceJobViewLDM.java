@@ -15,7 +15,7 @@ public class WorkspaceJobViewLDM extends ABaseLDM<WorkspaceFluidItem> {
 		super();
 	}
 
-	public WorkspaceJobViewLDM(List<WorkspaceFluidItem> allFields) {
-		super(allFields);
+	public WorkspaceJobViewLDM(List<WorkspaceFluidItem> allItems) {
+		super(allItems);
 	}
 }

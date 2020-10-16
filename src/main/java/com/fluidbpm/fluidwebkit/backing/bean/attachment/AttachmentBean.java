@@ -57,6 +57,12 @@ public class AttachmentBean extends ABaseManagedBean {
 	@FormAttachmentsCache
 	private Cache<Long, List<Attachment>> attachmentCache;
 
+	public List<Attachment> actionFetchAttachmentsForForm(Form form, int fromIndex) {
+		List<Attachment> returnVal = this.actionFetchAttachmentsForForm(form);
+		if (returnVal == null || (fromIndex + 1) > returnVal.size()) return returnVal;
+		return returnVal.subList(fromIndex, returnVal.size());
+	}
+
 	public List<Attachment> actionFetchAttachmentsForForm(Form form) {
 		try {
 			if (this.getFluidClientDS() == null || form == null) {

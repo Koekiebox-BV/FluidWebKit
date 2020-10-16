@@ -83,6 +83,11 @@ public class WebKitMenuBean extends ABaseManagedBean {
 		public static final String CLICKED_SUB_ALIAS = "webKitItmClickedSubAlias";
 		public static final String CLICKED_VIEWS = "webKitItmClickedViews";
 		public static final String MISSING_CONFIG_MSG = "missingConfigMessage";
+
+		//User Query...
+		public static final String USER_QUERY_SECTION = "userQuerySection";
+		public static final String USER_QUERY_LABEL = "userQueryLabel";
+		public static final String USER_QUERY_ID = "userQueryId";
 	}
 
 	@PostConstruct
@@ -282,9 +287,14 @@ public class WebKitMenuBean extends ABaseManagedBean {
 							ReqParam.MISSING_CONFIG_MSG,
 							String.format("No User Query configured for Menu '%s'.", menuItmWhereParent.getMenuLabel()));
 				} else if (foundByIdAccess) {
-					onCompleteJS = String.format("javascript:rcOpenNoConfig([{name:'%s', value:\"%s\"}]);",
-							ReqParam.MISSING_CONFIG_MSG,
-							String.format("Boom. Nice results. '%s'.", userQuery.getName()));
+					onCompleteJS = String.format("javascript:rcOpenUserQueryItem" +
+									"([{name:'%s', value:\"%s\"}, {name:'%s', value:\"%s\"}, {name:'%s', value:'%d'}]);",
+							ReqParam.USER_QUERY_LABEL,
+							menuItmWhereParent.getMenuLabel(),
+							ReqParam.USER_QUERY_SECTION,
+							submenu.getLabel(),
+							ReqParam.USER_QUERY_ID,
+							userQuery.getId());
 				} else {
 					onCompleteJS = String.format("javascript:rcOpenNoConfig([{name:'%s', value:\"%s\"}]);",
 							ReqParam.MISSING_CONFIG_MSG,

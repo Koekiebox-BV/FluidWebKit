@@ -103,6 +103,11 @@ public class WorkspaceFluidItem extends ABaseFluidVO {
 		return this.getJobView().getViewName();
 	}
 
+	public Long getFluidItemViewId() {
+		if (this.getJobView() == null) return null;
+		return this.getJobView().getId();
+	}
+
 	//TODO Need to add the step entry time to Fluid Item...
 
 	public String getFluidItemFormTypeURLSafe() {

@@ -13,11 +13,15 @@
  * forbidden unless prior written permission is obtained from Koekiebox Innovations.
  */
 
-package com.fluidbpm.fluidwebkit.backing.bean.workspace.pi;
+package com.fluidbpm.fluidwebkit.backing.bean.workspace.uq;
 
-import com.fluidbpm.fluidwebkit.backing.bean.performance.PerformanceBean;
 import com.fluidbpm.fluidwebkit.backing.bean.workspace.ABaseWorkspaceBean;
 import com.fluidbpm.fluidwebkit.backing.bean.workspace.WorkspaceFluidItem;
+import com.fluidbpm.fluidwebkit.backing.bean.workspace.jv.ContentViewJV;
+import com.fluidbpm.fluidwebkit.backing.bean.workspace.jv.JobViewItemVO;
+import com.fluidbpm.fluidwebkit.backing.bean.workspace.menu.WebKitMenuBean;
+import com.fluidbpm.fluidwebkit.backing.bean.workspace.pi.ContentViewPI;
+import com.fluidbpm.fluidwebkit.backing.bean.workspace.pi.PersonalInventoryItemVO;
 import com.fluidbpm.program.api.vo.flow.JobView;
 import com.fluidbpm.program.api.vo.item.FluidItem;
 import com.fluidbpm.program.api.vo.webkit.viewgroup.WebKitViewGroup;
@@ -25,28 +29,37 @@ import com.fluidbpm.program.api.vo.webkit.viewgroup.WebKitViewSub;
 import com.fluidbpm.program.api.vo.webkit.viewgroup.WebKitWorkspaceJobView;
 import com.fluidbpm.ws.client.FluidClientException;
 import com.fluidbpm.ws.client.v1.user.PersonalInventoryClient;
+import com.fluidbpm.ws.client.v1.userquery.UserQueryClient;
+import lombok.Getter;
+import lombok.Setter;
 import org.primefaces.PrimeFaces;
 
 import javax.annotation.PostConstruct;
 import javax.enterprise.context.SessionScoped;
 import javax.faces.application.FacesMessage;
 import javax.faces.context.FacesContext;
-import javax.inject.Inject;
 import javax.inject.Named;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Bean storing personal inventory related items.
  */
 @SessionScoped
-@Named("webKitPersonalInvBean")
-public class PersonalInventoryBean extends ABaseWorkspaceBean<PersonalInventoryItemVO, ContentViewPI> {
+@Named("webKitUserQueryBean")
+public class WebKitUserQueryBean extends ABaseWorkspaceBean<UserQueryItemVO, ContentViewUQ> {
 
-	@Inject
-	private PerformanceBean performanceBean;
+	@Getter
+	@Setter
+	private String emptyMessage;
+
+	public static final String TGM_TABLE_PER_VIEW_SECTION_FORMAT = "%s - %s";
+	public static final String TGM_TABLE_PER_VIEW_SECTION_DEL = " - ";
+	public static final int TGM_TABLE_PER_VIEW_SECTION_DEL_LEN = TGM_TABLE_PER_VIEW_SECTION_DEL.length();
+
+	public String actionOpenMainPageNonAjax() {
+		this.actionOpenMainPage();
+		return "userquery";
+	}
 
 	@Override
 	@PostConstruct
@@ -57,8 +70,8 @@ public class PersonalInventoryBean extends ABaseWorkspaceBean<PersonalInventoryI
 
 	@Override
 	public void actionOpenFormForEditingFromWorkspace(
-		JobView fromView,
-		Long formIdToUpdateParam
+			JobView fromView,
+			Long formIdToUpdateParam
 	) {
 		//Do nothing...
 	}
@@ -69,7 +82,7 @@ public class PersonalInventoryBean extends ABaseWorkspaceBean<PersonalInventoryI
 	}
 
 	@Override
-	protected ContentViewPI actionOpenMainPage(
+	protected ContentViewUQ actionOpenMainPage(
 		WebKitViewGroup webKitGroup,
 		WebKitViewSub selectedSub
 	) {
@@ -77,63 +90,39 @@ public class PersonalInventoryBean extends ABaseWorkspaceBean<PersonalInventoryI
 			if (this.getFluidClientDS() == null) {
 				return null;
 			}
-			PersonalInventoryClient persInvClient = this.getFluidClientDS().getPersonalInventoryClient();
-			List<FluidItem> piItems = persInvClient.getPersonalInventoryItems();
-			List<WorkspaceFluidItem> wsFldItms = new ArrayList<>();
-			piItems.forEach(flItm -> {
-				wsFldItms.add(new WorkspaceFluidItem(this.createABaseWebVO(webKitGroup, selectedSub, null, flItm)));
-			});
 
-			Map<WebKitViewSub, Map<WebKitWorkspaceJobView, List<WorkspaceFluidItem>>> data = new HashMap<>();
-			Map<WebKitWorkspaceJobView, List<WorkspaceFluidItem>> wsFluidItmsMap = new HashMap<>();
-			wsFluidItmsMap.put(new WebKitWorkspaceJobView(new JobView(ContentViewPI.PI)), wsFldItms);
-			data.put(new WebKitViewSub(), wsFluidItmsMap);
+			String userQuerySection = this.getStringRequestParam(WebKitMenuBean.ReqParam.USER_QUERY_SECTION);
+			String userQueryLabel = this.getStringRequestParam(WebKitMenuBean.ReqParam.USER_QUERY_LABEL);
+			Long userQueryId = this.getLongRequestParam(WebKitMenuBean.ReqParam.USER_QUERY_ID);
 
-			ContentViewPI contentViewPI = new ContentViewPI(this.getLoggedInUser());
-			contentViewPI.refreshData(data);
-			return contentViewPI;
+			ContentViewUQ contentViewUserQuery = new ContentViewUQ(this.getLoggedInUser());
+			contentViewUserQuery.setFluidItemsLazyModel(
+					new WorkspaceUserQueryLDM(this.getFluidClientDS(), userQueryId, userQueryLabel, this));
+			contentViewUserQuery.refreshData(null);
+			return contentViewUserQuery;
 		} catch (Exception fce) {
 			if (fce instanceof FluidClientException) {
 				FluidClientException casted = (FluidClientException)fce;
 				if (casted.getErrorCode() == FluidClientException.ErrorCode.NO_RESULT) {
-					return new ContentViewPI(this.getLoggedInUser());
+					return new ContentViewUQ(this.getLoggedInUser());
 				}
 			}
 			this.raiseError(fce);
-			return new ContentViewPI(this.getLoggedInUser());
+			return new ContentViewUQ(this.getLoggedInUser());
 		}
 	}
 
 	@Override
-	protected PersonalInventoryItemVO createABaseWebVO(
+	public UserQueryItemVO createABaseWebVO(
 			WebKitViewGroup group,
 			WebKitViewSub sub,
 			WebKitWorkspaceJobView view,
 			FluidItem item
 	) {
-		PersonalInventoryItemVO returnVal = new PersonalInventoryItemVO(item);
+		UserQueryItemVO returnVal = new UserQueryItemVO(item);
 		return returnVal;
 	}
 
-	/**
-	 *
-	 */
-	public void actionRemoveSelectedItemsFromPI() {
-		try {
-			this.getContentView().getFluidItemsSelectedList().clear();
-			FacesContext.getCurrentInstance().addMessage(null, new FacesMessage("Products Removed"));
-			PrimeFaces.current().ajax().update("form:messages", "form:dt-products");
 
-		} catch (Exception fce) {
-			this.raiseError(fce);
-		}
-	}
 
-	public int getNumberOfPersonalInventoryItems() {
-		return performanceBean.getUserStatsReport().getPiCount();
-	}
-
-	public int getNumberOfPersonalInventoryLockedItems() {
-		return performanceBean.getUserStatsReport().getPiLockedCount();
-	}
 }

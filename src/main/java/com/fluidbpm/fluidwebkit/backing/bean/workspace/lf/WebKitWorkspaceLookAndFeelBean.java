@@ -65,7 +65,6 @@ public class WebKitWorkspaceLookAndFeelBean extends ABaseManagedBean {
 	@Setter
 	private Map<String, WebKitWorkspaceRouteFieldLDM> inputSubToRouteFieldMapping;
 
-
 	@Getter
 	@Setter
 	private List<WebKitViewGroup> webKitViewGroups;
@@ -92,12 +91,17 @@ public class WebKitWorkspaceLookAndFeelBean extends ABaseManagedBean {
 
 	private List<WebKitUserQuery> webKitUserQueries;
 
+	@Getter
+	@Setter
+	private WebKitWorkspaceUserQueryLDM userQueryLDM;
+
 	//Inputs....
 	@Getter
 	@Setter
 	private String inputNewRootMenuLabel;
 
 	public enum VisibleColumnItems {
+		showColumnID,
 		showColumnFormType,
 		showColumnTitle,
 		showColumnStepEntryTime,
@@ -111,6 +115,9 @@ public class WebKitWorkspaceLookAndFeelBean extends ABaseManagedBean {
 			List<String> returnVal = new ArrayList<>();
 			if (group == null) {
 				return returnVal;
+			}
+			if (group.isShowColumnID()) {
+				returnVal.add(VisibleColumnItems.showColumnID.name());
 			}
 			if (group.isShowColumnFormType()) {
 				returnVal.add(VisibleColumnItems.showColumnFormType.name());
@@ -187,6 +194,7 @@ public class WebKitWorkspaceLookAndFeelBean extends ABaseManagedBean {
 		this.inputVisibleColumns = new HashMap<>();
 		this.inputVisibleButtons = new HashMap<>();
 		this.webKitUserQueries = new ArrayList<>();
+		this.userQueryLDM = new WebKitWorkspaceUserQueryLDM();
 		this.setDialogHeaderTitle("Workspace - Look & Feel");
 		try {
 			try {
@@ -204,6 +212,7 @@ public class WebKitWorkspaceLookAndFeelBean extends ABaseManagedBean {
 			try {
 				this.webKitUserQueries =
 						this.getFluidClientDSConfig().getUserQueryClient().getUserQueryWebKit().getListing();
+				this.userQueryLDM.addToInitialListing(this.webKitUserQueries);
 			} catch (FluidClientException fce) {
 				if (fce.getErrorCode() != FluidClientException.ErrorCode.NO_RESULT) {
 					throw fce;
@@ -660,6 +669,11 @@ public class WebKitWorkspaceLookAndFeelBean extends ABaseManagedBean {
 		WebKitViewGroup groupToUpdate
 	) {
 		//Columns...
+		if (visibleColumns.contains(VisibleColumnItems.showColumnID.name())) {
+			groupToUpdate.setShowColumnID(true);
+		} else {
+			groupToUpdate.setShowColumnID(false);
+		}
 		if (visibleColumns.contains(VisibleColumnItems.showColumnFormType.name())) {
 			groupToUpdate.setShowColumnFormType(true);
 		} else {
