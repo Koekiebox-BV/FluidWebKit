@@ -397,7 +397,7 @@ public abstract class ABaseContentView implements Serializable {
 	 *
 	 * @return {@code Map<String,List<WorkspaceFluidItem>>} mapping of data table items filtered.
 	 */
-	public Map<String,List<WorkspaceFluidItem>> getFluidItemsForSectionFiltered() {
+	public Map<String, List<WorkspaceFluidItem>> getFluidItemsForSectionFiltered() {
 		return this.fluidItemsForSectionFiltered;
 	}
 

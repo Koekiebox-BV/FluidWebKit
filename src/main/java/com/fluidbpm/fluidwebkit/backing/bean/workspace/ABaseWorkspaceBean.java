@@ -400,7 +400,9 @@ public abstract class ABaseWorkspaceBean<T extends ABaseWebVO, J extends ABaseCo
 											}
 										}
 										T baseWebToAdd = this.createABaseWebVO(groupWithName, sub, viewWithResults, fldItem);
-										wfiList.add(new WorkspaceFluidItem(baseWebToAdd));
+										WorkspaceFluidItem item = new WorkspaceFluidItem(baseWebToAdd);
+										item.setJobView(viewWithResults.getJobView());
+										wfiList.add(item);
 									});
 									viewMapForSub.put(viewWithResults, wfiList);
 								});

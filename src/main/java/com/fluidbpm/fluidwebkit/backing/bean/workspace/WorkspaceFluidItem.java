@@ -22,6 +22,8 @@ import com.fluidbpm.program.api.vo.field.Field;
 import com.fluidbpm.program.api.vo.flow.JobView;
 import com.fluidbpm.program.api.vo.form.Form;
 import com.fluidbpm.program.api.vo.item.FluidItem;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.util.HashMap;
 import java.util.List;
@@ -31,8 +33,15 @@ import java.util.Map;
  * Workspace object to host the {@code JobView} and {@code ABaseWebVO}.
  */
 public class WorkspaceFluidItem extends ABaseFluidVO {
+	@Getter
 	private ABaseWebVO baseWeb;
+
+	@Getter
+	@Setter
 	private Map<String, Object> fieldMap;
+
+	@Getter
+	@Setter
 	private JobView jobView;
 
 	/**
@@ -115,38 +124,18 @@ public class WorkspaceFluidItem extends ABaseFluidVO {
 		return UtilGlobal.encodeURL(this.getFluidItemForm().getFormType());
 	}
 
-	/**
-	 * 
-	 * @return
-	 * 
-	 * @see Field
-	 */
 	public List<Field> getRouteFields() {
 		if (this.baseWeb == null || this.baseWeb.getFluidItem() == null) {
 			return null;
 		}
-
 		return this.baseWeb.getFluidItem().getRouteFields();
 	}
 
-	/**
-	 * 
-	 * @return
-	 */
 	public List<Field> getFormFields() {
 		if (this.baseWeb == null || this.baseWeb.getForm() == null) {
 			return null;
 		}
-
 		return this.baseWeb.getForm().getFormFields();
-	}
-
-	/**
-	 *
-	 * @return
-	 */
-	public ABaseWebVO getBaseWeb() {
-		return this.baseWeb;
 	}
 
 	/**
@@ -183,37 +172,5 @@ public class WorkspaceFluidItem extends ABaseFluidVO {
 				}
 			}
 		}
-	}
-
-	/**
-	 *
-	 * @return
-	 */
-	public Map<String, Object> getFieldMap() {
-		return this.fieldMap;
-	}
-
-	/**
-	 *
-	 * @param fieldMapParam
-	 */
-	public void setFieldMap(Map<String, Object> fieldMapParam) {
-		this.fieldMap = fieldMapParam;
-	}
-
-	/**
-	 *
-	 * @return
-	 */
-	public JobView getJobView() {
-		return this.jobView;
-	}
-
-	/**
-	 *
-	 * @param jobViewParam
-	 */
-	public void setJobView(JobView jobViewParam) {
-		this.jobView = jobViewParam;
 	}
 }

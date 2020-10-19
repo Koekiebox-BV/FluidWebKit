@@ -17,11 +17,13 @@ package com.fluidbpm.fluidwebkit.backing.bean.workspace;
 
 import com.fluidbpm.fluidwebkit.backing.bean.workspace.jv.ContentViewJV;
 import com.fluidbpm.fluidwebkit.backing.bean.workspace.jv.JobViewItemVO;
+import com.fluidbpm.program.api.vo.field.Field;
 import com.fluidbpm.program.api.vo.flow.JobView;
 import com.fluidbpm.program.api.vo.item.FluidItem;
 import com.fluidbpm.program.api.vo.webkit.viewgroup.WebKitViewGroup;
 import com.fluidbpm.program.api.vo.webkit.viewgroup.WebKitViewSub;
 import com.fluidbpm.program.api.vo.webkit.viewgroup.WebKitWorkspaceJobView;
+import com.fluidbpm.program.api.vo.webkit.viewgroup.WebKitWorkspaceRouteField;
 import com.fluidbpm.ws.client.FluidClientException;
 
 import javax.enterprise.context.SessionScoped;
@@ -116,16 +118,26 @@ public class WorkspaceBean extends ABaseWorkspaceBean<JobViewItemVO, ContentView
 		WebKitWorkspaceJobView view,
 		FluidItem item
 	) {
-		JobViewItemVO returnVal = new JobViewItemVO(item);
+		List<Field> mergedFields = new ArrayList<>();
+		final List<WebKitWorkspaceRouteField> fieldsForSub = sub.getRouteFields();
+		if (fieldsForSub != null) {
+			fieldsForSub.forEach(rteItm -> {
+				Field fieldToAdd = new Field(rteItm.getRouteField().getFieldName());
+				Object fieldValue = null;
+				if (item.getRouteFields() != null) {
+					fieldValue = item.getRouteFields().stream()
+							.filter(itm -> fieldToAdd.getFieldName().equals(itm.getFieldName()))
+							.map(itm -> itm.getFieldValue())
+							.findFirst()
+							.orElse(null);
+				}
+				fieldToAdd.setFieldValue(fieldValue);
+				mergedFields.add(fieldToAdd);
+			});
+		}
 
-
-
-		//FIXME @jason, need map the route fields here...
-		//FIXME @jason, need to map Route field webkit to normal route field...
-
-
-
-		return returnVal;
+		item.setRouteFields(mergedFields);
+		return new JobViewItemVO(item);
 	}
 
 }
