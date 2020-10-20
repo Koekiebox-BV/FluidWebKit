@@ -48,18 +48,22 @@ public abstract class ABaseContentView implements Serializable {
 
 	//Header and Column Names
 	protected String[] sections;
+
+	@Getter
 	private Map<String, List<ABaseManagedBean.ColumnModel>> columnModels;
 
 	//Initial Data...
 	private Map<String, List<WorkspaceFluidItem>> fluidItemsForSection;
 
 	//Filter...
-	private Map<String, List<WorkspaceFluidItem>> fluidItemsForSectionFiltered;
+	private Map<String, List<WorkspaceFluidItem>> fluidItemsForSectionFiltered = new HashMap<>();
 
 	//Selected...
 	@Getter
 	@Setter
 	private List<WorkspaceFluidItem> fluidItemsSelectedList;
+
+	private Map<String,Map<String,String[]>> filterBySelectItemMap;
 
 	protected User loggedInUser;
 	private String textToFilterBy;
@@ -131,6 +135,12 @@ public abstract class ABaseContentView implements Serializable {
 		this.fluidItemsForSectionFiltered = new HashMap<>();
 		this.fluidItemsSelectedList = new ArrayList<>();
 
+		this.mapColumnModel();
+
+		this.refreshData(fluidItemsForViewsParam);
+	}
+
+	public void mapColumnModel() {
 		if (this.getSections() != null) {
 			for (String section : this.getSections()) {
 				//Sections Headers...
@@ -143,8 +153,6 @@ public abstract class ABaseContentView implements Serializable {
 				this.fluidItemsForSection.put(section, new ArrayList<>());
 			}
 		}
-
-		this.refreshData(fluidItemsForViewsParam);
 	}
 
 	/**
@@ -216,15 +224,97 @@ public abstract class ABaseContentView implements Serializable {
 			String sectionParam,
 			Map<WebKitViewSub, Map<WebKitWorkspaceJobView, List<WorkspaceFluidItem>>> fluidItemsForViewsParam);
 
-	/**
-	 *
-	 * @param event
-	 */
 	public void actionOnRowToggle(ToggleEvent event) {
 		if (event.getVisibility() == Visibility.VISIBLE) {
 			Object data = event.getData();
 
 		}
+	}
+
+	/**
+	 *
+	 * @param sectionParam
+	 * @param fieldNameParam
+	 * @return
+	 */
+	public boolean checkIfFieldCurrentlyFiltered(String sectionParam, String fieldNameParam) {
+		String selectedColumns = this.checkListingOfFiltersForSectionAndField(sectionParam, fieldNameParam);
+		return (selectedColumns == null || selectedColumns.trim().isEmpty()) ? false:true;
+	}
+
+	/**
+	 *
+	 * @param sectionParam
+	 * @param fieldNameParam
+	 * @return
+	 */
+	public String checkListingOfFiltersForSectionAndField(String sectionParam, String fieldNameParam) {
+		Map<String, String[]> mappingForSection = this.getSelectItemSelectedMap(sectionParam);
+		if(mappingForSection == null) {
+			return null;
+		}
+
+		String[] stringSelectedFilters = mappingForSection.get(fieldNameParam);
+		if(stringSelectedFilters == null || stringSelectedFilters.length < 1) {
+			return null;
+		}
+
+		StringBuilder builder = new StringBuilder();
+		for(String selected : stringSelectedFilters) {
+			builder.append(selected);
+			builder.append(", ");
+		}
+
+		String toStringed = builder.toString();
+		return toStringed.substring(0, toStringed.length() - 2);
+	}
+
+	/**
+	 *
+	 * @param sectionParam
+	 * @return
+	 */
+	public Map<String, String[]> getSelectItemSelectedMap(String sectionParam) {
+		if (sectionParam == null || sectionParam.trim().isEmpty()) {
+			return new HashMap<>();
+		}
+
+		if (this.filterBySelectItemMap == null) {
+			return new HashMap<>();
+		}
+
+		Map<String,String[]> selectedValuesForField = this.filterBySelectItemMap.get(sectionParam);
+		Set<String> fieldNames = selectedValuesForField.keySet();
+
+		Map<String, String[]> newMapWithNoDups = new HashMap<>();
+		for (String fieldName : fieldNames) {
+			String[] fieldValues = selectedValuesForField.get(fieldName);;
+			if (fieldValues == null) {
+				continue;
+			}
+
+			Set<String> returnValUniq = new HashSet<>();
+			returnValUniq.addAll(Arrays.asList(fieldValues));
+
+			newMapWithNoDups.put(fieldName, returnValUniq.toArray(new String[]{}));
+		}
+
+		this.filterBySelectItemMap.put(sectionParam, newMapWithNoDups);
+		return this.filterBySelectItemMap.get(sectionParam);
+	}
+
+	/**
+	 * Update the visible column configs.
+	 */
+	public void actionUpdateVisibleColumn() {
+
+	}
+
+	/**
+	 * Update the filter column configs.
+	 */
+	public void actionUpdateFilterColumn() {
+
 	}
 
 	public String getRemoveButtonMessage() {
@@ -622,12 +712,6 @@ public abstract class ABaseContentView implements Serializable {
 				.orElse(null);
 	}
 
-	/**
-	 *
-	 * @param sectionAliasParam
-	 * @param columnIndexParam
-	 * @return
-	 */
 	public ABaseManagedBean.ColumnModel getCHForSecCM(
 		String sectionAliasParam, int columnIndexParam
 	) {

@@ -220,12 +220,12 @@ public class GuestPreferencesBean extends ABaseManagedBean {
 		}
 		switch (topbarTheme) {
 			case "light" :
-				return "fluid-black.png";
+				return "fluid-black.svg";
 			case "dark" :
 			case "dim" :
-				return "fluid-white.png";
+				return "fluid-white.svg";
 			default:
-				return "fluid-white.png";
+				return "fluid-white.svg";
 		}
 	}
 

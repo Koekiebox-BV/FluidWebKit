@@ -153,24 +153,28 @@ public class WorkspaceFluidItem extends ABaseFluidVO {
 
 		//Route Fields...
 		if (this.getFluidItem().getRouteFields() != null) {
-			for (Field field : this.getFluidItem().getRouteFields()) {
-				if (Field.Type.DateTime.toString().equals(field.getFieldType())) {
-					this.fieldMap.put(field.getFieldName(), field.getFieldValue());
-				} else {
-					this.fieldMap.put(field.getFieldName(), field.getFieldValue().toString());
-				}
-			}
+			this.getFluidItem().getRouteFields().stream()
+					.filter(itm -> itm.getFieldValue() != null)
+					.forEach(field -> {
+						if (Field.Type.DateTime.toString().equals(field.getFieldType())) {
+							this.fieldMap.put(field.getFieldName(), field.getFieldValue());
+						} else {
+							this.fieldMap.put(field.getFieldName(), field.getFieldValue().toString());
+						}
+					});
 		}
 
 		//Form Fields...
 		if (this.getFluidItem().getForm() != null && this.getFluidItem().getForm().getFormFields() != null) {
-			for (Field field : this.getFluidItem().getForm().getFormFields()) {
-				if (Field.Type.DateTime.toString().equals(field.getFieldType())) {
-					this.fieldMap.put(field.getFieldName(), field.getFieldValue());
-				} else {
-					this.fieldMap.put(field.getFieldName(), field.getFieldValue().toString());
-				}
-			}
+			this.getFluidItem().getForm().getFormFields().stream()
+					.filter(itm -> itm.getFieldValue() != null)
+					.forEach(field -> {
+						if (Field.Type.DateTime.toString().equals(field.getFieldType())) {
+							this.fieldMap.put(field.getFieldName(), field.getFieldValue());
+						} else {
+							this.fieldMap.put(field.getFieldName(), field.getFieldValue().toString());
+						}
+					});
 		}
 	}
 }

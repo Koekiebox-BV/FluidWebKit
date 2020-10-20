@@ -159,6 +159,7 @@ public abstract class ABaseManagedBean implements Serializable {
 			this.header = header;
 			this.fluidFieldName = fluidFieldNameParam;
 			this.fluidFieldColumnType = fluidFieldColumnTypeParam;
+			this.visible = true;
 		}
 
 		public String getFluidFieldColumnTypeTxt() {

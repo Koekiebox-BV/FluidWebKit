@@ -16,30 +16,19 @@
 package com.fluidbpm.fluidwebkit.backing.bean.workspace.uq;
 
 import com.fluidbpm.fluidwebkit.backing.bean.workspace.ABaseWorkspaceBean;
-import com.fluidbpm.fluidwebkit.backing.bean.workspace.WorkspaceFluidItem;
-import com.fluidbpm.fluidwebkit.backing.bean.workspace.jv.ContentViewJV;
-import com.fluidbpm.fluidwebkit.backing.bean.workspace.jv.JobViewItemVO;
 import com.fluidbpm.fluidwebkit.backing.bean.workspace.menu.WebKitMenuBean;
-import com.fluidbpm.fluidwebkit.backing.bean.workspace.pi.ContentViewPI;
-import com.fluidbpm.fluidwebkit.backing.bean.workspace.pi.PersonalInventoryItemVO;
 import com.fluidbpm.program.api.vo.flow.JobView;
 import com.fluidbpm.program.api.vo.item.FluidItem;
 import com.fluidbpm.program.api.vo.webkit.viewgroup.WebKitViewGroup;
 import com.fluidbpm.program.api.vo.webkit.viewgroup.WebKitViewSub;
 import com.fluidbpm.program.api.vo.webkit.viewgroup.WebKitWorkspaceJobView;
 import com.fluidbpm.ws.client.FluidClientException;
-import com.fluidbpm.ws.client.v1.user.PersonalInventoryClient;
-import com.fluidbpm.ws.client.v1.userquery.UserQueryClient;
 import lombok.Getter;
 import lombok.Setter;
-import org.primefaces.PrimeFaces;
 
 import javax.annotation.PostConstruct;
 import javax.enterprise.context.SessionScoped;
-import javax.faces.application.FacesMessage;
-import javax.faces.context.FacesContext;
 import javax.inject.Named;
-import java.util.*;
 
 /**
  * Bean storing personal inventory related items.
@@ -122,7 +111,4 @@ public class WebKitUserQueryBean extends ABaseWorkspaceBean<UserQueryItemVO, Con
 		UserQueryItemVO returnVal = new UserQueryItemVO(item);
 		return returnVal;
 	}
-
-
-
 }

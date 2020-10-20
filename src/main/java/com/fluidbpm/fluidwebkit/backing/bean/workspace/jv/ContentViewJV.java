@@ -15,13 +15,15 @@
 
 package com.fluidbpm.fluidwebkit.backing.bean.workspace.jv;
 
+import com.fluidbpm.fluidwebkit.backing.bean.ABaseManagedBean;
 import com.fluidbpm.fluidwebkit.backing.bean.workspace.WorkspaceFluidItem;
 import com.fluidbpm.fluidwebkit.backing.bean.workspace.contentview.ABaseContentView;
-import com.fluidbpm.program.api.vo.flow.JobView;
+import com.fluidbpm.program.api.vo.field.Field;
 import com.fluidbpm.program.api.vo.user.User;
 import com.fluidbpm.program.api.vo.webkit.viewgroup.WebKitViewGroup;
 import com.fluidbpm.program.api.vo.webkit.viewgroup.WebKitViewSub;
 import com.fluidbpm.program.api.vo.webkit.viewgroup.WebKitWorkspaceJobView;
+import com.fluidbpm.program.api.vo.webkit.viewgroup.WebKitWorkspaceRouteField;
 import lombok.Getter;
 
 import java.util.*;
@@ -140,5 +142,37 @@ public class ContentViewJV extends ABaseContentView {
 			}
 		}
 		this.sections = sectionsToKeep.toArray(new String[]{});
+	}
+
+	/**
+	 * Retrieve all the column models for section {@code sectionAliasParam}.
+	 *
+	 * @param sectionAlias The section to retrieve column model headers for.
+	 * @return ABaseManagedBean.ColumnModel list.
+	 *
+	 * @see ABaseManagedBean.ColumnModel
+	 * @see List
+	 */
+	@Override
+	public List<ABaseManagedBean.ColumnModel> getColumnHeadersForSection(String sectionAlias) {
+		List<ABaseManagedBean.ColumnModel> returnVal = new ArrayList<>();
+		if (this.wkSub == null) {
+			return returnVal;
+		}
+		List<WebKitWorkspaceRouteField> routeFieldsForKit = this.wkSub.getRouteFields();
+		if (routeFieldsForKit == null || routeFieldsForKit.isEmpty()) {
+			return returnVal;
+		}
+
+		routeFieldsForKit.sort(Comparator.comparing(WebKitWorkspaceRouteField::getFieldOrder));
+		return routeFieldsForKit.stream()
+				.map(wkField -> {
+					Field field = wkField.getRouteField();
+					return new ABaseManagedBean.ColumnModel(
+							field.getFieldName(),
+							field.getFieldName(),
+							field.getTypeAsEnum());
+				})
+				.collect(Collectors.toList());
 	}
 }

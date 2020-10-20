@@ -82,6 +82,10 @@ public class WebKitWorkspaceLookAndFeelBean extends ABaseManagedBean {
 	@Setter
 	private Map<String, List<String>> inputVisibleButtons;
 
+	@Getter
+	@Setter
+	private Map<String, Map<String, List<String>>> inputRowExpansions;
+
 	private WebKitGlobal webKitGlobal;
 
 	//User Query related objects...
@@ -193,6 +197,7 @@ public class WebKitWorkspaceLookAndFeelBean extends ABaseManagedBean {
 		this.groupToRouteFieldMapping = new HashMap<>();
 		this.inputVisibleColumns = new HashMap<>();
 		this.inputVisibleButtons = new HashMap<>();
+		this.inputRowExpansions = new HashMap<>();
 		this.webKitUserQueries = new ArrayList<>();
 		this.userQueryLDM = new WebKitWorkspaceUserQueryLDM();
 		this.setDialogHeaderTitle("Workspace - Look & Feel");

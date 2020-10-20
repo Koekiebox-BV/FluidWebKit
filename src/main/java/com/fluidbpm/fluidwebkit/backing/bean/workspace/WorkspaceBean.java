@@ -98,6 +98,7 @@ public class WorkspaceBean extends ABaseWorkspaceBean<JobViewItemVO, ContentView
 			}
 
 			ContentViewJV contentViewJV = new ContentViewJV(this.getLoggedInUser(), sections, wkGroup, wkSub);
+			contentViewJV.mapColumnModel();
 			return contentViewJV;
 		} catch (Exception fce) {
 			if (fce instanceof FluidClientException) {
