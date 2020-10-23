@@ -17,6 +17,7 @@ package com.fluidbpm.fluidwebkit.backing.bean.workspace.uq;
 
 import com.fluidbpm.fluidwebkit.backing.bean.workspace.WorkspaceFluidItem;
 import com.fluidbpm.fluidwebkit.backing.bean.workspace.contentview.ABaseContentView;
+import com.fluidbpm.fluidwebkit.backing.bean.workspace.contentview.WebKitViewContentModelBean;
 import com.fluidbpm.fluidwebkit.backing.bean.workspace.jv.WorkspaceJobViewLDM;
 import com.fluidbpm.program.api.vo.user.User;
 import com.fluidbpm.program.api.vo.webkit.viewgroup.WebKitViewSub;
@@ -35,12 +36,12 @@ public class ContentViewUQ extends ABaseContentView {
 	@Setter
 	private WorkspaceUserQueryLDM fluidItemsLazyModel = null;
 
-	public ContentViewUQ(User loggedInUserParam) {
-		super(loggedInUserParam, new String[]{});
+	public ContentViewUQ(User loggedInUserParam, WebKitViewContentModelBean webKitViewContentModelBean) {
+		super(loggedInUserParam, new String[]{}, webKitViewContentModelBean);
 	}
 
-	public ContentViewUQ(User loggedInUserParam, String sectionName) {
-		super(loggedInUserParam, new String[]{sectionName});
+	public ContentViewUQ(User loggedInUserParam, String sectionName, WebKitViewContentModelBean webKitViewContentModelBean) {
+		super(loggedInUserParam, new String[]{sectionName}, webKitViewContentModelBean);
 	}
 
 	@Override

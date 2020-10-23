@@ -143,24 +143,8 @@ public abstract class ABaseManagedBean implements Serializable {
 		private String fluidFieldName;
 		private Field.Type fluidFieldColumnType;
 
+		private boolean enabled;
 		private boolean visible;
-
-		/**
-		 *
-		 * @param header
-		 * @param fluidFieldNameParam
-		 * @param fluidFieldColumnTypeParam
-		 */
-		public ColumnModel(
-			String header,
-			String fluidFieldNameParam,
-			Field.Type fluidFieldColumnTypeParam
-		) {
-			this.header = header;
-			this.fluidFieldName = fluidFieldNameParam;
-			this.fluidFieldColumnType = fluidFieldColumnTypeParam;
-			this.visible = true;
-		}
 
 		public String getFluidFieldColumnTypeTxt() {
 			return (this.getFluidFieldColumnType() == null) ? null:
@@ -538,11 +522,6 @@ public abstract class ABaseManagedBean implements Serializable {
 		return returnVal.get();
 	}
 
-	/**
-	 *
-	 * @param paramName
-	 * @return
-	 */
 	protected long getLongRequestParam(String paramName) {
 		Map<String, String> params = getFacesRequestParameterMap();
 		if (params == null || params.isEmpty()) {
@@ -556,11 +535,6 @@ public abstract class ABaseManagedBean implements Serializable {
 		}
 	}
 
-	/**
-	 * 
-	 * @param paramName
-	 * @return
-	 */
 	protected boolean getBooleanRequestParam(String paramName) {
 		Map<String, String> params = getFacesRequestParameterMap();
 
@@ -575,12 +549,6 @@ public abstract class ABaseManagedBean implements Serializable {
 		}
 	}
 
-
-	/**
-	 *
-	 * @param paramName
-	 * @return
-	 */
 	protected int getIntRequestParam(String paramName) {
 		Map<String, String> params = getFacesRequestParameterMap();
 		if (params == null || params.isEmpty()) {
@@ -594,11 +562,6 @@ public abstract class ABaseManagedBean implements Serializable {
 		}
 	}
 
-	/**
-	 * 
-	 * @param paramName
-	 * @return
-	 */
 	protected String getStringRequestParam(String paramName) {
 		Map<String, String> params = getFacesRequestParameterMap();
 		if (params == null || params.isEmpty()) {
@@ -608,18 +571,10 @@ public abstract class ABaseManagedBean implements Serializable {
 		return params.get(paramName);
 	}
 
-	/**
-	 *
-	 * @param pageParam
-	 */
 	protected void redirectToPage(String pageParam) {
 		this.redirectToPage(pageParam, false);
 	}
 
-	/**
-	 *
-	 * @param pageParam
-	 */
 	protected void redirectToPage(String pageParam,boolean isRootParam) {
 		String pagesFolder = "/pages/";
 		if (isRootParam) {

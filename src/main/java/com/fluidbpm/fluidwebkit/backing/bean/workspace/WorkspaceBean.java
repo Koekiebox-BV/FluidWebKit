@@ -15,6 +15,7 @@
 
 package com.fluidbpm.fluidwebkit.backing.bean.workspace;
 
+import com.fluidbpm.fluidwebkit.backing.bean.workspace.contentview.WebKitViewContentModelBean;
 import com.fluidbpm.fluidwebkit.backing.bean.workspace.jv.ContentViewJV;
 import com.fluidbpm.fluidwebkit.backing.bean.workspace.jv.JobViewItemVO;
 import com.fluidbpm.program.api.vo.field.Field;
@@ -27,6 +28,7 @@ import com.fluidbpm.program.api.vo.webkit.viewgroup.WebKitWorkspaceRouteField;
 import com.fluidbpm.ws.client.FluidClientException;
 
 import javax.enterprise.context.SessionScoped;
+import javax.inject.Inject;
 import javax.inject.Named;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -43,6 +45,9 @@ public class WorkspaceBean extends ABaseWorkspaceBean<JobViewItemVO, ContentView
 	public static final String TGM_TABLE_PER_VIEW_SECTION_FORMAT = "%s - %s";
 	public static final String TGM_TABLE_PER_VIEW_SECTION_DEL = " - ";
 	public static final int TGM_TABLE_PER_VIEW_SECTION_DEL_LEN = TGM_TABLE_PER_VIEW_SECTION_DEL.length();
+
+	@Inject
+	private WebKitViewContentModelBean webKitViewContentModelBean;
 
 	@Override
 	public void actionOpenFormForEditingFromWorkspace(
@@ -97,18 +102,19 @@ public class WorkspaceBean extends ABaseWorkspaceBean<JobViewItemVO, ContentView
 						FluidClientException.ErrorCode.FIELD_VALIDATE);
 			}
 
-			ContentViewJV contentViewJV = new ContentViewJV(this.getLoggedInUser(), sections, wkGroup, wkSub);
+			ContentViewJV contentViewJV = new ContentViewJV(
+					this.getLoggedInUser(), sections, wkGroup, wkSub, this.webKitViewContentModelBean);
 			contentViewJV.mapColumnModel();
 			return contentViewJV;
 		} catch (Exception fce) {
 			if (fce instanceof FluidClientException) {
 				FluidClientException casted = (FluidClientException)fce;
 				if (casted.getErrorCode() == FluidClientException.ErrorCode.NO_RESULT) {
-					return new ContentViewJV(this.getLoggedInUser());
+					return new ContentViewJV(this.getLoggedInUser(), this.webKitViewContentModelBean);
 				}
 			}
 			this.raiseError(fce);
-			return new ContentViewJV(this.getLoggedInUser());
+			return new ContentViewJV(this.getLoggedInUser(), this.webKitViewContentModelBean);
 		}
 	}
 

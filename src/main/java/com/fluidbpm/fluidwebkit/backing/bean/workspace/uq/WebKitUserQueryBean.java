@@ -16,6 +16,7 @@
 package com.fluidbpm.fluidwebkit.backing.bean.workspace.uq;
 
 import com.fluidbpm.fluidwebkit.backing.bean.workspace.ABaseWorkspaceBean;
+import com.fluidbpm.fluidwebkit.backing.bean.workspace.contentview.WebKitViewContentModelBean;
 import com.fluidbpm.fluidwebkit.backing.bean.workspace.menu.WebKitMenuBean;
 import com.fluidbpm.program.api.vo.flow.JobView;
 import com.fluidbpm.program.api.vo.item.FluidItem;
@@ -28,6 +29,7 @@ import lombok.Setter;
 
 import javax.annotation.PostConstruct;
 import javax.enterprise.context.SessionScoped;
+import javax.inject.Inject;
 import javax.inject.Named;
 
 /**
@@ -40,6 +42,9 @@ public class WebKitUserQueryBean extends ABaseWorkspaceBean<UserQueryItemVO, Con
 	@Getter
 	@Setter
 	private String emptyMessage;
+
+	@Inject
+	private WebKitViewContentModelBean webKitViewContentModelBean;
 
 	public static final String TGM_TABLE_PER_VIEW_SECTION_FORMAT = "%s - %s";
 	public static final String TGM_TABLE_PER_VIEW_SECTION_DEL = " - ";
@@ -84,7 +89,7 @@ public class WebKitUserQueryBean extends ABaseWorkspaceBean<UserQueryItemVO, Con
 			String userQueryLabel = this.getStringRequestParam(WebKitMenuBean.ReqParam.USER_QUERY_LABEL);
 			Long userQueryId = this.getLongRequestParam(WebKitMenuBean.ReqParam.USER_QUERY_ID);
 
-			ContentViewUQ contentViewUserQuery = new ContentViewUQ(this.getLoggedInUser());
+			ContentViewUQ contentViewUserQuery = new ContentViewUQ(this.getLoggedInUser(), this.webKitViewContentModelBean);
 			contentViewUserQuery.setFluidItemsLazyModel(
 					new WorkspaceUserQueryLDM(this.getFluidClientDS(), userQueryId, userQueryLabel, this));
 			contentViewUserQuery.refreshData(null);
@@ -93,11 +98,11 @@ public class WebKitUserQueryBean extends ABaseWorkspaceBean<UserQueryItemVO, Con
 			if (fce instanceof FluidClientException) {
 				FluidClientException casted = (FluidClientException)fce;
 				if (casted.getErrorCode() == FluidClientException.ErrorCode.NO_RESULT) {
-					return new ContentViewUQ(this.getLoggedInUser());
+					return new ContentViewUQ(this.getLoggedInUser(), this.webKitViewContentModelBean);
 				}
 			}
 			this.raiseError(fce);
-			return new ContentViewUQ(this.getLoggedInUser());
+			return new ContentViewUQ(this.getLoggedInUser(), this.webKitViewContentModelBean);
 		}
 	}
 

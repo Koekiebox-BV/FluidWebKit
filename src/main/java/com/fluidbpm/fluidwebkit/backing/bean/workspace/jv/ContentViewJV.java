@@ -18,6 +18,7 @@ package com.fluidbpm.fluidwebkit.backing.bean.workspace.jv;
 import com.fluidbpm.fluidwebkit.backing.bean.ABaseManagedBean;
 import com.fluidbpm.fluidwebkit.backing.bean.workspace.WorkspaceFluidItem;
 import com.fluidbpm.fluidwebkit.backing.bean.workspace.contentview.ABaseContentView;
+import com.fluidbpm.fluidwebkit.backing.bean.workspace.contentview.WebKitViewContentModelBean;
 import com.fluidbpm.program.api.vo.field.Field;
 import com.fluidbpm.program.api.vo.user.User;
 import com.fluidbpm.program.api.vo.webkit.viewgroup.WebKitViewGroup;
@@ -39,19 +40,32 @@ public class ContentViewJV extends ABaseContentView {
 	@Getter
 	private WebKitViewSub wkSub;
 
+	public static final class SystemField {
+		public static final String DATE_CREATED = "Date Created";
+		public static final String DATE_LAST_UPDATED = "Date Last Updated";
+		public static final String FORM_TYPE = "Form Type";
+		public static final String FLOW = "Flow";
+		public static final String STEP = "Step";
+		public static final String VIEW = "View";
+		public static final String ID = "ID";
+		public static final String TITLE = "Title";
+
+	}
+
 	private Map<String, WorkspaceJobViewLDM> fluidItemsLazyModel = null;
 
-	public ContentViewJV(User loggedInUserParam) {
-		super(loggedInUserParam, new String[]{});
+	public ContentViewJV(User loggedInUserParam, WebKitViewContentModelBean webKitViewContentModelBean) {
+		super(loggedInUserParam, new String[]{}, webKitViewContentModelBean);
 	}
 
 	public ContentViewJV(
 		User loggedInUserParam,
 		List<String> subs,
 		WebKitViewGroup webKitGroup,
-		WebKitViewSub selectedSub
+		WebKitViewSub selectedSub,
+		WebKitViewContentModelBean webKitViewContentModelBean
 	) {
-		super(loggedInUserParam, subs);
+		super(loggedInUserParam, subs, webKitViewContentModelBean);
 		this.wkGroup = webKitGroup;
 		this.wkSub = selectedSub;
 	}
@@ -156,6 +170,66 @@ public class ContentViewJV extends ABaseContentView {
 	@Override
 	public List<ABaseManagedBean.ColumnModel> getColumnHeadersForSection(String sectionAlias) {
 		List<ABaseManagedBean.ColumnModel> returnVal = new ArrayList<>();
+		if (this.wkGroup == null) {
+			return returnVal;
+		}
+
+		//Index - 01 - Title
+		returnVal.add(new ABaseManagedBean.ColumnModel(
+				SystemField.TITLE,
+				SystemField.TITLE,
+				Field.Type.MultipleChoice,
+				this.wkGroup.isShowColumnTitle(),
+				true));
+
+		//Index - 02 - Attachment
+		returnVal.add(new ABaseManagedBean.ColumnModel(
+				this.wkGroup.getAttachmentColumnLabel(),
+				this.wkGroup.getAttachmentColumnLabel(),
+				Field.Type.Label,
+				this.wkGroup.isShowColumnAttachment(),
+				true));
+
+		//Index - 03 - Form Type
+		returnVal.add(new ABaseManagedBean.ColumnModel(
+				SystemField.FORM_TYPE,
+				SystemField.FORM_TYPE,
+				Field.Type.MultipleChoice,
+				this.wkGroup.isShowColumnFormType(),
+				true));
+
+		//Index - 04 - Flow
+		returnVal.add(new ABaseManagedBean.ColumnModel(
+				SystemField.FLOW,
+				SystemField.FLOW,
+				Field.Type.Text,
+				this.wkGroup.isShowColumnCurrentFlow(),
+				true));
+
+		//Index - 05 - Step
+		returnVal.add(new ABaseManagedBean.ColumnModel(
+				SystemField.STEP,
+				SystemField.STEP,
+				Field.Type.Text,
+				this.wkGroup.isShowColumnCurrentStep(),
+				true));
+
+		//Index - 06 - View
+		returnVal.add(new ABaseManagedBean.ColumnModel(
+				SystemField.VIEW,
+				SystemField.VIEW,
+				Field.Type.Text,
+				this.wkGroup.isShowColumnCurrentView(),
+				true));
+
+		//Index - 07 - ID
+		returnVal.add(new ABaseManagedBean.ColumnModel(
+				SystemField.ID,
+				SystemField.ID,
+				Field.Type.Text,
+				this.wkGroup.isShowColumnID(),
+				true));
+
 		if (this.wkSub == null) {
 			return returnVal;
 		}
@@ -165,14 +239,19 @@ public class ContentViewJV extends ABaseContentView {
 		}
 
 		routeFieldsForKit.sort(Comparator.comparing(WebKitWorkspaceRouteField::getFieldOrder));
-		return routeFieldsForKit.stream()
+
+		List<ABaseManagedBean.ColumnModel> returnValCustomRouteFields = routeFieldsForKit.stream()
 				.map(wkField -> {
 					Field field = wkField.getRouteField();
 					return new ABaseManagedBean.ColumnModel(
 							field.getFieldName(),
 							field.getFieldName(),
-							field.getTypeAsEnum());
+							field.getTypeAsEnum(),
+							true,
+							true);
 				})
 				.collect(Collectors.toList());
+		returnVal.addAll(returnValCustomRouteFields);
+		return returnVal;
 	}
 }

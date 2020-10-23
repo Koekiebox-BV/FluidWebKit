@@ -17,6 +17,7 @@ package com.fluidbpm.fluidwebkit.backing.bean.workspace.pi;
 
 import com.fluidbpm.fluidwebkit.backing.bean.workspace.WorkspaceFluidItem;
 import com.fluidbpm.fluidwebkit.backing.bean.workspace.contentview.ABaseContentView;
+import com.fluidbpm.fluidwebkit.backing.bean.workspace.contentview.WebKitViewContentModelBean;
 import com.fluidbpm.program.api.vo.user.User;
 import com.fluidbpm.program.api.vo.webkit.viewgroup.WebKitViewSub;
 import com.fluidbpm.program.api.vo.webkit.viewgroup.WebKitWorkspaceJobView;
@@ -30,8 +31,8 @@ public class ContentViewPI extends ABaseContentView {
 	public static final String PI = "Personal Inventory";
 	public static final String TO_ME = "Sent to Me";//TODO add the others....
 
-	public ContentViewPI(User loggedInUserParam) {
-		super(loggedInUserParam, new String[]{PI});
+	public ContentViewPI(User loggedInUserParam, WebKitViewContentModelBean webKitViewContentModelBean) {
+		super(loggedInUserParam, new String[]{PI}, webKitViewContentModelBean);
 	}
 
 	@Override

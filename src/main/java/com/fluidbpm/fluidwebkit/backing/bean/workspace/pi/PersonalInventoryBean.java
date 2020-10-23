@@ -18,6 +18,7 @@ package com.fluidbpm.fluidwebkit.backing.bean.workspace.pi;
 import com.fluidbpm.fluidwebkit.backing.bean.performance.PerformanceBean;
 import com.fluidbpm.fluidwebkit.backing.bean.workspace.ABaseWorkspaceBean;
 import com.fluidbpm.fluidwebkit.backing.bean.workspace.WorkspaceFluidItem;
+import com.fluidbpm.fluidwebkit.backing.bean.workspace.contentview.WebKitViewContentModelBean;
 import com.fluidbpm.program.api.vo.flow.JobView;
 import com.fluidbpm.program.api.vo.item.FluidItem;
 import com.fluidbpm.program.api.vo.webkit.viewgroup.WebKitViewGroup;
@@ -47,6 +48,9 @@ public class PersonalInventoryBean extends ABaseWorkspaceBean<PersonalInventoryI
 
 	@Inject
 	private PerformanceBean performanceBean;
+
+	@Inject
+	private WebKitViewContentModelBean webKitViewContentModelBean;
 
 	@Override
 	@PostConstruct
@@ -89,18 +93,18 @@ public class PersonalInventoryBean extends ABaseWorkspaceBean<PersonalInventoryI
 			wsFluidItmsMap.put(new WebKitWorkspaceJobView(new JobView(ContentViewPI.PI)), wsFldItms);
 			data.put(new WebKitViewSub(), wsFluidItmsMap);
 
-			ContentViewPI contentViewPI = new ContentViewPI(this.getLoggedInUser());
+			ContentViewPI contentViewPI = new ContentViewPI(this.getLoggedInUser(), this.webKitViewContentModelBean);
 			contentViewPI.refreshData(data);
 			return contentViewPI;
 		} catch (Exception fce) {
 			if (fce instanceof FluidClientException) {
 				FluidClientException casted = (FluidClientException)fce;
 				if (casted.getErrorCode() == FluidClientException.ErrorCode.NO_RESULT) {
-					return new ContentViewPI(this.getLoggedInUser());
+					return new ContentViewPI(this.getLoggedInUser(), this.webKitViewContentModelBean);
 				}
 			}
 			this.raiseError(fce);
-			return new ContentViewPI(this.getLoggedInUser());
+			return new ContentViewPI(this.getLoggedInUser(), this.webKitViewContentModelBean);
 		}
 	}
 

@@ -49,9 +49,6 @@ public abstract class ABaseContentView implements Serializable {
 	//Header and Column Names
 	protected String[] sections;
 
-	@Getter
-	private Map<String, List<ABaseManagedBean.ColumnModel>> columnModels;
-
 	//Initial Data...
 	private Map<String, List<WorkspaceFluidItem>> fluidItemsForSection;
 
@@ -68,16 +65,22 @@ public abstract class ABaseContentView implements Serializable {
 	protected User loggedInUser;
 	private String textToFilterBy;
 
+	protected WebKitViewContentModelBean webKitViewContentModelBean;
+
 	/**
 	 * Base to set logged in user and applicable sections.
 	 * 
 	 * @param loggedInUserParam The currently logged in user.
 	 * @param sectionsParam The list of sections applicable to the view.
 	 */
-	public ABaseContentView(User loggedInUserParam, Collection<String> sectionsParam) {
+	public ABaseContentView(
+			User loggedInUserParam,
+			Collection<String> sectionsParam,
+			WebKitViewContentModelBean webKitViewContentModelBean
+	) {
 		this(loggedInUserParam,
 				sectionsParam == null ? null : sectionsParam.toArray(new String[]{}),
-				null);
+				null, webKitViewContentModelBean);
 	}
 
 	/**
@@ -88,9 +91,10 @@ public abstract class ABaseContentView implements Serializable {
 	 */
 	public ABaseContentView(
 		User loggedInUserParam,
-		String[] sectionsParam
+		String[] sectionsParam,
+		WebKitViewContentModelBean webKitViewContentModelBean
 	) {
-		this(loggedInUserParam, sectionsParam, null);
+		this(loggedInUserParam, sectionsParam, null, webKitViewContentModelBean);
 	}
 
 	/**
@@ -106,9 +110,10 @@ public abstract class ABaseContentView implements Serializable {
 	public ABaseContentView(
 		User loggedInUserParam,
 		Collection<String> sectionsParam,
-		Map<WebKitViewSub, Map<WebKitWorkspaceJobView, List<WorkspaceFluidItem>>> data
+		Map<WebKitViewSub, Map<WebKitWorkspaceJobView, List<WorkspaceFluidItem>>> data,
+		WebKitViewContentModelBean webKitViewContentModelBean
 	) {
-		this(loggedInUserParam, sectionsParam == null ? null : sectionsParam.toArray(new String[]{}), data);
+		this(loggedInUserParam, sectionsParam == null ? null : sectionsParam.toArray(new String[]{}), data, webKitViewContentModelBean);
 	}
 
 	/**
@@ -124,13 +129,14 @@ public abstract class ABaseContentView implements Serializable {
 	public ABaseContentView(
 		User loggedInUserParam,
 		String[] sectionsParam,
-		Map<WebKitViewSub, Map<WebKitWorkspaceJobView, List<WorkspaceFluidItem>>> fluidItemsForViewsParam
+		Map<WebKitViewSub, Map<WebKitWorkspaceJobView, List<WorkspaceFluidItem>>> fluidItemsForViewsParam,
+		WebKitViewContentModelBean webKitViewContentModelBean
 	) {
 		this.loggedInUser = loggedInUserParam;
 		this.sections = sectionsParam;
+		this.webKitViewContentModelBean = webKitViewContentModelBean;
 
 		//Headers for Columns...
-		this.columnModels = new HashMap<>();
 		this.fluidItemsForSection = new HashMap<>();
 		this.fluidItemsForSectionFiltered = new HashMap<>();
 		this.fluidItemsSelectedList = new ArrayList<>();
@@ -144,11 +150,10 @@ public abstract class ABaseContentView implements Serializable {
 		if (this.getSections() != null) {
 			for (String section : this.getSections()) {
 				//Sections Headers...
-				List<ABaseManagedBean.ColumnModel> columnModForSection = this.getColumnHeadersForSection(section);
-				if (columnModForSection != null) {
-					this.columnModels.put(section, columnModForSection);
+				if (this.webKitViewContentModelBean != null) {
+					List<ABaseManagedBean.ColumnModel> columnModForSection = this.getColumnHeadersForSection(section);
+					this.webKitViewContentModelBean.storeModelFor(this.getCategory(), section, columnModForSection);
 				}
-
 				//Placeholder for Filter...
 				this.fluidItemsForSection.put(section, new ArrayList<>());
 			}
@@ -166,47 +171,11 @@ public abstract class ABaseContentView implements Serializable {
 	 */
 	public List<ABaseManagedBean.ColumnModel> getColumnHeadersForSection(String sectionAliasParam) {
 		List<ABaseManagedBean.ColumnModel> returnVal = new ArrayList<>();
-		if (this.getActiveMapBasedOnFilterCriteria() == null) {
-			return returnVal;
-		}
-
-		List<WorkspaceFluidItem> workspaceItemsFromList =
-				this.getActiveMapBasedOnFilterCriteria().get(sectionAliasParam);
-		if (workspaceItemsFromList == null || workspaceItemsFromList.isEmpty()) {
-			return returnVal;
-		}
-
-		workspaceItemsFromList.forEach(itm -> {
-			List<Field> routeFields = itm.getRouteFields();
-			if (routeFields == null || routeFields.isEmpty()) {
-				return;
-			}
-
-			//Iterate the route fields ...
-			routeFields.forEach(routeField -> {
-				if (routeField.getFieldName() == null || routeField.getFieldName().trim().isEmpty()) {
-					return;
-				}
-				String routeFieldNameLowerTrim = routeField.getFieldName().trim().toLowerCase();
-				boolean containsVal = false;
-				for (ABaseManagedBean.ColumnModel returnItem: returnVal) {
-					if (returnItem.getFluidFieldName().trim().toLowerCase().equals(routeFieldNameLowerTrim)) {
-						containsVal = true;
-						break;
-					}
-				}
-
-				if (!containsVal) {
-					returnVal.add(
-							new ABaseManagedBean.ColumnModel(
-									routeField.getFieldName(),
-									routeField.getFieldName(),
-									routeField.getTypeAsEnum()));
-				}
-			});
-		});
-
 		return returnVal;
+	}
+
+	protected String getCategory() {
+		return this.getClass().getName();
 	}
 
 	/**
@@ -755,14 +724,16 @@ public abstract class ABaseContentView implements Serializable {
 			return false;
 		}
 
-		List<ABaseManagedBean.ColumnModel> columnsForSection = this.columnModels.get(sectionRptItem);
+		List<ABaseManagedBean.ColumnModel> columnsForSection = null;
+		if (this.webKitViewContentModelBean != null) {
+			columnsForSection = this.webKitViewContentModelBean.getModelFor(this.getCategory(), sectionRptItem);
+		}
 		if (columnsForSection == null || columnsForSection.isEmpty()) {
 			return false;
 		}
-
 		for (ABaseManagedBean.ColumnModel toCheckAgainst : columnsForSection) {
 			if (toCheckAgainst.getHeader().equals(columnModelParam.getHeader())) {
-				return toCheckAgainst.isVisible();
+				return (toCheckAgainst.isEnabled() && toCheckAgainst.isVisible());
 			}
 		}
 		return true;
@@ -794,5 +765,10 @@ public abstract class ABaseContentView implements Serializable {
 	 */
 	public boolean isRenderActionColumn(String sectionNameParam){
 		return true;
+	}
+
+	public Map<String, List<ABaseManagedBean.ColumnModel>> getColumnModels() {
+		return (this.webKitViewContentModelBean == null) ?
+				null : this.webKitViewContentModelBean.getColumnModels().get(this.getCategory());
 	}
 }
