@@ -145,6 +145,7 @@ public abstract class ABaseManagedBean implements Serializable {
 
 		private boolean enabled;
 		private boolean visible;
+		private boolean filterable;
 
 		public String getFluidFieldColumnTypeTxt() {
 			return (this.getFluidFieldColumnType() == null) ? null:

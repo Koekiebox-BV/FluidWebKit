@@ -32,6 +32,7 @@ import lombok.Getter;
 import javax.enterprise.context.SessionScoped;
 import javax.inject.Named;
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  *
@@ -65,5 +66,21 @@ public class WebKitViewContentModelBean extends ABaseManagedBean {
 
 	public List<ABaseManagedBean.ColumnModel> getModelFor(String category, String sectionAlias) {
 		return this.columnModels.getOrDefault(category, new HashMap<>()).getOrDefault(sectionAlias, new ArrayList<>());
+	}
+
+	public Map<String, List<ABaseManagedBean.ColumnModel>> getColumnModelsFilterable(String category) {
+		Map<String,List<ABaseManagedBean.ColumnModel>> modelMap = this.getColumnModels().get(category);
+		Map<String, List<ABaseManagedBean.ColumnModel>> returnVal = new HashMap<>();
+		modelMap.forEach((key, val) -> {
+			List<ABaseManagedBean.ColumnModel> filterList = modelMap.get(key).stream()
+					.filter(itm -> itm.isEnabled() && itm.isFilterable())
+					.collect(Collectors.toList());
+			if (filterList == null) {
+				filterList = new ArrayList<>();
+			}
+			Collections.sort(filterList, Comparator.comparing(ColumnModel::getFluidFieldName));
+			returnVal.put(key, filterList);
+		});
+		return returnVal;
 	}
 }

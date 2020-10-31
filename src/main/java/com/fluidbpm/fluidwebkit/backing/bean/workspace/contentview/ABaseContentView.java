@@ -17,8 +17,11 @@ package com.fluidbpm.fluidwebkit.backing.bean.workspace.contentview;
 
 import com.fluidbpm.fluidwebkit.backing.bean.ABaseManagedBean;
 import com.fluidbpm.fluidwebkit.backing.bean.workspace.WorkspaceFluidItem;
+import com.fluidbpm.fluidwebkit.backing.utility.RaygunUtil;
+import com.fluidbpm.fluidwebkit.exception.ClientDashboardException;
 import com.fluidbpm.program.api.vo.field.Field;
 import com.fluidbpm.program.api.vo.flow.JobView;
+import com.fluidbpm.program.api.vo.form.Form;
 import com.fluidbpm.program.api.vo.user.User;
 import com.fluidbpm.program.api.vo.webkit.viewgroup.WebKitViewSub;
 import com.fluidbpm.program.api.vo.webkit.viewgroup.WebKitWorkspaceJobView;
@@ -30,6 +33,7 @@ import org.primefaces.model.Visibility;
 import javax.faces.model.SelectItem;
 import java.io.Serializable;
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * Super class for all content view classes.
@@ -60,7 +64,9 @@ public abstract class ABaseContentView implements Serializable {
 	@Setter
 	private List<WorkspaceFluidItem> fluidItemsSelectedList;
 
-	private Map<String,Map<String,String[]>> filterBySelectItemMap;
+	private Map<String, Map<String,String[]>> filterBySelectItemMap;
+	private Map<String,Map<String,String>> filterByTextValueMap;
+	private Map<String,Map<String,Double>> filterByDecimalValueMap;
 
 	protected User loggedInUser;
 	private String textToFilterBy;
@@ -174,7 +180,7 @@ public abstract class ABaseContentView implements Serializable {
 		return returnVal;
 	}
 
-	protected String getCategory() {
+	public String getCategory() {
 		return this.getClass().getName();
 	}
 
@@ -238,11 +244,6 @@ public abstract class ABaseContentView implements Serializable {
 		return toStringed.substring(0, toStringed.length() - 2);
 	}
 
-	/**
-	 *
-	 * @param sectionParam
-	 * @return
-	 */
 	public Map<String, String[]> getSelectItemSelectedMap(String sectionParam) {
 		if (sectionParam == null || sectionParam.trim().isEmpty()) {
 			return new HashMap<>();
@@ -692,11 +693,6 @@ public abstract class ABaseContentView implements Serializable {
 		return headers.get(columnIndexParam);
 	}
 
-	/**
-	 * @param sectionRptItem
-	 * @param indexParam
-	 * @return
-	 */
 	public boolean shouldRenderColumnForSectionAndIndex(
 		String sectionRptItem,
 		int indexParam
@@ -706,18 +702,12 @@ public abstract class ABaseContentView implements Serializable {
 		if (columnModel == null) {
 			return false;
 		}
-
 		return this.shouldRenderColumnForSectionAndModel(sectionRptItem, columnModel);
 	}
 
-	/**
-	 * @param sectionRptItem
-	 * @param columnModelParam
-	 * @return
-	 */
 	public boolean shouldRenderColumnForSectionAndModel(
-			String sectionRptItem,
-			ABaseManagedBean.ColumnModel columnModelParam
+		String sectionRptItem,
+		ABaseManagedBean.ColumnModel columnModelParam
 	) {
 		if (sectionRptItem == null ||
 				(columnModelParam == null || columnModelParam.getHeader() == null)) {
@@ -768,7 +758,102 @@ public abstract class ABaseContentView implements Serializable {
 	}
 
 	public Map<String, List<ABaseManagedBean.ColumnModel>> getColumnModels() {
-		return (this.webKitViewContentModelBean == null) ?
+		Map<String, List<ABaseManagedBean.ColumnModel>> returnVal = (this.webKitViewContentModelBean == null) ?
 				null : this.webKitViewContentModelBean.getColumnModels().get(this.getCategory());
+		if (returnVal != null) {
+			returnVal.forEach((key, val) -> {
+				Collections.sort(val, Comparator.comparing(ABaseManagedBean.ColumnModel::getFluidFieldName));
+			});
+		}
+		return returnVal;
+	}
+
+	public Map<String, List<ABaseManagedBean.ColumnModel>> getColumnModelsEnabled() {
+		Map<String, List<ABaseManagedBean.ColumnModel>> returnVal = this.getColumnModels();
+		Map<String, List<ABaseManagedBean.ColumnModel>> returnValNew = new HashMap<>();
+		if (returnVal != null) {
+			returnVal.forEach((key, val) -> {
+				List<ABaseManagedBean.ColumnModel> enabledOnly = val.stream()
+						.filter(itm -> itm.isEnabled())
+						.collect(Collectors.toList());
+				returnValNew.put(key, enabledOnly);
+			});
+		}
+		return returnValNew;
+	}
+
+	public Map<String, List<ABaseManagedBean.ColumnModel>> getColumnModelsFilterable() {
+		return (this.webKitViewContentModelBean == null) ?
+				null : this.webKitViewContentModelBean.getColumnModelsFilterable(this.getCategory());
+	}
+
+	public Map<String, String> getTextMap(String sectionParam) {
+		if (sectionParam == null || sectionParam.trim().isEmpty()) {
+			new RaygunUtil().raiseErrorToRaygun(
+					new ClientDashboardException("Text: Section name is empty. Not allowed. Returning new Hashmap. ",
+							ClientDashboardException.ErrorCode.ILLEGAL_STATE));
+			return new HashMap<>();
+		}
+
+		if (this.filterByTextValueMap == null) {
+			this.filterByTextValueMap = new HashMap<>();
+		}
+		return this.filterByTextValueMap.get(sectionParam);
+	}
+
+	public Map<String, Double> getDecimalMap(String sectionParam) {
+		if (sectionParam == null || sectionParam.trim().isEmpty()) {
+			new RaygunUtil().raiseErrorToRaygun(
+					new ClientDashboardException("Decimal: Section name is empty. Not allowed. Returning new Hashmap. ",
+							ClientDashboardException.ErrorCode.ILLEGAL_STATE));
+			return new HashMap<>();
+		}
+
+		if (this.filterByDecimalValueMap == null) {
+			this.filterByDecimalValueMap = new HashMap<>();
+		}
+		return this.filterByDecimalValueMap.get(sectionParam);
+	}
+
+	public List<SelectItem> getPossibleCombinationsMapAsSelectItemsFor(String section, String fieldName) {
+		if ((section == null || section.trim().isEmpty()) || (fieldName == null || fieldName.trim().isEmpty())) return new ArrayList<>();
+
+		List<WorkspaceFluidItem> workItemsForSection = this.getWorkspaceFluidItemsForSection(section);
+		if (workItemsForSection == null) return new ArrayList<>();
+
+		Set<String> setOfPossibleOptions = new HashSet<>();
+		workItemsForSection.stream()
+				.filter(itm -> itm.getFieldMap() != null && !itm.getFieldMap().isEmpty())
+				.map(itm -> itm.getFieldMap())
+				.forEach(map -> {
+					Object fieldVal = map.get(fieldName);
+					if (fieldVal == null) return;
+					setOfPossibleOptions.add(fieldVal.toString());
+				});
+		List<SelectItem> returnVal = setOfPossibleOptions.stream()
+				.map(itm -> new SelectItem(itm, itm))
+				.collect(Collectors.toList());
+
+		//Sort by Label...
+		Collections.sort(returnVal, Comparator.comparing(SelectItem::getLabel));
+		return returnVal;
+	}
+
+	public String getSelectItemMultipleLabelForSectionAndField(String sectionParam, String fieldNameParam) {
+		Map<String,String[]> selectedValuesForField = this.getSelectItemSelectedMap(sectionParam);
+		String[] selectedValues = selectedValuesForField.get(fieldNameParam);
+		if (selectedValues == null || selectedValues.length == 0) {
+			return ("-- Not Filtered --");
+		}
+
+		StringBuilder returnVal = new StringBuilder();
+		for (String val : selectedValues) {
+			returnVal.append(val);
+			returnVal.append(",");
+		}
+
+		String toStr = returnVal.toString();
+		String returnValStr = toStr.substring(0,toStr.length() - 1);
+		return returnValStr;
 	}
 }

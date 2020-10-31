@@ -265,6 +265,7 @@ public class WebKitWorkspaceLookAndFeelBean extends ABaseManagedBean {
 				String groupName = groupItm.getJobViewGroupName();
 				this.inputVisibleColumns.put(groupName, VisibleColumnItems.asListFrom(groupItm));
 				this.inputVisibleButtons.put(groupName, VisibleButtonItems.asListFrom(groupItm));
+				this.inputRowExpansions.put(groupItm.getJobViewGroupName(), new HashMap<>());
 
 				List<WebKitViewSub> subsForGroup = groupItm.getWebKitViewSubs();
 				if (subsForGroup == null || subsForGroup.isEmpty()) {
@@ -272,6 +273,7 @@ public class WebKitWorkspaceLookAndFeelBean extends ABaseManagedBean {
 				}
 
 				subsForGroup.forEach(subItm -> {
+					this.inputRowExpansions.get(groupItm.getJobViewGroupName()).put(subItm.getLabel(), new ArrayList<>());
 					String keyForStorage = this.generateGroupSubKey(groupItm.getJobViewGroupName(), subItm.getLabel());
 					List<WebKitWorkspaceJobView> jobViewsToSet = new ArrayList<>();
 					List<WebKitWorkspaceRouteField> fieldsToSet = new ArrayList<>();

@@ -27,6 +27,7 @@ import com.fluidbpm.program.api.vo.webkit.viewgroup.WebKitWorkspaceJobView;
 import com.fluidbpm.program.api.vo.webkit.viewgroup.WebKitWorkspaceRouteField;
 import lombok.Getter;
 
+import javax.faces.model.SelectItem;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -49,7 +50,6 @@ public class ContentViewJV extends ABaseContentView {
 		public static final String VIEW = "View";
 		public static final String ID = "ID";
 		public static final String TITLE = "Title";
-
 	}
 
 	private Map<String, WorkspaceJobViewLDM> fluidItemsLazyModel = null;
@@ -178,8 +178,9 @@ public class ContentViewJV extends ABaseContentView {
 		returnVal.add(new ABaseManagedBean.ColumnModel(
 				SystemField.TITLE,
 				SystemField.TITLE,
-				Field.Type.MultipleChoice,
+				Field.Type.Text,
 				this.wkGroup.isShowColumnTitle(),
+				true,
 				true));
 
 		//Index - 02 - Attachment
@@ -188,7 +189,8 @@ public class ContentViewJV extends ABaseContentView {
 				this.wkGroup.getAttachmentColumnLabel(),
 				Field.Type.Label,
 				this.wkGroup.isShowColumnAttachment(),
-				true));
+				true,
+				false));
 
 		//Index - 03 - Form Type
 		returnVal.add(new ABaseManagedBean.ColumnModel(
@@ -196,30 +198,34 @@ public class ContentViewJV extends ABaseContentView {
 				SystemField.FORM_TYPE,
 				Field.Type.MultipleChoice,
 				this.wkGroup.isShowColumnFormType(),
+				true,
 				true));
 
 		//Index - 04 - Flow
 		returnVal.add(new ABaseManagedBean.ColumnModel(
 				SystemField.FLOW,
 				SystemField.FLOW,
-				Field.Type.Text,
+				Field.Type.MultipleChoice,
 				this.wkGroup.isShowColumnCurrentFlow(),
+				true,
 				true));
 
 		//Index - 05 - Step
 		returnVal.add(new ABaseManagedBean.ColumnModel(
 				SystemField.STEP,
 				SystemField.STEP,
-				Field.Type.Text,
+				Field.Type.MultipleChoice,
 				this.wkGroup.isShowColumnCurrentStep(),
+				true,
 				true));
 
 		//Index - 06 - View
 		returnVal.add(new ABaseManagedBean.ColumnModel(
 				SystemField.VIEW,
 				SystemField.VIEW,
-				Field.Type.Text,
+				Field.Type.MultipleChoice,
 				this.wkGroup.isShowColumnCurrentView(),
+				true,
 				true));
 
 		//Index - 07 - ID
@@ -228,6 +234,7 @@ public class ContentViewJV extends ABaseContentView {
 				SystemField.ID,
 				Field.Type.Text,
 				this.wkGroup.isShowColumnID(),
+				true,
 				true));
 
 		if (this.wkSub == null) {
@@ -243,15 +250,72 @@ public class ContentViewJV extends ABaseContentView {
 		List<ABaseManagedBean.ColumnModel> returnValCustomRouteFields = routeFieldsForKit.stream()
 				.map(wkField -> {
 					Field field = wkField.getRouteField();
+					boolean canFilter = false;
+					switch (field.getTypeAsEnum()) {
+						case Text:
+						case DateTime:
+						case Decimal:
+						case MultipleChoice:
+							canFilter = true;
+					}
+
 					return new ABaseManagedBean.ColumnModel(
 							field.getFieldName(),
 							field.getFieldName(),
 							field.getTypeAsEnum(),
 							true,
-							true);
+							true,
+							canFilter);
 				})
 				.collect(Collectors.toList());
 		returnVal.addAll(returnValCustomRouteFields);
+		return returnVal;
+	}
+
+	public List<SelectItem> getPossibleCombinationsMapAsSelectItemsFor(String section, String fieldName) {
+		if ((section == null || section.trim().isEmpty()) || (fieldName == null || fieldName.trim().isEmpty())) return new ArrayList<>();
+
+		List<WorkspaceFluidItem> workItemsForSection = this.getWorkspaceFluidItemsForSection(section);
+		if (workItemsForSection == null) return new ArrayList<>();
+
+		Set<String> setOfPossibleOptions = new HashSet<>();
+		workItemsForSection.stream()
+				.forEach(itm -> {
+					Map<String, Object> map = itm.getFieldMap();
+					Object fieldVal = (map == null) ? null : map.get(fieldName);
+					if (fieldVal == null) {
+						switch (fieldName) {
+							case SystemField.FORM_TYPE:
+								fieldVal = itm.getFluidItemFormType();
+							break;
+							case SystemField.DATE_CREATED:
+								fieldVal = itm.getFluidItemForm().getDateCreated();
+							break;
+							case SystemField.DATE_LAST_UPDATED:
+								fieldVal = itm.getFluidItemForm().getDateLastUpdated();
+							break;
+							case SystemField.FLOW:
+								fieldVal = itm.getFluidItemFlow();
+							break;
+							case SystemField.STEP:
+								fieldVal = itm.getFluidItemStep();
+							break;
+							case SystemField.VIEW:
+								fieldVal = itm.getFluidItemView();
+							break;
+							case SystemField.TITLE:
+								fieldVal = itm.getFluidItemTitle();
+							break;
+						}
+					}
+					setOfPossibleOptions.add(fieldVal.toString());
+				});
+		List<SelectItem> returnVal = setOfPossibleOptions.stream()
+				.map(itm -> new SelectItem(itm, itm))
+				.collect(Collectors.toList());
+
+		//Sort by Label...
+		Collections.sort(returnVal, Comparator.comparing(SelectItem::getLabel));
 		return returnVal;
 	}
 }

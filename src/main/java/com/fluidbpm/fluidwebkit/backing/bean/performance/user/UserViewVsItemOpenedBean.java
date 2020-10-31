@@ -117,10 +117,6 @@ public class UserViewVsItemOpenedBean extends ABasePerformanceBean {
 		this.mostProductiveView = mostPopView == null || mostPopView.isEmpty() ? UtilGlobal.EMPTY : mostProdView;
 	}
 
-	/**
-	 *
-	 * @return
-	 */
 	public int getOpenAndCompletePercentage() {
 		if(this.openAndCompletePercentage < 0) {
 			return 0;
@@ -128,15 +124,16 @@ public class UserViewVsItemOpenedBean extends ABasePerformanceBean {
 		return this.openAndCompletePercentage;
 	}
 
-	/**
-	 *
-	 * @return
-	 */
 	public String getMostProductiveView() {
 		if (this.mostProductiveView == null || this.mostProductiveView.trim().isEmpty()) {
 			return UtilGlobal.EMPTY;
 		}
 
 		return this.mostProductiveView;
+	}
+
+	public boolean isBubbleChartModelEmpty() {
+		return (this.bubbleChartModel.getData() == null ||
+				this.bubbleChartModel.getData().isEmpty());
 	}
 }

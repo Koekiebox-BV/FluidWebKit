@@ -568,4 +568,8 @@ public abstract class ABaseWorkspaceBean<T extends ABaseWebVO, J extends ABaseCo
 	public void setAreaToUpdateForDialogAfterSubmit(String areaToUpdateForDialogAfterSubmitParam) {
 		this.areaToUpdateForDialogAfterSubmit = areaToUpdateForDialogAfterSubmitParam;
 	}
+
+	public String getCategory() {
+		return this.contentView == null ? null : this.contentView.getCategory();
+	}
 }
