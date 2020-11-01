@@ -60,6 +60,9 @@ public class WebKitAccessBean extends ABaseManagedBean {
 	private List<UserQuery> userQueriesCanExecute;
 
 	@Getter
+	private Map<Long, List<Field>> userQueryFieldMapping = new HashMap<>();
+
+	@Getter
 	private List<JobView> jobViewsCanAccess;
 
 	private boolean cachingDone = false;
@@ -184,6 +187,26 @@ public class WebKitAccessBean extends ABaseManagedBean {
 		if (this.userQueriesCanExecute == null) {
 			this.userQueriesCanExecute = new ArrayList<>();
 		}
+
+		//Run the following asynchronous...
+		String endpoint = this.getFluidClientDS().getEndpoint(),
+				serviceTicket = this.getFluidClientDS().getServiceTicket();
+		List<CompletableFuture> allAsyncs = new ArrayList<>();
+		this.userQueriesCanExecute.forEach(itm -> {
+			CompletableFuture toAdd = CompletableFuture.runAsync(
+					() -> {
+						try (FormFieldClient formFieldClient = new FormFieldClient(endpoint, serviceTicket)) {
+							List<Field> fieldsForUserQuery = formFieldClient.getFormFieldsByUserQuery(itm);
+							synchronized (this.userQueryFieldMapping) {
+								this.userQueryFieldMapping.put(itm.getId(), fieldsForUserQuery);
+							}
+						}
+					});
+			allAsyncs.add(toAdd);
+		});
+		//We are waiting for all of them to complete...
+		CompletableFuture.allOf(allAsyncs.toArray(new CompletableFuture[]{})).join();
+
 		Collections.sort(this.userQueriesCanExecute, Comparator.comparing(UserQuery::getName));
 	}
 
