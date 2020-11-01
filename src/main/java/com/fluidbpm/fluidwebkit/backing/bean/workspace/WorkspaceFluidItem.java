@@ -138,6 +138,13 @@ public class WorkspaceFluidItem extends ABaseFluidVO {
 		return this.baseWeb.getForm().getFormFields();
 	}
 
+	public String getRowId() {
+		return String.format("%d-%d-%d",
+				this.getFluidItemFormId(),
+				this.getFluidItemId(),
+				this.getFluidItemViewId());
+	}
+
 	/**
 	 * Refresh the local {@code fieldMap} based on the {@code FluidItem} route and form fields.
 	 *

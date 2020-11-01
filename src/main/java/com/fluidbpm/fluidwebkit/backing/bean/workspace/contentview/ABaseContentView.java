@@ -19,6 +19,7 @@ import com.fluidbpm.fluidwebkit.backing.bean.ABaseManagedBean;
 import com.fluidbpm.fluidwebkit.backing.bean.workspace.WorkspaceFluidItem;
 import com.fluidbpm.fluidwebkit.backing.utility.RaygunUtil;
 import com.fluidbpm.fluidwebkit.exception.ClientDashboardException;
+import com.fluidbpm.program.api.util.UtilGlobal;
 import com.fluidbpm.program.api.vo.field.Field;
 import com.fluidbpm.program.api.vo.flow.JobView;
 import com.fluidbpm.program.api.vo.form.Form;
@@ -62,11 +63,23 @@ public abstract class ABaseContentView implements Serializable {
 	//Selected...
 	@Getter
 	@Setter
-	private List<WorkspaceFluidItem> fluidItemsSelectedList;
+	private List<WorkspaceFluidItem> fluidItemsSelectedList = new ArrayList<>();
 
+	@Getter
+	@Setter
 	private Map<String, Map<String,String[]>> filterBySelectItemMap;
-	private Map<String,Map<String,String>> filterByTextValueMap;
+
+	@Getter
+	@Setter
+	private Map<String, Map<String, String>> filterByTextValueMap;
+
+	@Getter
+	@Setter
 	private Map<String,Map<String,Double>> filterByDecimalValueMap;
+
+	@Getter
+	@Setter
+	private Map<String,Map<String,Date>> filterByDateValueMap;
 
 	protected User loggedInUser;
 	private String textToFilterBy;
@@ -158,6 +171,8 @@ public abstract class ABaseContentView implements Serializable {
 				//Sections Headers...
 				if (this.webKitViewContentModelBean != null) {
 					List<ABaseManagedBean.ColumnModel> columnModForSection = this.getColumnHeadersForSection(section);
+					this.initInitialFilterFields(section, columnModForSection);
+					this.initSelectItemSelectedMap(section, columnModForSection);
 					this.webKitViewContentModelBean.storeModelFor(this.getCategory(), section, columnModForSection);
 				}
 				//Placeholder for Filter...
@@ -206,25 +221,13 @@ public abstract class ABaseContentView implements Serializable {
 		}
 	}
 
-	/**
-	 *
-	 * @param sectionParam
-	 * @param fieldNameParam
-	 * @return
-	 */
 	public boolean checkIfFieldCurrentlyFiltered(String sectionParam, String fieldNameParam) {
 		String selectedColumns = this.checkListingOfFiltersForSectionAndField(sectionParam, fieldNameParam);
 		return (selectedColumns == null || selectedColumns.trim().isEmpty()) ? false:true;
 	}
 
-	/**
-	 *
-	 * @param sectionParam
-	 * @param fieldNameParam
-	 * @return
-	 */
 	public String checkListingOfFiltersForSectionAndField(String sectionParam, String fieldNameParam) {
-		Map<String, String[]> mappingForSection = this.getSelectItemSelectedMap(sectionParam);
+		Map<String, String[]> mappingForSection = this.filterBySelectItemMap.get(sectionParam);
 		if(mappingForSection == null) {
 			return null;
 		}
@@ -235,7 +238,7 @@ public abstract class ABaseContentView implements Serializable {
 		}
 
 		StringBuilder builder = new StringBuilder();
-		for(String selected : stringSelectedFilters) {
+		for (String selected : stringSelectedFilters) {
 			builder.append(selected);
 			builder.append(", ");
 		}
@@ -244,13 +247,20 @@ public abstract class ABaseContentView implements Serializable {
 		return toStringed.substring(0, toStringed.length() - 2);
 	}
 
-	public Map<String, String[]> getSelectItemSelectedMap(String sectionParam) {
+	public void initSelectItemSelectedMap(
+		String sectionParam,
+		List<ABaseManagedBean.ColumnModel> columnModelForSection
+	) {
 		if (sectionParam == null || sectionParam.trim().isEmpty()) {
-			return new HashMap<>();
+			return;
 		}
 
 		if (this.filterBySelectItemMap == null) {
-			return new HashMap<>();
+			this.filterBySelectItemMap = new HashMap<>();
+		}
+
+		if (true) {
+			return;//TODO @jason, remove this.... To the select items properly...
 		}
 
 		Map<String,String[]> selectedValuesForField = this.filterBySelectItemMap.get(sectionParam);
@@ -270,7 +280,6 @@ public abstract class ABaseContentView implements Serializable {
 		}
 
 		this.filterBySelectItemMap.put(sectionParam, newMapWithNoDups);
-		return this.filterBySelectItemMap.get(sectionParam);
 	}
 
 	/**
@@ -288,19 +297,15 @@ public abstract class ABaseContentView implements Serializable {
 	}
 
 	public String getRemoveButtonMessage() {
-		if (this.hasSelectedItems()) {
-			int size = this.fluidItemsSelectedList.size();
-			return size > 1 ? size + " Items" : "1 Item";
-		}
-		return "Remove";
+		return this.getButtonMessage("Remove");
 	}
 
-	public String getDeleteButtonMessage() {
+	public String getButtonMessage(String action) {
 		if (this.hasSelectedItems()) {
 			int size = this.fluidItemsSelectedList.size();
-			return size > 1 ? size + " Items" : "1 Item";
+			return String.format("%s %d %s", action, size, size > 1 ? "Items" : "Item");
 		}
-		return "Delete";
+		return action;
 	}
 
 	public boolean hasSelectedItems() {
@@ -316,7 +321,7 @@ public abstract class ABaseContentView implements Serializable {
 	 * 
 	 * @see #getTextToFilterBy
 	 */
-	public void actionSetFilteredList() {
+	public void actionSetFilteredList(String selectedSection) {
 		this.fluidItemsForSectionFiltered.clear();
 		if (this.getTextToFilterBy() == null || this.getTextToFilterBy().trim().isEmpty()) {
 			this.fluidItemsForSectionFiltered.putAll(this.fluidItemsForSection);
@@ -325,6 +330,8 @@ public abstract class ABaseContentView implements Serializable {
 		String filterByTextLower = this.getTextToFilterBy().trim().toLowerCase();
 
 		for (String section : this.getSections()) {
+			if (selectedSection != null && !selectedSection.equals(section)) continue;
+
 			List<WorkspaceFluidItem> itemsInSection = null;
 			if (!this.fluidItemsForSection.containsKey(section) ||
 					((itemsInSection = this.fluidItemsForSection.get(section)) == null)
@@ -787,32 +794,45 @@ public abstract class ABaseContentView implements Serializable {
 				null : this.webKitViewContentModelBean.getColumnModelsFilterable(this.getCategory());
 	}
 
-	public Map<String, String> getTextMap(String sectionParam) {
+	public void initInitialFilterFields(
+		String sectionParam,
+		List<ABaseManagedBean.ColumnModel> columnModelForSection
+	) {
+		if (columnModelForSection == null || columnModelForSection.isEmpty()) {
+			return;
+		}
 		if (sectionParam == null || sectionParam.trim().isEmpty()) {
 			new RaygunUtil().raiseErrorToRaygun(
-					new ClientDashboardException("Text: Section name is empty. Not allowed. Returning new Hashmap. ",
+					new ClientDashboardException("Section name is empty. Not allowed. Returning new Hashmap. ",
 							ClientDashboardException.ErrorCode.ILLEGAL_STATE));
-			return new HashMap<>();
+			return;
 		}
 
-		if (this.filterByTextValueMap == null) {
-			this.filterByTextValueMap = new HashMap<>();
-		}
-		return this.filterByTextValueMap.get(sectionParam);
-	}
-
-	public Map<String, Double> getDecimalMap(String sectionParam) {
-		if (sectionParam == null || sectionParam.trim().isEmpty()) {
-			new RaygunUtil().raiseErrorToRaygun(
-					new ClientDashboardException("Decimal: Section name is empty. Not allowed. Returning new Hashmap. ",
-							ClientDashboardException.ErrorCode.ILLEGAL_STATE));
-			return new HashMap<>();
-		}
-
-		if (this.filterByDecimalValueMap == null) {
-			this.filterByDecimalValueMap = new HashMap<>();
-		}
-		return this.filterByDecimalValueMap.get(sectionParam);
+		columnModelForSection.stream()
+				.forEach(itm -> {
+					if (itm.getFluidFieldColumnType() == Field.Type.Text) {//Text
+						if (this.filterByTextValueMap == null) {
+							this.filterByTextValueMap = new HashMap<>();
+						}
+						Map<String, String> fields = this.filterByTextValueMap.getOrDefault(sectionParam, new HashMap<>());
+						fields.put(itm.getFluidFieldName(), UtilGlobal.EMPTY);
+						this.filterByTextValueMap.put(sectionParam, fields);
+					} else if (itm.getFluidFieldColumnType() == Field.Type.Decimal) {//Decimal
+						if (this.filterByDecimalValueMap == null) {
+							this.filterByDecimalValueMap = new HashMap<>();
+						}
+						Map<String, Double> fields = this.filterByDecimalValueMap.getOrDefault(sectionParam, new HashMap<>());
+						fields.put(itm.getFluidFieldName(), null);
+						this.filterByDecimalValueMap.put(sectionParam, fields);
+					} else if (itm.getFluidFieldColumnType() == Field.Type.MultipleChoice) {//Multi Choice
+						if (this.filterBySelectItemMap == null) {
+							this.filterBySelectItemMap = new HashMap<>();
+						}
+						Map<String, String[]> fields = this.filterBySelectItemMap.getOrDefault(sectionParam, new HashMap<>());
+						fields.put(itm.getFluidFieldName(), new String[]{});
+						this.filterBySelectItemMap.put(sectionParam, fields);
+					}
+				});
 	}
 
 	public List<SelectItem> getPossibleCombinationsMapAsSelectItemsFor(String section, String fieldName) {
@@ -840,7 +860,7 @@ public abstract class ABaseContentView implements Serializable {
 	}
 
 	public String getSelectItemMultipleLabelForSectionAndField(String sectionParam, String fieldNameParam) {
-		Map<String,String[]> selectedValuesForField = this.getSelectItemSelectedMap(sectionParam);
+		Map<String,String[]> selectedValuesForField = this.filterBySelectItemMap.get(sectionParam);
 		String[] selectedValues = selectedValuesForField.get(fieldNameParam);
 		if (selectedValues == null || selectedValues.length == 0) {
 			return ("-- Not Filtered --");
@@ -856,4 +876,33 @@ public abstract class ABaseContentView implements Serializable {
 		String returnValStr = toStr.substring(0,toStr.length() - 1);
 		return returnValStr;
 	}
+
+	/**
+	 * Clear the filtered results.
+	 *
+	 * @param selectedSectionParam
+	 */
+	public void actionClearFilteredList(String selectedSectionParam) {
+		this.fluidItemsForSectionFiltered.clear();
+
+		Map<String, String[]> mappingForSection = this.filterBySelectItemMap.get(selectedSectionParam);
+		Set<String> keySet = (mappingForSection == null) ? null : mappingForSection.keySet();
+		if (keySet != null && !keySet.isEmpty()) {
+			for (String fieldName : new ArrayList<>(keySet)) {
+				mappingForSection.put(fieldName, new String[]{});
+			}
+		}
+
+		Map<String, String> mappingForTextSection = this.filterByTextValueMap.get(selectedSectionParam);
+		Set<String> keySetText = (mappingForTextSection == null) ? null : mappingForTextSection.keySet();
+		if (keySetText != null && !keySetText.isEmpty()) {
+			for (String fieldName : new ArrayList<>(keySetText)) {
+				mappingForTextSection.put(fieldName, "");
+			}
+		}
+
+		this.actionSetFilteredList(selectedSectionParam);
+	}
+
+
 }
