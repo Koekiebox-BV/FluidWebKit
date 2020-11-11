@@ -27,6 +27,7 @@ import com.fluidbpm.program.api.vo.userquery.UserQuery;
 import com.fluidbpm.program.api.vo.webkit.WebKitGlobal;
 import com.fluidbpm.program.api.vo.webkit.userquery.WebKitMenuItem;
 import com.fluidbpm.program.api.vo.webkit.userquery.WebKitUserQuery;
+import com.fluidbpm.program.api.vo.webkit.userquery.WebKitUserQueryListing;
 import com.fluidbpm.program.api.vo.webkit.viewgroup.*;
 import com.fluidbpm.ws.client.FluidClientException;
 import com.fluidbpm.ws.client.v1.config.ConfigurationClient;
@@ -215,8 +216,7 @@ public class WebKitWorkspaceLookAndFeelBean extends ABaseManagedBean {
 			this.populateUserQueryMenu();
 
 			try {
-				this.webKitUserQueries =
-						this.getFluidClientDSConfig().getUserQueryClient().getUserQueryWebKit().getListing();
+				this.webKitUserQueries = this.getFluidClientDSConfig().getUserQueryClient().getUserQueryWebKit().getListing();
 				this.userQueryLDM.addToInitialListing(this.webKitUserQueries);
 			} catch (FluidClientException fce) {
 				if (fce.getErrorCode() != FluidClientException.ErrorCode.NO_RESULT) {
@@ -529,7 +529,7 @@ public class WebKitWorkspaceLookAndFeelBean extends ABaseManagedBean {
 
 	public void actionSaveWebKitViewGroups(String dialogToHideAfterSuccess) {
 		try {
-			WebKitViewGroupListing listing = new WebKitViewGroupListing();
+			//View Groups...
 			this.webKitViewGroups.forEach(groupItm -> {
 				String groupName = groupItm.getJobViewGroupName();
 				List<String> visibleColumns = new ArrayList<>();
@@ -548,13 +548,22 @@ public class WebKitWorkspaceLookAndFeelBean extends ABaseManagedBean {
 				}
 				this.updateGroupPropertyBasedOnSelected(visibleColumns, visibleButtons, groupItm);
 			});
+
+			//Global WebKit Config
 			FluidClientDS configDs = this.getFluidClientDSConfig();
 			final ConfigurationClient configurationClient = configDs.getConfigurationClient();
 			configurationClient.upsertConfiguration(WebKitConfigBean.ConfigKey.WebKit, this.webKitGlobal.toString());
 
-			listing.setListing(this.webKitViewGroups);
-			listing.setListingCount(this.webKitViewGroups.size());
-			configDs.getFlowClient().upsertViewGroupWebKit(listing);
+			WebKitViewGroupListing listingVg = new WebKitViewGroupListing();
+			listingVg.setListing(this.webKitViewGroups);
+			listingVg.setListingCount(this.webKitViewGroups.size());
+			configDs.getFlowClient().upsertViewGroupWebKit(listingVg);
+
+			//User Query...
+			WebKitUserQueryListing listingUq = new WebKitUserQueryListing();
+			listingUq.setListing(this.userQueryLDM.getDataListing());
+			listingUq.setListingCount(this.userQueryLDM.getDataListing().size());
+			configDs.getUserQueryClient().upsertUserQueryWebKit(listingUq);
 
 			this.executeJavaScript(String.format("PF('%s').hide();", dialogToHideAfterSuccess));
 			FacesMessage fMsg = new FacesMessage(FacesMessage.SEVERITY_INFO,
@@ -781,6 +790,22 @@ public class WebKitWorkspaceLookAndFeelBean extends ABaseManagedBean {
 					return new SelectItem(userQuery.getId(), userQuery.getName());
 				})
 				.collect(Collectors.toList());
+	}
+
+	public WebKitUserQuery getUserQueryWithName(String userQueryName) {
+		if (userQueryName == null) return null;
+		return this.webKitUserQueries.stream()
+				.filter(itm -> userQueryName.equals(itm.getUserQuery().getName()))
+				.findFirst()
+				.orElse(null);
+	}
+
+	public WebKitUserQuery getUserQueryWithUserQueryId(Long userQueryId) {
+		if (userQueryId == null) return null;
+		return this.webKitUserQueries.stream()
+				.filter(itm -> userQueryId.equals(itm.getUserQuery().getId()))
+				.findFirst()
+				.orElse(null);
 	}
 
 	public String getLabelForUserQueryId(Long userQueryId) {

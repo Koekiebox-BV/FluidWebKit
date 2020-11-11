@@ -71,6 +71,7 @@ public class WebKitViewContentModelBean extends ABaseManagedBean {
 	public Map<String, List<ABaseManagedBean.ColumnModel>> getColumnModelsFilterable(String category) {
 		Map<String,List<ABaseManagedBean.ColumnModel>> modelMap = this.getColumnModels().get(category);
 		Map<String, List<ABaseManagedBean.ColumnModel>> returnVal = new HashMap<>();
+		if (modelMap == null) return returnVal;
 		modelMap.forEach((key, val) -> {
 			List<ABaseManagedBean.ColumnModel> filterList = modelMap.get(key).stream()
 					.filter(itm -> itm.isEnabled() && itm.isFilterable())

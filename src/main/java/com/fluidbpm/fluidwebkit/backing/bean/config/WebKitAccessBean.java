@@ -15,7 +15,6 @@
 package com.fluidbpm.fluidwebkit.backing.bean.config;
 
 import com.fluidbpm.fluidwebkit.backing.bean.ABaseManagedBean;
-import com.fluidbpm.fluidwebkit.backing.utility.Globals;
 import com.fluidbpm.program.api.vo.field.Field;
 import com.fluidbpm.program.api.vo.field.MultiChoice;
 import com.fluidbpm.program.api.vo.flow.JobView;
@@ -66,7 +65,6 @@ public class WebKitAccessBean extends ABaseManagedBean {
 	private List<JobView> jobViewsCanAccess;
 
 	private boolean cachingDone = false;
-
 	static long realtimeCounter = 0;
 	private String loggedInUsername;
 
@@ -86,9 +84,7 @@ public class WebKitAccessBean extends ABaseManagedBean {
 			return;
 		}
 
-		if (this.getFluidClientDS() == null) {
-			return;
-		}
+		if (this.getFluidClientDS() == null) return;
 
 		try {
 			this.loggedInUsername = this.getLoggedInUserUsername();
@@ -132,9 +128,7 @@ public class WebKitAccessBean extends ABaseManagedBean {
 
 		this.getLogger().info("FFC-Bean: PART-1-COMPLETE.");
 		List<Form> allFormDefinitions = formDefinitionClient.getAllByLoggedInUser(true);
-		if (allFormDefinitions == null) {
-			return;
-		}
+		if (allFormDefinitions == null) return;
 
 		this.getLogger().info("FFC-Bean: PART-2-COMPLETE.");
 		long now = System.currentTimeMillis();
@@ -184,13 +178,11 @@ public class WebKitAccessBean extends ABaseManagedBean {
 		UserQueryClient userQueryClient = this.getFluidClientDS().getUserQueryClient();
 		UserQueryListing userQueries = userQueryClient.getAllUserQueriesByLoggedInUser();
 		this.userQueriesCanExecute = userQueries.getListing();
-		if (this.userQueriesCanExecute == null) {
-			this.userQueriesCanExecute = new ArrayList<>();
-		}
+		if (this.userQueriesCanExecute == null) this.userQueriesCanExecute = new ArrayList<>();
 
 		//Run the following asynchronous...
-		String endpoint = this.getFluidClientDS().getEndpoint(),
-				serviceTicket = this.getFluidClientDS().getServiceTicket();
+		String endpoint = this.getFluidClientDSConfig().getEndpoint(),
+				serviceTicket = this.getFluidClientDSConfig().getServiceTicket();
 		List<CompletableFuture> allAsyncs = new ArrayList<>();
 		this.userQueriesCanExecute.forEach(itm -> {
 			CompletableFuture toAdd = CompletableFuture.runAsync(
@@ -223,13 +215,8 @@ public class WebKitAccessBean extends ABaseManagedBean {
 	}
 
 	public List<Field> getFieldsViewableForFormDef(String formDefinitionParam) {
-		if (formDefinitionParam == null || formDefinitionParam.trim().isEmpty()) {
-			return null;
-		}
-
-		if (this.fieldsForViewing == null || this.fieldsForViewing.isEmpty()) {
-			return null;
-		}
+		if (formDefinitionParam == null || formDefinitionParam.trim().isEmpty()) return null;
+		if (this.fieldsForViewing == null || this.fieldsForViewing.isEmpty()) return null;
 
 		return this.fieldsForViewing.get(formDefinitionParam);
 	}
@@ -238,22 +225,12 @@ public class WebKitAccessBean extends ABaseManagedBean {
 			String formDefinitionParam,
 			String formFieldParam
 	) {
-		if (formDefinitionParam == null || formDefinitionParam.trim().isEmpty()) {
-			return null;
-		}
-
-		if (formFieldParam == null || formFieldParam.trim().isEmpty()) {
-			return null;
-		}
-
-		if (this.fieldsForViewing == null || this.fieldsForViewing.isEmpty()) {
-			return null;
-		}
+		if (formDefinitionParam == null || formDefinitionParam.trim().isEmpty()) return null;
+		if (formFieldParam == null || formFieldParam.trim().isEmpty()) return null;
+		if (this.fieldsForViewing == null || this.fieldsForViewing.isEmpty()) return null;
 
 		List<Field> fieldsForFormDef = this.fieldsForViewing.get(formDefinitionParam);
-		if (fieldsForFormDef == null) {
-			return null;
-		}
+		if (fieldsForFormDef == null) return null;
 
 		String paramLowerTrim = formFieldParam.trim().toLowerCase();
 		return fieldsForFormDef.stream()
@@ -264,13 +241,8 @@ public class WebKitAccessBean extends ABaseManagedBean {
 	}
 
 	public List<Field> getFieldsEditableForFormDef(String formDefinitionParam) {
-		if (formDefinitionParam == null || formDefinitionParam.trim().isEmpty()) {
-			return null;
-		}
-
-		if (this.fieldsForEditing == null || this.fieldsForEditing.isEmpty()) {
-			return null;
-		}
+		if (formDefinitionParam == null || formDefinitionParam.trim().isEmpty()) return null;
+		if (this.fieldsForEditing == null || this.fieldsForEditing.isEmpty()) return null;
 
 		return this.fieldsForEditing.get(formDefinitionParam);
 	}
@@ -289,15 +261,14 @@ public class WebKitAccessBean extends ABaseManagedBean {
 	}
 
 	public int getNumberOfUserQueriesCanExecute() {
-		return (this.userQueriesCanExecute == null) ? 0 :
-				this.userQueriesCanExecute.size();
+		return (this.userQueriesCanExecute == null) ? 0 : this.userQueriesCanExecute.size();
 	}
 
 	private void setFieldsForEditAndViewing(
-			FormFieldClient formFieldClientParam,
-			String formNameParam,
-			List<Field> fieldsForViewingParam,
-			List<Field> fieldsForEditingParam
+		FormFieldClient formFieldClientParam,
+		String formNameParam,
+		List<Field> fieldsForViewingParam,
+		List<Field> fieldsForEditingParam
 	) {
 		//View fields...
 		FormFieldListing formFieldViewFields =
@@ -326,23 +297,17 @@ public class WebKitAccessBean extends ABaseManagedBean {
 	}
 
 	private void populateAvailableMultiChoicesForField(FormFieldClient formFieldClientParam, List<Field> fieldsForViewingParam) {
-		if (fieldsForViewingParam == null || fieldsForViewingParam.isEmpty()) {
-			return;
-		}
+		if (fieldsForViewingParam == null || fieldsForViewingParam.isEmpty()) return;
 
 		for (Field fieldToPopulate : fieldsForViewingParam) {
-			if (fieldToPopulate.getTypeAsEnum() != Field.Type.MultipleChoice) {
-				continue;
-			}
+			if (fieldToPopulate.getTypeAsEnum() != Field.Type.MultipleChoice) continue;
 
 			//Get from the id fetch...
 			Field fieldById = formFieldClientParam.getFieldById(fieldToPopulate.getId());
 			MultiChoice fieldMultiChoiceToExtractFrom = (MultiChoice)fieldById.getFieldValue();
 
 			MultiChoice multiChoiceToPopulate = (MultiChoice)fieldToPopulate.getFieldValue();
-			if (multiChoiceToPopulate == null) {
-				multiChoiceToPopulate = new MultiChoice();
-			}
+			if (multiChoiceToPopulate == null) multiChoiceToPopulate = new MultiChoice();
 
 			multiChoiceToPopulate.setAvailableMultiChoices(
 					fieldMultiChoiceToExtractFrom.getAvailableMultiChoices());
@@ -353,24 +318,13 @@ public class WebKitAccessBean extends ABaseManagedBean {
 		}
 	}
 
-	/**
-	 *
-	 * @param formToCheckForParam
-	 * @return
-	 */
 	public boolean isCanUserCreate(String formToCheckForParam) {
-		if (formToCheckForParam == null || formToCheckForParam.trim().isEmpty()){
-			return false;
-		}
+		if (formToCheckForParam == null || formToCheckForParam.trim().isEmpty()) return false;
 
-		if (User.ADMIN_USERNAME.equals(this.getLoggedInUserUsername())) {
-			return true;
-		}
+		if (User.ADMIN_USERNAME.equals(this.getLoggedInUserUsername())) return true;
 
 		List<Form> formDefs = this.getFormDefinitionsCanCreateInstanceOfSorted();
-		if (formDefs == null || formDefs.isEmpty()) {
-			return false;
-		}
+		if (formDefs == null || formDefs.isEmpty()) return false;
 
 		List<String> formDefTitles = formDefs.stream()
 				.map(itm -> itm.getFormType())
@@ -379,18 +333,12 @@ public class WebKitAccessBean extends ABaseManagedBean {
 	}
 
 	public boolean isCanUserAttachmentsView(String formToCheckForParam) {
-		if (formToCheckForParam == null || formToCheckForParam.trim().isEmpty()){
-			return false;
-		}
+		if (formToCheckForParam == null || formToCheckForParam.trim().isEmpty()) return false;
 
-		if (User.ADMIN_USERNAME.equals(this.loggedInUsername)) {
-			return true;
-		}
+		if (User.ADMIN_USERNAME.equals(this.loggedInUsername)) return true;
 
 		List<Form> formDefs = this.getFormDefinitionsAttachmentCanView();
-		if (formDefs == null || formDefs.isEmpty()) {
-			return false;
-		}
+		if (formDefs == null || formDefs.isEmpty()) return false;
 
 		List<String> formDefTitles = formDefs.stream()
 				.map(itm -> itm.getFormType())
@@ -399,18 +347,12 @@ public class WebKitAccessBean extends ABaseManagedBean {
 	}
 
 	public boolean isCanUserAttachmentsEdit(String formToCheckForParam) {
-		if (formToCheckForParam == null || formToCheckForParam.trim().isEmpty()){
-			return false;
-		}
+		if (formToCheckForParam == null || formToCheckForParam.trim().isEmpty()) return false;
 
-		if (User.ADMIN_USERNAME.equals(this.loggedInUsername)) {
-			return true;
-		}
+		if (User.ADMIN_USERNAME.equals(this.loggedInUsername)) return true;
 
 		List<Form> formDefs = this.getFormDefinitionsAttachmentCanEdit();
-		if (formDefs == null || formDefs.isEmpty()) {
-			return false;
-		}
+		if (formDefs == null || formDefs.isEmpty()) return false;
 
 		List<String> formDefTitles = formDefs.stream()
 				.map(itm -> itm.getFormType())
@@ -425,5 +367,25 @@ public class WebKitAccessBean extends ABaseManagedBean {
 	protected List<String> getFormDefsToIgnore() {
 		//TODO need to fetch this from the web kit client...
 		return null;
+	}
+
+	public List<Field> getFormFieldsUserHasVisibilityFor(UserQuery query) {
+		if (query == null) return null;
+		if (this.fieldsForViewing == null || this.fieldsForViewing.isEmpty()) return null;
+
+		List<Field> allForUserQuery = this.userQueryFieldMapping.get(query.getId());
+		if (allForUserQuery == null || allForUserQuery.isEmpty()) return null;
+
+		return allForUserQuery.stream()
+				.filter(usrQueryFieldItm -> {
+					String fieldNameToFetch = usrQueryFieldItm.getFieldName();
+					Field fieldWithName = this.fieldsForViewing.values().stream()
+							.flatMap(Collection::stream)
+							.filter(itm -> itm.getFieldName().equals(fieldNameToFetch))
+							.findFirst()
+							.orElse(null);
+					return fieldWithName != null && fieldWithName.getId() > 0L;
+				})
+				.collect(Collectors.toList());
 	}
 }

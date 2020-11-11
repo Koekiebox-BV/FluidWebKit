@@ -41,9 +41,12 @@ public class ContentViewJV extends ABaseContentView {
 	@Getter
 	private WebKitViewSub wkSub;
 
+	private Map<String, WorkspaceJobViewLDM> fluidItemsLazyModel = null;
+
 	public static final class SystemField {
 		public static final String DATE_CREATED = "Date Created";
 		public static final String DATE_LAST_UPDATED = "Date Last Updated";
+		public static final String DATE_STEP_ENTERED = "Date Step Entered";
 		public static final String FORM_TYPE = "Form Type";
 		public static final String FLOW = "Flow";
 		public static final String STEP = "Step";
@@ -51,8 +54,6 @@ public class ContentViewJV extends ABaseContentView {
 		public static final String ID = "ID";
 		public static final String TITLE = "Title";
 	}
-
-	private Map<String, WorkspaceJobViewLDM> fluidItemsLazyModel = null;
 
 	public ContentViewJV(User loggedInUserParam, WebKitViewContentModelBean webKitViewContentModelBean) {
 		super(loggedInUserParam, new String[]{}, webKitViewContentModelBean);
@@ -174,16 +175,7 @@ public class ContentViewJV extends ABaseContentView {
 			return returnVal;
 		}
 
-		//Index - 01 - Title
-		returnVal.add(new ABaseManagedBean.ColumnModel(
-				SystemField.TITLE,
-				SystemField.TITLE,
-				Field.Type.Text,
-				this.wkGroup.isShowColumnTitle(),
-				true,
-				true));
-
-		//Index - 02 - Attachment
+		//Index - 01 - Attachment
 		returnVal.add(new ABaseManagedBean.ColumnModel(
 				this.wkGroup.getAttachmentColumnLabel(),
 				this.wkGroup.getAttachmentColumnLabel(),
@@ -192,7 +184,25 @@ public class ContentViewJV extends ABaseContentView {
 				true,
 				false));
 
-		//Index - 03 - Form Type
+		//Index - 02 - Title
+		returnVal.add(new ABaseManagedBean.ColumnModel(
+				SystemField.TITLE,
+				SystemField.TITLE,
+				Field.Type.Text,
+				this.wkGroup.isShowColumnTitle(),
+				true,
+				true));
+
+		//Index - 03 - ID
+		returnVal.add(new ABaseManagedBean.ColumnModel(
+				SystemField.ID,
+				SystemField.ID,
+				Field.Type.Text,
+				this.wkGroup.isShowColumnID(),
+				true,
+				true));
+
+		//Index - 04 - Form Type
 		returnVal.add(new ABaseManagedBean.ColumnModel(
 				SystemField.FORM_TYPE,
 				SystemField.FORM_TYPE,
@@ -201,7 +211,7 @@ public class ContentViewJV extends ABaseContentView {
 				true,
 				true));
 
-		//Index - 04 - Flow
+		//Index - 05 - Flow
 		returnVal.add(new ABaseManagedBean.ColumnModel(
 				SystemField.FLOW,
 				SystemField.FLOW,
@@ -210,7 +220,7 @@ public class ContentViewJV extends ABaseContentView {
 				true,
 				true));
 
-		//Index - 05 - Step
+		//Index - 06 - Step
 		returnVal.add(new ABaseManagedBean.ColumnModel(
 				SystemField.STEP,
 				SystemField.STEP,
@@ -219,7 +229,7 @@ public class ContentViewJV extends ABaseContentView {
 				true,
 				true));
 
-		//Index - 06 - View
+		//Index - 07 - View
 		returnVal.add(new ABaseManagedBean.ColumnModel(
 				SystemField.VIEW,
 				SystemField.VIEW,
@@ -228,12 +238,30 @@ public class ContentViewJV extends ABaseContentView {
 				true,
 				true));
 
-		//Index - 07 - ID
+		//Index - 08 - Date Step Entered
 		returnVal.add(new ABaseManagedBean.ColumnModel(
-				SystemField.ID,
-				SystemField.ID,
-				Field.Type.Text,
-				this.wkGroup.isShowColumnID(),
+				SystemField.DATE_STEP_ENTERED,
+				SystemField.DATE_STEP_ENTERED,
+				Field.Type.DateTime,
+				this.wkGroup.isShowColumnStepEntryTime(),
+				true,
+				true));
+
+		//Index - 09 - Date Created
+		returnVal.add(new ABaseManagedBean.ColumnModel(
+				SystemField.DATE_CREATED,
+				SystemField.DATE_CREATED,
+				Field.Type.DateTime,
+				this.wkGroup.isShowColumnDateCreated(),
+				true,
+				true));
+
+		//Index - 10 - Date Last Updated
+		returnVal.add(new ABaseManagedBean.ColumnModel(
+				SystemField.DATE_LAST_UPDATED,
+				SystemField.DATE_LAST_UPDATED,
+				Field.Type.DateTime,
+				this.wkGroup.isShowColumnDateLastUpdated(),
 				true,
 				true));
 
@@ -246,7 +274,6 @@ public class ContentViewJV extends ABaseContentView {
 		}
 
 		routeFieldsForKit.sort(Comparator.comparing(WebKitWorkspaceRouteField::getFieldOrder));
-
 		List<ABaseManagedBean.ColumnModel> returnValCustomRouteFields = routeFieldsForKit.stream()
 				.map(wkField -> {
 					Field field = wkField.getRouteField();
@@ -272,6 +299,7 @@ public class ContentViewJV extends ABaseContentView {
 		return returnVal;
 	}
 
+	@Override
 	public List<SelectItem> getPossibleCombinationsMapAsSelectItemsFor(String section, String fieldName) {
 		if ((section == null || section.trim().isEmpty()) || (fieldName == null || fieldName.trim().isEmpty())) return new ArrayList<>();
 
@@ -292,6 +320,9 @@ public class ContentViewJV extends ABaseContentView {
 								fieldVal = itm.getFluidItemForm().getDateCreated();
 							break;
 							case SystemField.DATE_LAST_UPDATED:
+								fieldVal = itm.getFluidItemForm().getDateLastUpdated();
+							break;
+							case SystemField.DATE_STEP_ENTERED:
 								fieldVal = itm.getFluidItemForm().getDateLastUpdated();
 							break;
 							case SystemField.FLOW:

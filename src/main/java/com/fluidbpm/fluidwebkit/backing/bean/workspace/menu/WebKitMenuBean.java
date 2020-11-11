@@ -512,4 +512,11 @@ public class WebKitMenuBean extends ABaseManagedBean {
 		return this.lookAndFeelBean.getWebKitViewGroups();
 	}
 
+	public WebKitUserQuery getWebKitUserQueryWithName(String userQueryName) {
+		return this.lookAndFeelBean.getUserQueryWithName(userQueryName);
+	}
+
+	public WebKitUserQuery getWebKitUserQueryWithId(Long userQueryId) {
+		return this.lookAndFeelBean.getUserQueryWithUserQueryId(userQueryId);
+	}
 }

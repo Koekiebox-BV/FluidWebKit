@@ -791,7 +791,7 @@ public abstract class ABaseContentView implements Serializable {
 
 	public Map<String, List<ABaseManagedBean.ColumnModel>> getColumnModelsFilterable() {
 		return (this.webKitViewContentModelBean == null) ?
-				null : this.webKitViewContentModelBean.getColumnModelsFilterable(this.getCategory());
+				new HashMap<>() : this.webKitViewContentModelBean.getColumnModelsFilterable(this.getCategory());
 	}
 
 	public void initInitialFilterFields(
@@ -836,27 +836,7 @@ public abstract class ABaseContentView implements Serializable {
 	}
 
 	public List<SelectItem> getPossibleCombinationsMapAsSelectItemsFor(String section, String fieldName) {
-		if ((section == null || section.trim().isEmpty()) || (fieldName == null || fieldName.trim().isEmpty())) return new ArrayList<>();
-
-		List<WorkspaceFluidItem> workItemsForSection = this.getWorkspaceFluidItemsForSection(section);
-		if (workItemsForSection == null) return new ArrayList<>();
-
-		Set<String> setOfPossibleOptions = new HashSet<>();
-		workItemsForSection.stream()
-				.filter(itm -> itm.getFieldMap() != null && !itm.getFieldMap().isEmpty())
-				.map(itm -> itm.getFieldMap())
-				.forEach(map -> {
-					Object fieldVal = map.get(fieldName);
-					if (fieldVal == null) return;
-					setOfPossibleOptions.add(fieldVal.toString());
-				});
-		List<SelectItem> returnVal = setOfPossibleOptions.stream()
-				.map(itm -> new SelectItem(itm, itm))
-				.collect(Collectors.toList());
-
-		//Sort by Label...
-		Collections.sort(returnVal, Comparator.comparing(SelectItem::getLabel));
-		return returnVal;
+		return new ArrayList<>();
 	}
 
 	public String getSelectItemMultipleLabelForSectionAndField(String sectionParam, String fieldNameParam) {
