@@ -1,12 +1,16 @@
 package com.fluidbpm.fluidwebkit.backing.bean.workspace.uq;
 
+import com.fluidbpm.fluidwebkit.backing.bean.workspace.jv.JobViewItemVO;
 import com.fluidbpm.fluidwebkit.backing.vo.ABaseWebVO;
+import com.fluidbpm.program.api.vo.field.Field;
 import com.fluidbpm.program.api.vo.form.Form;
 import com.fluidbpm.program.api.vo.item.FluidItem;
+import com.fluidbpm.program.api.vo.user.User;
 import lombok.Getter;
 import lombok.Setter;
 
 import java.util.Date;
+import java.util.List;
 
 @Getter
 @Setter
@@ -43,5 +47,19 @@ public class UserQueryItemVO extends ABaseWebVO {
 		this.currentUser = (form.getCurrentUser() == null ||
 				form.getCurrentUser().getUsername().trim().isEmpty()) ? "[None]" :
 				form.getCurrentUser().getUsername();
+	}
+
+
+	public UserQueryItemVO cloneVO(
+			FluidItem fluidItem,
+			List<Field> fieldsViewable,
+			List<Field> fieldsEditable,
+			List<User> allUsers
+	) {
+		UserQueryItemVO returnVal = new UserQueryItemVO(fluidItem);
+		returnVal.setFieldsViewable(fieldsViewable);
+		returnVal.setFieldsEditable(fieldsEditable);
+		returnVal.setAllUsers(allUsers);
+		return returnVal;
 	}
 }

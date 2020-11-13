@@ -101,7 +101,7 @@ public class ContentViewJV extends ABaseContentView {
 		} else if (this.wkGroup.isTGMTablePerView()) {
 			int indexOfSeparator = sectionParam.indexOf(TGM_TABLE_PER_VIEW_SECTION_DEL);
 			if (indexOfSeparator > -1) {
-				String subLabel = sectionParam.substring(0,indexOfSeparator),
+				String subLabel = sectionParam.substring(0, indexOfSeparator),
 						viewName = sectionParam.substring(indexOfSeparator + TGM_TABLE_PER_VIEW_SECTION_DEL_LEN);
 				List<WorkspaceFluidItem> returnVal = new ArrayList<>();
 				data.forEach((sub, viewMap) -> {

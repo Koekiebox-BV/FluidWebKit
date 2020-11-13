@@ -60,10 +60,7 @@ public class PersonalInventoryBean extends ABaseWorkspaceBean<PersonalInventoryI
 	}
 
 	@Override
-	public void actionOpenFormForEditingFromWorkspace(
-		JobView fromView,
-		Long formIdToUpdateParam
-	) {
+	public void actionOpenForm(WorkspaceFluidItem workspaceFluidItem) {
 		//Do nothing...
 	}
 

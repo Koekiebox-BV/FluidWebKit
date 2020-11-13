@@ -83,10 +83,6 @@ public class WebKitWorkspaceLookAndFeelBean extends ABaseManagedBean {
 	@Setter
 	private Map<String, List<String>> inputVisibleButtons;
 
-	@Getter
-	@Setter
-	private Map<String, Map<String, List<String>>> inputRowExpansions;
-
 	private WebKitGlobal webKitGlobal;
 
 	//User Query related objects...
@@ -198,7 +194,6 @@ public class WebKitWorkspaceLookAndFeelBean extends ABaseManagedBean {
 		this.groupToRouteFieldMapping = new HashMap<>();
 		this.inputVisibleColumns = new HashMap<>();
 		this.inputVisibleButtons = new HashMap<>();
-		this.inputRowExpansions = new HashMap<>();
 		this.webKitUserQueries = new ArrayList<>();
 		this.userQueryLDM = new WebKitWorkspaceUserQueryLDM();
 		this.setDialogHeaderTitle("Workspace - Look & Feel");
@@ -265,7 +260,6 @@ public class WebKitWorkspaceLookAndFeelBean extends ABaseManagedBean {
 				String groupName = groupItm.getJobViewGroupName();
 				this.inputVisibleColumns.put(groupName, VisibleColumnItems.asListFrom(groupItm));
 				this.inputVisibleButtons.put(groupName, VisibleButtonItems.asListFrom(groupItm));
-				this.inputRowExpansions.put(groupItm.getJobViewGroupName(), new HashMap<>());
 
 				List<WebKitViewSub> subsForGroup = groupItm.getWebKitViewSubs();
 				if (subsForGroup == null || subsForGroup.isEmpty()) {
@@ -273,7 +267,6 @@ public class WebKitWorkspaceLookAndFeelBean extends ABaseManagedBean {
 				}
 
 				subsForGroup.forEach(subItm -> {
-					this.inputRowExpansions.get(groupItm.getJobViewGroupName()).put(subItm.getLabel(), new ArrayList<>());
 					String keyForStorage = this.generateGroupSubKey(groupItm.getJobViewGroupName(), subItm.getLabel());
 					List<WebKitWorkspaceJobView> jobViewsToSet = new ArrayList<>();
 					List<WebKitWorkspaceRouteField> fieldsToSet = new ArrayList<>();

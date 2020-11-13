@@ -65,9 +65,7 @@ public class AttachmentBean extends ABaseManagedBean {
 
 	public List<Attachment> actionFetchAttachmentsForForm(Form form) {
 		try {
-			if (this.getFluidClientDS() == null || form == null) {
-				return null;
-			}
+			if (this.getFluidClientDS() == null || form == null) return null;
 
 			List<Attachment> attachments = this.attachmentCache.getIfPresent(form.getId());
 			if (attachments != null) {
@@ -114,8 +112,8 @@ public class AttachmentBean extends ABaseManagedBean {
 		StringBuffer buffer = new StringBuffer();
 		String postFix = String.format(
 				"/get_form_image?formId=%d&formDefinition=%s&thumbnailScale=%d",
-				wfItem.getFluidItemFormId(),
-				wfItem.getFluidItemFormTypeURLSafe(),
+				wfItem == null ? null : wfItem.getFluidItemFormId(),
+				wfItem == null ? null : wfItem.getFluidItemFormTypeURLSafe(),
 				thumbnailScale);
 		buffer.append(postFix);
 		String returnVal = buffer.toString();

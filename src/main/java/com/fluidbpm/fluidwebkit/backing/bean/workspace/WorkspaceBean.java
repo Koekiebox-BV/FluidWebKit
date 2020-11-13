@@ -50,11 +50,8 @@ public class WorkspaceBean extends ABaseWorkspaceBean<JobViewItemVO, ContentView
 	private WebKitViewContentModelBean webKitViewContentModelBean;
 
 	@Override
-	public void actionOpenFormForEditingFromWorkspace(
-		JobView fromView,
-		Long formIdToUpdateParam
-	) {
-		//Do nothing...
+	public void actionOpenForm(WorkspaceFluidItem workspaceFluidItem) {
+		this.openFormBean.actionFreshLoadFormAndSet(workspaceFluidItem);
 	}
 
 	@Override

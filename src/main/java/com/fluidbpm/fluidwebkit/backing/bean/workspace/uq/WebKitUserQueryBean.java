@@ -17,6 +17,7 @@ package com.fluidbpm.fluidwebkit.backing.bean.workspace.uq;
 
 import com.fluidbpm.fluidwebkit.backing.bean.config.WebKitAccessBean;
 import com.fluidbpm.fluidwebkit.backing.bean.workspace.ABaseWorkspaceBean;
+import com.fluidbpm.fluidwebkit.backing.bean.workspace.WorkspaceFluidItem;
 import com.fluidbpm.fluidwebkit.backing.bean.workspace.contentview.WebKitViewContentModelBean;
 import com.fluidbpm.fluidwebkit.backing.bean.workspace.lf.WebKitWorkspaceLookAndFeelBean;
 import com.fluidbpm.fluidwebkit.backing.bean.workspace.menu.WebKitMenuBean;
@@ -72,10 +73,7 @@ public class WebKitUserQueryBean extends ABaseWorkspaceBean<UserQueryItemVO, Con
 	}
 
 	@Override
-	public void actionOpenFormForEditingFromWorkspace(
-			JobView fromView,
-			Long formIdToUpdateParam
-	) {
+	public void actionOpenForm(WorkspaceFluidItem workspaceFluidItem) {
 		//Do nothing...
 	}
 

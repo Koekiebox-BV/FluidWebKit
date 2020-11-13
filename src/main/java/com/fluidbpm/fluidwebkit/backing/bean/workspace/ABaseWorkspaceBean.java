@@ -17,6 +17,7 @@ package com.fluidbpm.fluidwebkit.backing.bean.workspace;
 
 import com.fluidbpm.fluidwebkit.backing.bean.ABaseManagedBean;
 import com.fluidbpm.fluidwebkit.backing.bean.workspace.contentview.ABaseContentView;
+import com.fluidbpm.fluidwebkit.backing.bean.workspace.form.WebKitOpenFormConversationBean;
 import com.fluidbpm.fluidwebkit.backing.bean.workspace.menu.WebKitMenuBean;
 import com.fluidbpm.fluidwebkit.backing.utility.Globals;
 import com.fluidbpm.fluidwebkit.backing.vo.ABaseWebVO;
@@ -72,6 +73,9 @@ public abstract class ABaseWorkspaceBean<T extends ABaseWebVO, J extends ABaseCo
 	protected OpenPageLastCache openPageLastCache;
 
 	private String areaToUpdateForDialogAfterSubmit;
+
+	@Inject
+	protected WebKitOpenFormConversationBean openFormBean;
 
 	@Inject
 	protected WebKitMenuBean webKitMenuBean;
@@ -230,6 +234,11 @@ public abstract class ABaseWorkspaceBean<T extends ABaseWebVO, J extends ABaseCo
 	 * oncomplete="PF('panelToClose').close();"
 	 */
 	public void actionCloseOpenForm() {
+		if (this.openFormBean != null) {
+			this.openFormBean.endConversation();
+		}
+
+		this.currentlyHaveItemOpen = false;
 		this.actionOpenMainPage();
 	}
 
@@ -237,9 +246,9 @@ public abstract class ABaseWorkspaceBean<T extends ABaseWebVO, J extends ABaseCo
 	 * Open an 'Form' for editing or viewing.
 	 * Custom functionality needs to be placed in {@code this#actionOpenFormForEditingFromWorkspace}.
 	 *
-	 * @see this#actionOpenFormForEditingFromWorkspace(JobView, Long)
+	 * @see this#actionOpenForm(WorkspaceFluidItem)
 	 */
-	public void actionOpenFormForEditingFromWorkspace() {
+	public void actionOpenFormForEditingFromWorkspace(WorkspaceFluidItem workspaceFluidItem) {
 		this.setAreaToUpdateForDialogAfterSubmit(null);
 		this.currentlyHaveItemOpen = false;
 
@@ -248,7 +257,8 @@ public abstract class ABaseWorkspaceBean<T extends ABaseWebVO, J extends ABaseCo
 		JobView fromView = this.getJobViewFromListingWithId(this.viewsAll, openedFromViewId);
 
 		try {
-			this.actionOpenFormForEditingFromWorkspace(fromView, formIdToUpdate);
+			this.openFormBean.startConversation();
+			this.actionOpenForm(workspaceFluidItem);
 			this.currentlyHaveItemOpen = true;
 		} catch (Exception except) {
 			this.raiseError(except);
@@ -258,14 +268,8 @@ public abstract class ABaseWorkspaceBean<T extends ABaseWebVO, J extends ABaseCo
 	/**
 	 * Custom functionality for when a Form is clicked on to be opened.
 	 * Open an 'Form' for editing or viewing.
-	 *
-	 * @param fromView Opened from view.
-	 * @param formIdToUpdateParam Form ID to update.
 	 */
-	public abstract void actionOpenFormForEditingFromWorkspace(
-		JobView fromView,
-		Long formIdToUpdateParam
-	);
+	public abstract void actionOpenForm(WorkspaceFluidItem workspaceFluidItem);
 
 	public String actionOpenMainPageNonAjax() {
 		this.actionOpenMainPage();
@@ -494,12 +498,9 @@ public abstract class ABaseWorkspaceBean<T extends ABaseWebVO, J extends ABaseCo
 	 * @see JobView
 	 */
 	protected JobView getJobViewFromListingWithId(List<JobView> jobViewsParam, Long idToGetParam) {
-		if (idToGetParam == null) {
-			return null;
-		}
-		if (jobViewsParam == null || jobViewsParam.isEmpty()) {
-			return null;
-		}
+		if (idToGetParam == null) return null;
+
+		if (jobViewsParam == null || jobViewsParam.isEmpty()) return null;
 
 		return jobViewsParam.stream()
 				.filter(itm -> idToGetParam.equals(itm.getId()))

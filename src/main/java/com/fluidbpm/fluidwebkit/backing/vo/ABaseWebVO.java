@@ -33,7 +33,7 @@ import java.util.List;
  * @author jasonbruwer on 2018-06-02
  * @since 1.0
  */
-public class ABaseWebVO implements Serializable {
+public abstract class ABaseWebVO implements Serializable {
 	private FluidItem fluidItem;
 
 	@Getter
@@ -56,111 +56,59 @@ public class ABaseWebVO implements Serializable {
 	@Setter
 	private List<User> allUsers;
 
-	/**
-	 * Default constructor.
-	 */
 	public ABaseWebVO() {
 		super();
 		this.justReviewed = false;
 	}
 
-	/**
-	 * 
-	 * @param fluidItmParam
-	 */
 	public ABaseWebVO(FluidItem fluidItmParam) {
 		super();
 		this.fluidItem = fluidItmParam;
 	}
 
-	/**
-	 *
-	 * @param fieldsViewableParam
-	 * @param fieldsEditableParam
-	 */
 	public ABaseWebVO(List<Field> fieldsViewableParam, List<Field> fieldsEditableParam) {
 		this();
 		this.fieldsViewable = fieldsViewableParam;
 		this.fieldsEditable = fieldsEditableParam;
 	}
 
-	/**
-	 *
-	 * @return
-	 */
 	public Form getForm() {
 		return (this.fluidItem == null) ? null : this.fluidItem.getForm();
 	}
 
-	/**
-	 * @return
-	 */
 	public FluidItem getFluidItem() {
 		return this.fluidItem;
 	}
 
-	/**
-	 * 
-	 * @return
-	 */
 	public boolean isFieldsViewableEmpty() {
 		return (this.fieldsViewable == null ||
 				this.fieldsViewable.isEmpty());
 	}
 
-	/**
-	 * 
-	 * @return
-	 */
 	public boolean isFieldsEditableEmpty() {
 		return (this.fieldsEditable == null || this.fieldsEditable.isEmpty());
 	}
 
-	/**
-	 *
-	 * @param fieldNameParam
-	 * @return
-	 */
 	public Field getFieldViewableWithName(String fieldNameParam) {
-		if (fieldNameParam == null || fieldNameParam.trim().isEmpty()) {
-			return null;
-		}
+		if (fieldNameParam == null || fieldNameParam.trim().isEmpty()) return null;
 
-		if (this.getFieldsViewable() == null || this.getFieldsViewable().isEmpty()) {
-			return null;
-		}
+		if (this.getFieldsViewable() == null || this.getFieldsViewable().isEmpty()) return null;
 
 		for (Field toCheck : this.getFieldsViewable()) {
-			if(toCheck.getFieldName() == null || toCheck.getFieldName().trim().isEmpty()) {
-				continue;
-			}
+			if (toCheck.getFieldName() == null || toCheck.getFieldName().trim().isEmpty()) continue;
 
-			if (fieldNameParam.equals(toCheck.getFieldName())) {
-				return toCheck;
-			}
+			if (fieldNameParam.equals(toCheck.getFieldName())) return toCheck;
 		}
-
 		return null;
 	}
 
-	/**
-	 *
-	 * @param fieldNameParam
-	 * @return
-	 */
 	public boolean isFieldViewable(String fieldNameParam) {
 		Field fieldWithName = this.getFieldWithName(
 				this.fieldsViewable,
 				fieldNameParam);
-
 		return (fieldWithName == null) ? false:true;
 	}
 
-	/**
-	 *
-	 * @param fieldNameParam
-	 * @return
-	 */
 	public boolean isFieldEditable(String fieldNameParam) {
 		Field fieldWithName = this.getFieldWithName(
 				this.fieldsEditable,
@@ -169,77 +117,47 @@ public class ABaseWebVO implements Serializable {
 		return (fieldWithName == null) ? false:true;
 	}
 
-	/**
-	 *
-	 * @param listToCheckParam
-	 * @param fieldNameParam
-	 * @return
-	 */
 	protected Field getFieldWithName(List<Field> listToCheckParam, String fieldNameParam) {
-		if (fieldNameParam == null || fieldNameParam.isEmpty()) {
-			return null;
-		}
+		if (fieldNameParam == null || fieldNameParam.isEmpty()) return null;
 
-		if (listToCheckParam == null || listToCheckParam.isEmpty()) {
-			return null;
-		}
+		if (listToCheckParam == null || listToCheckParam.isEmpty()) return null;
 
 		for (Field viewableField : listToCheckParam) {
-			if (fieldNameParam.equals(viewableField.getFieldName())) {
-				return viewableField;
-			}
+			if (fieldNameParam.equals(viewableField.getFieldName())) return viewableField;
 		}
 
 		return null;
 	}
 
-	/**
-	 * 
-	 * @param selectableItemParam
-	 * @return
-	 */
 	protected List<SelectItem> convertToSelectItems(List<String> selectableItemParam) {
-		if (selectableItemParam == null) {
-			return null;
-		}
+		if (selectableItemParam == null) return null;
 
 		List<SelectItem> returnVal = new ArrayList<>();
-		for (String availChoice : selectableItemParam) {
-			returnVal.add(new SelectItem(availChoice, availChoice));
-		}
+		for (String availChoice : selectableItemParam) returnVal.add(new SelectItem(availChoice, availChoice));
 
 		return returnVal;
 	}
 
-	/**
-	 *
-	 * @return
-	 */
 	public String getOpenModeMessage() {
 		return this.openModeMessage;
 	}
 
-	/**
-	 *
-	 * @param openModeMessageParam
-	 */
 	public void setOpenModeMessage(String openModeMessageParam) {
 		this.openModeMessage = openModeMessageParam;
 	}
 
-	/**
-	 *
-	 * @return
-	 */
 	public Long getAssignedUserId() {
 		return this.assignedUserId;
 	}
 
-	/**
-	 *
-	 * @param assignedUserIdParam
-	 */
 	public void setAssignedUserId(Long assignedUserIdParam) {
 		this.assignedUserId = assignedUserIdParam;
 	}
+
+	public abstract ABaseWebVO cloneVO(
+		FluidItem fluidItem,
+		List<Field> fieldsViewable,
+		List<Field> fieldsEditable,
+		List<User> allUsers
+	);
 }
