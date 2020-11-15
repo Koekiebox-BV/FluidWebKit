@@ -24,6 +24,7 @@ import com.fluidbpm.program.api.vo.config.ConfigurationListing;
 import com.fluidbpm.program.api.vo.field.Field;
 import com.fluidbpm.program.api.vo.flow.JobView;
 import com.fluidbpm.program.api.vo.userquery.UserQuery;
+import com.fluidbpm.program.api.vo.webkit.WebKitForm;
 import com.fluidbpm.program.api.vo.webkit.WebKitGlobal;
 import com.fluidbpm.program.api.vo.webkit.userquery.WebKitMenuItem;
 import com.fluidbpm.program.api.vo.webkit.userquery.WebKitUserQuery;
@@ -89,12 +90,20 @@ public class WebKitWorkspaceLookAndFeelBean extends ABaseManagedBean {
 	@Getter
 	@Setter
 	private TreeNode treeNodeUserQueryMenuRoot;
-
 	private List<WebKitUserQuery> webKitUserQueries;
 
 	@Getter
 	@Setter
 	private WebKitWorkspaceUserQueryLDM userQueryLDM;
+
+	//Form Definitions...
+	@Getter
+	@Setter
+	private List<WebKitForm> webKitForms;
+
+	@Getter
+	@Setter
+	private WebKitWorkspaceFormDefinitionLDM formDefinitionLDM;
 
 	//Inputs....
 	@Getter
@@ -195,15 +204,15 @@ public class WebKitWorkspaceLookAndFeelBean extends ABaseManagedBean {
 		this.inputVisibleColumns = new HashMap<>();
 		this.inputVisibleButtons = new HashMap<>();
 		this.webKitUserQueries = new ArrayList<>();
+		this.webKitForms = new ArrayList<>();
 		this.userQueryLDM = new WebKitWorkspaceUserQueryLDM();
+		this.formDefinitionLDM = new WebKitWorkspaceFormDefinitionLDM();
 		this.setDialogHeaderTitle("Workspace - Look & Feel");
 		try {
 			try {
 				this.webKitViewGroups = this.getFluidClientDSConfig().getFlowClient().getViewGroupWebKit().getListing();
 			} catch (FluidClientException fce) {
-				if (fce.getErrorCode() != FluidClientException.ErrorCode.NO_RESULT) {
-					throw fce;
-				}
+				if (fce.getErrorCode() != FluidClientException.ErrorCode.NO_RESULT) throw fce;
 				return;
 			}
 
@@ -214,9 +223,14 @@ public class WebKitWorkspaceLookAndFeelBean extends ABaseManagedBean {
 				this.webKitUserQueries = this.getFluidClientDSConfig().getUserQueryClient().getUserQueryWebKit().getListing();
 				this.userQueryLDM.addToInitialListing(this.webKitUserQueries);
 			} catch (FluidClientException fce) {
-				if (fce.getErrorCode() != FluidClientException.ErrorCode.NO_RESULT) {
-					throw fce;
-				}
+				if (fce.getErrorCode() != FluidClientException.ErrorCode.NO_RESULT) throw fce;
+			}
+
+			try {
+				this.webKitForms = this.getFluidClientDSConfig().getFormDefinitionClient().getAllFormWebKits();
+				this.formDefinitionLDM.addToInitialListing(this.webKitForms);
+			} catch (FluidClientException fce) {
+				if (fce.getErrorCode() != FluidClientException.ErrorCode.NO_RESULT) throw fce;
 			}
 
 			this.allJobViews = this.getFluidClientDSConfig().getFlowStepClient().getJobViewsByLoggedInUser().getListing();
@@ -243,9 +257,7 @@ public class WebKitWorkspaceLookAndFeelBean extends ABaseManagedBean {
 				try {
 					routeFieldsForGroup = routeFieldClient.getFieldsByViewGroup(new WebKitViewGroup(key)).getListing();
 				} catch (FluidClientException fce) {
-					if (fce.getErrorCode() != FluidClientException.ErrorCode.NO_RESULT) {
-						throw fce;
-					}
+					if (fce.getErrorCode() != FluidClientException.ErrorCode.NO_RESULT) throw fce;
 				}
 				this.groupToRouteFieldMapping.put(key, routeFieldsForGroup);
 			});
@@ -810,5 +822,13 @@ public class WebKitWorkspaceLookAndFeelBean extends ABaseManagedBean {
 				.map(itm -> itm.getUserQuery().getName())
 				.findFirst()
 				.orElse("[Missing]");
+	}
+
+	public WebKitForm getWebKitFormWithFormDef(String formDefType) {
+		if (formDefType == null) return null;
+		return this.webKitForms.stream()
+				.filter(itm -> formDefType.equals(itm.getForm().getFormType()))
+				.findFirst()
+				.orElse(null);
 	}
 }

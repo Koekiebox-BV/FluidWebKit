@@ -3,10 +3,11 @@ package com.fluidbpm.fluidwebkit.backing.bean.workspace.form;
 import com.fluidbpm.fluidwebkit.backing.bean.ABaseManagedBean;
 import com.fluidbpm.fluidwebkit.backing.bean.config.WebKitAccessBean;
 import com.fluidbpm.fluidwebkit.backing.bean.workspace.WorkspaceFluidItem;
+import com.fluidbpm.fluidwebkit.backing.bean.workspace.lf.WebKitWorkspaceLookAndFeelBean;
 import com.fluidbpm.program.api.vo.field.Field;
-import com.fluidbpm.program.api.vo.flow.JobView;
 import com.fluidbpm.program.api.vo.form.Form;
 import com.fluidbpm.program.api.vo.item.FluidItem;
+import com.fluidbpm.program.api.vo.webkit.WebKitForm;
 import com.fluidbpm.ws.client.v1.flowitem.FlowItemClient;
 import com.fluidbpm.ws.client.v1.form.FormContainerClient;
 import lombok.Getter;
@@ -15,6 +16,8 @@ import lombok.Setter;
 import javax.annotation.PostConstruct;
 import javax.enterprise.context.Conversation;
 import javax.enterprise.context.ConversationScoped;
+import javax.faces.application.FacesMessage;
+import javax.faces.context.FacesContext;
 import javax.inject.Inject;
 import javax.inject.Named;
 import java.util.List;
@@ -29,10 +32,13 @@ public class WebKitOpenFormConversationBean extends ABaseManagedBean {
 
 	@Getter
 	@Setter
-	private WorkspaceFluidItem workspaceFluidItem;
+	private WorkspaceFluidItem wsFluidItem;
 
 	@Inject
 	private WebKitAccessBean accessBean;
+
+	@Inject
+	private WebKitWorkspaceLookAndFeelBean lookAndFeelBean;
 
 	@PostConstruct
 	public void init() {
@@ -63,26 +69,50 @@ public class WebKitOpenFormConversationBean extends ABaseManagedBean {
 	}
 
 	public void actionFreshLoadFormAndSet(WorkspaceFluidItem wfiParam) {
-		this.setWorkspaceFluidItem(null);
+		this.setDialogHeaderTitle(null);
+		this.setWsFluidItem(null);
 		if (wfiParam == null) return;
+		if (this.getFluidClientDS() == null) return;
+
 		try {
 			String formType = wfiParam.getFluidItemFormType();
+			this.setDialogHeaderTitle(wfiParam.getFluidItemTitle());
+
+			WebKitForm webKitForm = this.lookAndFeelBean.getWebKitFormWithFormDef(formType);
 			List<Field> editable = this.accessBean.getFieldsEditableForFormDef(formType);
 			List<Field> viewable = this.accessBean.getFieldsViewableForFormDef(formType);
 
 			FormContainerClient fcClient = this.getFluidClientDS().getFormContainerClient();
 
 			FluidItem fluidItem = new FluidItem();
-			if (wfiParam.getFluidItemId() != null && wfiParam.getFluidItemId().longValue() > 0) {
+			if (wfiParam.isFluidItemInWIPState()) {
 				FlowItemClient flowItemClient = this.getFluidClientDS().getFlowItemClient();
 				fluidItem = flowItemClient.getFluidItemByFormId(wfiParam.getFluidItemFormId());
 			}
 
-			Form freshFetchForm = fcClient.getFormContainerById(wfiParam.getFluidItemFormId());
+			Form freshFetchForm = new Form();
+			if (wfiParam.isFluidItemFormSet()) {
+				freshFetchForm = fcClient.getFormContainerById(wfiParam.getFluidItemFormId());
+			}
 			fluidItem.setForm(freshFetchForm);
 
-			this.setWorkspaceFluidItem(new WorkspaceFluidItem(wfiParam.getBaseWeb().cloneVO(
+			this.setWsFluidItem(new WorkspaceFluidItem(wfiParam.getBaseWeb().cloneVO(
 					fluidItem, viewable, editable, null)));
+			this.getWsFluidItem().setWebKitForm(webKitForm);
+			this.getWsFluidItem().refreshFormFieldsEdit();
+		} catch (Exception except) {
+			this.raiseError(except);
+		}
+	}
+
+	public void actionSaveForm(String dialogToHideAfterSuccess) {
+		if (this.getFluidClientDS() == null) return;
+		try {
+
+			this.executeJavaScript(String.format("PF('%s').hide();", dialogToHideAfterSuccess));
+			FacesMessage fMsg = new FacesMessage(FacesMessage.SEVERITY_INFO,
+					"Success", String.format("'%s' Updated.", this.wsFluidItem.getFluidItemTitle()));
+			FacesContext.getCurrentInstance().addMessage(null, fMsg);
 		} catch (Exception except) {
 			this.raiseError(except);
 		}

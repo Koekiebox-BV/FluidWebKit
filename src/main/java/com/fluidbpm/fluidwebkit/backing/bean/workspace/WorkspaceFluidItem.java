@@ -22,9 +22,11 @@ import com.fluidbpm.program.api.vo.field.Field;
 import com.fluidbpm.program.api.vo.flow.JobView;
 import com.fluidbpm.program.api.vo.form.Form;
 import com.fluidbpm.program.api.vo.item.FluidItem;
+import com.fluidbpm.program.api.vo.webkit.WebKitForm;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -43,6 +45,14 @@ public class WorkspaceFluidItem extends ABaseFluidVO {
 	@Getter
 	@Setter
 	private JobView jobView;
+
+	@Getter
+	@Setter
+	private WebKitForm webKitForm;
+
+	@Getter
+	@Setter
+	private List<Field> formFieldsEdit;
 
 	/**
 	 * Default constructor to create a {@code WorkspaceFluidItem} without setting the view.
@@ -92,6 +102,16 @@ public class WorkspaceFluidItem extends ABaseFluidVO {
 		return this.getFluidItemForm().getFormType();
 	}
 
+	public String getFluidItemFormState() {
+		if (this.getFluidItemForm() == null) return null;
+		return this.getFluidItemForm().getState();
+	}
+
+	public FluidItem.FlowState getFluidItemFormFlowState() {
+		if (this.getFluidItem() == null) return null;
+		return this.getFluidItem().getFlowState();
+	}
+
 	public String getFluidItemTitle() {
 		if (this.getFluidItemForm() == null) return null;
 		return this.getFluidItemForm().getTitle();
@@ -125,17 +145,50 @@ public class WorkspaceFluidItem extends ABaseFluidVO {
 	}
 
 	public List<Field> getRouteFields() {
-		if (this.baseWeb == null || this.baseWeb.getFluidItem() == null) {
-			return null;
-		}
+		if (this.baseWeb == null || this.baseWeb.getFluidItem() == null) return null;
 		return this.baseWeb.getFluidItem().getRouteFields();
 	}
 
 	public List<Field> getFormFields() {
-		if (this.baseWeb == null || this.baseWeb.getForm() == null) {
-			return null;
-		}
+		if (this.baseWeb == null || this.baseWeb.getForm() == null) return null;
 		return this.baseWeb.getForm().getFormFields();
+	}
+
+	public void refreshFormFieldsEdit() {
+		List<Field> visibleFields = this.getFormFieldsViewable();
+		if (visibleFields == null) visibleFields = new ArrayList<>();
+		final List<Field> formFields =
+				(this.getFormFields() == null) ? new ArrayList<>() : this.getFormFields();
+
+		List<Field> editFieldsList = new ArrayList<>();
+
+		visibleFields.forEach(visibleField -> {
+			Field fieldToAdd = new Field(
+					null,
+					visibleField.getFieldName(),
+					formFields.stream()
+							.filter(itm -> itm.getFieldName().equals(visibleField.getFieldName()))
+							.findFirst()
+							.map(itm -> itm.getFieldValue())
+							.orElse(visibleField.getFieldValue()),
+					visibleField.getTypeAsEnum()
+			);
+			fieldToAdd.setTypeMetaData(visibleField.getTypeMetaData());
+			fieldToAdd.setFieldDescription(visibleField.getFieldDescription());
+			editFieldsList.add(fieldToAdd);
+		});
+
+		this.formFieldsEdit = editFieldsList;
+	}
+
+	public List<Field> getFormFieldsViewable() {
+		if (this.baseWeb == null || this.baseWeb.getFieldsViewable() == null) return null;
+		return this.baseWeb.getFieldsViewable();
+	}
+
+	public List<Field> getFormFieldsEditable() {
+		if (this.baseWeb == null || this.baseWeb.getFieldsEditable() == null) return null;
+		return this.baseWeb.getFieldsEditable();
 	}
 
 	public String getRowId() {
@@ -145,6 +198,28 @@ public class WorkspaceFluidItem extends ABaseFluidVO {
 				this.getFluidItemViewId());
 	}
 
+	public boolean isFormFieldEditable(String formField) {
+		if (formField == null || formField.trim().isEmpty()) return false;
+		List<Field> editableFields = this.getFormFieldsEditable();
+		if (editableFields == null || editableFields.isEmpty()) return false;
+
+		String fieldLower = formField.trim().toLowerCase();
+		Field fieldWithName = editableFields.stream()
+				.filter(itm -> itm.getFieldName() != null &&
+						fieldLower.equals(itm.getFieldName().trim().toLowerCase()))
+				.findFirst()
+				.orElse(null);
+		return fieldWithName != null;
+	}
+
+	public boolean isFluidItemInWIPState() {
+		return (this.getFluidItemId() != null && this.getFluidItemId() > 0);
+	}
+
+	public boolean isFluidItemFormSet() {
+		return (this.getFluidItemFormId() != null && this.getFluidItemFormId() > 0);
+	}
+
 	/**
 	 * Refresh the local {@code fieldMap} based on the {@code FluidItem} route and form fields.
 	 *
@@ -152,9 +227,7 @@ public class WorkspaceFluidItem extends ABaseFluidVO {
 	 * @see Field
 	 */
 	private void refreshFieldNameAndValueMap() {
-		if (this.getFluidItem() == null) {
-			return;
-		}
+		if (this.getFluidItem() == null) return;
 
 		this.fieldMap = new HashMap<>();
 
