@@ -15,12 +15,17 @@
 
 package com.fluidbpm.fluidwebkit.backing.bean.workspace.pi;
 
+import com.fluidbpm.fluidwebkit.backing.bean.config.WebKitAccessBean;
 import com.fluidbpm.fluidwebkit.backing.bean.performance.PerformanceBean;
 import com.fluidbpm.fluidwebkit.backing.bean.workspace.ABaseWorkspaceBean;
 import com.fluidbpm.fluidwebkit.backing.bean.workspace.WorkspaceFluidItem;
 import com.fluidbpm.fluidwebkit.backing.bean.workspace.contentview.WebKitViewContentModelBean;
+import com.fluidbpm.fluidwebkit.backing.vo.ABaseWebVO;
+import com.fluidbpm.program.api.vo.field.Field;
 import com.fluidbpm.program.api.vo.flow.JobView;
+import com.fluidbpm.program.api.vo.form.Form;
 import com.fluidbpm.program.api.vo.item.FluidItem;
+import com.fluidbpm.program.api.vo.user.User;
 import com.fluidbpm.program.api.vo.webkit.viewgroup.WebKitViewGroup;
 import com.fluidbpm.program.api.vo.webkit.viewgroup.WebKitViewSub;
 import com.fluidbpm.program.api.vo.webkit.viewgroup.WebKitWorkspaceJobView;
@@ -52,6 +57,9 @@ public class PersonalInventoryBean extends ABaseWorkspaceBean<PersonalInventoryI
 	@Inject
 	private WebKitViewContentModelBean webKitViewContentModelBean;
 
+	@Inject
+	private WebKitAccessBean accessBean;
+
 	@Override
 	@PostConstruct
 	public void actionPopulateInit() {
@@ -62,6 +70,7 @@ public class PersonalInventoryBean extends ABaseWorkspaceBean<PersonalInventoryI
 	@Override
 	public void actionOpenForm(WorkspaceFluidItem workspaceFluidItem) {
 		//Do nothing...
+		this.openFormBean.actionFreshLoadFormAndSet(workspaceFluidItem);
 	}
 
 	@Override
@@ -116,9 +125,6 @@ public class PersonalInventoryBean extends ABaseWorkspaceBean<PersonalInventoryI
 		return returnVal;
 	}
 
-	/**
-	 *
-	 */
 	public void actionRemoveSelectedItemsFromPI() {
 		try {
 			this.getContentView().getFluidItemsSelectedList().clear();
@@ -136,5 +142,43 @@ public class PersonalInventoryBean extends ABaseWorkspaceBean<PersonalInventoryI
 
 	public int getNumberOfPersonalInventoryLockedItems() {
 		return performanceBean.getUserStatsReport().getPiLockedCount();
+	}
+
+	/**
+	 * Prepare to create a new instane of a form.
+	 */
+	public void actionPrepToCreateNewInstanceOf() {
+		this.setAreaToUpdateForDialogAfterSubmit(null);
+		this.currentlyHaveItemOpen = false;
+		this.setDialogHeaderTitle(null);
+
+		Long formIdType = this.getLongRequestParam(RequestParam.FORM_TYPE_ID);
+		String formType = this.getStringRequestParam(RequestParam.FORM_TYPE);
+
+		if (this.accessBean.getFormDefinitionsCanCreateInstanceOfSorted() == null) return;
+
+		Form formDefWithNewInstanceAccess =
+				this.accessBean.getFormDefinitionsCanCreateInstanceOfSorted().stream()
+				.filter(itm -> itm.getFormType().equals(formType) || itm.getFormTypeId().equals(formIdType))
+				.findFirst()
+				.orElse(null);
+		if (formDefWithNewInstanceAccess == null) {
+			FacesMessage fMsg = new FacesMessage(
+					FacesMessage.SEVERITY_ERROR, "Failed.", String.format(
+							"You do not have access to '%s'.", formType));
+			FacesContext.getCurrentInstance().addMessage(null, fMsg);
+			return;
+		}
+
+		FluidItem newFluidItem = new FluidItem(new Form(formDefWithNewInstanceAccess.getFormType()));
+		newFluidItem.getForm().setFormTypeId(formDefWithNewInstanceAccess.getFormTypeId());
+		WorkspaceFluidItem newItem = new WorkspaceFluidItem(new PersonalInventoryItemVO(newFluidItem));
+		try {
+			this.openFormBean.startConversation();
+			this.actionOpenForm(newItem);
+			this.currentlyHaveItemOpen = true;
+		} catch (Exception except) {
+			this.raiseError(except);
+		}
 	}
 }

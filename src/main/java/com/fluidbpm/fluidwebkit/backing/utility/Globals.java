@@ -27,10 +27,7 @@ import java.util.concurrent.TimeUnit;
 import static java.lang.Class.forName;
 
 /**
- * Global accessible variables.
  *
- * @author jasonbruwer on 4/14/18.
- * @since 1.0
  */
 public class Globals {
 	public static String CHARSET_UTF8 = "UTF-8";
@@ -42,50 +39,30 @@ public class Globals {
 	public static String FLUID_CONFIG_USER = "admin";
 	public static String FLUID_CONFIG_USER_PASSWORD = "12345";
 
-	/**
-	 *
-	 * @param elementParam
-	 * @return
-	 */
 	private static String getTextContentOnlyFrom(Element elementParam) {
 		return elementParam.getTextContent();
 	}
 
 	public static String EXCEL_WARNING = "WARNING: ";
 
-	/**
-	 *
-	 * @return
-	 */
 	public static String getConfigURLFromSystemProperty() {
 		return System.getProperty(
 				"FLUID_WS_URL",
 				FLUID_WS_URL);
 	}
 
-	/**
-	 *
-	 * @return
-	 */
 	public static String getConfigUserProperty() {
 		return System.getProperty(
 				"CONFIG_USER",
 				FLUID_CONFIG_USER);
 	}
 
-	/**
-	 *
-	 * @return
-	 */
 	public static String getConfigUserPasswordProperty() {
 		return System.getProperty(
 				"CONFIG_USER_PASSWORD",
 				FLUID_CONFIG_USER_PASSWORD);
 	}
 
-	/**
-	 * @return
-	 */
 	public static boolean isConfigBasicAuthFromSystemProperty() {
 		String useBasicAuth = System.getProperty(
 				"USE_BASIC_AUTH",
@@ -99,10 +76,6 @@ public class Globals {
 
 	private static String JS_USER_TRACKING_FR = null;
 
-	/**
-	 * Retrieve the FusionReactor script for tracking user experience.
-	 * @return JS for user tracking
-	 */
 	public static String getFRUserTrackingScript() {
 		if (JS_USER_TRACKING_FR != null) {
 			return JS_USER_TRACKING_FR;
@@ -123,11 +96,6 @@ public class Globals {
 		return JS_USER_TRACKING_FR;
 	}
 
-	/**
-	 * Create and return a new instance of the SQLUtil wrapper.
-	 *
-	 * @return new instance of {@code SQLUtilWebSocketRESTWrapper}
-	 */
 	@Deprecated
 	public static SQLUtilWebSocketRESTWrapper getConfigWrapperInstance() {
 		LoginClient loginClient = new LoginClient(Globals.getConfigURLFromSystemProperty());

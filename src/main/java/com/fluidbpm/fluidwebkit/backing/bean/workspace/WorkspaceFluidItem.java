@@ -22,6 +22,7 @@ import com.fluidbpm.program.api.vo.field.Field;
 import com.fluidbpm.program.api.vo.flow.JobView;
 import com.fluidbpm.program.api.vo.form.Form;
 import com.fluidbpm.program.api.vo.item.FluidItem;
+import com.fluidbpm.program.api.vo.user.User;
 import com.fluidbpm.program.api.vo.webkit.WebKitForm;
 import lombok.Getter;
 import lombok.Setter;
@@ -53,6 +54,10 @@ public class WorkspaceFluidItem extends ABaseFluidVO {
 	@Getter
 	@Setter
 	private List<Field> formFieldsEdit;
+
+	@Getter
+	@Setter
+	private User loggedInUser;
 
 	/**
 	 * Default constructor to create a {@code WorkspaceFluidItem} without setting the view.
@@ -214,6 +219,17 @@ public class WorkspaceFluidItem extends ABaseFluidVO {
 
 	public boolean isFluidItemInWIPState() {
 		return (this.getFluidItemId() != null && this.getFluidItemId() > 0);
+	}
+
+	public boolean isFormLocked() {
+		return Form.State.LOCKED.equals(this.getFluidItemFormState());
+	}
+
+	public boolean isFormLockedByLoggedInUser() {
+		return (this.getLoggedInUser() == null || this.getLoggedInUser().getUsername() == null) ? false :
+				((this.getFluidItemForm() == null || this.getFluidItemForm().getCurrentUser() == null) ||
+						this.getFluidItemForm().getCurrentUser().getUsername() == null) ? false :
+						this.getFluidItemForm().getCurrentUser().getUsername().equals(this.getLoggedInUser().getUsername());
 	}
 
 	public boolean isFluidItemFormSet() {

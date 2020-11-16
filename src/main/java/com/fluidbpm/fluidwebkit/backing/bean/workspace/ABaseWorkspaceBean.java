@@ -101,6 +101,10 @@ public abstract class ABaseWorkspaceBean<T extends ABaseWebVO, J extends ABaseCo
 		public static final String WORKSPACE_AIM = "workspaceItemAim";
 		public static final String OPENED_FROM_VIEW = "openedFromView";
 		public static final String TO_UPDATE = "toUpdate";
+
+		//Create new Form instance...
+		public static final String FORM_TYPE = "formType";
+		public static final String FORM_TYPE_ID = "formTypeId";
 	}
 
 	/**

@@ -102,13 +102,9 @@ public class WebKitConfigHelperBean extends ABaseManagedBean {
 		FacesMessage fMsg = new FacesMessage(FacesMessage.SEVERITY_INFO, infoMessageHeader, infoMessage);
 		FacesContext.getCurrentInstance().addMessage(null, fMsg);
 	}
-
-	/**
-	 *
-	 * @return
-	 */
+	
 	public int getUserBrowserSessionDialogHeight() {
-		return (this.getUserBrowserSessionWindowHeight() - 330);
+		return (this.getUserBrowserSessionWindowHeight() - 370);
 	}
 
 	/**

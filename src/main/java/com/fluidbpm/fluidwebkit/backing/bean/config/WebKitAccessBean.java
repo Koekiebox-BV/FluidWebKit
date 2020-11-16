@@ -113,7 +113,7 @@ public class WebKitAccessBean extends ABaseManagedBean {
 		this.formDefinitionsAttachmentCanView = new ArrayList<>();
 		this.formDefinitionsAttachmentCanEdit = new ArrayList<>();
 
-		this.formDefinitionsCanCreateInstanceOf = formDefinitionClient.getAllByLoggedInUserWhereCanCreateInstanceOf(true);
+		this.formDefinitionsCanCreateInstanceOf = formDefinitionClient.getAllByLoggedInUserWhereCanCreateInstanceOf(false);
 		if (this.formDefinitionsCanCreateInstanceOf != null) {
 			if (this.getFormDefsToIgnore() != null) {
 				this.formDefinitionsCanCreateInstanceOf = this.formDefinitionsCanCreateInstanceOf.stream()

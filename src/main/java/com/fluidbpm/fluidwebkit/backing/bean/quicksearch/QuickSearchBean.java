@@ -184,7 +184,7 @@ public class QuickSearchBean extends ABaseManagedBean {
 		//TODO this.formContainerBean.actionMasterFormContainerLoadForConversation(dataToSend.getId(), dataToSend.getTitle());
 
 		//3. Show the dialog...
-		this.executeJavaScript("PF('varDialFormContainer').show();");
+		this.executeJavaScript("PF('varNewFormInstDialog').show();");
 
 		//4. Clear the selected result...
 		this.setSelectedSearchResult(null);
