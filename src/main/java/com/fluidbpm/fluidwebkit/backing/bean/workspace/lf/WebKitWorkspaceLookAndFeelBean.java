@@ -831,4 +831,17 @@ public class WebKitWorkspaceLookAndFeelBean extends ABaseManagedBean {
 				.findFirst()
 				.orElse(null);
 	}
+
+	public List<SelectItem> extractTableFieldsFrom(String formDef) {
+		List<Field> fieldsForFormDef = this.getFluidClientDSConfig().getFormFieldClient().getFieldsByFormNameAndLoggedInUser(
+						formDef, false).getListing();
+		List<SelectItem> returnVal = new ArrayList<>();
+		if (fieldsForFormDef == null) return null;
+
+		fieldsForFormDef.stream()
+				.filter(itm -> Field.Type.Table == itm.getTypeAsEnum())
+				.map(itm -> itm.getFieldName())
+				.forEach(itm -> returnVal.add(new SelectItem(itm, itm)));
+		return returnVal;
+	}
 }

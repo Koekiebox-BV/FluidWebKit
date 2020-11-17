@@ -17,9 +17,13 @@ package com.fluidbpm.fluidwebkit.backing.bean.quicksearch;
 
 import com.fluidbpm.fluidwebkit.backing.bean.ABaseManagedBean;
 import com.fluidbpm.fluidwebkit.backing.bean.login.ProfileBean;
+import com.fluidbpm.fluidwebkit.backing.bean.workspace.WorkspaceFluidItem;
+import com.fluidbpm.fluidwebkit.backing.bean.workspace.form.WebKitOpenFormConversationBean;
+import com.fluidbpm.fluidwebkit.backing.bean.workspace.pi.PersonalInventoryItemVO;
 import com.fluidbpm.program.api.util.UtilGlobal;
 import com.fluidbpm.program.api.vo.form.Form;
 import com.fluidbpm.program.api.vo.form.FormListing;
+import com.fluidbpm.program.api.vo.item.FluidItem;
 import com.fluidbpm.program.api.vo.user.User;
 import com.fluidbpm.ws.client.FluidClientException;
 import com.fluidbpm.ws.client.v1.form.FormContainerClient;
@@ -48,6 +52,9 @@ public class QuickSearchBean extends ABaseManagedBean {
 
 	@Inject
 	private ProfileBean profileBean;
+
+	@Inject
+	protected WebKitOpenFormConversationBean openFormBean;
 
 	@NoArgsConstructor
 	@Getter
@@ -114,28 +121,16 @@ public class QuickSearchBean extends ABaseManagedBean {
 		private String value;
 	}
 
-	/**
-	 *
-	 */
 	public QuickSearchBean() {
 		super();
 	}
 
-	/**
-	 *
-	 * @param queryParam
-	 * @return
-	 */
 	public List<QuickSearchResultVO> actionCompletePossibleSearchResults(String queryParam) {
 		List<QuickSearchResultVO> returnValues = new ArrayList();
 		//No need to auto-complete...
-		if (queryParam == null || queryParam.trim().isEmpty()) {
-			return returnValues;
-		}
+		if (queryParam == null || queryParam.trim().isEmpty()) return returnValues;
 
-		if (this.getFluidClientDS() == null) {
-			return returnValues;
-		}
+		if (this.getFluidClientDS() == null) return returnValues;
 
 		FormContainerClient ffClient = this.getFluidClientDS().getFormContainerClient();
 		FormListing listing = null;
@@ -153,16 +148,11 @@ public class QuickSearchBean extends ABaseManagedBean {
 		}
 
 		SimpleDateFormat sdf = new SimpleDateFormat(this.getDateAndTimeFormat());
-		for (Form formAtIndex : listing.getListing()) {
-			returnValues.add(new QuickSearchResultVO(formAtIndex, sdf));
-		}
+		for (Form formAtIndex : listing.getListing()) returnValues.add(new QuickSearchResultVO(formAtIndex, sdf));
+
 		return returnValues;
 	}
 
-	/**
-	 *
-	 * @param eventParam
-	 */
 	public void actionOnItemSelect(SelectEvent eventParam) {
 		QuickSearchResultVO selected = this.getSelectedSearchResult();
 		if (selected == null) {
@@ -175,33 +165,28 @@ public class QuickSearchBean extends ABaseManagedBean {
 		Form dataToSend = new Form();
 
 		dataToSend.setId(selected.getId());
+		dataToSend.setFormType(selected.getFormContainerType());
 		dataToSend.setCurrentUser(this.getLoggedInUser());
+		this.setDialogHeaderTitle(null);
 
-		//1. Add to Personal Inventory...
-		//TODO this.formContainerBean.actionAddFormContainerToPersonalInventory(dataToSend);
-
-		//2. Populate...
-		//TODO this.formContainerBean.actionMasterFormContainerLoadForConversation(dataToSend.getId(), dataToSend.getTitle());
-
-		//3. Show the dialog...
-		this.executeJavaScript("PF('varNewFormInstDialog').show();");
+		WorkspaceFluidItem newItem = new WorkspaceFluidItem(
+				new PersonalInventoryItemVO(new FluidItem(dataToSend)));
+		try {
+			this.openFormBean.startConversation();
+			this.openFormBean.actionFreshLoadFormAndSet(newItem);
+			this.executeJavaScript("PF('varNewFormInstDialog').show();");
+		} catch (Exception except) {
+			this.raiseError(except);
+		}
 
 		//4. Clear the selected result...
 		this.setSelectedSearchResult(null);
 	}
 
-	/**
-	 *
-	 * @return
-	 */
 	public QuickSearchResultVO getSelectedSearchResult() {
 		return this.selectedSearchResult;
 	}
 
-	/**
-	 *
-	 * @param selectedSearchResult
-	 */
 	public void setSelectedSearchResult(QuickSearchResultVO selectedSearchResult) {
 		this.selectedSearchResult = selectedSearchResult;
 	}

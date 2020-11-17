@@ -79,6 +79,10 @@ public class WebKitOpenFormConversationBean extends ABaseManagedBean {
 			this.setDialogHeaderTitle(wfiParam.getFluidItemTitle());
 
 			WebKitForm webKitForm = this.lookAndFeelBean.getWebKitFormWithFormDef(formType);
+			if (webKitForm == null && WebKitForm.EMAIL_FORM_TYPE.equals(formType)) {
+				webKitForm = WebKitForm.emailWebKitForm();
+			}
+
 			List<Field> editable = this.accessBean.getFieldsEditableForFormDef(formType);
 			List<Field> viewable = this.accessBean.getFieldsViewableForFormDef(formType);
 
@@ -94,7 +98,7 @@ public class WebKitOpenFormConversationBean extends ABaseManagedBean {
 			if (wfiParam.isFluidItemFormSet()) {
 				freshFetchForm = fcClient.getFormContainerById(wfiParam.getFluidItemFormId());
 				//Lock the Form as it is being opened...
-				if (webKitForm.getLockFormOnOpen() && Form.State.OPEN.equals(freshFetchForm.getState())) {
+				if (webKitForm.isLockFormOnOpen() && Form.State.OPEN.equals(freshFetchForm.getState())) {
 					fcClient.lockFormContainer(freshFetchForm, wfiParam.getJobView());
 					this.lockByLoggedInUser(freshFetchForm);
 				}
@@ -135,18 +139,18 @@ public class WebKitOpenFormConversationBean extends ABaseManagedBean {
 				//Existing Item...
 				fcClient.updateFormContainer(this.toFormToSave(wsFlItem));
 
-				if (webKitForm.getSendOnAfterSave() &&
+				if (webKitForm.isSendOnAfterSave() &&
 						(wsFlItem.isFluidItemInWIPState() && wsFlItem.isFormLockedByLoggedInUser())) {
 					//Send on in the workflow...
 					fiClient.sendFlowItemOn(wsFlItem.getFluidItem(), true);
-				} else if (webKitForm.getUnlockFormOnSave()) {
+				} else if (webKitForm.isUnlockFormOnSave()) {
 					//Unlock form on save...
 					fcClient.unLockFormContainer(wsFlItem.getFluidItemForm());
 				}
 			} else {
 				//Create a new item...
 				Form createdForm = fcClient.createFormContainer(this.toFormToSave(wsFlItem), false);
-				if (webKitForm.getSendToWorkflowAfterCreate()) {
+				if (webKitForm.isSendToWorkflowAfterCreate()) {
 					String workflowToSendTo = "TODO";//TODO need to set this on the form before sending...
 					fiClient.sendFormToFlow(createdForm, workflowToSendTo);
 				}
