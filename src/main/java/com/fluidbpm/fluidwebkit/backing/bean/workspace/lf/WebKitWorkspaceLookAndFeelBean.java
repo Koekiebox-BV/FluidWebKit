@@ -25,6 +25,7 @@ import com.fluidbpm.program.api.vo.field.Field;
 import com.fluidbpm.program.api.vo.flow.JobView;
 import com.fluidbpm.program.api.vo.userquery.UserQuery;
 import com.fluidbpm.program.api.vo.webkit.WebKitForm;
+import com.fluidbpm.program.api.vo.webkit.WebKitFormListing;
 import com.fluidbpm.program.api.vo.webkit.WebKitGlobal;
 import com.fluidbpm.program.api.vo.webkit.userquery.WebKitMenuItem;
 import com.fluidbpm.program.api.vo.webkit.userquery.WebKitUserQuery;
@@ -546,11 +547,9 @@ public class WebKitWorkspaceLookAndFeelBean extends ABaseManagedBean {
 					}
 				}
 				Object objVisibleButtons = this.inputVisibleButtons.get(groupName);
-				if (objVisibleButtons instanceof String[]) {
-					for (String selected : (String[])objVisibleButtons) {
-						visibleButtons.add(selected);
-					}
-				}
+				if (objVisibleButtons instanceof String[])
+					for (String selected : (String[])objVisibleButtons) visibleButtons.add(selected);
+
 				this.updateGroupPropertyBasedOnSelected(visibleColumns, visibleButtons, groupItm);
 			});
 
@@ -569,6 +568,12 @@ public class WebKitWorkspaceLookAndFeelBean extends ABaseManagedBean {
 			listingUq.setListing(this.userQueryLDM.getDataListing());
 			listingUq.setListingCount(this.userQueryLDM.getDataListing().size());
 			configDs.getUserQueryClient().upsertUserQueryWebKit(listingUq);
+
+			//Form...
+			WebKitFormListing listingFrm = new WebKitFormListing();
+			listingFrm.setListing(this.formDefinitionLDM.getDataListing());
+			listingFrm.setListingCount(this.formDefinitionLDM.getDataListing().size());
+			configDs.getFormDefinitionClient().upsertFormWebKit(listingFrm);
 
 			this.executeJavaScript(String.format("PF('%s').hide();", dialogToHideAfterSuccess));
 			FacesMessage fMsg = new FacesMessage(FacesMessage.SEVERITY_INFO,

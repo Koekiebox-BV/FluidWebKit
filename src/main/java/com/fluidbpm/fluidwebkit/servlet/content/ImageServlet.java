@@ -70,8 +70,11 @@ public class ImageServlet extends ABaseFWKServlet {
 	@Override
 	protected void doGet(HttpServletRequest reqParam, HttpServletResponse respParam) throws ServletException, IOException {
 		String formId = reqParam.getParameter(PARAM_FORM_ID);
+		if ("null".equals(formId)) return;
 		String formDef = reqParam.getParameter(PARAM_FORM_DEFINITION);
-		if ((formId == null || formId.trim().isEmpty()) || (formDef == null || formDef.trim().isEmpty())) {
+		if ("null".equals(formDef)) return;
+		if ((formId == null || formId.trim().isEmpty()) ||
+				(formDef == null || formDef.trim().isEmpty())) {
 			return;
 		}
 		String attachmentId = reqParam.getParameter(PARAM_ATTACHMENT_ID);
@@ -88,7 +91,10 @@ public class ImageServlet extends ABaseFWKServlet {
 			thumbScale = Integer.parseInt(thumbnailScale.trim());
 		}
 
-		Long formIdParam = Long.valueOf(formId.trim());
+		Long formIdParam = null;
+		try {
+			formIdParam = Long.valueOf(formId.trim());
+		} catch (NumberFormatException nfe) { return; }
 		Form form = new Form(formIdParam);
 		form.setFormType(formDef);
 
