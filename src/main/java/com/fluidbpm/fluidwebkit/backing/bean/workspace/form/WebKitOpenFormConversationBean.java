@@ -6,6 +6,7 @@ import com.fluidbpm.fluidwebkit.backing.bean.workspace.WorkspaceFluidItem;
 import com.fluidbpm.fluidwebkit.backing.bean.workspace.lf.WebKitWorkspaceLookAndFeelBean;
 import com.fluidbpm.program.api.vo.field.Field;
 import com.fluidbpm.program.api.vo.form.Form;
+import com.fluidbpm.program.api.vo.form.FormListing;
 import com.fluidbpm.program.api.vo.item.FluidItem;
 import com.fluidbpm.program.api.vo.webkit.WebKitForm;
 import com.fluidbpm.ws.client.v1.flowitem.FlowItemClient;
@@ -102,6 +103,14 @@ public class WebKitOpenFormConversationBean extends ABaseManagedBean {
 					fcClient.lockFormContainer(freshFetchForm, wfiParam.getJobView());
 					this.lockByLoggedInUser(freshFetchForm);
 				}
+
+				//Fetch the table field forms...
+				if (webKitForm.isAnyTableFormsEnabled()) {
+					List<FormListing> childForms =
+							this.getFluidClientDS().getSQLUtilWrapper().getTableForms(true, freshFetchForm);
+					
+				}
+
 			} else {
 				freshFetchForm.setTitle(String.format("New '%s'", wfiParam.getFluidItemFormType()));
 				this.setDialogHeaderTitle(freshFetchForm.getTitle());
