@@ -83,7 +83,6 @@ public class WebKitAccessBean extends ABaseManagedBean {
 			this.getLogger().info("FFC-Bean: Fields ALREADY CACHED.");
 			return;
 		}
-
 		if (this.getFluidClientDS() == null) return;
 
 		try {
@@ -113,7 +112,9 @@ public class WebKitAccessBean extends ABaseManagedBean {
 		this.formDefinitionsAttachmentCanView = new ArrayList<>();
 		this.formDefinitionsAttachmentCanEdit = new ArrayList<>();
 
-		this.formDefinitionsCanCreateInstanceOf = formDefinitionClient.getAllByLoggedInUserWhereCanCreateInstanceOf(false);
+		//Retrieve Forms and their Workflows...
+		this.formDefinitionsCanCreateInstanceOf = formDefinitionClient.getAllByLoggedInUserWhereCanCreateInstanceOf(
+				false, true);
 		if (this.formDefinitionsCanCreateInstanceOf != null) {
 			if (this.getFormDefsToIgnore() != null) {
 				this.formDefinitionsCanCreateInstanceOf = this.formDefinitionsCanCreateInstanceOf.stream()

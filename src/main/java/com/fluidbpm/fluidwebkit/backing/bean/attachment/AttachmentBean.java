@@ -16,36 +16,16 @@
 package com.fluidbpm.fluidwebkit.backing.bean.attachment;
 
 import com.fluidbpm.fluidwebkit.backing.bean.ABaseManagedBean;
-import com.fluidbpm.fluidwebkit.backing.bean.config.WebKitConfigBean;
-import com.fluidbpm.fluidwebkit.backing.bean.login.ProfileBean;
 import com.fluidbpm.fluidwebkit.backing.bean.workspace.WorkspaceFluidItem;
 import com.fluidbpm.fluidwebkit.qualifier.cache.FormAttachmentsCache;
-import com.fluidbpm.program.api.util.UtilGlobal;
 import com.fluidbpm.program.api.vo.attachment.Attachment;
 import com.fluidbpm.program.api.vo.form.Form;
-import com.fluidbpm.program.api.vo.form.FormListing;
-import com.fluidbpm.program.api.vo.user.User;
-import com.fluidbpm.ws.client.FluidClientException;
 import com.fluidbpm.ws.client.v1.attachment.AttachmentClient;
-import com.fluidbpm.ws.client.v1.config.ConfigurationClient;
-import com.fluidbpm.ws.client.v1.form.FormContainerClient;
 import com.google.common.cache.Cache;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
-import org.primefaces.event.SelectEvent;
 
 import javax.enterprise.context.RequestScoped;
-import javax.enterprise.context.SessionScoped;
-import javax.faces.application.FacesMessage;
-import javax.faces.context.FacesContext;
 import javax.inject.Inject;
 import javax.inject.Named;
-import java.io.Serializable;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -65,7 +45,7 @@ public class AttachmentBean extends ABaseManagedBean {
 
 	public List<Attachment> actionFetchAttachmentsForForm(Form form) {
 		try {
-			if (this.getFluidClientDS() == null || form == null) return null;
+			if (this.getFluidClientDS() == null || (form == null || form.getId() == null)) return null;
 
 			List<Attachment> attachments = this.attachmentCache.getIfPresent(form.getId());
 			if (attachments != null) {

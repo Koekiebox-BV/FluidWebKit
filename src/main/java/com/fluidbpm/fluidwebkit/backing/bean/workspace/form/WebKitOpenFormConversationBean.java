@@ -5,6 +5,7 @@ import com.fluidbpm.fluidwebkit.backing.bean.config.WebKitAccessBean;
 import com.fluidbpm.fluidwebkit.backing.bean.workspace.WorkspaceFluidItem;
 import com.fluidbpm.fluidwebkit.backing.bean.workspace.lf.WebKitWorkspaceLookAndFeelBean;
 import com.fluidbpm.program.api.vo.field.Field;
+import com.fluidbpm.program.api.vo.flow.Flow;
 import com.fluidbpm.program.api.vo.form.Form;
 import com.fluidbpm.program.api.vo.form.FormListing;
 import com.fluidbpm.program.api.vo.item.FluidItem;
@@ -21,6 +22,7 @@ import javax.faces.application.FacesMessage;
 import javax.faces.context.FacesContext;
 import javax.inject.Inject;
 import javax.inject.Named;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -40,6 +42,14 @@ public class WebKitOpenFormConversationBean extends ABaseManagedBean {
 
 	@Inject
 	private WebKitWorkspaceLookAndFeelBean lookAndFeelBean;
+
+	@Getter
+	@Setter
+	private String inputSelectedWorkflow;
+
+	@Getter
+	@Setter
+	private List<String> inputWorkflowsForFormDef;
 
 	@PostConstruct
 	public void init() {
@@ -72,6 +82,9 @@ public class WebKitOpenFormConversationBean extends ABaseManagedBean {
 	public void actionFreshLoadFormAndSet(WorkspaceFluidItem wfiParam) {
 		this.setDialogHeaderTitle(null);
 		this.setWsFluidItem(null);
+		this.setInputWorkflowsForFormDef(new ArrayList<>());
+		this.setInputSelectedWorkflow(null);
+
 		if (wfiParam == null) return;
 		if (this.getFluidClientDS() == null) return;
 
@@ -108,12 +121,23 @@ public class WebKitOpenFormConversationBean extends ABaseManagedBean {
 				if (webKitForm.isAnyTableFormsEnabled()) {
 					List<FormListing> childForms =
 							this.getFluidClientDS().getSQLUtilWrapper().getTableForms(true, freshFetchForm);
-					
 				}
 
 			} else {
 				freshFetchForm.setTitle(String.format("New '%s'", wfiParam.getFluidItemFormType()));
 				this.setDialogHeaderTitle(freshFetchForm.getTitle());
+
+				if (webKitForm.isSendToWorkflowAfterCreate()) {
+					List<Form> formDefs = this.accessBean.getFormDefinitionsCanCreateInstanceOfSorted();
+					List<Flow> associatedFlowsForFormDef = formDefs.stream()
+							.filter(itm -> itm.getFormType().equals(wfiParam.getFluidItemFormType()))
+							.findFirst()
+							.map(itm -> itm.getAssociatedFlows())
+							.orElse(new ArrayList<>());
+					if (associatedFlowsForFormDef.size() == 1)
+						this.setInputSelectedWorkflow(associatedFlowsForFormDef.get(0).getName());
+					associatedFlowsForFormDef.forEach(flowItm -> this.getInputWorkflowsForFormDef().add(flowItm.getName()));
+				}
 			}
 			fluidItem.setForm(freshFetchForm);
 
@@ -160,8 +184,7 @@ public class WebKitOpenFormConversationBean extends ABaseManagedBean {
 				//Create a new item...
 				Form createdForm = fcClient.createFormContainer(this.toFormToSave(wsFlItem), false);
 				if (webKitForm.isSendToWorkflowAfterCreate()) {
-					String workflowToSendTo = "TODO";//TODO need to set this on the form before sending...
-					fiClient.sendFormToFlow(createdForm, workflowToSendTo);
+					fiClient.sendFormToFlow(createdForm, this.inputSelectedWorkflow);
 				}
 			}
 
@@ -187,6 +210,11 @@ public class WebKitOpenFormConversationBean extends ABaseManagedBean {
 	private void lockByLoggedInUser(Form form) {
 		form.setCurrentUser(this.getLoggedInUser());
 		form.setState(Form.State.LOCKED);
+	}
+
+	public int getInputWorkflowsForFormDefCount() {
+		return this.inputWorkflowsForFormDef == null ? 0 :
+				this.inputWorkflowsForFormDef.size();
 	}
 
 }
