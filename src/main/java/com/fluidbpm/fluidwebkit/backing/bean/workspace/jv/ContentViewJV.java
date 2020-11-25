@@ -76,9 +76,8 @@ public class ContentViewJV extends ABaseContentView {
 		String sectionParam,
 		Map<WebKitViewSub, Map<WebKitWorkspaceJobView, List<WorkspaceFluidItem>>> data
 	) {
-		if (data.isEmpty()) {
-			return new ArrayList<>();
-		}
+		if (data == null || data.isEmpty()) return new ArrayList<>();
+
 		if (this.wkGroup.isTGMCombined()) {
 			List<WorkspaceFluidItem> returnVal = new ArrayList<>();
 			returnVal.addAll(data.values().stream()
@@ -131,13 +130,9 @@ public class ContentViewJV extends ABaseContentView {
 	@Override
 	public void refreshData(Map<WebKitViewSub, Map<WebKitWorkspaceJobView, List<WorkspaceFluidItem>>> data) {
 		super.refreshData(data);
-		if (this.getSections() == null) {
-			return;
-		}
+		if (this.getSections() == null) return;
 
-		if (this.fluidItemsLazyModel == null) {
-			this.fluidItemsLazyModel = new HashMap<>();
-		}
+		if (this.fluidItemsLazyModel == null) this.fluidItemsLazyModel = new HashMap<>();
 
 		//Load Items for each section...
 		List<String> sectionsToKeep = new ArrayList<>();
@@ -146,9 +141,8 @@ public class ContentViewJV extends ABaseContentView {
 			WorkspaceJobViewLDM workFluidItmLazy =
 					this.fluidItemsLazyModel.getOrDefault(section, new WorkspaceJobViewLDM());
 			workFluidItmLazy.clearInitialListing();
-			if (items != null) {
-				workFluidItmLazy.addToInitialListing(items);
-			}
+
+			if (items != null) workFluidItmLazy.addToInitialListing(items);
 
 			this.fluidItemsLazyModel.put(section, workFluidItmLazy);
 			if ((this.getWkGroup() == null || this.getWkGroup().isEnableRenderEmptyTable()) ||
@@ -171,9 +165,7 @@ public class ContentViewJV extends ABaseContentView {
 	@Override
 	public List<ABaseManagedBean.ColumnModel> getColumnHeadersForSection(String sectionAlias) {
 		List<ABaseManagedBean.ColumnModel> returnVal = new ArrayList<>();
-		if (this.wkGroup == null) {
-			return returnVal;
-		}
+		if (this.wkGroup == null) return returnVal;
 
 		//Index - 01 - Attachment
 		returnVal.add(new ABaseManagedBean.ColumnModel(
@@ -265,13 +257,10 @@ public class ContentViewJV extends ABaseContentView {
 				true,
 				true));
 
-		if (this.wkSub == null) {
-			return returnVal;
-		}
+		if (this.wkSub == null) return returnVal;
+
 		List<WebKitWorkspaceRouteField> routeFieldsForKit = this.wkSub.getRouteFields();
-		if (routeFieldsForKit == null || routeFieldsForKit.isEmpty()) {
-			return returnVal;
-		}
+		if (routeFieldsForKit == null || routeFieldsForKit.isEmpty()) return returnVal;
 
 		routeFieldsForKit.sort(Comparator.comparing(WebKitWorkspaceRouteField::getFieldOrder));
 		List<ABaseManagedBean.ColumnModel> returnValCustomRouteFields = routeFieldsForKit.stream()

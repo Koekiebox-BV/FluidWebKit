@@ -20,20 +20,17 @@ import com.fluidbpm.fluidwebkit.backing.bean.config.WebKitAccessBean;
 import com.fluidbpm.fluidwebkit.backing.bean.workspace.WorkspaceFluidItem;
 import com.fluidbpm.fluidwebkit.backing.bean.workspace.contentview.ABaseContentView;
 import com.fluidbpm.fluidwebkit.backing.bean.workspace.contentview.WebKitViewContentModelBean;
-import com.fluidbpm.fluidwebkit.backing.bean.workspace.jv.ContentViewJV;
-import com.fluidbpm.fluidwebkit.backing.bean.workspace.jv.WorkspaceJobViewLDM;
 import com.fluidbpm.program.api.vo.field.Field;
 import com.fluidbpm.program.api.vo.user.User;
 import com.fluidbpm.program.api.vo.webkit.userquery.WebKitUserQuery;
-import com.fluidbpm.program.api.vo.webkit.viewgroup.WebKitViewGroup;
 import com.fluidbpm.program.api.vo.webkit.viewgroup.WebKitViewSub;
 import com.fluidbpm.program.api.vo.webkit.viewgroup.WebKitWorkspaceJobView;
-import com.fluidbpm.program.api.vo.webkit.viewgroup.WebKitWorkspaceRouteField;
 import lombok.Getter;
 import lombok.Setter;
 
-import javax.faces.model.SelectItem;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 public class ContentViewUQ extends ABaseContentView {
@@ -89,9 +86,7 @@ public class ContentViewUQ extends ABaseContentView {
 	@Override
 	public List<ABaseManagedBean.ColumnModel> getColumnHeadersForSection(String sectionAlias) {
 		List<ABaseManagedBean.ColumnModel> returnVal = new ArrayList<>();
-		if (this.wkUserQuery == null) {
-			return returnVal;
-		}
+		if (this.wkUserQuery == null) return returnVal;
 
 		//Index - 01 - Attachment
 		returnVal.add(new ABaseManagedBean.ColumnModel(

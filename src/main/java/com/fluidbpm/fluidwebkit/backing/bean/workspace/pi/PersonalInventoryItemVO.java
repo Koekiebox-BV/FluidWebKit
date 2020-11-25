@@ -1,6 +1,5 @@
 package com.fluidbpm.fluidwebkit.backing.bean.workspace.pi;
 
-import com.fluidbpm.fluidwebkit.backing.bean.workspace.jv.JobViewItemVO;
 import com.fluidbpm.fluidwebkit.backing.vo.ABaseWebVO;
 import com.fluidbpm.program.api.vo.field.Field;
 import com.fluidbpm.program.api.vo.form.Form;

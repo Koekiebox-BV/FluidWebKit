@@ -20,18 +20,15 @@ import com.fluidbpm.fluidwebkit.backing.bean.performance.PerformanceBean;
 import com.fluidbpm.fluidwebkit.backing.bean.workspace.ABaseWorkspaceBean;
 import com.fluidbpm.fluidwebkit.backing.bean.workspace.WorkspaceFluidItem;
 import com.fluidbpm.fluidwebkit.backing.bean.workspace.contentview.WebKitViewContentModelBean;
-import com.fluidbpm.fluidwebkit.backing.vo.ABaseWebVO;
-import com.fluidbpm.program.api.vo.field.Field;
+import com.fluidbpm.fluidwebkit.backing.bean.workspace.form.IConversationCallback;
 import com.fluidbpm.program.api.vo.flow.JobView;
 import com.fluidbpm.program.api.vo.form.Form;
 import com.fluidbpm.program.api.vo.item.FluidItem;
-import com.fluidbpm.program.api.vo.user.User;
 import com.fluidbpm.program.api.vo.webkit.viewgroup.WebKitViewGroup;
 import com.fluidbpm.program.api.vo.webkit.viewgroup.WebKitViewSub;
 import com.fluidbpm.program.api.vo.webkit.viewgroup.WebKitWorkspaceJobView;
 import com.fluidbpm.ws.client.FluidClientException;
 import com.fluidbpm.ws.client.v1.user.PersonalInventoryClient;
-import org.primefaces.PrimeFaces;
 
 import javax.annotation.PostConstruct;
 import javax.enterprise.context.SessionScoped;
@@ -49,7 +46,8 @@ import java.util.Map;
  */
 @SessionScoped
 @Named("webKitPersonalInvBean")
-public class PersonalInventoryBean extends ABaseWorkspaceBean<PersonalInventoryItemVO, ContentViewPI> {
+public class PersonalInventoryBean extends ABaseWorkspaceBean<PersonalInventoryItemVO, ContentViewPI>
+implements IConversationCallback {
 
 	@Inject
 	private PerformanceBean performanceBean;
@@ -125,12 +123,76 @@ public class PersonalInventoryBean extends ABaseWorkspaceBean<PersonalInventoryI
 		return returnVal;
 	}
 
+	/**
+	 * Open an 'Form' for editing or viewing.
+	 * Custom functionality needs to be placed in {@code this#actionOpenFormForEditingFromWorkspace}.
+	 *
+	 * @see this#actionOpenForm(WorkspaceFluidItem)
+	 */
+	public void actionOpenFormForEditingFromWorkspace(WorkspaceFluidItem workspaceFluidItem) {
+		this.setAreaToUpdateForDialogAfterSubmit(null);
+		try {
+			this.openFormBean.startConversation();
+			this.openFormBean.setAreaToUpdateAfterSave(":frmPIContent");
+			this.openFormBean.setConversationCallback(this);
+			this.actionOpenForm(workspaceFluidItem);
+			this.currentlyHaveItemOpen = true;
+		} catch (Exception except) {
+			this.raiseError(except);
+		}
+	}
+
+	@Override
+	public void afterSaveProcessing(WorkspaceFluidItem workspaceItemSaved) {
+		this.actionOpenMainPage();
+	}
+
 	public void actionRemoveSelectedItemsFromPI() {
 		try {
-			this.getContentView().getFluidItemsSelectedList().clear();
-			FacesContext.getCurrentInstance().addMessage(null, new FacesMessage("Products Removed"));
-			PrimeFaces.current().ajax().update("form:messages", "form:dt-products");
+			if (this.getContentView().getFluidItemsSelectedList() == null) return;
 
+			final PersonalInventoryClient piClient = this.getFluidClientDS().getPersonalInventoryClient();
+			this.getContentView().getFluidItemsSelectedList().forEach(itm -> {
+				piClient.removeFromPersonalInventory(itm.getFluidItemForm());
+			});
+			int numberOfSelected = this.getContentView().getFluidItemsSelectedList().size();
+
+			this.getContentView().getFluidItemsSelectedList().clear();
+			FacesContext.getCurrentInstance().addMessage(null, new FacesMessage(String.format("%d Removed.", numberOfSelected)));
+			//PrimeFaces.current().ajax().update("form:messages", "form:dt-products");
+		} catch (Exception fce) {
+			this.raiseError(fce);
+		}
+	}
+
+	public void actionRemoveAllItemsFromPI() {
+		try {
+			List<WorkspaceFluidItem> piItems =
+					this.getContentView().getWorkspaceFluidItemsForSection(ContentViewPI.PI);
+			if (piItems == null) return;
+			
+			int numberOfSelected = piItems.size();
+			final PersonalInventoryClient piClient = this.getFluidClientDS().getPersonalInventoryClient();
+			piClient.clearPersonalInventoryItems();
+			piItems.clear();
+			FacesContext.getCurrentInstance().addMessage(null, new FacesMessage(String.format("%d Removed.", numberOfSelected)));
+		} catch (Exception fce) {
+			this.raiseError(fce);
+		}
+	}
+
+	public void actionRemoveItemFromPI(WorkspaceFluidItem toRemove) {
+		try {
+			if (toRemove == null) return;
+			final PersonalInventoryClient piClient = this.getFluidClientDS().getPersonalInventoryClient();
+			piClient.removeFromPersonalInventory(toRemove.getFluidItemForm());
+
+			List<WorkspaceFluidItem> piItems =
+					this.getContentView().getWorkspaceFluidItemsForSection(ContentViewPI.PI);
+			piItems.remove(toRemove);
+			
+			FacesContext.getCurrentInstance().addMessage(null, new FacesMessage(String.format("'%s' Removed.",
+					toRemove.getFluidItemTitle())));
 		} catch (Exception fce) {
 			this.raiseError(fce);
 		}

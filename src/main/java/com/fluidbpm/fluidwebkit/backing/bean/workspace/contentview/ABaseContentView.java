@@ -22,7 +22,6 @@ import com.fluidbpm.fluidwebkit.exception.ClientDashboardException;
 import com.fluidbpm.program.api.util.UtilGlobal;
 import com.fluidbpm.program.api.vo.field.Field;
 import com.fluidbpm.program.api.vo.flow.JobView;
-import com.fluidbpm.program.api.vo.form.Form;
 import com.fluidbpm.program.api.vo.user.User;
 import com.fluidbpm.program.api.vo.webkit.viewgroup.WebKitViewSub;
 import com.fluidbpm.program.api.vo.webkit.viewgroup.WebKitWorkspaceJobView;
@@ -524,31 +523,24 @@ public abstract class ABaseContentView implements Serializable {
 	 */
 	public void refreshData(Map<WebKitViewSub, Map<WebKitWorkspaceJobView, List<WorkspaceFluidItem>>> data) {
 		this.data = data;
-		if (this.fluidItemsForSection == null) {
-			this.fluidItemsForSection = new HashMap<>();
-		}
+		if (this.fluidItemsForSection == null) this.fluidItemsForSection = new HashMap<>();
 
 		//Clear all data...
 		this.fluidItemsForSection.values().clear();
 		this.fluidItemsForSection.clear();
-		if (this.getSections() == null) {
-			return;
-		}
 
-		if (data == null || data.isEmpty()) {
-			return;
-		}
+		if (this.getSections() == null) return;
+
+		if (data == null || data.isEmpty()) return;
 
 		//Load Items for each section...
 		for (String section : this.getSections()) {
-			if (section == null || section.trim().isEmpty()) {
-				continue;
-			}
+			if (section == null || section.trim().isEmpty()) continue;
+
 			List<WorkspaceFluidItem> itemsForSection =
 					this.getWorkspaceFluidItemsFor(section, data);
-			if (itemsForSection == null || itemsForSection.isEmpty()) {
-				continue;
-			}
+			if (itemsForSection == null || itemsForSection.isEmpty()) continue;
+
 			this.fluidItemsForSection.put(section, itemsForSection);
 		}
 	}

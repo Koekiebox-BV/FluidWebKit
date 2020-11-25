@@ -19,9 +19,8 @@ import com.fluidbpm.fluidwebkit.backing.bean.config.WebKitAccessBean;
 import com.fluidbpm.fluidwebkit.backing.bean.workspace.ABaseWorkspaceBean;
 import com.fluidbpm.fluidwebkit.backing.bean.workspace.WorkspaceFluidItem;
 import com.fluidbpm.fluidwebkit.backing.bean.workspace.contentview.WebKitViewContentModelBean;
-import com.fluidbpm.fluidwebkit.backing.bean.workspace.lf.WebKitWorkspaceLookAndFeelBean;
+import com.fluidbpm.fluidwebkit.backing.bean.workspace.form.IConversationCallback;
 import com.fluidbpm.fluidwebkit.backing.bean.workspace.menu.WebKitMenuBean;
-import com.fluidbpm.program.api.vo.flow.JobView;
 import com.fluidbpm.program.api.vo.item.FluidItem;
 import com.fluidbpm.program.api.vo.webkit.userquery.WebKitUserQuery;
 import com.fluidbpm.program.api.vo.webkit.viewgroup.WebKitViewGroup;
@@ -41,7 +40,8 @@ import javax.inject.Named;
  */
 @SessionScoped
 @Named("webKitUserQueryBean")
-public class WebKitUserQueryBean extends ABaseWorkspaceBean<UserQueryItemVO, ContentViewUQ> {
+public class WebKitUserQueryBean extends ABaseWorkspaceBean<UserQueryItemVO, ContentViewUQ> implements
+		IConversationCallback {
 
 	@Getter
 	@Setter
@@ -80,6 +80,31 @@ public class WebKitUserQueryBean extends ABaseWorkspaceBean<UserQueryItemVO, Con
 	@Override
 	public void actionOpenMainPage() {
 		this.contentView = this.actionOpenMainPage(null, null);
+	}
+
+	/**
+	 * Open an 'Form' for editing or viewing.
+	 * Custom functionality needs to be placed in {@code this#actionOpenFormForEditingFromWorkspace}.
+	 *
+	 * @see this#actionOpenForm(WorkspaceFluidItem)
+	 */
+	public void actionOpenFormForEditingFromWorkspace(WorkspaceFluidItem workspaceFluidItem) {
+		this.setAreaToUpdateForDialogAfterSubmit(null);
+		try {
+			this.openFormBean.startConversation();
+			this.openFormBean.setAreaToUpdateAfterSave(":formUserQueryResults");
+			this.openFormBean.setConversationCallback(this);
+			this.actionOpenForm(workspaceFluidItem);
+			this.currentlyHaveItemOpen = true;
+		} catch (Exception except) {
+			this.raiseError(except);
+		}
+	}
+
+	@Override
+	public void afterSaveProcessing(WorkspaceFluidItem workspaceItemSaved) {
+		//No Need to do anything after a save...
+		//this.getContentView().getFluidItemsLazyModel().load()
 	}
 
 	@Override

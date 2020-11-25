@@ -42,9 +42,7 @@ public class WorkspaceUserQueryLDM extends ABaseLDM<WorkspaceFluidItem> {
 	) {
 		this.baseWorkspaceBean.setEmptyMessage(String.format("No items for '%s'.", this.label));
 		this.setRowCount(0);
-		if (this.dataListing == null) {
-			return null;
-		}
+		if (this.dataListing == null) return null;
 
 		try {
 			UserQueryClient userQueryClient = this.clientDS.getUserQueryClient();

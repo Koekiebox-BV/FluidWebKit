@@ -252,22 +252,7 @@ public abstract class ABaseWorkspaceBean<T extends ABaseWebVO, J extends ABaseCo
 	 *
 	 * @see this#actionOpenForm(WorkspaceFluidItem)
 	 */
-	public void actionOpenFormForEditingFromWorkspace(WorkspaceFluidItem workspaceFluidItem) {
-		this.setAreaToUpdateForDialogAfterSubmit(null);
-		this.currentlyHaveItemOpen = false;
-
-		Long formIdToUpdate = this.getLongRequestParam(RequestParam.TO_UPDATE);
-		Long openedFromViewId = this.getLongRequestParam(RequestParam.OPENED_FROM_VIEW);
-		JobView fromView = this.getJobViewFromListingWithId(this.viewsAll, openedFromViewId);
-
-		try {
-			this.openFormBean.startConversation();
-			this.actionOpenForm(workspaceFluidItem);
-			this.currentlyHaveItemOpen = true;
-		} catch (Exception except) {
-			this.raiseError(except);
-		}
-	}
+	public abstract void actionOpenFormForEditingFromWorkspace(WorkspaceFluidItem workspaceFluidItem);
 
 	/**
 	 * Custom functionality for when a Form is clicked on to be opened.
@@ -305,6 +290,7 @@ public abstract class ABaseWorkspaceBean<T extends ABaseWebVO, J extends ABaseCo
 				&& this.openPageLastCache != null) {
 			clickedGroup = this.openPageLastCache.clickedGroup;
 			clickedWorkspaceViews = this.openPageLastCache.selectedJobViews;
+			clickedGroupAlias = this.openPageLastCache.clickedGroupAlias;
 			clickedSubAlias = this.openPageLastCache.clickedSubAlias;
 		}
 		this.openPageLastCache = new OpenPageLastCache(

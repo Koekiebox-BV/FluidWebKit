@@ -4,6 +4,7 @@ import com.fluidbpm.fluidwebkit.backing.bean.ABaseManagedBean;
 import com.fluidbpm.fluidwebkit.backing.bean.config.WebKitAccessBean;
 import com.fluidbpm.fluidwebkit.backing.bean.workspace.WorkspaceFluidItem;
 import com.fluidbpm.fluidwebkit.backing.bean.workspace.lf.WebKitWorkspaceLookAndFeelBean;
+import com.fluidbpm.program.api.util.UtilGlobal;
 import com.fluidbpm.program.api.vo.field.Field;
 import com.fluidbpm.program.api.vo.flow.Flow;
 import com.fluidbpm.program.api.vo.form.Form;
@@ -51,6 +52,13 @@ public class WebKitOpenFormConversationBean extends ABaseManagedBean {
 	@Setter
 	private List<String> inputWorkflowsForFormDef;
 
+	@Getter
+	@Setter
+	private String areaToUpdateAfterSave;
+
+	@Setter
+	private IConversationCallback conversationCallback;
+
 	@PostConstruct
 	public void init() {
 
@@ -82,6 +90,8 @@ public class WebKitOpenFormConversationBean extends ABaseManagedBean {
 	public void actionFreshLoadFormAndSet(WorkspaceFluidItem wfiParam) {
 		this.setDialogHeaderTitle(null);
 		this.setWsFluidItem(null);
+
+		//Send to a specific workflow...
 		this.setInputWorkflowsForFormDef(new ArrayList<>());
 		this.setInputSelectedWorkflow(null);
 
@@ -125,6 +135,7 @@ public class WebKitOpenFormConversationBean extends ABaseManagedBean {
 
 			} else {
 				freshFetchForm.setTitle(String.format("New '%s'", wfiParam.getFluidItemFormType()));
+				freshFetchForm.setFormType(wfiParam.getFluidItemFormType());
 				this.setDialogHeaderTitle(freshFetchForm.getTitle());
 
 				if (webKitForm.isSendToWorkflowAfterCreate()) {
@@ -151,15 +162,25 @@ public class WebKitOpenFormConversationBean extends ABaseManagedBean {
 		}
 	}
 
-	public void actionSaveForm(String dialogToHideAfterSuccess) {
+	public void actionUpdateSelectedWorkflow() {
+		
+	}
+
+	public void actionSaveForm(
+		String dialogToHideAfterSuccess,
+		String varBtnToEnableFailedSave
+	) {
 		if (this.getFluidClientDS() == null) return;
+
 		try {
+			String actionString = "Created";
 			FormContainerClient fcClient = this.getFluidClientDS().getFormContainerClient();
 			FlowItemClient fiClient = this.getFluidClientDS().getFlowItemClient();
 			WorkspaceFluidItem wsFlItem = this.getWsFluidItem();
 			WebKitForm webKitForm = wsFlItem.getWebKitForm();
 
 			if (wsFlItem.isFluidItemFormSet()) {
+				actionString = "Updated";
 				//Always lock the form first on a save...
 				if (wsFlItem.isFormLockedByLoggedInUser()) {
 					//Already locked by the logged in user...
@@ -176,23 +197,34 @@ public class WebKitOpenFormConversationBean extends ABaseManagedBean {
 						(wsFlItem.isFluidItemInWIPState() && wsFlItem.isFormLockedByLoggedInUser())) {
 					//Send on in the workflow...
 					fiClient.sendFlowItemOn(wsFlItem.getFluidItem(), true);
+					actionString = String.format("%s and Sent On", actionString);
 				} else if (webKitForm.isUnlockFormOnSave()) {
 					//Unlock form on save...
 					fcClient.unLockFormContainer(wsFlItem.getFluidItemForm());
 				}
 			} else {
 				//Create a new item...
-				Form createdForm = fcClient.createFormContainer(this.toFormToSave(wsFlItem), false);
-				if (webKitForm.isSendToWorkflowAfterCreate()) {
+				boolean sendingOn = (webKitForm.isSendToWorkflowAfterCreate() &&
+						UtilGlobal.isNotBlank(this.inputSelectedWorkflow));
+				Form createdForm = fcClient.createFormContainer(this.toFormToSave(wsFlItem), !sendingOn);
+				if (sendingOn) {
 					fiClient.sendFormToFlow(createdForm, this.inputSelectedWorkflow);
+					actionString = String.format("%s and Sent to '%s'", actionString, this.inputSelectedWorkflow);
+				} else if (webKitForm.isUnlockFormOnSave()) {
+					fcClient.unLockFormContainer(wsFlItem.getFluidItemForm());
 				}
 			}
 
+			//After 'Save' Processing...
+			if (this.conversationCallback != null) this.conversationCallback.afterSaveProcessing(wsFlItem);
+
 			this.executeJavaScript(String.format("PF('%s').hide();", dialogToHideAfterSuccess));
 			FacesMessage fMsg = new FacesMessage(FacesMessage.SEVERITY_INFO,
-					"Success", String.format("'%s' Updated.", this.wsFluidItem.getFluidItemTitle()));
+					"Success", String.format("'%s' %s.", this.wsFluidItem.getFluidItemTitle(), actionString));
 			FacesContext.getCurrentInstance().addMessage(null, fMsg);
 		} catch (Exception except) {
+			if (UtilGlobal.isNotBlank(varBtnToEnableFailedSave))
+				this.executeJavaScript(String.format("PF('%s').enable();", varBtnToEnableFailedSave));
 			this.raiseError(except);
 		}
 	}
@@ -200,7 +232,7 @@ public class WebKitOpenFormConversationBean extends ABaseManagedBean {
 	private Form toFormToSave(WorkspaceFluidItem fluidItem) {
 		Form returnVal = new Form(fluidItem.getFluidItemFormType());
 		returnVal.setId(fluidItem.getFluidItemFormId());
-		returnVal.setFormTypeId(fluidItem.getFluidItemForm().getFormTypeId());
+		returnVal.setFormType(fluidItem.getFluidItemForm().getFormType());
 		returnVal.setFormFields(fluidItem.getFormFieldsEdit());
 		returnVal.setTitle(fluidItem.getFluidItemTitle());
 		returnVal.setFormTypeId(fluidItem.getFluidItemForm().getFormTypeId());

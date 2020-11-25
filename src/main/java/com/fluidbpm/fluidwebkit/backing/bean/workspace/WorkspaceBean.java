@@ -16,10 +16,10 @@
 package com.fluidbpm.fluidwebkit.backing.bean.workspace;
 
 import com.fluidbpm.fluidwebkit.backing.bean.workspace.contentview.WebKitViewContentModelBean;
+import com.fluidbpm.fluidwebkit.backing.bean.workspace.form.IConversationCallback;
 import com.fluidbpm.fluidwebkit.backing.bean.workspace.jv.ContentViewJV;
 import com.fluidbpm.fluidwebkit.backing.bean.workspace.jv.JobViewItemVO;
 import com.fluidbpm.program.api.vo.field.Field;
-import com.fluidbpm.program.api.vo.flow.JobView;
 import com.fluidbpm.program.api.vo.item.FluidItem;
 import com.fluidbpm.program.api.vo.webkit.viewgroup.WebKitViewGroup;
 import com.fluidbpm.program.api.vo.webkit.viewgroup.WebKitViewSub;
@@ -40,7 +40,8 @@ import java.util.List;
  */
 @SessionScoped
 @Named("webKitWorkspaceBean")
-public class WorkspaceBean extends ABaseWorkspaceBean<JobViewItemVO, ContentViewJV> {
+public class WorkspaceBean extends ABaseWorkspaceBean<JobViewItemVO, ContentViewJV> implements
+		IConversationCallback {
 
 	public static final String TGM_TABLE_PER_VIEW_SECTION_FORMAT = "%s - %s";
 	public static final String TGM_TABLE_PER_VIEW_SECTION_DEL = " - ";
@@ -60,16 +61,14 @@ public class WorkspaceBean extends ABaseWorkspaceBean<JobViewItemVO, ContentView
 		WebKitViewSub wkSub
 	) {
 		try {
-			if (this.getFluidClientDS() == null) {
-				return null;
-			}
+			if (this.getFluidClientDS() == null) return null;
 
 			final String tgm = wkGroup.getTableGenerateMode();
-			if (tgm == null) {
-				throw new FluidClientException(
+
+			if (tgm == null) throw new FluidClientException(
 						"Unable to determine outcome for TGM not being set.",
 						FluidClientException.ErrorCode.FIELD_VALIDATE);
-			}
+
 			List<WebKitViewSub> subs = wkGroup.getWebKitViewSubs();
 			Collections.sort(subs, Comparator.comparing(WebKitViewSub::getSubOrder));
 			List<String> sections = new ArrayList<>();
@@ -113,6 +112,36 @@ public class WorkspaceBean extends ABaseWorkspaceBean<JobViewItemVO, ContentView
 			this.raiseError(fce);
 			return new ContentViewJV(this.getLoggedInUser(), this.webKitViewContentModelBean);
 		}
+	}
+
+	/**
+	 * Open an 'Form' for editing or viewing.
+	 * Custom functionality needs to be placed in {@code this#actionOpenFormForEditingFromWorkspace}.
+	 *
+	 * @see this#actionOpenForm(WorkspaceFluidItem)
+	 */
+	public void actionOpenFormForEditingFromWorkspace(WorkspaceFluidItem workspaceFluidItem) {
+		this.setAreaToUpdateForDialogAfterSubmit(null);
+		this.currentlyHaveItemOpen = false;
+
+//		Long formIdToUpdate = this.getLongRequestParam(RequestParam.TO_UPDATE);
+//		Long openedFromViewId = this.getLongRequestParam(RequestParam.OPENED_FROM_VIEW);
+//		JobView fromView = this.getJobViewFromListingWithId(this.viewsAll, openedFromViewId);
+
+		try {
+			this.openFormBean.startConversation();
+			this.openFormBean.setAreaToUpdateAfterSave(":dataListResults");
+			this.openFormBean.setConversationCallback(this);
+			this.actionOpenForm(workspaceFluidItem);
+			this.currentlyHaveItemOpen = true;
+		} catch (Exception except) {
+			this.raiseError(except);
+		}
+	}
+
+	@Override
+	public void afterSaveProcessing(WorkspaceFluidItem workspaceItemSaved) {
+		this.actionOpenMainPage();
 	}
 
 	@Override
