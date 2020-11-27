@@ -535,20 +535,18 @@ public class WebKitWorkspaceLookAndFeelBean extends ABaseManagedBean {
 
 	public void actionSaveWebKitViewGroups(String dialogToHideAfterSuccess) {
 		try {
+			if (this.formDefinitionLDM.getDataListing() != null)
+				this.formDefinitionLDM.getDataListing().forEach(itm -> itm.validateAndFormatNewFormFormula());
+
 			//View Groups...
 			this.webKitViewGroups.forEach(groupItm -> {
 				String groupName = groupItm.getJobViewGroupName();
 				List<String> visibleColumns = new ArrayList<>();
 				List<String> visibleButtons = new ArrayList<>();
 				Object objVisibleColumns = this.inputVisibleColumns.get(groupName);
-				if (objVisibleColumns instanceof String[]) {
-					for (String selected : (String[])objVisibleColumns) {
+				if (objVisibleColumns instanceof String[])
+					for (String selected : (String[])objVisibleColumns)
 						visibleColumns.add(selected);
-					}
-				}
-				Object objVisibleButtons = this.inputVisibleButtons.get(groupName);
-				if (objVisibleButtons instanceof String[])
-					for (String selected : (String[])objVisibleButtons) visibleButtons.add(selected);
 
 				this.updateGroupPropertyBasedOnSelected(visibleColumns, visibleButtons, groupItm);
 			});

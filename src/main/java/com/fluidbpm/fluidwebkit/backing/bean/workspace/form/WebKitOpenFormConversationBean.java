@@ -68,10 +68,8 @@ public class WebKitOpenFormConversationBean extends ABaseManagedBean {
 	 * Start the conversation scope.
 	 */
 	public void startConversation() {
-		//Start the transaction...
 		if (this.conversation.isTransient()) {
-			this.conversation.setTimeout(
-					TimeUnit.MINUTES.toMillis(120));
+			this.conversation.setTimeout(TimeUnit.MINUTES.toMillis(120));
 			this.conversation.begin();
 		}
 	}
@@ -103,9 +101,8 @@ public class WebKitOpenFormConversationBean extends ABaseManagedBean {
 			this.setDialogHeaderTitle(wfiParam.getFluidItemTitle());
 
 			WebKitForm webKitForm = this.lookAndFeelBean.getWebKitFormWithFormDef(formType);
-			if (webKitForm == null && WebKitForm.EMAIL_FORM_TYPE.equals(formType)) {
+			if (webKitForm == null && WebKitForm.EMAIL_FORM_TYPE.equals(formType))
 				webKitForm = WebKitForm.emailWebKitForm();
-			}
 
 			List<Field> editable = this.accessBean.getFieldsEditableForFormDef(formType);
 			List<Field> viewable = this.accessBean.getFieldsViewableForFormDef(formType);
@@ -132,9 +129,7 @@ public class WebKitOpenFormConversationBean extends ABaseManagedBean {
 					List<FormListing> childForms =
 							this.getFluidClientDS().getSQLUtilWrapper().getTableForms(true, freshFetchForm);
 				}
-
 			} else {
-				freshFetchForm.setTitle(String.format("New '%s'", wfiParam.getFluidItemFormType()));
 				freshFetchForm.setFormType(wfiParam.getFluidItemFormType());
 				this.setDialogHeaderTitle(freshFetchForm.getTitle());
 
@@ -234,9 +229,45 @@ public class WebKitOpenFormConversationBean extends ABaseManagedBean {
 		returnVal.setId(fluidItem.getFluidItemFormId());
 		returnVal.setFormType(fluidItem.getFluidItemForm().getFormType());
 		returnVal.setFormFields(fluidItem.getFormFieldsEdit());
-		returnVal.setTitle(fluidItem.getFluidItemTitle());
+
+		WebKitForm wkForm = this.lookAndFeelBean.getWebKitFormWithFormDef(returnVal.getFormType());
 		returnVal.setFormTypeId(fluidItem.getFluidItemForm().getFormTypeId());
+		returnVal.setTitle(this.generateNewFormTitle(
+				wkForm == null ? null : wkForm.getNewFormTitleFormula(), fluidItem));
 		return returnVal;
+	}
+
+	protected String generateNewFormTitle(
+		String formula,
+		WorkspaceFluidItem wfiParam
+	) {
+		if (UtilGlobal.isBlank(formula)) return String.format("New '%s'", wfiParam.getFluidItemFormType());
+
+		int lastIndexOfPipe = formula.lastIndexOf("|");
+		String formFieldsString = formula.substring(lastIndexOfPipe);
+		if (UtilGlobal.isBlank(formFieldsString)) return formula.substring(lastIndexOfPipe - 1);
+
+		String[] formFieldNames = formFieldsString.split("\\,");
+		if (formFieldNames == null || formFieldNames.length < 1) return formFieldsString;
+
+		return String.format(formula, this.toObjs(formFieldNames, wfiParam.getFormFields()));
+	}
+
+	private Object[] toObjs(String[] formFieldNames, List<Field> formFields) {
+		if (formFieldNames == null || formFieldNames.length == 0) return null;
+
+		List<Object> returnVal = new ArrayList<>();
+		for (String fieldName : formFieldNames) {
+			String fieldNameLower = fieldName.toLowerCase();
+			Field fieldWithName = formFields.stream()
+					.filter(itm -> fieldNameLower.equals(itm.getFieldName().toLowerCase()))
+					.findFirst()
+					.orElse(null);
+			if (fieldWithName == null) returnVal.add(UtilGlobal.EMPTY);
+			else
+				returnVal.add(fieldWithName.getFieldValue());
+		}
+		return returnVal.toArray(new Object[]{});
 	}
 
 	private void lockByLoggedInUser(Form form) {
