@@ -24,6 +24,7 @@ import javax.faces.context.FacesContext;
 import javax.inject.Inject;
 import javax.inject.Named;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -130,6 +131,7 @@ public class WebKitOpenFormConversationBean extends ABaseManagedBean {
 							this.getFluidClientDS().getSQLUtilWrapper().getTableForms(true, freshFetchForm);
 				}
 			} else {
+				freshFetchForm.setTitle(String.format("New '%s'", wfiParam.getFluidItemFormType()));
 				freshFetchForm.setFormType(wfiParam.getFluidItemFormType());
 				this.setDialogHeaderTitle(freshFetchForm.getTitle());
 
@@ -241,16 +243,18 @@ public class WebKitOpenFormConversationBean extends ABaseManagedBean {
 		String formula,
 		WorkspaceFluidItem wfiParam
 	) {
-		if (UtilGlobal.isBlank(formula)) return String.format("New '%s'", wfiParam.getFluidItemFormType());
+		if (UtilGlobal.isBlank(formula))
+			return String.format("%s - %s", wfiParam.getFluidItemFormType(), new Date().toString());
 
 		int lastIndexOfPipe = formula.lastIndexOf("|");
 		String formFieldsString = formula.substring(lastIndexOfPipe);
 		if (UtilGlobal.isBlank(formFieldsString)) return formula.substring(lastIndexOfPipe - 1);
 
-		String[] formFieldNames = formFieldsString.split("\\,");
+		String[] formFieldNames = formFieldsString.substring(1).split("\\,");
 		if (formFieldNames == null || formFieldNames.length < 1) return formFieldsString;
 
-		return String.format(formula, this.toObjs(formFieldNames, wfiParam.getFormFields()));
+		return String.format(formula.substring(0, lastIndexOfPipe),
+				this.toObjs(formFieldNames, wfiParam.getFormFieldsEdit()));
 	}
 
 	private Object[] toObjs(String[] formFieldNames, List<Field> formFields) {
@@ -258,9 +262,9 @@ public class WebKitOpenFormConversationBean extends ABaseManagedBean {
 
 		List<Object> returnVal = new ArrayList<>();
 		for (String fieldName : formFieldNames) {
-			String fieldNameLower = fieldName.toLowerCase();
+			String fieldNameLower = fieldName.trim().toLowerCase();
 			Field fieldWithName = formFields.stream()
-					.filter(itm -> fieldNameLower.equals(itm.getFieldName().toLowerCase()))
+					.filter(itm -> itm.getFieldName() != null && fieldNameLower.equals(itm.getFieldName().toLowerCase()))
 					.findFirst()
 					.orElse(null);
 			if (fieldWithName == null) returnVal.add(UtilGlobal.EMPTY);

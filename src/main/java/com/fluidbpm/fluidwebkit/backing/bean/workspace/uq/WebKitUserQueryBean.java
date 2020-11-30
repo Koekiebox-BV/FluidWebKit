@@ -74,7 +74,7 @@ public class WebKitUserQueryBean extends ABaseWorkspaceBean<UserQueryItemVO, Con
 
 	@Override
 	public void actionOpenForm(WorkspaceFluidItem workspaceFluidItem) {
-		//Do nothing...
+		this.openFormBean.actionFreshLoadFormAndSet(workspaceFluidItem);
 	}
 
 	@Override

@@ -67,7 +67,6 @@ implements IConversationCallback {
 
 	@Override
 	public void actionOpenForm(WorkspaceFluidItem workspaceFluidItem) {
-		//Do nothing...
 		this.openFormBean.actionFreshLoadFormAndSet(workspaceFluidItem);
 	}
 
