@@ -36,9 +36,7 @@ public class PersonalInventoryItemVO extends ABaseWebVO {
 		this.dateCreated = form.getDateCreated();
 
 		this.step = COMPLETED_NOT_IN_FLOW_SENT;
-		if (fluidItm.getStep() != null && !fluidItm.getStep().trim().isEmpty()) {
-			this.step = fluidItm.getStep();
-		}
+		if (fluidItm.getStep() != null && !fluidItm.getStep().trim().isEmpty()) this.step = fluidItm.getStep();
 
 		this.type = form.getFormType();
 		this.state = form.getState();
@@ -50,10 +48,10 @@ public class PersonalInventoryItemVO extends ABaseWebVO {
 
 
 	public PersonalInventoryItemVO cloneVO(
-			FluidItem fluidItem,
-			List<Field> fieldsViewable,
-			List<Field> fieldsEditable,
-			List<User> allUsers
+		FluidItem fluidItem,
+		List<Field> fieldsViewable,
+		List<Field> fieldsEditable,
+		List<User> allUsers
 	) {
 		PersonalInventoryItemVO returnVal = new PersonalInventoryItemVO(fluidItem);
 		returnVal.setFieldsViewable(fieldsViewable);

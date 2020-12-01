@@ -4,8 +4,10 @@ import com.fluidbpm.fluidwebkit.backing.bean.ABaseManagedBean;
 import com.fluidbpm.fluidwebkit.backing.bean.config.WebKitAccessBean;
 import com.fluidbpm.fluidwebkit.backing.bean.workspace.WorkspaceFluidItem;
 import com.fluidbpm.fluidwebkit.backing.bean.workspace.lf.WebKitWorkspaceLookAndFeelBean;
+import com.fluidbpm.fluidwebkit.backing.bean.workspace.pi.PersonalInventoryItemVO;
 import com.fluidbpm.program.api.util.UtilGlobal;
 import com.fluidbpm.program.api.vo.field.Field;
+import com.fluidbpm.program.api.vo.field.TableField;
 import com.fluidbpm.program.api.vo.flow.Flow;
 import com.fluidbpm.program.api.vo.form.Form;
 import com.fluidbpm.program.api.vo.form.FormListing;
@@ -15,6 +17,7 @@ import com.fluidbpm.ws.client.v1.flowitem.FlowItemClient;
 import com.fluidbpm.ws.client.v1.form.FormContainerClient;
 import lombok.Getter;
 import lombok.Setter;
+import org.primefaces.event.RowEditEvent;
 
 import javax.annotation.PostConstruct;
 import javax.enterprise.context.Conversation;
@@ -23,9 +26,7 @@ import javax.faces.application.FacesMessage;
 import javax.faces.context.FacesContext;
 import javax.inject.Inject;
 import javax.inject.Named;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 @ConversationScoped
@@ -38,6 +39,18 @@ public class WebKitOpenFormConversationBean extends ABaseManagedBean {
 	@Getter
 	@Setter
 	private WorkspaceFluidItem wsFluidItem;
+
+	@Getter
+	@Setter
+	private Map<String, List<WorkspaceFluidItem>> tableRecordWSFluidItems;
+
+	@Getter
+	@Setter
+	private Map<String, List<Field>> tableRecordViewableFields;
+
+	@Getter
+	@Setter
+	private Map<String, List<Field>> tableRecordEditableFields;
 
 	@Inject
 	private WebKitAccessBean accessBean;
@@ -89,6 +102,9 @@ public class WebKitOpenFormConversationBean extends ABaseManagedBean {
 	public void actionFreshLoadFormAndSet(WorkspaceFluidItem wfiParam) {
 		this.setDialogHeaderTitle(null);
 		this.setWsFluidItem(null);
+		this.setTableRecordWSFluidItems(null);
+		this.setTableRecordViewableFields(null);
+		this.setTableRecordEditableFields(null);
 
 		//Send to a specific workflow...
 		this.setInputWorkflowsForFormDef(new ArrayList<>());
@@ -116,6 +132,32 @@ public class WebKitOpenFormConversationBean extends ABaseManagedBean {
 				fluidItem = flowItemClient.getFluidItemByFormId(wfiParam.getFluidItemFormId());
 			}
 
+			boolean tableFormsEnabled = webKitForm.isAnyTableFormsEnabled();
+			Map<String, List<Field>> tblFieldViewable = new HashMap<>(), tblFieldEditable = new HashMap<>();
+			Map<String, String> fieldNameToFormDef = new HashMap<>();
+			if (tableFormsEnabled) {
+				webKitForm.getTableFieldsToInclude().forEach(tableField -> {
+					Field tableFieldWithName = viewable.stream()
+							.filter(itm -> itm.getFieldName().equals(tableField))
+							.findFirst()
+							.orElse(null);
+					if (tableFieldWithName == null) return;
+
+					String formDef = this.accessBean.getFormDefinitionFromTableField(tableFieldWithName);
+					List<Field> tblEditable = this.accessBean.getFieldsEditableForFormDef(formDef);
+					if (tblEditable == null) tblEditable = new ArrayList<>();
+					tblFieldEditable.put(tableField, tblEditable);
+
+					List<Field> tblViewable = this.accessBean.getFieldsViewableForFormDef(formDef);
+					if (tblViewable == null) tblViewable = new ArrayList<>();
+					tblFieldViewable.put(tableField, tblViewable);
+
+					fieldNameToFormDef.put(tableField, formDef);
+				});
+				this.setTableRecordViewableFields(tblFieldViewable);
+				this.setTableRecordEditableFields(tblFieldEditable);
+			}
+
 			Form freshFetchForm = new Form();
 			if (wfiParam.isFluidItemFormSet()) {
 				freshFetchForm = fcClient.getFormContainerById(wfiParam.getFluidItemFormId());
@@ -126,9 +168,21 @@ public class WebKitOpenFormConversationBean extends ABaseManagedBean {
 				}
 
 				//Fetch the table field forms...
-				if (webKitForm.isAnyTableFormsEnabled()) {
+				if (tableFormsEnabled) {
 					List<FormListing> childForms =
 							this.getFluidClientDS().getSQLUtilWrapper().getTableForms(true, freshFetchForm);
+					webKitForm.getTableFieldsToInclude().forEach(tableFieldName -> {
+						List<Form> tableRecordsForField = new ArrayList<>();
+						childForms.stream()
+								.filter(itm -> !itm.isListingEmpty())
+								.forEach(listItm -> {
+									String formDefToFilterBy = fieldNameToFormDef.get(tableFieldName);
+									
+
+									//TODO add its...
+									
+								});
+					});
 				}
 			} else {
 				freshFetchForm.setTitle(String.format("New '%s'", wfiParam.getFluidItemFormType()));
@@ -149,8 +203,7 @@ public class WebKitOpenFormConversationBean extends ABaseManagedBean {
 			}
 			fluidItem.setForm(freshFetchForm);
 
-			this.setWsFluidItem(new WorkspaceFluidItem(wfiParam.getBaseWeb().cloneVO(
-					fluidItem, viewable, editable, null)));
+			this.setWsFluidItem(new WorkspaceFluidItem(wfiParam.getBaseWeb().cloneVO(fluidItem, viewable, editable, null)));
 			this.getWsFluidItem().setWebKitForm(webKitForm);
 			this.getWsFluidItem().setLoggedInUser(this.getLoggedInUserSafe());
 			this.getWsFluidItem().refreshFormFieldsEdit();
@@ -161,6 +214,45 @@ public class WebKitOpenFormConversationBean extends ABaseManagedBean {
 
 	public void actionUpdateSelectedWorkflow() {
 		
+	}
+
+	public void actionAddNewRowOfType(Field tableFieldToAddFor) {
+		try {
+			TableField tableField = tableFieldToAddFor.getFieldValueAsTableField();
+			if (tableField == null) tableField = new TableField(new ArrayList<>());
+			if (tableField.isTableRecordsEmpty()) tableField.setTableRecords(new ArrayList<>());
+
+			String formDefForNewTableRecord = this.accessBean.getFormDefinitionFromTableField(tableFieldToAddFor);
+			String fieldName = tableFieldToAddFor.getFieldName();
+
+			List<Field> tableRecordFieldsView = this.tableRecordViewableFields.get(fieldName);
+			List<Field> tableRecordFieldsEditable = this.tableRecordEditableFields.get(fieldName);
+
+			//New Form Instance...
+			Form toAdd = new Form(formDefForNewTableRecord);
+			FluidItem fluidItmToAdd = new FluidItem(toAdd);
+			WorkspaceFluidItem wfi = new WorkspaceFluidItem(
+					new PersonalInventoryItemVO(fluidItmToAdd).cloneVO(
+							fluidItmToAdd, tableRecordFieldsView, tableRecordFieldsEditable, null));
+			wfi.refreshFormFieldsEdit();
+			toAdd.setFormFields(wfi.getFormFieldsEdit());
+			tableField.getTableRecords().add(toAdd);
+			tableFieldToAddFor.setFieldValue(tableField);
+		} catch (Exception except) {
+			this.raiseError(except);
+		}
+	}
+
+	public void actionOnRowEdit(RowEditEvent<Form> event) {
+		FacesMessage msg = new FacesMessage("Edited",
+				String.format("%s", event.getObject().getFormType()));
+		FacesContext.getCurrentInstance().addMessage(null, msg);
+	}
+
+	public void actionOnRowCancel(RowEditEvent<Form> event) {
+		FacesMessage msg = new FacesMessage("Cancelled",
+				String.format("%s", event.getObject().getFormType()));
+		FacesContext.getCurrentInstance().addMessage(null, msg);
 	}
 
 	public void actionSaveForm(
@@ -187,8 +279,12 @@ public class WebKitOpenFormConversationBean extends ABaseManagedBean {
 					this.lockByLoggedInUser(wsFlItem.getFluidItemForm());
 				}
 
+				//Update the Table Records...
+				Form formToSave = this.toFormToSave(wsFlItem);
+				this.upsertTableRecords(formToSave);
+
 				//Existing Item...
-				fcClient.updateFormContainer(this.toFormToSave(wsFlItem));
+				fcClient.updateFormContainer(formToSave);
 
 				if (webKitForm.isSendOnAfterSave() &&
 						(wsFlItem.isFluidItemInWIPState() && wsFlItem.isFormLockedByLoggedInUser())) {
@@ -204,6 +300,10 @@ public class WebKitOpenFormConversationBean extends ABaseManagedBean {
 				boolean sendingOn = (webKitForm.isSendToWorkflowAfterCreate() &&
 						UtilGlobal.isNotBlank(this.inputSelectedWorkflow));
 				Form createdForm = fcClient.createFormContainer(this.toFormToSave(wsFlItem), !sendingOn);
+
+				//Update the table records...
+				this.upsertTableRecords(createdForm);
+
 				if (sendingOn) {
 					fiClient.sendFormToFlow(createdForm, this.inputSelectedWorkflow);
 					actionString = String.format("%s and Sent to '%s'", actionString, this.inputSelectedWorkflow);
@@ -224,6 +324,10 @@ public class WebKitOpenFormConversationBean extends ABaseManagedBean {
 				this.executeJavaScript(String.format("PF('%s').enable();", varBtnToEnableFailedSave));
 			this.raiseError(except);
 		}
+	}
+
+	private void upsertTableRecords(Form formToUpdateForm) {
+		
 	}
 
 	private Form toFormToSave(WorkspaceFluidItem fluidItem) {

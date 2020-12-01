@@ -15,6 +15,7 @@
 package com.fluidbpm.fluidwebkit.backing.bean.config;
 
 import com.fluidbpm.fluidwebkit.backing.bean.ABaseManagedBean;
+import com.fluidbpm.program.api.util.UtilGlobal;
 import com.fluidbpm.program.api.vo.field.Field;
 import com.fluidbpm.program.api.vo.field.MultiChoice;
 import com.fluidbpm.program.api.vo.flow.JobView;
@@ -54,6 +55,9 @@ public class WebKitAccessBean extends ABaseManagedBean {
 
 	@Getter
 	private List<Form> formDefinitionsAttachmentCanEdit;
+
+	@Getter
+	private List<Form> allFormDefinitionsForLoggedIn;
 
 	@Getter
 	private List<UserQuery> userQueriesCanExecute;
@@ -111,6 +115,7 @@ public class WebKitAccessBean extends ABaseManagedBean {
 		this.formDefinitionsCanCreateInstanceOf = new ArrayList<>();
 		this.formDefinitionsAttachmentCanView = new ArrayList<>();
 		this.formDefinitionsAttachmentCanEdit = new ArrayList<>();
+		this.allFormDefinitionsForLoggedIn = new ArrayList<>();
 
 		//Retrieve Forms and their Workflows...
 		this.formDefinitionsCanCreateInstanceOf = formDefinitionClient.getAllByLoggedInUserWhereCanCreateInstanceOf(
@@ -128,20 +133,18 @@ public class WebKitAccessBean extends ABaseManagedBean {
 		this.formDefinitionsAttachmentCanEdit = formDefinitionClient.getAllByLoggedInUserWhereCanEditAttachments();
 
 		this.getLogger().info("FFC-Bean: PART-1-COMPLETE.");
-		List<Form> allFormDefinitions = formDefinitionClient.getAllByLoggedInUser(true);
-		if (allFormDefinitions == null) return;
+		this.allFormDefinitionsForLoggedIn = formDefinitionClient.getAllByLoggedInUser(true);
+		if (allFormDefinitionsForLoggedIn == null) return;
 
 		this.getLogger().info("FFC-Bean: PART-2-COMPLETE.");
 		long now = System.currentTimeMillis();
 
 		//Set all the field definitions...
 		List<CompletableFuture> allAsyncs = new ArrayList<>();
-		for (Form formDef : allFormDefinitions) {
+		for (Form formDef : this.allFormDefinitionsForLoggedIn) {
 			//Ignore any configuration [Form Definitions]...
 			String formDefTitle = formDef.getFormType();
-			if (this.getFormDefsToIgnore() != null && this.getFormDefsToIgnore().contains(formDefTitle)) {
-				continue;
-			}
+			if (this.getFormDefsToIgnore() != null && this.getFormDefsToIgnore().contains(formDefTitle)) continue;
 
 			//Run the following asynchronous...
 			String endpoint = this.getFluidClientDS().getEndpoint(),
@@ -220,6 +223,24 @@ public class WebKitAccessBean extends ABaseManagedBean {
 		if (this.fieldsForViewing == null || this.fieldsForViewing.isEmpty()) return null;
 
 		return this.fieldsForViewing.get(formDefinitionParam);
+	}
+
+	public String getFormDefinitionFromTableField(Field tableField) {
+		if (this.allFormDefinitionsForLoggedIn == null || this.allFormDefinitionsForLoggedIn.isEmpty()) return null;
+
+		String fieldMetaData = null;
+		if (tableField == null || UtilGlobal.isBlank(fieldMetaData = tableField.getTypeMetaData())) return null;
+
+		int indexOfUnderscore = fieldMetaData.indexOf("_");
+		if (indexOfUnderscore < 0) return null;
+		String formDefIdTxt = fieldMetaData.substring(0, indexOfUnderscore);
+		if (UtilGlobal.isBlank(formDefIdTxt)) return null;
+
+		return this.allFormDefinitionsForLoggedIn.stream()
+				.filter(itm -> itm.getFormTypeId() != null && formDefIdTxt.equals(itm.getFormTypeId().toString()))
+				.findFirst()
+				.map(itm -> itm.getFormType())
+				.orElse(null);
 	}
 
 	public Field getFieldBy(

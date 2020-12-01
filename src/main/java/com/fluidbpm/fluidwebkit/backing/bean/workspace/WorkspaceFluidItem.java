@@ -75,9 +75,7 @@ public class WorkspaceFluidItem extends ABaseFluidVO {
 	 * @return {@code this.baseWeb.getFluidItem()}
 	 */
 	public FluidItem getFluidItem() {
-		if (this.baseWeb == null) {
-			return null;
-		}
+		if (this.baseWeb == null) return null;
 		return this.baseWeb.getFluidItem();
 	}
 
@@ -162,11 +160,9 @@ public class WorkspaceFluidItem extends ABaseFluidVO {
 	public void refreshFormFieldsEdit() {
 		List<Field> visibleFields = this.getFormFieldsViewable();
 		if (visibleFields == null) visibleFields = new ArrayList<>();
-		final List<Field> formFields =
-				(this.getFormFields() == null) ? new ArrayList<>() : this.getFormFields();
+		final List<Field> formFields = (this.getFormFields() == null) ? new ArrayList<>() : this.getFormFields();
 
 		List<Field> editFieldsList = new ArrayList<>();
-
 		visibleFields.forEach(visibleField -> {
 			Field fieldToAdd = new Field(
 					null,
@@ -182,7 +178,6 @@ public class WorkspaceFluidItem extends ABaseFluidVO {
 			fieldToAdd.setFieldDescription(visibleField.getFieldDescription());
 			editFieldsList.add(fieldToAdd);
 		});
-
 		this.formFieldsEdit = editFieldsList;
 	}
 
