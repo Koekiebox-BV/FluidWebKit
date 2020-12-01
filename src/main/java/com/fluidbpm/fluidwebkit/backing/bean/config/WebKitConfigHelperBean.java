@@ -35,6 +35,7 @@ import java.util.Map;
 @RequestScoped
 @Named("webKitConfHelpBean")
 public class WebKitConfigHelperBean extends ABaseManagedBean {
+
 	@Inject
 	private WebKitConfigBean webKitConfigBean;
 
@@ -81,18 +82,12 @@ public class WebKitConfigHelperBean extends ABaseManagedBean {
 				serverName).concat(":").concat(Integer.toString(port)).concat(contextPath).toString();
 	}
 
-	/**
-	 *
-	 */
 	public void actionDisplayErrorRemote() {
 		String value = this.getFacesRequestParameterMap().get(WebParam.ErrorMessage);
 		FacesMessage fMsg = new FacesMessage(FacesMessage.SEVERITY_ERROR, value, UtilGlobal.EMPTY);
 		FacesContext.getCurrentInstance().addMessage(null, fMsg);
 	}
 
-	/**
-	 *
-	 */
 	public void actionDisplayInformationRemote() {
 		Map<String,String> reqParamMap = this.getFacesRequestParameterMap();
 
@@ -107,18 +102,10 @@ public class WebKitConfigHelperBean extends ABaseManagedBean {
 		return (this.getUserBrowserSessionWindowHeight() - 370);
 	}
 
-	/**
-	 *
-	 * @return
-	 */
 	public int getUserBrowserSessionScrollableHeight() {
 		return (this.getUserBrowserSessionWindowHeight() - 100);
 	}
 
-	/**
-	 *
-	 * @return
-	 */
 	public int getUserBrowserSessionWindowHeight() {
 		Object httpSessionObj =
 				FacesContext.getCurrentInstance().getExternalContext().getSession(false);
@@ -141,5 +128,12 @@ public class WebKitConfigHelperBean extends ABaseManagedBean {
 
 	public String convertToUpper(String toConvert) {
 		return toConvert.toUpperCase();
+	}
+
+	public String objectHashCode(Object objectAddress) {
+		if (objectAddress == null) return UtilGlobal.NONE;
+		return String.format("%s@%s",
+				objectAddress.getClass().getName(),
+				Integer.toHexString(objectAddress.hashCode()));
 	}
 }

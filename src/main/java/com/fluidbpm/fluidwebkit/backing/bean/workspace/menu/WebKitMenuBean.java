@@ -18,7 +18,6 @@ package com.fluidbpm.fluidwebkit.backing.bean.workspace.menu;
 import com.fluidbpm.fluidwebkit.backing.bean.ABaseManagedBean;
 import com.fluidbpm.fluidwebkit.backing.bean.config.GuestPreferencesBean;
 import com.fluidbpm.fluidwebkit.backing.bean.config.WebKitAccessBean;
-import com.fluidbpm.fluidwebkit.backing.bean.config.WebKitConfigBean;
 import com.fluidbpm.fluidwebkit.backing.bean.workspace.lf.WebKitWorkspaceLookAndFeelBean;
 import com.fluidbpm.program.api.vo.flow.JobView;
 import com.fluidbpm.program.api.vo.userquery.UserQuery;
@@ -33,8 +32,6 @@ import lombok.Getter;
 import lombok.Setter;
 import org.primefaces.component.menuitem.UIMenuItem;
 import org.primefaces.component.submenu.UISubmenu;
-import org.primefaces.model.DefaultTreeNode;
-import org.primefaces.model.TreeNode;
 
 import javax.annotation.PostConstruct;
 import javax.enterprise.context.SessionScoped;
@@ -44,7 +41,6 @@ import javax.inject.Named;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
-import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
@@ -270,7 +266,8 @@ public class WebKitMenuBean extends ABaseManagedBean {
 				boolean foundByIdAccess = false;
 				if (wkUserQryByMenu != null && wkUserQryByMenu.getUserQuery() != null) {
 					userQuery = wkUserQryByMenu.getUserQuery();
-					foundByIdAccess = this.webKitAccessBean.getUserQueriesCanExecute().stream()
+					foundByIdAccess = (this.webKitAccessBean.getUserQueriesCanExecute() == null) ? false :
+							this.webKitAccessBean.getUserQueriesCanExecute().stream()
 							.filter(itm -> menuItmWhereParent.getId().equals(itm.getId()))
 							.findFirst()
 							.isPresent();

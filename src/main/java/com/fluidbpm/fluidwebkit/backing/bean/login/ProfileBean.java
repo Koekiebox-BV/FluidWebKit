@@ -19,7 +19,6 @@ import com.fluidbpm.fluidwebkit.backing.bean.ABaseManagedBean;
 import com.fluidbpm.program.api.vo.field.Field;
 import com.fluidbpm.program.api.vo.user.User;
 import com.fluidbpm.program.api.vo.user.UserFieldListing;
-import com.fluidbpm.ws.client.FluidClientException;
 import com.fluidbpm.ws.client.v1.user.UserClient;
 import lombok.Getter;
 import lombok.Setter;
@@ -210,6 +209,7 @@ public class ProfileBean extends ABaseManagedBean {
 
 	public List<Field> getLoggedInUserFieldsProfile() {
 		List<Field> allUserFields = this.getLoggedInUserSafe().getUserFields();
+		if (allUserFields == null) return new ArrayList<>();
 		List<Field> returnVal = allUserFields.stream()
 				.filter(itm -> !USER_PROF_IGNORE.contains(itm.getFieldName()))
 				.collect(Collectors.toList());

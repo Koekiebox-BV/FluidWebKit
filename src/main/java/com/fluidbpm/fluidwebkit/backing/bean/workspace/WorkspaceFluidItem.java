@@ -19,6 +19,7 @@ import com.fluidbpm.fluidwebkit.backing.vo.ABaseWebVO;
 import com.fluidbpm.program.api.util.UtilGlobal;
 import com.fluidbpm.program.api.vo.ABaseFluidVO;
 import com.fluidbpm.program.api.vo.field.Field;
+import com.fluidbpm.program.api.vo.field.MultiChoice;
 import com.fluidbpm.program.api.vo.flow.JobView;
 import com.fluidbpm.program.api.vo.form.Form;
 import com.fluidbpm.program.api.vo.item.FluidItem;
@@ -164,14 +165,21 @@ public class WorkspaceFluidItem extends ABaseFluidVO {
 
 		List<Field> editFieldsList = new ArrayList<>();
 		visibleFields.forEach(visibleField -> {
-			Field fieldToAdd = new Field(
-					null,
-					visibleField.getFieldName(),
-					formFields.stream()
+
+			Object fieldValueToSet = formFields.stream()
 							.filter(itm -> itm.getFieldName().equals(visibleField.getFieldName()))
 							.findFirst()
 							.map(itm -> itm.getFieldValue())
-							.orElse(visibleField.getFieldValue()),
+							.orElse(visibleField.getFieldValue());
+			if (fieldValueToSet instanceof MultiChoice) {
+				MultiChoice casted = (MultiChoice)fieldValueToSet;
+				fieldValueToSet = casted.cloneMultiChoice();
+			}
+
+			Field fieldToAdd = new Field(
+					null,
+					visibleField.getFieldName(),
+					fieldValueToSet,
 					visibleField.getTypeAsEnum()
 			);
 			fieldToAdd.setTypeMetaData(visibleField.getTypeMetaData());
