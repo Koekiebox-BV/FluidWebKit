@@ -52,10 +52,13 @@ public class WorkspaceUserQueryLDM extends ABaseLDM<WorkspaceFluidItem> {
 
 			List<WorkspaceFluidItem> wfiList = new ArrayList<>();
 			this.setRowCount(result.getListingCount());
-			result.getListing().forEach(flItm -> {
-				UserQueryItemVO vo = this.baseWorkspaceBean.createABaseWebVO(null, null, null, flItm);
-				wfiList.add(new WorkspaceFluidItem(vo));
-			});
+
+			if (result.getListingCount() > 0) {
+				result.getListing().forEach(flItm -> {
+					UserQueryItemVO vo = this.baseWorkspaceBean.createABaseWebVO(null, null, null, flItm);
+					wfiList.add(new WorkspaceFluidItem(vo));
+				});
+			}
 			return wfiList;
 		} catch (Exception err) {
 			this.baseWorkspaceBean.raiseError(err);

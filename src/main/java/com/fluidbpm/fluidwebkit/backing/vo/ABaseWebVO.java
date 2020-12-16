@@ -48,8 +48,12 @@ public abstract class ABaseWebVO implements Serializable {
 	@Setter
 	protected List<Field> fieldsEditable;
 
+	@Getter
+	@Setter
 	private String openModeMessage = null;
 
+	@Getter
+	@Setter
 	private Long assignedUserId;
 
 	@Getter
@@ -81,8 +85,7 @@ public abstract class ABaseWebVO implements Serializable {
 	}
 
 	public boolean isFieldsViewableEmpty() {
-		return (this.fieldsViewable == null ||
-				this.fieldsViewable.isEmpty());
+		return (this.fieldsViewable == null || this.fieldsViewable.isEmpty());
 	}
 
 	public boolean isFieldsEditableEmpty() {
@@ -113,7 +116,6 @@ public abstract class ABaseWebVO implements Serializable {
 		Field fieldWithName = this.getFieldWithName(
 				this.fieldsEditable,
 				fieldNameParam);
-
 		return (fieldWithName == null) ? false:true;
 	}
 
@@ -122,9 +124,8 @@ public abstract class ABaseWebVO implements Serializable {
 
 		if (listToCheckParam == null || listToCheckParam.isEmpty()) return null;
 
-		for (Field viewableField : listToCheckParam) {
+		for (Field viewableField : listToCheckParam)
 			if (fieldNameParam.equals(viewableField.getFieldName())) return viewableField;
-		}
 
 		return null;
 	}
@@ -136,22 +137,6 @@ public abstract class ABaseWebVO implements Serializable {
 		for (String availChoice : selectableItemParam) returnVal.add(new SelectItem(availChoice, availChoice));
 
 		return returnVal;
-	}
-
-	public String getOpenModeMessage() {
-		return this.openModeMessage;
-	}
-
-	public void setOpenModeMessage(String openModeMessageParam) {
-		this.openModeMessage = openModeMessageParam;
-	}
-
-	public Long getAssignedUserId() {
-		return this.assignedUserId;
-	}
-
-	public void setAssignedUserId(Long assignedUserIdParam) {
-		this.assignedUserId = assignedUserIdParam;
 	}
 
 	public abstract ABaseWebVO cloneVO(

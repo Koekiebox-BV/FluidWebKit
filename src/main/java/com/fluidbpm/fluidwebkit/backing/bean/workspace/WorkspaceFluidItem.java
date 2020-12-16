@@ -20,6 +20,7 @@ import com.fluidbpm.program.api.util.UtilGlobal;
 import com.fluidbpm.program.api.vo.ABaseFluidVO;
 import com.fluidbpm.program.api.vo.field.Field;
 import com.fluidbpm.program.api.vo.field.MultiChoice;
+import com.fluidbpm.program.api.vo.field.TableField;
 import com.fluidbpm.program.api.vo.flow.JobView;
 import com.fluidbpm.program.api.vo.form.Form;
 import com.fluidbpm.program.api.vo.item.FluidItem;
@@ -174,14 +175,15 @@ public class WorkspaceFluidItem extends ABaseFluidVO {
 			if (fieldValueToSet instanceof MultiChoice) {
 				MultiChoice casted = (MultiChoice)fieldValueToSet;
 				fieldValueToSet = casted.cloneMultiChoice();
+			} else if (fieldValueToSet instanceof TableField) {
+				fieldValueToSet = null;//Clear the records...
 			}
 
 			Field fieldToAdd = new Field(
 					null,
 					visibleField.getFieldName(),
 					fieldValueToSet,
-					visibleField.getTypeAsEnum()
-			);
+					visibleField.getTypeAsEnum());
 			fieldToAdd.setTypeMetaData(visibleField.getTypeMetaData());
 			fieldToAdd.setFieldDescription(visibleField.getFieldDescription());
 			editFieldsList.add(fieldToAdd);

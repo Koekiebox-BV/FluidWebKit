@@ -25,6 +25,7 @@ public class PersonalInventoryItemVO extends ABaseWebVO {
 	private Date dateCreated;
 
 	public static final String COMPLETED_NOT_IN_FLOW_SENT = "[Completed / Not In Flow]";
+	public static final String PLACEHOLDER_TITLE = "[[PLACEHOLDER]]";
 
 	public PersonalInventoryItemVO(FluidItem fluidItm) {
 		super(fluidItm);
@@ -45,7 +46,6 @@ public class PersonalInventoryItemVO extends ABaseWebVO {
 				form.getCurrentUser().getUsername().trim().isEmpty()) ? "[None]" :
 				form.getCurrentUser().getUsername();
 	}
-
 
 	public PersonalInventoryItemVO cloneVO(
 		FluidItem fluidItem,

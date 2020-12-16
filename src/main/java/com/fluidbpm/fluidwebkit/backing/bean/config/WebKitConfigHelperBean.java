@@ -136,4 +136,9 @@ public class WebKitConfigHelperBean extends ABaseManagedBean {
 				objectAddress.getClass().getName(),
 				Integer.toHexString(objectAddress.hashCode()));
 	}
+
+	public boolean isFieldTypeDecimalMetaTypeRating(String metaDataTxt) {
+		if (UtilGlobal.isBlank(metaDataTxt)) return false;
+		return metaDataTxt.startsWith("Rating");
+	}
 }

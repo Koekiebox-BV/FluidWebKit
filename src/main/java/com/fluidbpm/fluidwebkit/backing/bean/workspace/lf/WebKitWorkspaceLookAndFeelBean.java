@@ -91,6 +91,7 @@ public class WebKitWorkspaceLookAndFeelBean extends ABaseManagedBean {
 	@Getter
 	@Setter
 	private TreeNode treeNodeUserQueryMenuRoot;
+
 	private List<WebKitUserQuery> webKitUserQueries;
 
 	@Getter
@@ -214,7 +215,6 @@ public class WebKitWorkspaceLookAndFeelBean extends ABaseManagedBean {
 				this.webKitViewGroups = this.getFluidClientDSConfig().getFlowClient().getViewGroupWebKit().getListing();
 			} catch (FluidClientException fce) {
 				if (fce.getErrorCode() != FluidClientException.ErrorCode.NO_RESULT) throw fce;
-				return;
 			}
 
 			//Populate the menu items...
@@ -238,16 +238,18 @@ public class WebKitWorkspaceLookAndFeelBean extends ABaseManagedBean {
 			RouteFieldClient routeFieldClient = this.getFluidClientDSConfig().getRouteFieldClient();
 
 			//Set the Views available for the Groups...
-			this.allJobViews.stream()
-					.filter(itm -> itm.getViewGroupName() != null && !itm.getViewGroupName().isEmpty())
-					.forEach(itm -> {
-						String viewGroupName = itm.getViewGroupName();
-						//Add the Job Views for the Group...
-						List<JobView> jobViewList = this.groupToViewMapping.getOrDefault(
-								viewGroupName, new ArrayList<>());
-						jobViewList.add(itm);
-						this.groupToViewMapping.put(viewGroupName, jobViewList);
-					});
+			if (this.allJobViews != null) {
+				this.allJobViews.stream()
+						.filter(itm -> itm.getViewGroupName() != null && !itm.getViewGroupName().isEmpty())
+						.forEach(itm -> {
+							String viewGroupName = itm.getViewGroupName();
+							//Add the Job Views for the Group...
+							List<JobView> jobViewList = this.groupToViewMapping.getOrDefault(
+									viewGroupName, new ArrayList<>());
+							jobViewList.add(itm);
+							this.groupToViewMapping.put(viewGroupName, jobViewList);
+						});
+			}
 
 			//Set the Route Fields for the Groups...
 			this.groupToViewMapping.forEach((key, value) -> {
@@ -538,40 +540,46 @@ public class WebKitWorkspaceLookAndFeelBean extends ABaseManagedBean {
 			if (this.formDefinitionLDM.getDataListing() != null)
 				this.formDefinitionLDM.getDataListing().forEach(itm -> itm.validateAndFormatNewFormFormula());
 
-			//View Groups...
-			this.webKitViewGroups.forEach(groupItm -> {
-				String groupName = groupItm.getJobViewGroupName();
-				List<String> visibleColumns = new ArrayList<>();
-				List<String> visibleButtons = new ArrayList<>();
-				Object objVisibleColumns = this.inputVisibleColumns.get(groupName);
-				if (objVisibleColumns instanceof String[])
-					for (String selected : (String[])objVisibleColumns)
-						visibleColumns.add(selected);
-
-				this.updateGroupPropertyBasedOnSelected(visibleColumns, visibleButtons, groupItm);
-			});
-
 			//Global WebKit Config
 			FluidClientDS configDs = this.getFluidClientDSConfig();
 			final ConfigurationClient configurationClient = configDs.getConfigurationClient();
 			configurationClient.upsertConfiguration(WebKitConfigBean.ConfigKey.WebKit, this.webKitGlobal.toString());
 
-			WebKitViewGroupListing listingVg = new WebKitViewGroupListing();
-			listingVg.setListing(this.webKitViewGroups);
-			listingVg.setListingCount(this.webKitViewGroups.size());
-			configDs.getFlowClient().upsertViewGroupWebKit(listingVg);
+			//View Groups...
+			if (this.webKitViewGroups != null) {
+				this.webKitViewGroups.forEach(groupItm -> {
+					String groupName = groupItm.getJobViewGroupName();
+					List<String> visibleColumns = new ArrayList<>();
+					List<String> visibleButtons = new ArrayList<>();
+					Object objVisibleColumns = this.inputVisibleColumns.get(groupName);
+					if (objVisibleColumns instanceof String[])
+						for (String selected : (String[])objVisibleColumns)
+							visibleColumns.add(selected);
+
+					this.updateGroupPropertyBasedOnSelected(visibleColumns, visibleButtons, groupItm);
+				});
+
+				WebKitViewGroupListing listingVg = new WebKitViewGroupListing();
+				listingVg.setListing(this.webKitViewGroups);
+				listingVg.setListingCount(this.webKitViewGroups.size());
+				configDs.getFlowClient().upsertViewGroupWebKit(listingVg);
+			}
 
 			//User Query...
-			WebKitUserQueryListing listingUq = new WebKitUserQueryListing();
-			listingUq.setListing(this.userQueryLDM.getDataListing());
-			listingUq.setListingCount(this.userQueryLDM.getDataListing().size());
-			configDs.getUserQueryClient().upsertUserQueryWebKit(listingUq);
+			if (this.userQueryLDM != null) {
+				WebKitUserQueryListing listingUq = new WebKitUserQueryListing();
+				listingUq.setListing(this.userQueryLDM.getDataListing());
+				listingUq.setListingCount(this.userQueryLDM.getDataListing().size());
+				configDs.getUserQueryClient().upsertUserQueryWebKit(listingUq);
+			}
 
 			//Form...
-			WebKitFormListing listingFrm = new WebKitFormListing();
-			listingFrm.setListing(this.formDefinitionLDM.getDataListing());
-			listingFrm.setListingCount(this.formDefinitionLDM.getDataListing().size());
-			configDs.getFormDefinitionClient().upsertFormWebKit(listingFrm);
+			if (this.formDefinitionLDM != null) {
+				WebKitFormListing listingFrm = new WebKitFormListing();
+				listingFrm.setListing(this.formDefinitionLDM.getDataListing());
+				listingFrm.setListingCount(this.formDefinitionLDM.getDataListing().size());
+				configDs.getFormDefinitionClient().upsertFormWebKit(listingFrm);
+			}
 
 			this.executeJavaScript(String.format("PF('%s').hide();", dialogToHideAfterSuccess));
 			FacesMessage fMsg = new FacesMessage(FacesMessage.SEVERITY_INFO,
