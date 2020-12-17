@@ -1,8 +1,5 @@
 package com.fluidbpm.fluidwebkit.backing.utility;
 
-import org.primefaces.model.DefaultStreamedContent;
-
-import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -65,6 +62,10 @@ public class ImageUtil {
 
 	public static byte[] getThumbnailPlaceholderImageForNoAccess() throws IOException {
 		return getContentForPath("/image/thumbnail/no-access.png");
+	}
+
+	public static byte[] getThumbnailPlaceholderImageForPDF() throws IOException {
+		return getContentForPath("/image/thumbnail/pdf.png");
 	}
 
 	public static byte[] getThumbnailPlaceholderImageForLost() throws IOException {

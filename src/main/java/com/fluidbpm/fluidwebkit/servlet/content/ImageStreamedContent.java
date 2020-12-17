@@ -27,13 +27,6 @@ import java.io.ByteArrayInputStream;
  */
 public class ImageStreamedContent extends DefaultStreamedContent {
 	private byte[] imageBytes = null;
-
-	/**
-	 *
-	 * @param imageBytesParam
-	 * @param contentType
-	 * @param name
-	 */
 	public ImageStreamedContent(
 			byte[] imageBytesParam,
 			String contentType,
@@ -42,11 +35,7 @@ public class ImageStreamedContent extends DefaultStreamedContent {
 		super(new ByteArrayInputStream(imageBytesParam), contentType, name);
 		this.imageBytes = imageBytesParam;
 	}
-
-	/**
-	 *
-	 * @return
-	 */
+	
 	public DefaultStreamedContent cloneAsDefaultStreamedContent() {
 //		return DefaultStreamedContent.builder()
 //				.stream(new ByteArrayInputStream(this.imageBytes))

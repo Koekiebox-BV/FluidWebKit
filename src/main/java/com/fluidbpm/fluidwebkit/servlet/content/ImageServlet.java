@@ -109,8 +109,7 @@ public class ImageServlet extends ABaseFWKServlet {
 		String imageKey = this.getImageCacheKey(formIdParam, attachmentIdLong, thumbScale);
 		ImageStreamedContent cacheImageStreamedContent = this.formImageCache.getIfPresent(imageKey);
 		if (cacheImageStreamedContent != null) {
-			this.writeImageToResponseOutput(
-					respParam, cacheImageStreamedContent.cloneAsDefaultStreamedContent());
+			this.writeImageToResponseOutput(respParam, cacheImageStreamedContent.cloneAsDefaultStreamedContent());
 			return;
 		}
 
@@ -139,12 +138,7 @@ public class ImageServlet extends ABaseFWKServlet {
 		}
 	}
 
-	/**
-	 *
-	 * @param respParam
-	 * @param streamedContentParam
-	 */
-	private void writeImageToResponseOutput(
+	protected void writeImageToResponseOutput(
 		HttpServletResponse respParam,
 		StreamedContent streamedContentParam
 	) throws IOException {
@@ -153,9 +147,7 @@ public class ImageServlet extends ABaseFWKServlet {
 
 		OutputStream os = respParam.getOutputStream();
 		int readVal = -1;
-		while ((readVal = is.read()) != -1) {
-			os.write(readVal);
-		}
+		while ((readVal = is.read()) != -1) os.write(readVal);
 
 		is.close();
 		os.flush();
@@ -262,5 +254,15 @@ public class ImageServlet extends ABaseFWKServlet {
 		int scale
 	) {
 		return String.format("%d_%d_%d", formId, attachmentId, scale);
+	}
+
+	protected byte[] getNonImagePreviewForContentType(String contentType) throws IOException {
+		if (contentType == null) return null;
+
+		String contentTypeLower = contentType.trim().toLowerCase();
+		switch (contentTypeLower) {
+			case "application/pdf" : return ImageUtil.getThumbnailPlaceholderImageForPDF();
+			default: return null;
+		}
 	}
 }

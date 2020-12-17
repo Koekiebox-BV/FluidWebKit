@@ -83,9 +83,6 @@ public abstract class ABaseManagedBean implements Serializable {
 		return "FluidWebKit";
 	}
 
-	/**
-	 * @param exception
-	 */
 	public void raiseError(Exception exception) {
 		this.getLogger().error(exception.getMessage(), exception);
 		if (RaygunUtil.isRaygunEnabled()) {
@@ -99,13 +96,6 @@ public abstract class ABaseManagedBean implements Serializable {
 		FacesContext.getCurrentInstance().addMessage(null, fMsg);
 	}
 
-
-	/**
-	 *
-	 * @param exception
-	 * @param httpServletRequest
-	 * @param httpServletResponse
-	 */
 	public void raiseError(
 		Exception exception,
 		HttpServletRequest httpServletRequest,
@@ -122,18 +112,12 @@ public abstract class ABaseManagedBean implements Serializable {
 				httpServletResponse);
 	}
 
-	/**
-	 * Outcome JSF navigation outcomes.
-	 */
 	protected static class Outcome {
 		public static final String LOGIN = "login";
 		public static final String SESSION_EXPIRED = "session_expired";
 		public static final String DASHBOARD = "dashboard";
 	}
 
-	/**
-	 * Any column model.
-	 */
 	@Getter
 	@Setter
 	@AllArgsConstructor
@@ -203,26 +187,14 @@ public abstract class ABaseManagedBean implements Serializable {
 		};
 	}
 
-	/**
-	 * 
-	 * @return
-	 */
 	public String getSoftwareVersion() {
 		return GitDescribe.GIT_DESCRIBE;
 	}
 
-	/**
-	 *
-	 * @return
-	 */
 	public int getPageSize() {
 		return this.pageSize;
 	}
 
-	/**
-	 *
-	 * @return
-	 */
 	public String getDateAndTimeFormat() {
 		try {
 			String returnVal = this.getLoggedInUser().getDateFormat();
@@ -237,10 +209,6 @@ public abstract class ABaseManagedBean implements Serializable {
 		}
 	}
 
-	/**
-	 *
-	 * @return
-	 */
 	public String getDateFormat() {
 		try {
 			return this.getLoggedInUser().getDateFormat();
@@ -252,42 +220,22 @@ public abstract class ABaseManagedBean implements Serializable {
 		}
 	}
 
-	/**
-	 *
-	 * @return
-	 */
 	public String getNumberFormat() {
 		return "###,###,###.000";
 	}
 
-	/**
-	 *
-	 * @return
-	 */
 	public int getDateAndTimeFormatLength() {
 		return this.getDateAndTimeFormat().length();
 	}
 
-	/**
-	 *
-	 * @return
-	 */
 	public int getDateFormatLength() {
 		return getDateFormat().length();
 	}
 
-	/**
-	 *
-	 * @return
-	 */
 	public String getLoggedInUserUsername() {
 		return this.getLoggedInUserSafe().getUsername();
 	}
 
-	/**
-	 *
-	 * @return
-	 */
 	public User getLoggedInUserSafe() {
 		try {
 			return this.getLoggedInUser();
@@ -296,11 +244,6 @@ public abstract class ABaseManagedBean implements Serializable {
 		}
 	}
 
-	/**
-	 *
-	 * @param fieldNameParam
-	 * @return
-	 */
 	protected String getCustomUserFieldByName(String fieldNameParam){
 		if (fieldNameParam == null || fieldNameParam.isEmpty()){
 			return null;
@@ -328,10 +271,6 @@ public abstract class ABaseManagedBean implements Serializable {
 		}
 	}
 
-	/**
-	 *
-	 * @return
-	 */
 	public User getLoggedInUser() {
 		FacesContext facCont = FacesContext.getCurrentInstance();
 		ExternalContext externalContext = (facCont == null) ? null : facCont.getExternalContext();
@@ -353,11 +292,6 @@ public abstract class ABaseManagedBean implements Serializable {
 		throw new WebSessionExpiredException("No session. Session expired. User logged out.");
 	}
 
-	/**
-	 * Return the http session.
-	 *
-	 * @return {@code HttpSession}
-	 */
 	public HttpSession getHttpSession() {
 		FacesContext facCont = FacesContext.getCurrentInstance();
 		ExternalContext externalContext = (facCont == null) ? null : facCont.getExternalContext();
@@ -420,10 +354,6 @@ public abstract class ABaseManagedBean implements Serializable {
 		}
 	}
 
-	/**
-	 *
-	 * @return
-	 */
 	public boolean isSessionExpired() {
 		FacesContext facCont = FacesContext.getCurrentInstance();
 		ExternalContext externalContext = (facCont == null) ? null : facCont.getExternalContext();
@@ -432,18 +362,10 @@ public abstract class ABaseManagedBean implements Serializable {
 		return (sessObj == null);
 	}
 
-	/**
-	 *
-	 * @return
-	 */
 	public String generateUUID() {
 		return UUID.randomUUID().toString();
 	}
 
-	/**
-	 *
-	 * @return
-	 */
 	protected Map<String, String> getFacesRequestParameterMap() {
 		Map<String, String> params =
 				FacesContext.getCurrentInstance().getExternalContext().getRequestParameterMap();
@@ -455,21 +377,11 @@ public abstract class ABaseManagedBean implements Serializable {
 		return params;
 	}
 
-	/**
-	 *
-	 * @param permissionsParam
-	 * @return
-	 */
 	public boolean doesUserHavePermission(String permissionsParam) {
 		String permissionLower = permissionsParam.toLowerCase();
 		return this.doesUserHavePermissionArray(permissionLower.split("\\|"));
 	}
 
-	/**
-	 *
-	 * @param permissionParam
-	 * @return
-	 */
 	public boolean doesUserHavePermissionArray(String ... permissionParam) {
 		if (permissionParam == null || permissionParam.length == 0) {
 			return false;
@@ -609,27 +521,15 @@ public abstract class ABaseManagedBean implements Serializable {
 		}
 	}
 
-	/**
-	 * 
-	 * @return
-	 */
 	public String getLandingPageIfLoggedIn() {
 		return Outcome.DASHBOARD;
 	}
 
-	/**
-	 *
-	 * @return
-	 */
 	public void actionConfirmUserLoggedIn() {
 		this.checkLoggedIn();
 	}
 
-	/**
-	 * Confirm whether user is logged in.
-	 *
-	 * @return
-	 */
+
 	protected boolean checkLoggedIn() {
 		return checkLoggedIn("/index.xhtml");
 	}
@@ -637,7 +537,7 @@ public abstract class ABaseManagedBean implements Serializable {
 	/**
 	 * Confirm whether user is logged in.
 	 *
-	 * @return
+	 * @return {@code true} if logged in.
 	 */
 	protected boolean checkLoggedIn(String pagePath) {
 		try {
@@ -665,12 +565,6 @@ public abstract class ABaseManagedBean implements Serializable {
 		}
 	}
 
-
-	/**
-	 *
-	 * @param roleParam
-	 * @return
-	 */
 	protected boolean doesUserHaveAccessToRole(String roleParam) {
 		try {
 			if (this.getLoggedInUser().getUsername().equals("admin")) {
@@ -684,7 +578,6 @@ public abstract class ABaseManagedBean implements Serializable {
 
 	/**
 	 * Execute the JavaScript on the users browser.
-	 *
 	 * @param javascriptParam
 	 */
 	public void executeJavaScript(String javascriptParam) {
@@ -695,26 +588,14 @@ public abstract class ABaseManagedBean implements Serializable {
 		PrimeFaces.current().executeScript(javascriptParam);
 	}
 
-	/**
-	 *
-	 * @return
-	 */
 	protected String getConfigURLFromSystemProperty() {
 		return Globals.getConfigURLFromSystemProperty();
 	}
 
-	/**
-	 *
-	 * @return
-	 */
 	protected String getConfigUserProperty() {
 		return Globals.getConfigUserProperty();
 	}
 
-	/**
-	 *
-	 * @return
-	 */
 	protected String getConfigUserPasswordProperty() {
 		return Globals.getConfigUserPasswordProperty();
 	}

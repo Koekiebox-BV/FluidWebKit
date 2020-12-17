@@ -1,6 +1,7 @@
 package com.fluidbpm.fluidwebkit.backing.bean.workspace.form;
 
 import com.fluidbpm.fluidwebkit.backing.bean.ABaseManagedBean;
+import com.fluidbpm.fluidwebkit.backing.bean.attachment.AttachmentBean;
 import com.fluidbpm.fluidwebkit.backing.bean.config.WebKitAccessBean;
 import com.fluidbpm.fluidwebkit.backing.bean.workspace.WorkspaceFluidItem;
 import com.fluidbpm.fluidwebkit.backing.bean.workspace.lf.WebKitWorkspaceLookAndFeelBean;
@@ -23,6 +24,9 @@ import lombok.Getter;
 import lombok.Setter;
 import org.primefaces.event.FileUploadEvent;
 import org.primefaces.event.RowEditEvent;
+import org.primefaces.model.DefaultStreamedContent;
+import org.primefaces.model.StreamedContent;
+import org.primefaces.model.file.UploadedFile;
 
 import javax.annotation.PostConstruct;
 import javax.enterprise.context.Conversation;
@@ -31,6 +35,7 @@ import javax.faces.application.FacesMessage;
 import javax.faces.context.FacesContext;
 import javax.inject.Inject;
 import javax.inject.Named;
+import java.io.ByteArrayInputStream;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
@@ -59,12 +64,6 @@ public class WebKitOpenFormConversationBean extends ABaseManagedBean {
 	@Setter
 	private Map<String, List<Field>> tableRecordEditableFields;
 
-	@Inject
-	private WebKitAccessBean accessBean;
-
-	@Inject
-	private WebKitWorkspaceLookAndFeelBean lookAndFeelBean;
-
 	@Getter
 	@Setter
 	private String inputSelectedWorkflow;
@@ -80,7 +79,19 @@ public class WebKitOpenFormConversationBean extends ABaseManagedBean {
 	@Setter
 	private IConversationCallback conversationCallback;
 
-	private List<Attachment> attachments;
+	@Getter
+	@Setter
+	private List<Attachment> freshAttachments;
+
+	//----BEANS-----
+	@Inject
+	private WebKitAccessBean accessBean;
+
+	@Inject
+	private WebKitWorkspaceLookAndFeelBean lookAndFeelBean;
+
+	@Inject
+	private AttachmentBean attachmentBean;
 
 	@PostConstruct
 	public void init() {
@@ -114,6 +125,7 @@ public class WebKitOpenFormConversationBean extends ABaseManagedBean {
 		this.setTableRecordWSFluidItems(null);
 		this.setTableRecordViewableFields(new HashMap<>());
 		this.setTableRecordEditableFields(new HashMap<>());
+		this.setFreshAttachments(new ArrayList<>());
 
 		//Send to a specific workflow...
 		this.setInputWorkflowsForFormDef(new ArrayList<>());
@@ -249,8 +261,20 @@ public class WebKitOpenFormConversationBean extends ABaseManagedBean {
 	}
 
 	public void actionUploadNewAttachment(FileUploadEvent fileUploadEvent) {
+		UploadedFile uploaded = fileUploadEvent.getFile();
 
-		
+		Attachment toAdd = new Attachment();
+		toAdd.setContentType(uploaded.getContentType());
+		toAdd.setAttachmentDataBase64(UtilGlobal.encodeBase64(uploaded.getContent()));
+		toAdd.setName(uploaded.getFileName());
+
+		this.getFreshAttachments().add(toAdd);
+		this.attachmentBean.addAttachmentFreshToCache(
+				toAdd, this.conversation.getId(), this.getFreshAttachments().size() - 1);
+
+		FacesMessage fMsg = new FacesMessage(FacesMessage.SEVERITY_INFO,
+				"Success", String.format("Uploaded '%s'.", uploaded.getFileName()));
+		FacesContext.getCurrentInstance().addMessage(null, fMsg);
 	}
 
 	public void actionUpdateSelectedWorkflow() {
@@ -348,7 +372,11 @@ public class WebKitOpenFormConversationBean extends ABaseManagedBean {
 				this.upsertTableRecordsInFluid(formToSave);
 
 				//Existing Item...
-				fcClient.updateFormContainer(formToSave);
+				Long formId = fcClient.updateFormContainer(formToSave).getId();
+				this.getFreshAttachments().forEach(attItm -> {
+					attItm.setFormId(formId);
+					this.getFluidClientDS().getAttachmentClient().createAttachment(attItm);
+				});
 
 				if (webKitForm.isSendOnAfterSave() &&
 						(wsFlItem.isFluidItemInWIPState() && wsFlItem.isFormLockedByLoggedInUser())) {
@@ -487,6 +515,58 @@ public class WebKitOpenFormConversationBean extends ABaseManagedBean {
 	public boolean isTableRecordPlaceholder(Form tableRecordForm) {
 		if (tableRecordForm == null) return false;
 		return PLACEHOLDER_TITLE.equals(tableRecordForm.getTitle());
+	}
+
+	public List<Attachment> getFreshAndExistingAttachments() {
+		List<Attachment> allAttachments = this.getFreshAttachments();
+
+		WorkspaceFluidItem wsFlItem = this.getWsFluidItem();
+		if (wsFlItem.isFluidItemFormSet()) {
+			List<Attachment> existingAttachments = this.attachmentBean.actionFetchAttachmentsForForm(wsFlItem.getFluidItemForm());
+			if (existingAttachments != null) allAttachments.addAll(existingAttachments);
+		}
+		return allAttachments;
+	}
+
+	public int getFreshAndExistingAttachmentCount() {
+		return this.getFreshAndExistingAttachments().size();
+	}
+
+	public boolean actionIsAttachmentNewOrUpdated(Attachment toCheck) {
+		if (this.getFreshAttachments().isEmpty()) return false;
+
+		return this.getFreshAttachments().stream()
+				.filter(itm -> itm.getName().equals(toCheck.getName()))
+				.findFirst()
+				.isPresent();
+	}
+
+	public StreamedContent actionFetchDataForFreshAttachment(Attachment toCheck) {
+		return DefaultStreamedContent.builder()
+				.name(toCheck.getName())
+				.contentType(toCheck.getContentType())
+				.stream(() -> {
+					try {
+						return new ByteArrayInputStream(UtilGlobal.decodeBase64(toCheck.getAttachmentDataBase64()));
+					} catch (Exception err) {
+						raiseError(err);
+						return null;
+					}
+				}).build();
+	}
+
+	public String actionGenerateURLForThumbnail(WorkspaceFluidItem wfItem, Attachment attachment, int thumbnailScale) {
+		if (this.actionIsAttachmentNewOrUpdated(attachment)) {
+			int attachmentIndex = this.getFreshAttachments().indexOf(attachment);
+			String postFix = String.format(
+					"/get_new_or_updated_image?conversationId=%s&attachmentIndex=%d&thumbnailScale=%d",
+					UtilGlobal.encodeURL(this.conversation.getId()),
+					attachmentIndex,
+					thumbnailScale);
+			return postFix;
+		} else {
+			return this.attachmentBean.actionGenerateURLForThumbnail(wfItem, attachment, thumbnailScale);
+		}
 	}
 
 }

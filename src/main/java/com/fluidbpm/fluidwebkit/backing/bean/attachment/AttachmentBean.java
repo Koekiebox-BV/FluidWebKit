@@ -18,6 +18,9 @@ package com.fluidbpm.fluidwebkit.backing.bean.attachment;
 import com.fluidbpm.fluidwebkit.backing.bean.ABaseManagedBean;
 import com.fluidbpm.fluidwebkit.backing.bean.workspace.WorkspaceFluidItem;
 import com.fluidbpm.fluidwebkit.qualifier.cache.FormAttachmentsCache;
+import com.fluidbpm.fluidwebkit.qualifier.cache.FormImageCache;
+import com.fluidbpm.fluidwebkit.servlet.content.ImageStreamedContent;
+import com.fluidbpm.program.api.util.UtilGlobal;
 import com.fluidbpm.program.api.vo.attachment.Attachment;
 import com.fluidbpm.program.api.vo.form.Form;
 import com.fluidbpm.ws.client.v1.attachment.AttachmentClient;
@@ -36,6 +39,10 @@ public class AttachmentBean extends ABaseManagedBean {
 	@Inject
 	@FormAttachmentsCache
 	private Cache<Long, List<Attachment>> attachmentCache;
+
+	@Inject
+	@FormImageCache
+	private Cache<String, ImageStreamedContent> formImageCache;
 
 	public List<Attachment> actionFetchAttachmentsForForm(Form form, int fromIndex) {
 		List<Attachment> returnVal = this.actionFetchAttachmentsForForm(form);
@@ -108,6 +115,19 @@ public class AttachmentBean extends ABaseManagedBean {
 				attachment.getId(),
 				thumbnailScale);
 		return postFix;
+	}
+
+	public void addAttachmentFreshToCache(
+		Attachment attachment,
+		String conversationId,
+		int attachmentIndex
+	) {
+		ImageStreamedContent streamedContent = new ImageStreamedContent(
+				UtilGlobal.decodeBase64(attachment.getAttachmentDataBase64()),
+				attachment.getContentType(),
+				attachment.getName());
+		String key = String.format("%s_%d", conversationId, attachmentIndex);
+		this.formImageCache.put(key, streamedContent);
 	}
 
 }
