@@ -196,6 +196,18 @@ public class WebKitOpenFormConversationBean extends ABaseManagedBean {
 
 			Form freshFetchForm = new Form();
 			Map<String, List<Form>> existingTableRecords = new HashMap<>();
+
+			//Set the associated workflows...
+			List<Form> formDefs = this.accessBean.getFormDefinitionsCanCreateInstanceOfSorted();
+			if (formDefs == null) formDefs = new ArrayList<>();
+			List<Flow> associatedFlowsForFormDef = formDefs.stream()
+					.filter(itm -> itm.getFormType().equals(wfiParam.getFluidItemFormType()))
+					.findFirst()
+					.map(itm -> itm.getAssociatedFlows())
+					.orElse(new ArrayList<>());
+			if (associatedFlowsForFormDef == null) associatedFlowsForFormDef = new ArrayList<>();
+			associatedFlowsForFormDef.forEach(flowItm -> this.getInputWorkflowsForFormDef().add(flowItm.getName()));
+			
 			if (wfiParam.isFluidItemFormSet()) {
 				freshFetchForm = fcClient.getFormContainerById(wfiParam.getFluidItemFormId());
 				//Lock the Form as it is being opened...
@@ -228,15 +240,8 @@ public class WebKitOpenFormConversationBean extends ABaseManagedBean {
 				this.setDialogHeaderTitle(freshFetchForm.getTitle());
 
 				if (webKitForm.isSendToWorkflowAfterCreate()) {
-					List<Form> formDefs = this.accessBean.getFormDefinitionsCanCreateInstanceOfSorted();
-					List<Flow> associatedFlowsForFormDef = formDefs.stream()
-							.filter(itm -> itm.getFormType().equals(wfiParam.getFluidItemFormType()))
-							.findFirst()
-							.map(itm -> itm.getAssociatedFlows())
-							.orElse(new ArrayList<>());
-					if (associatedFlowsForFormDef.size() == 1)
+					if (associatedFlowsForFormDef != null && associatedFlowsForFormDef.size() == 1)
 						this.setInputSelectedWorkflow(associatedFlowsForFormDef.get(0).getName());
-					associatedFlowsForFormDef.forEach(flowItm -> this.getInputWorkflowsForFormDef().add(flowItm.getName()));
 				}
 			}
 			fluidItem.setForm(freshFetchForm);
@@ -548,6 +553,15 @@ public class WebKitOpenFormConversationBean extends ABaseManagedBean {
 	public int getInputWorkflowsForFormDefCount() {
 		return this.inputWorkflowsForFormDef == null ? 0 :
 				this.inputWorkflowsForFormDef.size();
+	}
+
+	public boolean getRenderWorkflowSelectDropdown() {
+		int workflowOptionCount = this.getInputWorkflowsForFormDefCount();
+		if (workflowOptionCount < 1) return false;
+
+		WebKitForm webKitForm = this.lookAndFeelBean.getWebKitFormWithFormDef(this.getWsFluidItem().getFluidItemFormType());
+		if ((webKitForm != null && webKitForm.isSendToWorkflowAfterCreate()) && workflowOptionCount == 1) return false;
+		return (!this.getWsFluidItem().isFluidItemInWIPState() && this.getWsFluidItem().isFormLockedByLoggedInUser());
 	}
 
 	public boolean isTableRecordPlaceholder(Form tableRecordForm) {
