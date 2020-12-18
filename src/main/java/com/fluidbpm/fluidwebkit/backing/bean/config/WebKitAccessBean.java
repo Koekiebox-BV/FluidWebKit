@@ -262,6 +262,17 @@ public class WebKitAccessBean extends ABaseManagedBean {
 				.orElse(null);
 	}
 
+	public Field getFieldBy(String formFieldParam) {
+		if (formFieldParam == null || formFieldParam.trim().isEmpty()) return null;
+		if (this.fieldsForViewing == null || this.fieldsForViewing.isEmpty()) return null;
+
+		return this.fieldsForViewing.values().stream()
+				.flatMap(List::stream)
+				.filter(itm -> formFieldParam.equals(itm.getFieldName()))
+				.findFirst()
+				.orElse(null);
+	}
+
 	public List<Field> getFieldsEditableForFormDef(String formDefinitionParam) {
 		if (formDefinitionParam == null || formDefinitionParam.trim().isEmpty()) return null;
 		if (this.fieldsForEditing == null || this.fieldsForEditing.isEmpty()) return null;

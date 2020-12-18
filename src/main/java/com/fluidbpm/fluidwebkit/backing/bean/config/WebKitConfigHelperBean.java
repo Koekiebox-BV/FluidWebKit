@@ -141,4 +141,26 @@ public class WebKitConfigHelperBean extends ABaseManagedBean {
 		if (UtilGlobal.isBlank(metaDataTxt)) return false;
 		return metaDataTxt.startsWith("Rating");
 	}
+
+
+	public boolean isFieldTypeTextMetaTypeBarcode(String metaDataTxt) {
+		if (UtilGlobal.isBlank(metaDataTxt)) return false;
+		String barcodeType = this.getBarcodeType(metaDataTxt);
+		return barcodeType != null && !barcodeType.trim().isEmpty();
+	}
+
+	private static final String BARCODE_TXT_META = "Barcode";
+	public String getBarcodeType(String metaDataTxt) {
+		if (UtilGlobal.isBlank(metaDataTxt)) return null;
+
+		int maskedLength = BARCODE_TXT_META.length();
+		if (metaDataTxt.length() >= maskedLength) {
+			String prefix = metaDataTxt.substring(0, maskedLength);
+			if(!BARCODE_TXT_META.equals(prefix)) return null;
+
+			String validBarcodeValue = metaDataTxt.substring(maskedLength);
+			return validBarcodeValue;
+		}
+		return null;
+	}
 }

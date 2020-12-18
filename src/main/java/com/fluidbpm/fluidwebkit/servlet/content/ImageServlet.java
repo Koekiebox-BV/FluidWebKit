@@ -192,6 +192,14 @@ public class ImageServlet extends ABaseFWKServlet {
 							attachmentsForForm.get(0).getId(), true);
 		}
 
+		byte[] nonImageData = this.getNonImagePreviewForContentType(imageAttachmentById.getContentType());
+		if (nonImageData != null) {
+			return new ImageStreamedContent(
+					nonImageData,
+					imageAttachmentById.getContentType(),
+					imageAttachmentById.getName());
+		}
+
 		byte[] imageBytes =
 				UtilGlobal.decodeBase64(
 						imageAttachmentById.getAttachmentDataBase64());
@@ -225,17 +233,11 @@ public class ImageServlet extends ABaseFWKServlet {
 		ByteArrayInputStream in = new ByteArrayInputStream(fileDataParam);
 		BufferedImage img = ImageIO.read(in);
 		//Lets not enlarge an image that is less than {widthParam}.
-		if (widthParam > img.getWidth() || heightParam > img.getHeight()) {
-			return fileDataParam;
-		}
+		if (widthParam > img.getWidth() || heightParam > img.getHeight()) return fileDataParam;
 
-		if (heightParam == 0) {
-			heightParam = (widthParam * img.getHeight()) / img.getWidth();
-		}
+		if (heightParam == 0) heightParam = (widthParam * img.getHeight()) / img.getWidth();
 
-		if (widthParam == 0) {
-			widthParam = (heightParam * img.getWidth()) / img.getHeight();
-		}
+		if (widthParam == 0) widthParam = (heightParam * img.getWidth()) / img.getHeight();
 
 		Image scaledImage = img.getScaledInstance(widthParam, heightParam, Image.SCALE_SMOOTH);
 		BufferedImage imageBuff = new BufferedImage(widthParam, heightParam, BufferedImage.TYPE_INT_RGB);

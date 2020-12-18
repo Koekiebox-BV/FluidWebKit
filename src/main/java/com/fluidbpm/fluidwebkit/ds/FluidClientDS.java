@@ -132,16 +132,15 @@ public class FluidClientDS implements Closeable {
 	}
 
 	private <T extends AutoCloseable> T getClientFor(Class<T> clazz) {
-		if (clazz == null) {
-			return null;
-		}
+		if (clazz == null) return null;
+
 		String keyToUse = clazz.getName();
 		ABaseClientWS returnVal = this.clientCache.getIfPresent(keyToUse);
 		if (returnVal == null) {
 			ABaseClientWS fromKey = this.defaultForClass(clazz);
-			if (fromKey == null) {
-				throw new FluidCacheException(String.format("Unable to create client from '%s'. Please MAP!", keyToUse));
-			}
+			if (fromKey == null) throw new FluidCacheException(
+					String.format("Unable to create client from '%s'. Please MAP!", keyToUse));
+
 			this.clientCache.put(keyToUse, fromKey);
 			return (T)this.clientCache.getIfPresent(keyToUse);
 		}
@@ -179,6 +178,8 @@ public class FluidClientDS implements Closeable {
 			return new FlowStepClient(this.endpoint, this.serviceTicket);
 		} else if (clazz.isAssignableFrom(FlowItemClient.class)) {
 			return new FlowItemClient(this.endpoint, this.serviceTicket);
+		} else if (clazz.isAssignableFrom(SQLUtilWebSocketRESTWrapper.class)) {
+			return new SQLUtilWebSocketRESTWrapper(this.endpoint, this.serviceTicket, TimeUnit.SECONDS.toMillis(30));
 		}
 
 		return null;

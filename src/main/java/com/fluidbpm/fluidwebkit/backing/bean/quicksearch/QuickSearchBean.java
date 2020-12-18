@@ -174,7 +174,7 @@ public class QuickSearchBean extends ABaseManagedBean {
 		try {
 			this.openFormBean.startConversation();
 			this.openFormBean.actionFreshLoadFormAndSet(newItem);
-			this.executeJavaScript("PF('varNewFormInstDialog').show();");
+			this.executeJavaScript("PF('varFormDialog').show();");
 		} catch (Exception except) {
 			this.raiseError(except);
 		}

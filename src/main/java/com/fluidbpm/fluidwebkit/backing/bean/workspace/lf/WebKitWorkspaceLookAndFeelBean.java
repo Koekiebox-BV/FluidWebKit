@@ -117,6 +117,8 @@ public class WebKitWorkspaceLookAndFeelBean extends ABaseManagedBean {
 		showColumnFormType,
 		showColumnTitle,
 		showColumnStepEntryTime,
+		showColumnDateCreated,
+		showColumnDateLastUpdated,
 		showColumnCurrentFlow,
 		showColumnCurrentStep,
 		showColumnCurrentView,
@@ -125,36 +127,19 @@ public class WebKitWorkspaceLookAndFeelBean extends ABaseManagedBean {
 
 		public static List<String> asListFrom(WebKitViewGroup group) {
 			List<String> returnVal = new ArrayList<>();
-			if (group == null) {
-				return returnVal;
-			}
-			if (group.isShowColumnID()) {
-				returnVal.add(VisibleColumnItems.showColumnID.name());
-			}
-			if (group.isShowColumnFormType()) {
-				returnVal.add(VisibleColumnItems.showColumnFormType.name());
-			}
-			if (group.isShowColumnTitle()) {
-				returnVal.add(VisibleColumnItems.showColumnTitle.name());
-			}
-			if (group.isShowColumnStepEntryTime()) {
-				returnVal.add(VisibleColumnItems.showColumnStepEntryTime.name());
-			}
-			if (group.isShowColumnCurrentFlow()) {
-				returnVal.add(VisibleColumnItems.showColumnCurrentFlow.name());
-			}
-			if (group.isShowColumnCurrentStep()) {
-				returnVal.add(VisibleColumnItems.showColumnCurrentStep.name());
-			}
-			if (group.isShowColumnCurrentView()) {
-				returnVal.add(VisibleColumnItems.showColumnCurrentView.name());
-			}
-			if (group.isShowColumnProgressPercentage()) {
-				returnVal.add(VisibleColumnItems.showColumnProgressPercentage.name());
-			}
-			if (group.isShowColumnAttachment()) {
-				returnVal.add(VisibleColumnItems.showColumnAttachment.name());
-			}
+			if (group == null) return returnVal;
+
+			if (group.isShowColumnID()) returnVal.add(VisibleColumnItems.showColumnID.name());
+			if (group.isShowColumnFormType()) returnVal.add(VisibleColumnItems.showColumnFormType.name());
+			if (group.isShowColumnTitle()) returnVal.add(VisibleColumnItems.showColumnTitle.name());
+			if (group.isShowColumnStepEntryTime()) returnVal.add(VisibleColumnItems.showColumnStepEntryTime.name());
+			if (group.isShowColumnCurrentFlow()) returnVal.add(VisibleColumnItems.showColumnCurrentFlow.name());
+			if (group.isShowColumnCurrentStep()) returnVal.add(VisibleColumnItems.showColumnCurrentStep.name());
+			if (group.isShowColumnCurrentView()) returnVal.add(VisibleColumnItems.showColumnCurrentView.name());
+			if (group.isShowColumnProgressPercentage()) returnVal.add(VisibleColumnItems.showColumnProgressPercentage.name());
+			if (group.isShowColumnDateCreated()) returnVal.add(VisibleColumnItems.showColumnDateCreated.name());
+			if (group.isShowColumnDateLastUpdated()) returnVal.add(VisibleColumnItems.showColumnDateLastUpdated.name());
+
 			return returnVal;
 		}
 	}
@@ -170,27 +155,15 @@ public class WebKitWorkspaceLookAndFeelBean extends ABaseManagedBean {
 
 		public static List<String> asListFrom(WebKitViewGroup group) {
 			List<String> returnVal = new ArrayList<>();
-			if (group == null) {
-				return returnVal;
-			}
-			if (group.isShowButtonBulkUpdate()) {
-				returnVal.add(VisibleButtonItems.showButtonBulkUpdate.name());
-			}
-			if (group.isShowButtonExport()) {
-				returnVal.add(VisibleButtonItems.showButtonExport.name());
-			}
-			if (group.isShowButtonSendOn()) {
-				returnVal.add(VisibleButtonItems.showButtonSendOn.name());
-			}
-			if (group.isShowButtonDelete()) {
-				returnVal.add(VisibleButtonItems.showButtonDelete.name());
-			}
-			if (group.isShowButtonLock()) {
-				returnVal.add(VisibleButtonItems.showButtonLock.name());
-			}
-			if (group.isShowButtonAddToPI()) {
-				returnVal.add(VisibleButtonItems.showButtonAddToPI.name());
-			}
+			if (group == null) return returnVal;
+
+			if (group.isShowButtonBulkUpdate()) returnVal.add(VisibleButtonItems.showButtonBulkUpdate.name());
+			if (group.isShowButtonExport()) returnVal.add(VisibleButtonItems.showButtonExport.name());
+			if (group.isShowButtonSendOn()) returnVal.add(VisibleButtonItems.showButtonSendOn.name());
+			if (group.isShowButtonDelete()) returnVal.add(VisibleButtonItems.showButtonDelete.name());
+			if (group.isShowButtonLock()) returnVal.add(VisibleButtonItems.showButtonLock.name());
+			if (group.isShowButtonAddToPI()) returnVal.add(VisibleButtonItems.showButtonAddToPI.name());
+
 			return returnVal;
 		}
 	}
@@ -553,8 +526,11 @@ public class WebKitWorkspaceLookAndFeelBean extends ABaseManagedBean {
 					List<String> visibleButtons = new ArrayList<>();
 					Object objVisibleColumns = this.inputVisibleColumns.get(groupName);
 					if (objVisibleColumns instanceof String[])
-						for (String selected : (String[])objVisibleColumns)
-							visibleColumns.add(selected);
+						for (String selected : (String[])objVisibleColumns) visibleColumns.add(selected);
+
+					Object objVisibleButtons = this.inputVisibleButtons.get(groupName);
+					if (objVisibleButtons instanceof String[])
+						for (String selected : (String[])objVisibleButtons) visibleButtons.add(selected);
 
 					this.updateGroupPropertyBasedOnSelected(visibleColumns, visibleButtons, groupItm);
 				});
@@ -720,6 +696,16 @@ public class WebKitWorkspaceLookAndFeelBean extends ABaseManagedBean {
 			groupToUpdate.setShowColumnStepEntryTime(true);
 		} else {
 			groupToUpdate.setShowColumnStepEntryTime(false);
+		}
+		if (visibleColumns.contains(VisibleColumnItems.showColumnDateCreated.name())) {
+			groupToUpdate.setShowColumnDateCreated(true);
+		} else {
+			groupToUpdate.setShowColumnDateCreated(false);
+		}
+		if (visibleColumns.contains(VisibleColumnItems.showColumnDateLastUpdated.name())) {
+			groupToUpdate.setShowColumnDateLastUpdated(true);
+		} else {
+			groupToUpdate.setShowColumnDateLastUpdated(false);
 		}
 		if (visibleColumns.contains(VisibleColumnItems.showColumnCurrentFlow.name())) {
 			groupToUpdate.setShowColumnCurrentFlow(true);

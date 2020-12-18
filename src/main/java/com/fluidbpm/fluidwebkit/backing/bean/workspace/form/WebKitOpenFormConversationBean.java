@@ -195,6 +195,7 @@ public class WebKitOpenFormConversationBean extends ABaseManagedBean {
 			}
 
 			Form freshFetchForm = new Form();
+			Map<String, List<Form>> existingTableRecords = new HashMap<>();
 			if (wfiParam.isFluidItemFormSet()) {
 				freshFetchForm = fcClient.getFormContainerById(wfiParam.getFluidItemFormId());
 				//Lock the Form as it is being opened...
@@ -211,13 +212,14 @@ public class WebKitOpenFormConversationBean extends ABaseManagedBean {
 						List<Form> tableRecordsForField = new ArrayList<>();
 						childForms.stream()
 								.filter(itm -> !itm.isListingEmpty())
-								.forEach(listItm -> {
-									String formDefToFilterBy = fieldNameToFormDef.get(tableFieldName);
-									
-
-									//TODO add its...
-									
+								.map(itm -> itm.getListing())
+								.flatMap(List::stream)
+								.filter(itm -> itm.getFormType() != null &&
+										itm.getFormType().equals(fieldNameToFormDef.get(tableFieldName)))
+								.forEach(formItm -> {
+									tableRecordsForField.add(formItm);
 								});
+						existingTableRecords.put(tableFieldName, tableRecordsForField);
 					});
 				}
 			} else {
@@ -250,6 +252,14 @@ public class WebKitOpenFormConversationBean extends ABaseManagedBean {
 						.filter(itm -> tableFieldName.equals(itm.getFieldName()))
 						.findFirst()
 						.ifPresent(fieldWithName -> this.actionAddPlaceholderRowOfType(fieldWithName));
+			});
+			//Add all the table records...
+			existingTableRecords.forEach((key, val) -> {
+				this.getWsFluidItem().getFormFieldsEdit().stream()
+						.filter(itm -> key.equals(itm.getFieldName()))
+						.findFirst()
+						.ifPresent(fieldWithName -> this.addTableRecordsForField(fieldWithName, val));
+
 			});
 		} catch (Exception except) {
 			this.raiseError(except);
@@ -301,6 +311,7 @@ public class WebKitOpenFormConversationBean extends ABaseManagedBean {
 							fluidItmToAdd, tableRecordFieldsView, tableRecordFieldsEditable, null));
 			wfi.refreshFormFieldsEdit();
 			toAdd.setFormFields(wfi.getFormFieldsEdit());
+			toAdd.setCurrentUser(this.getLoggedInUserSafe());
 			toAdd.setTitle(PLACEHOLDER_TITLE);
 			
 			tableField.getTableRecords().add(0, toAdd);//always on top...
@@ -310,10 +321,27 @@ public class WebKitOpenFormConversationBean extends ABaseManagedBean {
 		}
 	}
 
-	public void actionModifyTableRecord(
-			Form tableRecordToSave,
-			Field tableFieldToAddFor
-	) {
+	public void addTableRecordsForField(Field fieldToAddTo, List<Form> tableRecords) {
+		if (tableRecords == null || tableRecords.isEmpty()) return;
+		
+		TableField tableField = fieldToAddTo.getFieldValueAsTableField();
+		String fieldName = fieldToAddTo.getFieldName();
+		List<Field> tableRecordFieldsView = this.tableRecordViewableFields.get(fieldName);
+		List<Field> tableRecordFieldsEditable = this.tableRecordEditableFields.get(fieldName);
+
+		tableRecords.stream().forEach(toAdd -> {
+			FluidItem fluidItmToAdd = new FluidItem(toAdd);
+			WorkspaceFluidItem wfi = new WorkspaceFluidItem(
+					new PersonalInventoryItemVO(fluidItmToAdd).cloneVO(
+							fluidItmToAdd, tableRecordFieldsView, tableRecordFieldsEditable, null));
+			wfi.refreshFormFieldsEdit();
+			toAdd.setFormFields(wfi.getFormFieldsEdit());
+			tableField.getTableRecords().add(toAdd);
+		});
+		fieldToAddTo.setFieldValue(tableField);
+	}
+
+	public void actionModifyTableRecord(Form tableRecordToSave, Field tableFieldToAddFor) {
 		try {
 			String prevTitle = tableRecordToSave.getTitle();
 			WebKitForm wkForm = this.lookAndFeelBean.getWebKitFormWithFormDef(tableRecordToSave.getFormType());
@@ -321,7 +349,11 @@ public class WebKitOpenFormConversationBean extends ABaseManagedBean {
 					wkForm == null ? null : wkForm.getNewFormTitleFormula(),
 					tableRecordToSave.getFormType(), tableRecordToSave.getFormFields()));
 			tableRecordToSave.setCurrentUser(this.getLoggedInUser());
-			tableRecordToSave.setTableFieldParentId(tableFieldToAddFor.getId());
+
+			Field fieldBy = this.accessBean.getFieldBy(
+					this.getWsFluidItem().getFluidItemFormType(),
+					tableFieldToAddFor.getFieldName());
+			if (fieldBy != null) tableRecordToSave.setTableFieldParentId(fieldBy.getId());
 
 			//Add another placeholder...
 			if (PLACEHOLDER_TITLE.equals(prevTitle))
@@ -343,10 +375,7 @@ public class WebKitOpenFormConversationBean extends ABaseManagedBean {
 		FacesContext.getCurrentInstance().addMessage(null, msg);
 	}
 
-	public void actionSaveForm(
-		String dialogToHideAfterSuccess,
-		String varBtnToEnableFailedSave
-	) {
+	public void actionSaveForm(String dialogToHideAfterSuccess, String varBtnToEnableFailedSave) {
 		if (this.getFluidClientDS() == null) return;
 
 		try {
@@ -377,6 +406,7 @@ public class WebKitOpenFormConversationBean extends ABaseManagedBean {
 					attItm.setFormId(formId);
 					this.getFluidClientDS().getAttachmentClient().createAttachment(attItm);
 				});
+				this.attachmentBean.clearAttachmentCacheFor(new Form(formId));
 
 				if (webKitForm.isSendOnAfterSave() &&
 						(wsFlItem.isFluidItemInWIPState() && wsFlItem.isFormLockedByLoggedInUser())) {
@@ -391,10 +421,17 @@ public class WebKitOpenFormConversationBean extends ABaseManagedBean {
 				//Create a new item...
 				boolean sendingOn = (webKitForm.isSendToWorkflowAfterCreate() &&
 						UtilGlobal.isNotBlank(this.inputSelectedWorkflow));
-				Form createdForm = fcClient.createFormContainer(this.toFormToSave(wsFlItem), !sendingOn);
+				Form formToSave = this.toFormToSave(wsFlItem);
+				final Form createdForm = fcClient.createFormContainer(formToSave, !sendingOn);
+				formToSave.setId(createdForm.getId());
 
 				//Update the table records...
-				this.upsertTableRecordsInFluid(createdForm);
+				this.upsertTableRecordsInFluid(formToSave);
+				this.getFreshAttachments().forEach(attItm -> {
+					attItm.setFormId(createdForm.getId());
+					this.getFluidClientDS().getAttachmentClient().createAttachment(attItm);
+				});
+				this.attachmentBean.clearAttachmentCacheFor(createdForm);
 
 				if (sendingOn) {
 					fiClient.sendFormToFlow(createdForm, this.inputSelectedWorkflow);
@@ -435,7 +472,7 @@ public class WebKitOpenFormConversationBean extends ABaseManagedBean {
 				.map(tblRecords -> tblRecords.getTableRecords())
 				.flatMap(Collection::stream)
 				//Only where modified by currently logged in user and not a placeholder...
-				.filter(tblRecordItm -> loggedInUser.getId().equals(tblRecordItm.getCurrentUser()) &&
+				.filter(tblRecordItm -> loggedInUser.equals(tblRecordItm.getCurrentUser()) &&
 						!PLACEHOLDER_TITLE.equals(tblRecordItm.getTitle()))
 				.forEach(tableRecord -> {
 					try {
@@ -445,6 +482,7 @@ public class WebKitOpenFormConversationBean extends ABaseManagedBean {
 							TableRecord tableRecordCreate = new TableRecord(tableRecord, formToUpdateForm, parentField);
 							upsertForm = formContClient.createTableRecord(tableRecordCreate).getFormContainer();
 						} else {
+							tableRecord.setDateLastUpdated(new Date());
 							upsertForm = formContClient.updateFormContainer(tableRecord);
 						}
 						tableRecord.setId(upsertForm.getId());

@@ -29,6 +29,8 @@ import com.google.common.cache.Cache;
 import javax.enterprise.context.RequestScoped;
 import javax.inject.Inject;
 import javax.inject.Named;
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -44,10 +46,14 @@ public class AttachmentBean extends ABaseManagedBean {
 	@FormImageCache
 	private Cache<String, ImageStreamedContent> formImageCache;
 
-	public List<Attachment> actionFetchAttachmentsForForm(Form form, int fromIndex) {
+	public List<Attachment> actionFetchAttachmentsForForm(Form form, int fromIndex, int maxAllowed) {
 		List<Attachment> returnVal = this.actionFetchAttachmentsForForm(form);
-		if (returnVal == null || (fromIndex + 1) > returnVal.size()) return returnVal;
-		return returnVal.subList(fromIndex, returnVal.size());
+		if (maxAllowed < 1) maxAllowed = (returnVal == null) ? 0 : returnVal.size();
+
+		if (returnVal == null || (fromIndex + 1) > maxAllowed) return new ArrayList<>();
+
+		List<Attachment> subList = returnVal.subList(fromIndex, maxAllowed);
+		return subList;
 	}
 
 	public List<Attachment> actionFetchAttachmentsForForm(Form form) {
@@ -67,22 +73,27 @@ public class AttachmentBean extends ABaseManagedBean {
 
 			final AttachmentClient attachmentClient = this.getFluidClientDS().getAttachmentClient();
 			attachments = attachmentClient.getAttachmentsByForm(form, true);
-			if (attachments == null) {
-				return null;
-			}
+			if (attachments == null) return null;attachments.sort(Comparator.comparing(Attachment::getId));
 
 			this.attachmentCache.put(form.getId(), attachments);
-			return attachments.stream()
-					.map(toMap -> {
-						Attachment returnValClone = toMap.clone();
-						returnValClone.setAttachmentDataBase64(null);
-						return returnValClone;
-					})
-					.collect(Collectors.toList());
+			List<Attachment> returnVal = attachments.stream()
+							.map(toMap -> {
+								Attachment returnValClone = toMap.clone();
+								returnValClone.setAttachmentDataBase64(null);
+								return returnValClone;
+							})
+							.collect(Collectors.toList());
+			returnVal.sort(Comparator.comparing(Attachment::getId));
+			return returnVal;
 		} catch (Exception except) {
 			this.raiseError(except);
 			return null;
 		}
+	}
+
+	public void clearAttachmentCacheFor(Form formToClearFor) {
+		if (formToClearFor == null || formToClearFor.getId() == null) return;
+		this.attachmentCache.invalidate(formToClearFor.getId());
 	}
 
 	public boolean actionDoesAttachmentExist(Form formToCheck) {
