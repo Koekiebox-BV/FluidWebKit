@@ -70,16 +70,11 @@ public abstract class ABaseLDM<T extends ABaseFluidVO> extends LazyDataModel<T> 
 		Map<String, FilterMeta> filters
 	) {
 		this.setRowCount(0);
-		if (this.dataListing == null) {
-			return null;
-		}
-		if (this.dataListing.isEmpty()) {
-			return this.dataListing;
-		}
+		if (this.dataListing == null) return null;
 
-		if (this.comparator != null) {
-			this.dataListing.sort(this.comparator);
-		}
+		if (this.dataListing.isEmpty()) return this.dataListing;
+
+		if (this.comparator != null) this.dataListing.sort(this.comparator);
 
 		int totalSize = this.dataListing.size();
 		this.setRowCount(totalSize);

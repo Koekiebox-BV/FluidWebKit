@@ -142,14 +142,10 @@ public abstract class ABaseWorkspaceBean<T extends ABaseWebVO, J extends ABaseCo
 					String viewName = jobViewIter.getViewName();
 					String viewGroup = jobViewIter.getViewGroupName();
 					String uiViewGroup = this.getViewGroupForUI(viewGroup, viewName);
-					if (uiViewGroup == null || uiViewGroup.isEmpty()) {
-						continue;
-					}
+					if (uiViewGroup == null || uiViewGroup.isEmpty()) continue;
 
 					List<JobView> jobViews = this.loggedInUsrViewGroupPlacings.get(uiViewGroup);
-					if (jobViews == null) {
-						jobViews = new ArrayList<>();
-					}
+					if (jobViews == null) jobViews = new ArrayList<>();
 					jobViews.add(jobViewIter);
 					this.loggedInUsrViewGroupPlacings.put(uiViewGroup, jobViews);
 				}
@@ -277,9 +273,7 @@ public abstract class ABaseWorkspaceBean<T extends ABaseWebVO, J extends ABaseCo
 	 */
 	public void actionOpenMainPage() {
 		this.areaToUpdateForDialogAfterSubmit = null;
-		if (this.getFluidClientDS() == null) {
-			return;
-		}
+		if (this.getFluidClientDS() == null) return;
 
 		String workspaceAim = this.getStringRequestParam(WebKitMenuBean.ReqParam.WORKSPACE_AIM);
 		String clickedGroup = this.getStringRequestParam(WebKitMenuBean.ReqParam.CLICKED_GROUP);
@@ -301,9 +295,7 @@ public abstract class ABaseWorkspaceBean<T extends ABaseWebVO, J extends ABaseCo
 		);
 
 		//Clear the content view...
-		if (this.contentView != null) {
-			this.contentView.refreshData(null);
-		}
+		if (this.contentView != null) this.contentView.refreshData(null);
 
 		try {
 			WebKitViewGroup groupWithName = this.webKitMenuBean.getGroupWithName(clickedGroupAlias);
@@ -313,14 +305,10 @@ public abstract class ABaseWorkspaceBean<T extends ABaseWebVO, J extends ABaseCo
 			if (groupWithName.isTGMCombined()) {
 				viewToFetchFor = this.webKitMenuBean.getUniqueViewsForGroup(groupWithName);
 				subFilter = null;//force no sub selection to pull all items...
-			} else {
-				viewToFetchFor = this.webKitMenuBean.getViewsForSub(subFilter);
-			}
+			} else viewToFetchFor = this.webKitMenuBean.getViewsForSub(subFilter);
 
 			List<WebKitWorkspaceJobView> viewsWithAccess = this.filterViewsForUserAccess(viewToFetchFor, clickedGroupAlias);
-			if (viewsWithAccess == null || viewsWithAccess.isEmpty()) {
-				return;
-			}
+			if (viewsWithAccess == null || viewsWithAccess.isEmpty()) return;
 
 			List<CompletableFuture> allAsyncs = new ArrayList<>();
 			final Map<WebKitWorkspaceJobView, List<FluidItem>> mappingRawViewFetch = new Hashtable<>();
@@ -337,20 +325,14 @@ public abstract class ABaseWorkspaceBean<T extends ABaseWebVO, J extends ABaseCo
 								jobViewWK.getJobView(),
 								fetchLimit,
 								0);
-						if (listOfItems == null || (listOfItems.getListing() == null ||
-								listOfItems.getListing().isEmpty())) {
-							return;
-						}
+						if (listOfItems == null || (listOfItems.getListing() == null || listOfItems.getListing().isEmpty())) return;
 					} catch (FluidClientException fluidClientExcept) {
-						if (fluidClientExcept.getErrorCode() == FluidClientException.ErrorCode.NO_RESULT) {
-							return;
-						}
+						if (fluidClientExcept.getErrorCode() == FluidClientException.ErrorCode.NO_RESULT) return;
 						throw fluidClientExcept;
 					} finally {
 						//Set the items for the view...
-						if (listOfItems != null && !listOfItems.isListingEmpty()) {
+						if (listOfItems != null && !listOfItems.isListingEmpty())
 							mappingRawViewFetch.put(jobViewWK, listOfItems.getListing());
-						}
 					}
 				});
 				allAsyncs.add(toAdd);
@@ -387,11 +369,8 @@ public abstract class ABaseWorkspaceBean<T extends ABaseWebVO, J extends ABaseCo
 									viewResults.forEach(fldItem -> {
 										if (groupWithName.isTGMNoDuplicates()) {
 											Long toCheck = fldItem.getId();
-											if (fluidItemIdsAdded.contains(toCheck)) {
-												return;
-											} else {
-												fluidItemIdsAdded.add(toCheck);
-											}
+											if (fluidItemIdsAdded.contains(toCheck)) return;
+											else fluidItemIdsAdded.add(toCheck);
 										}
 										T baseWebToAdd = this.createABaseWebVO(groupWithName, sub, viewWithResults, fldItem);
 										WorkspaceFluidItem item = new WorkspaceFluidItem(baseWebToAdd);
@@ -409,11 +388,10 @@ public abstract class ABaseWorkspaceBean<T extends ABaseWebVO, J extends ABaseCo
 			//Map the layout...
 			this.contentView = this.actionOpenMainPage(groupWithName, subFilter);
 			//Set the correct content view...
-			if (this.contentView == null) {
-				throw new ClientDashboardException(
-						"Unable to set Content View for "+ workspaceAim+"'. Not supported.",
-						ClientDashboardException.ErrorCode.VALIDATION);
-			}
+			if (this.contentView == null) throw new ClientDashboardException(
+					"Unable to set Content View for "+ workspaceAim+"'. Not supported.",
+					ClientDashboardException.ErrorCode.VALIDATION);
+
 			//Refresh the data...
 			this.contentView.refreshData(data);
 		} catch (Exception except) {

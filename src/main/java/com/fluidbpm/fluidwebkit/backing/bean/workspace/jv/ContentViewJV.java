@@ -138,8 +138,7 @@ public class ContentViewJV extends ABaseContentView {
 		List<String> sectionsToKeep = new ArrayList<>();
 		for (String section : this.getSections()) {
 			List<WorkspaceFluidItem> items = this.getFluidItemsForSection().get(section);
-			WorkspaceJobViewLDM workFluidItmLazy =
-					this.fluidItemsLazyModel.getOrDefault(section, new WorkspaceJobViewLDM());
+			WorkspaceJobViewLDM workFluidItmLazy = this.fluidItemsLazyModel.getOrDefault(section, new WorkspaceJobViewLDM());
 			workFluidItmLazy.clearInitialListing();
 
 			if (items != null) workFluidItmLazy.addToInitialListing(items);
@@ -312,7 +311,7 @@ public class ContentViewJV extends ABaseContentView {
 								fieldVal = itm.getFluidItemForm().getDateLastUpdated();
 							break;
 							case SystemField.DATE_STEP_ENTERED:
-								fieldVal = itm.getFluidItemForm().getDateLastUpdated();
+								fieldVal = itm.getFluidItem().getStepEnteredTime();
 							break;
 							case SystemField.FLOW:
 								fieldVal = itm.getFluidItemFlow();

@@ -270,7 +270,11 @@ public class WorkspaceFluidItem extends ABaseFluidVO {
 			this.getFluidItem().getForm().getFormFields().stream()
 					.filter(itm -> itm.getFieldValue() != null)
 					.forEach(field -> {
-						if (Field.Type.DateTime.toString().equals(field.getFieldType())) {
+						if (Field.Type.TextEncrypted.toString().equals(field.getFieldType())) {
+							//String fieldValueClearText = (String)field.getFieldValue();
+							//TODO @jason Need to mask it properly here...
+							this.fieldMap.put(field.getFieldName(), "**********");
+						} else if (Field.Type.DateTime.toString().equals(field.getFieldType())) {
 							this.fieldMap.put(field.getFieldName(), field.getFieldValue());
 						} else {
 							this.fieldMap.put(field.getFieldName(), field.getFieldValue().toString());

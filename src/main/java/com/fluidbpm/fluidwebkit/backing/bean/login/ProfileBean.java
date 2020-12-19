@@ -16,6 +16,7 @@
 package com.fluidbpm.fluidwebkit.backing.bean.login;
 
 import com.fluidbpm.fluidwebkit.backing.bean.ABaseManagedBean;
+import com.fluidbpm.fluidwebkit.backing.utility.TimeZoneUtil;
 import com.fluidbpm.program.api.vo.field.Field;
 import com.fluidbpm.program.api.vo.user.User;
 import com.fluidbpm.program.api.vo.user.UserFieldListing;
@@ -29,6 +30,7 @@ import javax.enterprise.context.SessionScoped;
 import javax.faces.application.FacesMessage;
 import javax.faces.context.FacesContext;
 import javax.faces.event.PhaseId;
+import javax.faces.model.SelectItem;
 import javax.inject.Named;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -100,25 +102,20 @@ public class ProfileBean extends ABaseManagedBean {
 	 * @see User
 	 */
 	public StreamedContent getUserProfileImageForUser(User user, int size) {
-		if (user == null || (user.getId() == null || user.getId() < 1L)) {
-			return new DefaultStreamedContent();
-		}
+		if (user == null || (user.getId() == null || user.getId() < 1L)) return new DefaultStreamedContent();
+
 		FacesContext context = FacesContext.getCurrentInstance();
 		if (context.getCurrentPhaseId() == PhaseId.RENDER_RESPONSE) {
 			return new DefaultStreamedContent();
 		} else {
 			User loggedInUser = this.getLoggedInUserSafe();
-			if (loggedInUser == null) {
-				return new DefaultStreamedContent();
-			}
+			if (loggedInUser == null) return new DefaultStreamedContent();
 
 			UserClient userClient = this.getFluidClientDS().getUserClient();
 			//Get the bytes by user...
 			try {
 				final byte[] imageBytes = userClient.getGravatarForUser(user, size);
-				if (imageBytes == null || imageBytes.length < 1) {
-					return this.getNoGravatarStreamContent();
-				}
+				if (imageBytes == null || imageBytes.length < 1) return this.getNoGravatarStreamContent();
 
 				return DefaultStreamedContent.builder()
 						.stream(() -> new ByteArrayInputStream(imageBytes))
@@ -142,9 +139,7 @@ public class ProfileBean extends ABaseManagedBean {
 		String path = "/image/no_profile_logo.svg";
 		try {
 			InputStream inputStream = getClass().getClassLoader().getResourceAsStream(path);
-			if (inputStream == null) {
-				throw new IOException("Unable to find '"+ path+"'.");
-			}
+			if (inputStream == null) throw new IOException("Unable to find '"+ path+"'.");
 
 			return DefaultStreamedContent.builder()
 					.stream(() -> inputStream)
@@ -215,6 +210,10 @@ public class ProfileBean extends ABaseManagedBean {
 				.collect(Collectors.toList());
 		Collections.sort(returnVal, Comparator.comparing(Field::getFieldName));
 		return returnVal;
+	}
+
+	public List<SelectItem> getAvailableTimeZonesAsSelectItems() {
+		return TimeZoneUtil.getAvailableTimeZonesAsSelectItems();
 	}
 
 	public int getLoggedInUserFieldsProfileSize() {

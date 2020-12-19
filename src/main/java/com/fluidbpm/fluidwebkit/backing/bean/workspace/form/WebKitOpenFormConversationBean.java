@@ -570,14 +570,15 @@ public class WebKitOpenFormConversationBean extends ABaseManagedBean {
 	}
 
 	public List<Attachment> getFreshAndExistingAttachments() {
-		List<Attachment> allAttachments = this.getFreshAttachments();
+		List<Attachment> freshAttachments = this.getFreshAttachments();
+		List<Attachment> returnVal = new ArrayList<>(freshAttachments);
 
 		WorkspaceFluidItem wsFlItem = this.getWsFluidItem();
 		if (wsFlItem.isFluidItemFormSet()) {
 			List<Attachment> existingAttachments = this.attachmentBean.actionFetchAttachmentsForForm(wsFlItem.getFluidItemForm());
-			if (existingAttachments != null) allAttachments.addAll(existingAttachments);
+			if (existingAttachments != null) returnVal.addAll(existingAttachments);
 		}
-		return allAttachments;
+		return returnVal;
 	}
 
 	public int getFreshAndExistingAttachmentCount() {

@@ -22,6 +22,7 @@ public class JobViewItemVO extends ABaseWebVO {
 	private Long fluidItemId;
 	private Long formContainerId;
 	private Date dateLastUpdated;
+	private Date stepEnteredTime;
 	private Date dateCreated;
 
 	public static final String COMPLETED_NOT_IN_FLOW_SENT = "[Completed / Not In Flow]";
@@ -33,12 +34,11 @@ public class JobViewItemVO extends ABaseWebVO {
 		this.title = form.getTitle();
 		this.formContainerId = form.getId();
 		this.dateLastUpdated = form.getDateLastUpdated();
+		this.stepEnteredTime = fluidItm.getStepEnteredTime();
 		this.dateCreated = form.getDateCreated();
 
 		this.step = COMPLETED_NOT_IN_FLOW_SENT;
-		if (fluidItm.getStep() != null && !fluidItm.getStep().trim().isEmpty()) {
-			this.step = fluidItm.getStep();
-		}
+		if (fluidItm.getStep() != null && !fluidItm.getStep().trim().isEmpty()) this.step = fluidItm.getStep();
 
 		this.type = form.getFormType();
 		this.state = form.getState();

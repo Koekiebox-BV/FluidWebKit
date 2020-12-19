@@ -1,6 +1,5 @@
 package com.fluidbpm.fluidwebkit.backing.bean.workspace.uq;
 
-import com.fluidbpm.fluidwebkit.backing.bean.workspace.jv.JobViewItemVO;
 import com.fluidbpm.fluidwebkit.backing.vo.ABaseWebVO;
 import com.fluidbpm.program.api.vo.field.Field;
 import com.fluidbpm.program.api.vo.form.Form;
@@ -37,14 +36,13 @@ public class UserQueryItemVO extends ABaseWebVO {
 		this.dateCreated = form.getDateCreated();
 
 		this.step = COMPLETED_NOT_IN_FLOW_SENT;
-		if (fluidItm.getStep() != null && !fluidItm.getStep().trim().isEmpty()) {
-			this.step = fluidItm.getStep();
-		}
+		if (fluidItm.getStep() != null && !fluidItm.getStep().trim().isEmpty()) this.step = fluidItm.getStep();
 
 		this.type = form.getFormType();
 		this.state = form.getState();
 
 		this.currentUser = (form.getCurrentUser() == null ||
+				form.getCurrentUser().getUsername() == null ||
 				form.getCurrentUser().getUsername().trim().isEmpty()) ? "[None]" :
 				form.getCurrentUser().getUsername();
 	}

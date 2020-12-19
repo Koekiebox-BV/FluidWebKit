@@ -56,17 +56,13 @@ public class WorkspaceBean extends ABaseWorkspaceBean<JobViewItemVO, ContentView
 	}
 
 	@Override
-	protected ContentViewJV actionOpenMainPage(
-		WebKitViewGroup wkGroup,
-		WebKitViewSub wkSub
-	) {
+	protected ContentViewJV actionOpenMainPage(WebKitViewGroup wkGroup, WebKitViewSub wkSub) {
 		try {
 			if (this.getFluidClientDS() == null) return null;
 
 			final String tgm = wkGroup.getTableGenerateMode();
 
-			if (tgm == null) throw new FluidClientException(
-						"Unable to determine outcome for TGM not being set.",
+			if (tgm == null) throw new FluidClientException("Unable to determine outcome for TGM not being set.",
 						FluidClientException.ErrorCode.FIELD_VALIDATE);
 
 			List<WebKitViewSub> subs = wkGroup.getWebKitViewSubs();
