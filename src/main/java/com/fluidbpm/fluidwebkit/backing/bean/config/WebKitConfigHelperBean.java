@@ -111,12 +111,10 @@ public class WebKitConfigHelperBean extends ABaseManagedBean {
 				FacesContext.getCurrentInstance().getExternalContext().getSession(false);
 		if (httpSessionObj instanceof HttpSession) {
 			HttpSession casted = (HttpSession)httpSessionObj;
-
 			Object heightValue = casted.getAttribute(
 					SessionVariable.USER_BROWSER_WINDOW_HEIGHT);
-			if (heightValue != null && heightValue instanceof Number) {
+			if (heightValue != null && heightValue instanceof Number)
 				return ((Number)heightValue).intValue();
-			}
 		}
 		return 900;
 	}

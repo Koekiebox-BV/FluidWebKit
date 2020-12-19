@@ -326,7 +326,8 @@ public abstract class ABaseContentView implements Serializable {
 			this.fluidItemsForSectionFiltered.putAll(this.fluidItemsForSection);
 		}
 
-		String filterByTextLower = this.getTextToFilterBy().trim().toLowerCase();
+		String filterByTextLower = this.getTextToFilterBy() == null ? null :
+				this.getTextToFilterBy().trim().toLowerCase();
 
 		for (String section : this.getSections()) {
 			if (selectedSection != null && !selectedSection.equals(section)) continue;

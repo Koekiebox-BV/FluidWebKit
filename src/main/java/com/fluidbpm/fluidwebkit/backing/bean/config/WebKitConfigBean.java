@@ -16,13 +16,19 @@
 package com.fluidbpm.fluidwebkit.backing.bean.config;
 
 import com.fluidbpm.fluidwebkit.backing.bean.ABaseManagedBean;
+import com.fluidbpm.program.api.util.UtilGlobal;
 import com.fluidbpm.program.api.vo.config.ConfigurationListing;
 import lombok.Getter;
 import lombok.Setter;
+import org.primefaces.model.DefaultStreamedContent;
+import org.primefaces.model.StreamedContent;
 
 import javax.annotation.PostConstruct;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Named;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 
 /**
  * Bean to take care of the config login.
@@ -39,6 +45,7 @@ public class WebKitConfigBean extends ABaseManagedBean {
 	private String domain;
 	private String fluidServerURL;
 	private String whiteLabel;
+	private String companyLogoFilepath;
 	private String webKitGlobalJSON;
 
 	private boolean configUserLoginSuccess = false;
@@ -62,6 +69,7 @@ public class WebKitConfigBean extends ABaseManagedBean {
 
 		//Other
 		public static final String WhiteLabel = "WhiteLabel";
+		public static final String CompanyLogoFilePath = "CompanyLogoFilePath";
 		public static final String WebKit = "WebKit";
 	}
 
@@ -100,6 +108,8 @@ public class WebKitConfigBean extends ABaseManagedBean {
 						this.setFluidServerURL(configuration.getValue());
 					} else if (ConfigKey.WhiteLabel.equals(configName)) {
 						this.setWhiteLabel(configuration.getValue());
+					} else if (ConfigKey.CompanyLogoFilePath.equals(configName)) {
+						this.setCompanyLogoFilepath(configuration.getValue());
 					} else if (ConfigKey.WebKit.equals(configName)) {
 						this.setWebKitGlobalJSON(configuration.getValue());
 					}
@@ -113,7 +123,25 @@ public class WebKitConfigBean extends ABaseManagedBean {
 	}
 
 	public String getWhiteLabelUpper() {
-		return this.getWhiteLabel() == null ? null :
-				this.getWhiteLabel().toUpperCase();
+		return this.getWhiteLabel() == null ? null : this.getWhiteLabel().toUpperCase();
+	}
+
+	public boolean getCompanyLogoPathExists() {
+		return UtilGlobal.isBlank(this.companyLogoFilepath) ?
+				false : new File(this.companyLogoFilepath).exists();
+	}
+
+	public StreamedContent getCustomCompanyLogoStreamedContent() {
+		File logoFile = new File(this.companyLogoFilepath);
+		return DefaultStreamedContent.builder()
+				.name(logoFile.getName())
+				.stream(() -> {
+					try {
+						return new FileInputStream(logoFile);
+					} catch (FileNotFoundException e) {
+						this.raiseError(e);
+						return null;
+					}
+				}).build();
 	}
 }
