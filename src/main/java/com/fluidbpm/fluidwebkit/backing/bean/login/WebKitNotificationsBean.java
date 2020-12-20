@@ -131,15 +131,12 @@ public class WebKitNotificationsBean extends ABaseManagedBean {
 		try {
 			//Read...
 			try {
-				this.unreadUserNotifications =
-						userNotificationsClient.getAllUnReadByLoggedInUser(MAX_COUNT_READ,0);
+				this.unreadUserNotifications = userNotificationsClient.getAllUnReadByLoggedInUser(MAX_COUNT_READ,0);
 				if (this.unreadUserNotifications != null && this.unreadUserNotifications.size() > MAX_COUNT_UNREAD) {
 					this.unreadUserNotifications = this.unreadUserNotifications.subList(0, MAX_COUNT_UNREAD);
 				}
 			} catch (FluidClientException fce) {
-				if (fce.getErrorCode() != FluidClientException.ErrorCode.NO_RESULT) {
-					throw fce;
-				}
+				if (fce.getErrorCode() != FluidClientException.ErrorCode.NO_RESULT) throw fce;
 			}
 
 			//Unread...
@@ -147,9 +144,7 @@ public class WebKitNotificationsBean extends ABaseManagedBean {
 				this.readUserNotifications =
 						userNotificationsClient.getAllReadByLoggedInUser(MAX_COUNT_UNREAD,0);
 			} catch (FluidClientException fce) {
-				if (fce.getErrorCode() != FluidClientException.ErrorCode.NO_RESULT) {
-					throw fce;
-				}
+				if (fce.getErrorCode() != FluidClientException.ErrorCode.NO_RESULT) throw fce;
 			}
 		} catch (Exception except) {
 			this.raiseError(except);
@@ -163,15 +158,11 @@ public class WebKitNotificationsBean extends ABaseManagedBean {
 	 * Action to mark the unread notifications as read.
 	 */
 	public void actionMarkUnreadNotificationsAsRead() {
-		if (this.getFluidClientDS() == null) {
-			return;
-		}
+		if (this.getFluidClientDS() == null) return;
 
 		//Fluid Clients...
 		try {
-			if (this.getUnreadUserNotifications() == null || this.getUnreadUserNotifications().isEmpty()) {
-				return;
-			}
+			if (this.getUnreadUserNotifications() == null || this.getUnreadUserNotifications().isEmpty()) return;
 
 			final UserNotificationClient userNotificationsClient = this.getFluidClientDS().getUserNotificationClient();
 			//Mark the notifications as READ...
@@ -179,13 +170,13 @@ public class WebKitNotificationsBean extends ABaseManagedBean {
 			this.getUnreadUserNotifications().forEach(unreadMsg -> {
 				userNotificationsClient.markUserNotificationAsRead(unreadMsg);
 				unreadMsg.setDateRead(dateRead);
-				if (this.getReadUserNotifications() == null) {
-					this.setReadUserNotifications(new ArrayList<>());
-				}
+				if (this.getReadUserNotifications() == null) this.setReadUserNotifications(new ArrayList<>());
+				
 				this.getReadUserNotifications().add(unreadMsg);
+				this.getLogger().info(String.format("actionMarkUnreadNotificationsAsRead(%s:%d)",
+						unreadMsg.getMessage(), unreadMsg.getId()));
 			});
 			this.getUnreadUserNotifications().clear();
-			this.getLogger().info("actionMarkUnreadNotificationsAsRead(DONE)");
 			this.setNotificationState(NotificationState.UnreadNotificationsNowRead);
 		} catch (Exception except) {
 			this.raiseError(except);

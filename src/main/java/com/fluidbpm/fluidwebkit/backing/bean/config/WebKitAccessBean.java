@@ -308,13 +308,11 @@ public class WebKitAccessBean extends ABaseManagedBean {
 				formFieldClientParam.getFieldsByFormNameAndLoggedInUser(
 						formNameParam, false);
 		List<Field> viewListing = formFieldViewFields.getListing();
-		if (fieldsForViewingParam != null && viewListing != null) {
-			fieldsForViewingParam.addAll(viewListing);
-		}
+		if (fieldsForViewingParam != null && viewListing != null) fieldsForViewingParam.addAll(viewListing);
 
 		//Populate Multi Choice Fields...
 		this.populateAvailableMultiChoicesForField(
-				formFieldClientParam,
+				this.getFluidClientDSConfig().getFormFieldClient(),
 				fieldsForViewingParam);
 
 		//Edit fields...
@@ -324,9 +322,7 @@ public class WebKitAccessBean extends ABaseManagedBean {
 						true);
 
 		List<Field> editListing = formFieldEditFields.getListing();
-		if (fieldsForEditingParam != null && editListing != null) {
-			fieldsForEditingParam.addAll(editListing);
-		}
+		if (fieldsForEditingParam != null && editListing != null) fieldsForEditingParam.addAll(editListing);
 	}
 
 	private void populateAvailableMultiChoicesForField(FormFieldClient formFieldClientParam, List<Field> fieldsForViewingParam) {

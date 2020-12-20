@@ -219,7 +219,7 @@ public class WebKitOpenFormConversationBean extends ABaseManagedBean {
 				//Fetch the table field forms...
 				if (tableFormsEnabled) {
 					List<FormListing> childForms =
-							this.getFluidClientDS().getSQLUtilWrapper().getTableForms(true, freshFetchForm);
+							this.getFluidClientDSConfig().getSQLUtilWrapper().getTableForms(true, freshFetchForm);
 					webKitForm.getTableFieldsToInclude().forEach(tableFieldName -> {
 						List<Form> tableRecordsForField = new ArrayList<>();
 						childForms.stream()
@@ -329,7 +329,8 @@ public class WebKitOpenFormConversationBean extends ABaseManagedBean {
 	public void addTableRecordsForField(Field fieldToAddTo, List<Form> tableRecords) {
 		if (tableRecords == null || tableRecords.isEmpty()) return;
 		
-		TableField tableField = fieldToAddTo.getFieldValueAsTableField();
+		final TableField tableField = (fieldToAddTo.getFieldValueAsTableField() == null) ?
+				new TableField() : fieldToAddTo.getFieldValueAsTableField();
 		String fieldName = fieldToAddTo.getFieldName();
 		List<Field> tableRecordFieldsView = this.tableRecordViewableFields.get(fieldName);
 		List<Field> tableRecordFieldsEditable = this.tableRecordEditableFields.get(fieldName);
@@ -341,6 +342,7 @@ public class WebKitOpenFormConversationBean extends ABaseManagedBean {
 							fluidItmToAdd, tableRecordFieldsView, tableRecordFieldsEditable, null));
 			wfi.refreshFormFieldsEdit();
 			toAdd.setFormFields(wfi.getFormFieldsEdit());
+			if (tableField.getTableRecords() == null) tableField.setTableRecords(new ArrayList<>());
 			tableField.getTableRecords().add(toAdd);
 		});
 		fieldToAddTo.setFieldValue(tableField);

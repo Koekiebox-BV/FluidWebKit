@@ -78,7 +78,7 @@ public abstract class ABaseContentView implements Serializable {
 
 	@Getter
 	@Setter
-	private Map<String,Map<String,Date>> filterByDateValueMap;
+	private Map<String, Map<String, Date>> filterByDateValueMap;
 
 	protected User loggedInUser;
 	private String textToFilterBy;
@@ -322,25 +322,19 @@ public abstract class ABaseContentView implements Serializable {
 	 */
 	public void actionSetFilteredList(String selectedSection) {
 		this.fluidItemsForSectionFiltered.clear();
-		if (this.getTextToFilterBy() == null || this.getTextToFilterBy().trim().isEmpty()) {
+		if (this.getTextToFilterBy() == null || this.getTextToFilterBy().trim().isEmpty())
 			this.fluidItemsForSectionFiltered.putAll(this.fluidItemsForSection);
-		}
 
-		String filterByTextLower = this.getTextToFilterBy() == null ? null :
-				this.getTextToFilterBy().trim().toLowerCase();
+		String filterByTextLower = this.getTextToFilterBy() == null ? null : this.getTextToFilterBy().trim().toLowerCase();
 
 		for (String section : this.getSections()) {
 			if (selectedSection != null && !selectedSection.equals(section)) continue;
 
 			List<WorkspaceFluidItem> itemsInSection = null;
-			if (!this.fluidItemsForSection.containsKey(section) ||
-					((itemsInSection = this.fluidItemsForSection.get(section)) == null)
-			) {
+			if (!this.fluidItemsForSection.containsKey(section) || ((itemsInSection = this.fluidItemsForSection.get(section)) == null))
 				continue;
-			}
 
 			List<WorkspaceFluidItem> itemsInSectionFiltered = new ArrayList<>();
-
 			for (WorkspaceFluidItem item : itemsInSection) {
 				List<Field> formFields = item.getFormFields();
 				List<Field> routeFields = item.getRouteFields();
@@ -348,18 +342,15 @@ public abstract class ABaseContentView implements Serializable {
 				List<Field> combinedFields = new ArrayList<>();
 
 				//Form Fields...
-				if (formFields != null) {
-					combinedFields.addAll(formFields);
-				}
+				if (formFields != null) combinedFields.addAll(formFields);
 
 				//Route Fields...
-				if (routeFields != null) {
-					combinedFields.addAll(routeFields);
-				}
+				if (routeFields != null) combinedFields.addAll(routeFields);
 
 				//Form Type...
-				if (item.getFluidItem().getForm().getFormType() != null &&
-						item.getFluidItem().getForm().getFormType().trim().toLowerCase().contains(filterByTextLower)) {
+				if (filterByTextLower != null &&
+						(item.getFluidItem().getForm().getFormType() != null &&
+						item.getFluidItem().getForm().getFormType().trim().toLowerCase().contains(filterByTextLower))) {
 					itemsInSectionFiltered.add(item);
 				} else if (!combinedFields.isEmpty()) {
 					//Then Form and Route Fields...
@@ -377,7 +368,6 @@ public abstract class ABaseContentView implements Serializable {
 					});
 				}
 			}
-
 			this.fluidItemsForSectionFiltered.put(section, itemsInSectionFiltered);
 		}
 	}
@@ -803,27 +793,27 @@ public abstract class ABaseContentView implements Serializable {
 
 		columnModelForSection.stream()
 				.forEach(itm -> {
+					String fieldName = itm.getFluidFieldName();
 					if (itm.getFluidFieldColumnType() == Field.Type.Text) {//Text
-						if (this.filterByTextValueMap == null) {
-							this.filterByTextValueMap = new HashMap<>();
-						}
+						if (this.filterByTextValueMap == null) this.filterByTextValueMap = new HashMap<>();
 						Map<String, String> fields = this.filterByTextValueMap.getOrDefault(sectionParam, new HashMap<>());
-						fields.put(itm.getFluidFieldName(), UtilGlobal.EMPTY);
+						fields.put(fieldName, UtilGlobal.EMPTY);
 						this.filterByTextValueMap.put(sectionParam, fields);
 					} else if (itm.getFluidFieldColumnType() == Field.Type.Decimal) {//Decimal
-						if (this.filterByDecimalValueMap == null) {
-							this.filterByDecimalValueMap = new HashMap<>();
-						}
+						if (this.filterByDecimalValueMap == null) this.filterByDecimalValueMap = new HashMap<>();
 						Map<String, Double> fields = this.filterByDecimalValueMap.getOrDefault(sectionParam, new HashMap<>());
-						fields.put(itm.getFluidFieldName(), null);
+						fields.put(fieldName, null);
 						this.filterByDecimalValueMap.put(sectionParam, fields);
 					} else if (itm.getFluidFieldColumnType() == Field.Type.MultipleChoice) {//Multi Choice
-						if (this.filterBySelectItemMap == null) {
-							this.filterBySelectItemMap = new HashMap<>();
-						}
+						if (this.filterBySelectItemMap == null) this.filterBySelectItemMap = new HashMap<>();
 						Map<String, String[]> fields = this.filterBySelectItemMap.getOrDefault(sectionParam, new HashMap<>());
-						fields.put(itm.getFluidFieldName(), new String[]{});
+						fields.put(fieldName, new String[]{});
 						this.filterBySelectItemMap.put(sectionParam, fields);
+					} else if (itm.getFluidFieldColumnType() == Field.Type.DateTime) {//Date Time
+						if (this.filterByDateValueMap == null) this.filterByDateValueMap = new HashMap<>();
+						Map<String, Date> fields = this.filterByDateValueMap.getOrDefault(sectionParam, new HashMap<>());
+						//fields.put(fieldName, new Date(System.currentTimeMillis()));
+						this.filterByDateValueMap.put(sectionParam, fields);
 					}
 				});
 	}
@@ -872,6 +862,12 @@ public abstract class ABaseContentView implements Serializable {
 			for (String fieldName : new ArrayList<>(keySetText)) {
 				mappingForTextSection.put(fieldName, "");
 			}
+		}
+
+		Map<String, Date> mappingForDateSection = this.filterByDateValueMap.get(selectedSectionParam);
+		Set<String> keySetDate = (mappingForDateSection == null) ? null : mappingForDateSection.keySet();
+		if (keySetDate != null && !keySetDate.isEmpty()) {
+			for (String fieldName : new ArrayList<>(keySetDate)) mappingForDateSection.remove(fieldName);
 		}
 
 		this.actionSetFilteredList(selectedSectionParam);
