@@ -114,7 +114,7 @@ public class WebKitUserQueryBean extends ABaseWorkspaceBean<UserQueryItemVO, Con
 	) {
 		String userQueryLabel = this.getStringRequestParam(WebKitMenuBean.ReqParam.USER_QUERY_LABEL);
 		String sectionName = String.format("User Query - %s", userQueryLabel);
-		String userQuerySection = this.getStringRequestParam(WebKitMenuBean.ReqParam.USER_QUERY_SECTION);
+		//String userQuerySection = this.getStringRequestParam(WebKitMenuBean.ReqParam.USER_QUERY_SECTION);
 		try {
 			if (this.getFluidClientDS() == null) {
 				return null;

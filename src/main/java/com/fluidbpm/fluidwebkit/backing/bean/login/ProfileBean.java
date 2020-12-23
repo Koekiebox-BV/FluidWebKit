@@ -16,6 +16,7 @@
 package com.fluidbpm.fluidwebkit.backing.bean.login;
 
 import com.fluidbpm.fluidwebkit.backing.bean.ABaseManagedBean;
+import com.fluidbpm.fluidwebkit.backing.utility.DateTimeUtil;
 import com.fluidbpm.fluidwebkit.backing.utility.TimeZoneUtil;
 import com.fluidbpm.program.api.vo.field.Field;
 import com.fluidbpm.program.api.vo.user.User;
@@ -214,6 +215,14 @@ public class ProfileBean extends ABaseManagedBean {
 
 	public List<SelectItem> getAvailableTimeZonesAsSelectItems() {
 		return TimeZoneUtil.getAvailableTimeZonesAsSelectItems();
+	}
+
+	public List<SelectItem> getAvailableDateFormatsAsSelectItems() {
+		return DateTimeUtil.getAvailableDateFormatsAsSelectItems();
+	}
+
+	public List<SelectItem> getAvailableTimeFormatsAsSelectItems() {
+		return DateTimeUtil.getAvailableTimeFormatsAsSelectItems();
 	}
 
 	public int getLoggedInUserFieldsProfileSize() {

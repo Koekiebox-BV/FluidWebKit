@@ -20,17 +20,19 @@ import com.fluidbpm.fluidwebkit.backing.bean.config.WebKitAccessBean;
 import com.fluidbpm.fluidwebkit.backing.bean.workspace.WorkspaceFluidItem;
 import com.fluidbpm.fluidwebkit.backing.bean.workspace.contentview.ABaseContentView;
 import com.fluidbpm.fluidwebkit.backing.bean.workspace.contentview.WebKitViewContentModelBean;
+import com.fluidbpm.program.api.util.UtilGlobal;
 import com.fluidbpm.program.api.vo.field.Field;
+import com.fluidbpm.program.api.vo.field.MultiChoice;
 import com.fluidbpm.program.api.vo.user.User;
+import com.fluidbpm.program.api.vo.userquery.UserQuery;
 import com.fluidbpm.program.api.vo.webkit.userquery.WebKitUserQuery;
 import com.fluidbpm.program.api.vo.webkit.viewgroup.WebKitViewSub;
 import com.fluidbpm.program.api.vo.webkit.viewgroup.WebKitWorkspaceJobView;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import javax.faces.model.SelectItem;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class ContentViewUQ extends ABaseContentView {
@@ -39,9 +41,15 @@ public class ContentViewUQ extends ABaseContentView {
 
 	private WebKitAccessBean accessBean;
 
+	private static final String LEFT_SQ_BRACKET = "[";
+	private static final String RIGHT_SQ_BRACKET = "]";
+
 	@Getter
 	@Setter
 	private WorkspaceUserQueryLDM fluidItemsLazyModel = null;
+
+	private Map<String, List<ABaseManagedBean.ColumnModel>> sectionFilterableColumns;
+	private Map<String, List<String>> multiSelectMapping;
 
 	public static final class SystemField {
 		public static final String DATE_CREATED = "Date Created";
@@ -104,7 +112,7 @@ public class ContentViewUQ extends ABaseContentView {
 				Field.Type.Text,
 				this.wkUserQuery.isShowColumnTitle(),
 				true,
-				true));
+				false));
 
 		//Index - 03 - ID
 		returnVal.add(new ABaseManagedBean.ColumnModel(
@@ -113,7 +121,7 @@ public class ContentViewUQ extends ABaseContentView {
 				Field.Type.Text,
 				this.wkUserQuery.isShowColumnID(),
 				true,
-				true));
+				false));
 
 		//Index - 04 - Form Type
 		returnVal.add(new ABaseManagedBean.ColumnModel(
@@ -122,7 +130,7 @@ public class ContentViewUQ extends ABaseContentView {
 				Field.Type.MultipleChoice,
 				this.wkUserQuery.isShowColumnFormType(),
 				true,
-				true));
+				false));
 
 		//Index - 05 - Date Created
 		returnVal.add(new ABaseManagedBean.ColumnModel(
@@ -131,7 +139,7 @@ public class ContentViewUQ extends ABaseContentView {
 				Field.Type.DateTime,
 				this.wkUserQuery.isShowColumnDateCreated(),
 				true,
-				true));
+				false));
 
 		//Index - 06 - Date Last Updated
 		returnVal.add(new ABaseManagedBean.ColumnModel(
@@ -140,7 +148,7 @@ public class ContentViewUQ extends ABaseContentView {
 				Field.Type.DateTime,
 				this.wkUserQuery.isShowColumnDateLastUpdated(),
 				true,
-				true));
+				false));
 
 		//Index - 07 - User
 		returnVal.add(new ABaseManagedBean.ColumnModel(
@@ -149,7 +157,7 @@ public class ContentViewUQ extends ABaseContentView {
 				Field.Type.MultipleChoice,
 				this.wkUserQuery.isShowColumnUser(),
 				true,
-				true));
+				false));
 
 		//Index - 08 - State
 		returnVal.add(new ABaseManagedBean.ColumnModel(
@@ -158,7 +166,7 @@ public class ContentViewUQ extends ABaseContentView {
 				Field.Type.MultipleChoice,
 				this.wkUserQuery.isShowColumnState(),
 				true,
-				true));
+				false));
 
 		//Index - 09 - Flow State
 		returnVal.add(new ABaseManagedBean.ColumnModel(
@@ -167,7 +175,7 @@ public class ContentViewUQ extends ABaseContentView {
 				Field.Type.MultipleChoice,
 				this.wkUserQuery.isShowColumnFlowState(),
 				true,
-				true));
+				false));
 
 		List<Field> fieldsLoggedInUserHasAccessTo =
 				this.accessBean.getFormFieldsUserHasVisibilityFor(this.wkUserQuery.getUserQuery());
@@ -175,25 +183,109 @@ public class ContentViewUQ extends ABaseContentView {
 
 		List<ABaseManagedBean.ColumnModel> returnValCustomRouteFields = fieldsLoggedInUserHasAccessTo.stream()
 				.map(formField -> {
-					boolean canFilter = false;
-					switch (formField.getTypeAsEnum()) {
-						case Text:
-						case DateTime:
-						case TrueFalse:
-						case Decimal:
-						case MultipleChoice:
-							canFilter = true;
-					}
 					return new ABaseManagedBean.ColumnModel(
 							formField.getFieldName(),
 							formField.getFieldName(),
 							formField.getTypeAsEnum(),
 							true,
 							true,
-							canFilter);
+							false);
 				})
 				.collect(Collectors.toList());
 		returnVal.addAll(returnValCustomRouteFields);
+		
 		return returnVal;
+	}
+
+	@Override
+	public boolean checkIfFieldCurrentlyFiltered(String sectionParam, String fieldNameParam) {
+		if (this.sectionFilterableColumns == null) return false;
+
+		List<ABaseManagedBean.ColumnModel> modelForSection =
+				this.sectionFilterableColumns.get(sectionParam);
+		if (modelForSection == null || modelForSection.isEmpty()) return false;
+
+		//Txt...
+		Map<String, String> fieldFilterValTxt = this.getFilterByTextValueMap().get(sectionParam);
+		if (fieldFilterValTxt != null)
+			for (String value : fieldFilterValTxt.values()) 
+				if (UtilGlobal.isNotBlank(value)) return true;
+
+		//Decimal...
+		Map<String, Double> fieldFilterValDec = this.getFilterByDecimalValueMap().get(sectionParam);
+		if (fieldFilterValDec != null)
+			for (Double value : fieldFilterValDec.values())
+				if (value != null && value != 0.0) return true;
+
+		//MultiChoice...
+		Map<String, String[]> fieldFilterValMulti = this.getFilterBySelectItemMap().get(sectionParam);
+		if (fieldFilterValMulti != null)
+			for (String[] value : fieldFilterValMulti.values())
+				if (value != null && value.length > 0) return true;
+
+		return false;
+	}
+
+	@Override
+	public List<SelectItem> getPossibleCombinationsMapAsSelectItemsFor(String section, String fieldName) {
+		if ((section == null || section.trim().isEmpty()) || (fieldName == null || fieldName.trim().isEmpty())) return new ArrayList<>();
+
+		if (this.multiSelectMapping == null) this.multiSelectMapping = new HashMap<>();
+
+		final List<String> availableOptions;
+		if (this.multiSelectMapping.containsKey(fieldName)) {
+			availableOptions = this.multiSelectMapping.get(fieldName);
+		} else {
+			Field multiField = new Field(fieldName, new MultiChoice(), Field.Type.MultipleChoice);
+			this.accessBean.populateAvailableMultiChoicesForField(
+					this.accessBean.getFluidClientDSConfig().getFormFieldClient(), multiField);
+			availableOptions = multiField.getFieldValueAsMultiChoice().getAvailableMultiChoices();
+			this.multiSelectMapping.put(fieldName, availableOptions);
+		}
+
+		List<SelectItem> returnVal = availableOptions.stream()
+				.map(itm -> new SelectItem(itm, itm))
+				.collect(Collectors.toList());
+
+		//Sort by Label...
+		Collections.sort(returnVal, Comparator.comparing(SelectItem::getLabel));
+		return returnVal;
+	}
+
+	@Override
+	public Map<String, List<ABaseManagedBean.ColumnModel>> getColumnModelsFilterable() {
+		String section = this.getSections()[0];
+
+		if (this.sectionFilterableColumns == null) {
+			this.sectionFilterableColumns = new HashMap<>();
+
+			String userQueryName = this.wkUserQuery.getUserQuery().getName();
+			UserQuery freshFetch = this.accessBean.fetchUserQueryWithNameUsingConfigUser(userQueryName);
+
+			List<ABaseManagedBean.ColumnModel> inputModels = null;
+			List<String> inputsRulesWhereInputIsReq = (freshFetch == null) ? null :
+					freshFetch.getRuleFieldNamesWhereTypeInput();
+			if (inputsRulesWhereInputIsReq != null && !inputsRulesWhereInputIsReq.isEmpty()) {
+				inputModels = inputsRulesWhereInputIsReq.stream()
+						.map(inputRule -> {
+							int firstIndexOfBracket = inputRule.indexOf(LEFT_SQ_BRACKET);
+							int lastIndexOfBracket = inputRule.indexOf(RIGHT_SQ_BRACKET);
+							String formFieldName = inputRule.substring(firstIndexOfBracket+1, lastIndexOfBracket);
+							Field fieldByName = this.accessBean.getFieldBy(formFieldName);
+
+							return new ABaseManagedBean.ColumnModel(
+									fieldByName.getFieldName(),
+									fieldByName.getFieldName(),
+									fieldByName.getTypeAsEnum(),
+									true,
+									true,
+									true);
+						})
+						.collect(Collectors.toList());
+			}
+			if (inputModels == null) inputModels = new ArrayList<>();
+			this.sectionFilterableColumns.put(section, inputModels);
+		}
+		return this.sectionFilterableColumns;
 	}
 }

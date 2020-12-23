@@ -1,8 +1,12 @@
 package com.fluidbpm.fluidwebkit.backing.bean.workspace.uq;
 
 import com.fluidbpm.fluidwebkit.backing.bean.ABaseLDM;
+import com.fluidbpm.fluidwebkit.backing.bean.ABaseManagedBean;
 import com.fluidbpm.fluidwebkit.backing.bean.workspace.WorkspaceFluidItem;
 import com.fluidbpm.fluidwebkit.ds.FluidClientDS;
+import com.fluidbpm.program.api.util.UtilGlobal;
+import com.fluidbpm.program.api.vo.field.Field;
+import com.fluidbpm.program.api.vo.field.MultiChoice;
 import com.fluidbpm.program.api.vo.item.FluidItemListing;
 import com.fluidbpm.program.api.vo.userquery.UserQuery;
 import com.fluidbpm.ws.client.v1.userquery.UserQueryClient;
@@ -44,9 +48,11 @@ public class WorkspaceUserQueryLDM extends ABaseLDM<WorkspaceFluidItem> {
 		this.setRowCount(0);
 		if (this.dataListing == null) return null;
 
+		List<Field> inputFields = this.getInputFieldValues();
 		try {
 			UserQueryClient userQueryClient = this.clientDS.getUserQueryClient();
 			UserQuery userQueryToExec = new UserQuery(this.userQueryId);
+			userQueryToExec.setInputs(inputFields);
 
 			FluidItemListing result = userQueryClient.executeUserQuery(userQueryToExec, false, pageSize, first);
 
@@ -66,4 +72,33 @@ public class WorkspaceUserQueryLDM extends ABaseLDM<WorkspaceFluidItem> {
 			return null;
 		}
 	}
+
+	private List<Field> getInputFieldValues() {
+		String sectionName = this.baseWorkspaceBean.getSectionName();
+		Map<String, List<ABaseManagedBean.ColumnModel>> completeColMap =
+				this.baseWorkspaceBean.getContentView().getColumnModelsFilterable();
+		
+		List<Field> inputFields = new ArrayList<>();
+		if (sectionName != null && (completeColMap != null && completeColMap.containsKey(sectionName))) {
+			List<ABaseManagedBean.ColumnModel> columnModels = completeColMap.get(sectionName);
+			if (columnModels != null) {
+				columnModels.forEach(clmItm -> {
+					String fluidFieldName = clmItm.getFluidFieldName();
+					if (this.baseWorkspaceBean.getContentView().getFilterByTextValueMap().get(sectionName).containsKey(fluidFieldName)) {
+						String value = this.baseWorkspaceBean.getContentView().getFilterByTextValueMap().get(sectionName).get(fluidFieldName);
+						if (!UtilGlobal.isBlank(value)) inputFields.add(new Field(fluidFieldName, value, Field.Type.Text));
+					} else if (this.baseWorkspaceBean.getContentView().getFilterByDecimalValueMap().containsKey(fluidFieldName)) {
+						Double val =  this.baseWorkspaceBean.getContentView().getFilterByDecimalValueMap().get(sectionName).get(fluidFieldName);
+						if (val != null && val.doubleValue() > 0) inputFields.add(new Field(fluidFieldName, val, Field.Type.Decimal));
+					} else if (this.baseWorkspaceBean.getContentView().getFilterBySelectItemMap().get(sectionName).containsKey(fluidFieldName)) {
+						String[] value = this.baseWorkspaceBean.getContentView().getFilterBySelectItemMap().get(sectionName).get(fluidFieldName);
+						if (value != null && value.length > 0) inputFields.add(new Field(fluidFieldName, new MultiChoice(value), Field.Type.MultipleChoice));
+					}
+				});
+			}
+		}
+		return inputFields;
+	}
+
+
 }

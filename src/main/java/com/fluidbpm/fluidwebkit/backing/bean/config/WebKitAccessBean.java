@@ -49,6 +49,7 @@ public class WebKitAccessBean extends ABaseManagedBean {
 	private Map<String, List<Field>> fieldsForEditing;
 
 	private List<Form> formDefinitionsCanCreateInstanceOf;
+	private List<Form> formDefinitionsCanCreateInstanceOfIncTableFields;
 
 	@Getter
 	private List<Form> formDefinitionsAttachmentCanView;
@@ -113,6 +114,7 @@ public class WebKitAccessBean extends ABaseManagedBean {
 		this.fieldsForViewing = new Hashtable<>();
 		this.fieldsForEditing = new Hashtable<>();
 		this.formDefinitionsCanCreateInstanceOf = new ArrayList<>();
+		this.formDefinitionsCanCreateInstanceOfIncTableFields = new ArrayList<>();
 		this.formDefinitionsAttachmentCanView = new ArrayList<>();
 		this.formDefinitionsAttachmentCanEdit = new ArrayList<>();
 		this.allFormDefinitionsForLoggedIn = new ArrayList<>();
@@ -128,6 +130,19 @@ public class WebKitAccessBean extends ABaseManagedBean {
 			}
 			Collections.sort(this.formDefinitionsCanCreateInstanceOf, Comparator.comparing(Form::getFormType));
 		}
+
+		this.formDefinitionsCanCreateInstanceOfIncTableFields = formDefinitionClient.getAllByLoggedInUserWhereCanCreateInstanceOf(
+				true, false);
+		if (this.formDefinitionsCanCreateInstanceOfIncTableFields != null) {
+			if (this.getFormDefsToIgnore() != null) {
+				this.formDefinitionsCanCreateInstanceOfIncTableFields = this.formDefinitionsCanCreateInstanceOfIncTableFields.stream()
+						.filter(itm -> !this.getFormDefsToIgnore().contains(itm.getFormType()))
+						.collect(Collectors.toList());
+			}
+			Collections.sort(this.formDefinitionsCanCreateInstanceOfIncTableFields, Comparator.comparing(Form::getFormType));
+		}
+
+		//Attachments...
 
 		this.formDefinitionsAttachmentCanView = formDefinitionClient.getAllByLoggedInUserWhereCanViewAttachments();
 		this.formDefinitionsAttachmentCanEdit = formDefinitionClient.getAllByLoggedInUserWhereCanEditAttachments();
@@ -289,6 +304,10 @@ public class WebKitAccessBean extends ABaseManagedBean {
 				this.formDefinitionsCanCreateInstanceOf.size();
 	}
 
+	public List<Form> getFormDefinitionsCanCreateInstanceOfIncTableFieldsSorted() {
+		return this.formDefinitionsCanCreateInstanceOfIncTableFields;
+	}
+
 	public List<UserQuery> getUserQueriesCanExecuteSorted() {
 		return this.userQueriesCanExecute;
 	}
@@ -311,9 +330,8 @@ public class WebKitAccessBean extends ABaseManagedBean {
 		if (fieldsForViewingParam != null && viewListing != null) fieldsForViewingParam.addAll(viewListing);
 
 		//Populate Multi Choice Fields...
-		this.populateAvailableMultiChoicesForField(
-				this.getFluidClientDSConfig().getFormFieldClient(),
-				fieldsForViewingParam);
+		this.populateAvailableMultiChoicesForFields(
+				this.getFluidClientDSConfig().getFormFieldClient(), fieldsForViewingParam);
 
 		//Edit fields...
 		FormFieldListing formFieldEditFields =
@@ -325,26 +343,35 @@ public class WebKitAccessBean extends ABaseManagedBean {
 		if (fieldsForEditingParam != null && editListing != null) fieldsForEditingParam.addAll(editListing);
 	}
 
-	private void populateAvailableMultiChoicesForField(FormFieldClient formFieldClientParam, List<Field> fieldsForViewingParam) {
+	private void populateAvailableMultiChoicesForFields(FormFieldClient formFieldClientParam, List<Field> fieldsForViewingParam) {
 		if (fieldsForViewingParam == null || fieldsForViewingParam.isEmpty()) return;
 
 		for (Field fieldToPopulate : fieldsForViewingParam) {
-			if (fieldToPopulate.getTypeAsEnum() != Field.Type.MultipleChoice) continue;
-
-			//Get from the id fetch...
-			Field fieldById = formFieldClientParam.getFieldById(fieldToPopulate.getId());
-			MultiChoice fieldMultiChoiceToExtractFrom = (MultiChoice)fieldById.getFieldValue();
-
-			MultiChoice multiChoiceToPopulate = (MultiChoice)fieldToPopulate.getFieldValue();
-			if (multiChoiceToPopulate == null) multiChoiceToPopulate = new MultiChoice();
-
-			multiChoiceToPopulate.setAvailableMultiChoices(
-					fieldMultiChoiceToExtractFrom.getAvailableMultiChoices());
-			multiChoiceToPopulate.setAvailableMultiChoicesCombined(
-					fieldMultiChoiceToExtractFrom.getAvailableMultiChoicesCombined());
-
-			fieldToPopulate.setFieldValue(multiChoiceToPopulate);
+			this.populateAvailableMultiChoicesForField(formFieldClientParam, fieldToPopulate);
 		}
+	}
+
+	public void populateAvailableMultiChoicesForField(FormFieldClient formFieldClientParam, Field fieldsForViewingParam) {
+		if (fieldsForViewingParam.getTypeAsEnum() != Field.Type.MultipleChoice) return;
+
+		//Get from the id fetch...
+		final Field fieldByLookup;
+		if (fieldsForViewingParam.getId() == null || fieldsForViewingParam.getId().longValue() < 1) {
+			fieldByLookup = formFieldClientParam.getFieldByName(fieldsForViewingParam.getFieldName());
+		} else {
+			fieldByLookup = formFieldClientParam.getFieldById(fieldsForViewingParam.getId());
+		}
+		MultiChoice fieldMultiChoiceToExtractFrom = (MultiChoice)fieldByLookup.getFieldValue();
+
+		MultiChoice multiChoiceToPopulate = (MultiChoice)fieldsForViewingParam.getFieldValue();
+		if (multiChoiceToPopulate == null) multiChoiceToPopulate = new MultiChoice();
+
+		multiChoiceToPopulate.setAvailableMultiChoices(
+				fieldMultiChoiceToExtractFrom.getAvailableMultiChoices());
+		multiChoiceToPopulate.setAvailableMultiChoicesCombined(
+				fieldMultiChoiceToExtractFrom.getAvailableMultiChoicesCombined());
+
+		fieldsForViewingParam.setFieldValue(multiChoiceToPopulate);
 	}
 
 	public boolean isCanUserCreate(String formToCheckForParam) {
@@ -353,6 +380,20 @@ public class WebKitAccessBean extends ABaseManagedBean {
 		if (User.ADMIN_USERNAME.equals(this.getLoggedInUserUsername())) return true;
 
 		List<Form> formDefs = this.getFormDefinitionsCanCreateInstanceOfSorted();
+		if (formDefs == null || formDefs.isEmpty()) return false;
+
+		List<String> formDefTitles = formDefs.stream()
+				.map(itm -> itm.getFormType())
+				.collect(Collectors.toList());
+		return formDefTitles.contains(formToCheckForParam);
+	}
+
+	public boolean isCanUserCreateIncTableFields(String formToCheckForParam) {
+		if (formToCheckForParam == null || formToCheckForParam.trim().isEmpty()) return false;
+
+		if (User.ADMIN_USERNAME.equals(this.getLoggedInUserUsername())) return true;
+
+		List<Form> formDefs = this.getFormDefinitionsCanCreateInstanceOfIncTableFieldsSorted();
 		if (formDefs == null || formDefs.isEmpty()) return false;
 
 		List<String> formDefTitles = formDefs.stream()
@@ -416,5 +457,10 @@ public class WebKitAccessBean extends ABaseManagedBean {
 					return fieldWithName != null && fieldWithName.getId() > 0L;
 				})
 				.collect(Collectors.toList());
+	}
+
+	public UserQuery fetchUserQueryWithNameUsingConfigUser(String userQueryName) {
+		UserQueryClient userQueryClient = this.getFluidClientDSConfig().getUserQueryClient();
+		return userQueryClient.getUserQueryByName(userQueryName);
 	}
 }

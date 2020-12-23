@@ -687,11 +687,9 @@ public abstract class ABaseContentView implements Serializable {
 		String sectionRptItem,
 		int indexParam
 	) {
-		ABaseManagedBean.ColumnModel columnModel =
-				this.getCHForSecCM(sectionRptItem, indexParam);
-		if (columnModel == null) {
-			return false;
-		}
+		ABaseManagedBean.ColumnModel columnModel = this.getCHForSecCM(sectionRptItem, indexParam);
+		if (columnModel == null) return false;
+
 		return this.shouldRenderColumnForSectionAndModel(sectionRptItem, columnModel);
 	}
 
@@ -825,9 +823,7 @@ public abstract class ABaseContentView implements Serializable {
 	public String getSelectItemMultipleLabelForSectionAndField(String sectionParam, String fieldNameParam) {
 		Map<String,String[]> selectedValuesForField = this.filterBySelectItemMap.get(sectionParam);
 		String[] selectedValues = selectedValuesForField.get(fieldNameParam);
-		if (selectedValues == null || selectedValues.length == 0) {
-			return ("-- Not Filtered --");
-		}
+		if (selectedValues == null || selectedValues.length == 0) return ("-- Not Filtered --");
 
 		StringBuilder returnVal = new StringBuilder();
 		for (String val : selectedValues) {

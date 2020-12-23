@@ -16,17 +16,6 @@
 package com.fluidbpm.fluidwebkit.backing.bean.workspace.contentview;
 
 import com.fluidbpm.fluidwebkit.backing.bean.ABaseManagedBean;
-import com.fluidbpm.fluidwebkit.backing.bean.workspace.ABaseWorkspaceBean;
-import com.fluidbpm.fluidwebkit.backing.bean.workspace.jv.ContentViewJV;
-import com.fluidbpm.fluidwebkit.backing.bean.workspace.jv.JobViewItemVO;
-import com.fluidbpm.program.api.vo.field.Field;
-import com.fluidbpm.program.api.vo.flow.JobView;
-import com.fluidbpm.program.api.vo.item.FluidItem;
-import com.fluidbpm.program.api.vo.webkit.viewgroup.WebKitViewGroup;
-import com.fluidbpm.program.api.vo.webkit.viewgroup.WebKitViewSub;
-import com.fluidbpm.program.api.vo.webkit.viewgroup.WebKitWorkspaceJobView;
-import com.fluidbpm.program.api.vo.webkit.viewgroup.WebKitWorkspaceRouteField;
-import com.fluidbpm.ws.client.FluidClientException;
 import lombok.Getter;
 
 import javax.enterprise.context.SessionScoped;
@@ -34,9 +23,6 @@ import javax.inject.Named;
 import java.util.*;
 import java.util.stream.Collectors;
 
-/**
- *
- */
 @SessionScoped
 @Named("webKitViewContentModelBean")
 public class WebKitViewContentModelBean extends ABaseManagedBean {
@@ -48,13 +34,9 @@ public class WebKitViewContentModelBean extends ABaseManagedBean {
 	}
 
 	public void storeModelFor(String category, String sectionAlias, List<ABaseManagedBean.ColumnModel> model) {
-		if ((category == null || sectionAlias == null) || (model == null || model.isEmpty())) {
-			return;
-		}
-		if (this.columnModels.containsKey(category) &&
-				this.columnModels.get(category).containsKey(sectionAlias)) {
-			return;
-		}
+		if ((category == null || sectionAlias == null) || (model == null || model.isEmpty())) return;
+
+		if (this.columnModels.containsKey(category) && this.columnModels.get(category).containsKey(sectionAlias)) return;
 
 		synchronized (this.columnModels) {
 			Map<String, List<ABaseManagedBean.ColumnModel>> sectionMapping =
@@ -76,9 +58,8 @@ public class WebKitViewContentModelBean extends ABaseManagedBean {
 			List<ABaseManagedBean.ColumnModel> filterList = modelMap.get(key).stream()
 					.filter(itm -> itm.isEnabled() && itm.isFilterable())
 					.collect(Collectors.toList());
-			if (filterList == null) {
-				filterList = new ArrayList<>();
-			}
+			if (filterList == null) filterList = new ArrayList<>();
+
 			Collections.sort(filterList, Comparator.comparing(ColumnModel::getFluidFieldName));
 			returnVal.put(key, filterList);
 		});
