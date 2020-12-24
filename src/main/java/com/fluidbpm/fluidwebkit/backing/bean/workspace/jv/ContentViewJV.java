@@ -120,14 +120,6 @@ public class ContentViewJV extends ABaseContentView {
 	}
 
 	@Override
-	public Map<String, List<WorkspaceFluidItem>> getActiveMapBasedOnFilterCriteria() {
-		if (this.getTextToFilterBy() == null || this.getTextToFilterBy().trim().isEmpty()) {
-			return this.getFluidItemsForSection();
-		}
-		return this.getFluidItemsForSectionFiltered();
-	}
-
-	@Override
 	public void refreshData(Map<WebKitViewSub, Map<WebKitWorkspaceJobView, List<WorkspaceFluidItem>>> data) {
 		super.refreshData(data);
 		if (this.getSections() == null) return;

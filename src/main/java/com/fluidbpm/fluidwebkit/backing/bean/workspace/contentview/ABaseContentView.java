@@ -17,6 +17,7 @@ package com.fluidbpm.fluidwebkit.backing.bean.workspace.contentview;
 
 import com.fluidbpm.fluidwebkit.backing.bean.ABaseManagedBean;
 import com.fluidbpm.fluidwebkit.backing.bean.workspace.WorkspaceFluidItem;
+import com.fluidbpm.fluidwebkit.backing.bean.workspace.jv.ContentViewJV;
 import com.fluidbpm.fluidwebkit.backing.utility.RaygunUtil;
 import com.fluidbpm.fluidwebkit.exception.ClientDashboardException;
 import com.fluidbpm.program.api.util.UtilGlobal;
@@ -58,6 +59,9 @@ public abstract class ABaseContentView implements Serializable {
 
 	//Filter...
 	private Map<String, List<WorkspaceFluidItem>> fluidItemsForSectionFiltered = new HashMap<>();
+
+	@Getter
+	protected boolean filterCurrentlyActive = false;
 
 	//Selected...
 	@Getter
@@ -221,20 +225,15 @@ public abstract class ABaseContentView implements Serializable {
 	}
 
 	public boolean checkIfFieldCurrentlyFiltered(String sectionParam, String fieldNameParam) {
-		String selectedColumns = this.checkListingOfFiltersForSectionAndField(sectionParam, fieldNameParam);
-		return (selectedColumns == null || selectedColumns.trim().isEmpty()) ? false:true;
+		return this.isFilterCurrentlyActive();
 	}
 
 	public String checkListingOfFiltersForSectionAndField(String sectionParam, String fieldNameParam) {
 		Map<String, String[]> mappingForSection = this.filterBySelectItemMap.get(sectionParam);
-		if(mappingForSection == null) {
-			return null;
-		}
+		if (mappingForSection == null) return null;
 
 		String[] stringSelectedFilters = mappingForSection.get(fieldNameParam);
-		if(stringSelectedFilters == null || stringSelectedFilters.length < 1) {
-			return null;
-		}
+		if (stringSelectedFilters == null || stringSelectedFilters.length < 1) return null;
 
 		StringBuilder builder = new StringBuilder();
 		for (String selected : stringSelectedFilters) {
@@ -321,6 +320,7 @@ public abstract class ABaseContentView implements Serializable {
 	 * @see #getTextToFilterBy
 	 */
 	public void actionSetFilteredList(String selectedSection) {
+		this.filterCurrentlyActive = true;
 		this.fluidItemsForSectionFiltered.clear();
 		if (this.getTextToFilterBy() == null || this.getTextToFilterBy().trim().isEmpty())
 			this.fluidItemsForSectionFiltered.putAll(this.fluidItemsForSection);
@@ -347,6 +347,10 @@ public abstract class ABaseContentView implements Serializable {
 				//Route Fields...
 				if (routeFields != null) combinedFields.addAll(routeFields);
 
+				//System field filter...
+				boolean allowedBasedOnSystemFields = this.isAllowedBasedOnSystemFields(selectedSection, item);
+				if (!allowedBasedOnSystemFields) continue;
+
 				//Form Type...
 				if (filterByTextLower != null &&
 						(item.getFluidItem().getForm().getFormType() != null &&
@@ -366,10 +370,28 @@ public abstract class ABaseContentView implements Serializable {
 							}
 						}
 					});
+				} else {
+					itemsInSectionFiltered.add(item);
 				}
 			}
 			this.fluidItemsForSectionFiltered.put(section, itemsInSectionFiltered);
 		}
+	}
+
+	private boolean isAllowedBasedOnSystemFields(String selectedSection, WorkspaceFluidItem itm) {
+		Map<String, String> mapTxt = this.getFilterByTextValueMap().get(selectedSection);
+		if (mapTxt == null) return true;
+
+		boolean allowedSysField = true;
+		if (mapTxt.containsKey(ContentViewJV.SystemField.TITLE) && !mapTxt.get(ContentViewJV.SystemField.TITLE).trim().isEmpty()) {
+			String paramTitle = itm.getFluidItemTitle();
+			if (UtilGlobal.isBlank(paramTitle)) return false;
+			if (!paramTitle.toLowerCase().startsWith(mapTxt.get(ContentViewJV.SystemField.TITLE).toLowerCase())) {
+				allowedSysField = false;
+			}
+		}
+		
+		return allowedSysField;
 	}
 
 	/**
@@ -383,10 +405,10 @@ public abstract class ABaseContentView implements Serializable {
 	 * @return Map of sections and their {@code WorkspaceFluidItem}'s.
 	 */
 	public Map<String, List<WorkspaceFluidItem>> getActiveMapBasedOnFilterCriteria() {
-		if (this.getTextToFilterBy() == null || this.getTextToFilterBy().trim().isEmpty()) {
-			return this.getFluidItemsForSection();
+		if (this.filterCurrentlyActive) {
+			return this.getFluidItemsForSectionFiltered();
 		}
-		return this.getFluidItemsForSectionFiltered();
+		return this.getFluidItemsForSection();
 	}
 
 	/**
@@ -842,6 +864,7 @@ public abstract class ABaseContentView implements Serializable {
 	 * @param selectedSectionParam
 	 */
 	public void actionClearFilteredList(String selectedSectionParam) {
+		this.filterCurrentlyActive = false;
 		this.fluidItemsForSectionFiltered.clear();
 
 		Map<String, String[]> mappingForSection = this.filterBySelectItemMap.get(selectedSectionParam);
@@ -855,9 +878,7 @@ public abstract class ABaseContentView implements Serializable {
 		Map<String, String> mappingForTextSection = this.filterByTextValueMap.get(selectedSectionParam);
 		Set<String> keySetText = (mappingForTextSection == null) ? null : mappingForTextSection.keySet();
 		if (keySetText != null && !keySetText.isEmpty()) {
-			for (String fieldName : new ArrayList<>(keySetText)) {
-				mappingForTextSection.put(fieldName, "");
-			}
+			for (String fieldName : new ArrayList<>(keySetText)) mappingForTextSection.put(fieldName, UtilGlobal.EMPTY);
 		}
 
 		Map<String, Date> mappingForDateSection = this.filterByDateValueMap.get(selectedSectionParam);
