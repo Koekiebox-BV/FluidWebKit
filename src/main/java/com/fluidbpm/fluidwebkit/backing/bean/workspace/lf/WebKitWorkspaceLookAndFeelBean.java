@@ -38,6 +38,7 @@ import lombok.Getter;
 import lombok.Setter;
 import org.json.JSONObject;
 import org.primefaces.event.CellEditEvent;
+import org.primefaces.event.TabChangeEvent;
 import org.primefaces.event.data.PageEvent;
 import org.primefaces.model.DefaultTreeNode;
 import org.primefaces.model.TreeNode;
@@ -112,6 +113,14 @@ public class WebKitWorkspaceLookAndFeelBean extends ABaseManagedBean {
 	@Setter
 	private String inputNewRootMenuLabel;
 
+	private List<TabId> tabsViewed;
+	private enum TabId {
+		tabForm,
+		tabUserQuery,
+		tabWS,
+		tabPersonalInventory
+	}
+
 	public enum VisibleColumnItems {
 		showColumnID,
 		showColumnFormType,
@@ -182,6 +191,9 @@ public class WebKitWorkspaceLookAndFeelBean extends ABaseManagedBean {
 		this.webKitForms = new ArrayList<>();
 		this.userQueryLDM = new WebKitWorkspaceUserQueryLDM();
 		this.formDefinitionLDM = new WebKitWorkspaceFormDefinitionLDM();
+		this.tabsViewed = new ArrayList<>();
+		this.tabsViewed.add(TabId.tabForm);
+
 		this.setDialogHeaderTitle("Workspace - Look & Feel");
 		try {
 			try {
@@ -239,9 +251,7 @@ public class WebKitWorkspaceLookAndFeelBean extends ABaseManagedBean {
 			});
 
 			//Merged with existing configuration set...
-			if (this.webKitViewGroups == null || this.webKitViewGroups.isEmpty()) {
-				return;
-			}
+			if (this.webKitViewGroups == null || this.webKitViewGroups.isEmpty()) return;
 
 			//Merge the properties with what is stored...
 			this.webKitViewGroups.forEach(groupItm -> {
@@ -250,9 +260,7 @@ public class WebKitWorkspaceLookAndFeelBean extends ABaseManagedBean {
 				this.inputVisibleButtons.put(groupName, VisibleButtonItems.asListFrom(groupItm));
 
 				List<WebKitViewSub> subsForGroup = groupItm.getWebKitViewSubs();
-				if (subsForGroup == null || subsForGroup.isEmpty()) {
-					return;
-				}
+				if (subsForGroup == null || subsForGroup.isEmpty()) return;
 
 				subsForGroup.forEach(subItm -> {
 					String keyForStorage = this.generateGroupSubKey(groupItm.getJobViewGroupName(), subItm.getLabel());
@@ -318,9 +326,8 @@ public class WebKitWorkspaceLookAndFeelBean extends ABaseManagedBean {
 				(webKitGlobal.getValue() == null || webKitGlobal.getValue().trim().isEmpty())) ? "{}" :
 				webKitGlobal.getValue();
 		this.webKitGlobal = new WebKitGlobal(new JSONObject(jsonVal));
-		if (this.webKitGlobal.getWebKitMenuItems() == null) {
-			this.webKitGlobal.setWebKitMenuItems(new ArrayList<>());
-		}
+		if (this.webKitGlobal.getWebKitMenuItems() == null) this.webKitGlobal.setWebKitMenuItems(new ArrayList<>());
+
 		this.constructTreeNode();
 	}
 
@@ -508,6 +515,11 @@ public class WebKitWorkspaceLookAndFeelBean extends ABaseManagedBean {
 		}
 	}
 
+	public void actionOnTabChange(TabChangeEvent event) {
+		String tabId = event.getTab().getId();
+		this.tabsViewed.add(TabId.valueOf(tabId));
+	}
+
 	public void actionSaveWebKitViewGroups(String dialogToHideAfterSuccess) {
 		try {
 			if (this.formDefinitionLDM.getDataListing() != null)
@@ -519,7 +531,7 @@ public class WebKitWorkspaceLookAndFeelBean extends ABaseManagedBean {
 			configurationClient.upsertConfiguration(WebKitConfigBean.ConfigKey.WebKit, this.webKitGlobal.toString());
 
 			//View Groups...
-			if (this.webKitViewGroups != null) {
+			if (this.webKitViewGroups != null && this.tabsViewed.contains(TabId.tabWS)) {
 				this.webKitViewGroups.forEach(groupItm -> {
 					String groupName = groupItm.getJobViewGroupName();
 					List<String> visibleColumns = new ArrayList<>();
@@ -542,7 +554,7 @@ public class WebKitWorkspaceLookAndFeelBean extends ABaseManagedBean {
 			}
 
 			//User Query...
-			if (this.userQueryLDM != null) {
+			if (this.userQueryLDM != null && this.tabsViewed.contains(TabId.tabUserQuery)) {
 				WebKitUserQueryListing listingUq = new WebKitUserQueryListing();
 				listingUq.setListing(this.userQueryLDM.getDataListing());
 				listingUq.setListingCount(this.userQueryLDM.getDataListing().size());
@@ -550,7 +562,7 @@ public class WebKitWorkspaceLookAndFeelBean extends ABaseManagedBean {
 			}
 
 			//Form...
-			if (this.formDefinitionLDM != null) {
+			if (this.formDefinitionLDM != null && this.tabsViewed.contains(TabId.tabForm)) {
 				WebKitFormListing listingFrm = new WebKitFormListing();
 				listingFrm.setListing(this.formDefinitionLDM.getDataListing());
 				listingFrm.setListingCount(this.formDefinitionLDM.getDataListing().size());
