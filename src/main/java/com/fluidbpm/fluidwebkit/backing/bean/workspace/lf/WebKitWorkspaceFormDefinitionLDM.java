@@ -1,7 +1,7 @@
 package com.fluidbpm.fluidwebkit.backing.bean.workspace.lf;
 
 import com.fluidbpm.fluidwebkit.backing.bean.ABaseLDM;
-import com.fluidbpm.program.api.vo.webkit.WebKitForm;
+import com.fluidbpm.program.api.vo.webkit.form.WebKitForm;
 
 import java.util.List;
 

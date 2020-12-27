@@ -3,7 +3,7 @@ package com.fluidbpm.fluidwebkit.backing.bean.config;
 import com.fluidbpm.fluidwebkit.backing.bean.ABaseManagedBean;
 import com.fluidbpm.program.api.vo.config.Configuration;
 import com.fluidbpm.program.api.vo.config.ConfigurationListing;
-import com.fluidbpm.program.api.vo.webkit.WebKitGlobal;
+import com.fluidbpm.program.api.vo.webkit.global.WebKitGlobal;
 import com.fluidbpm.ws.client.v1.config.ConfigurationClient;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -67,6 +67,8 @@ public class GuestPreferencesBean extends ABaseManagedBean {
 		this.bindConfigFluidClientDS();
 		ConfigurationListing configurationListing =
 				this.getFluidClientDSConfig().getConfigurationClient().getAllConfigurations();
+
+		//Global...
 		Configuration webKitGlobal = configurationListing.getListing().stream()
 				.filter(itm -> WebKitConfigBean.ConfigKey.WebKit.equals(itm.getKey()))
 				.findFirst()

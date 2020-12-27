@@ -47,6 +47,7 @@ public class WebKitConfigBean extends ABaseManagedBean {
 	private String whiteLabel;
 	private String companyLogoFilepath;
 	private String webKitGlobalJSON;
+	private String webKitPersonalInventoryJSON;
 
 	private boolean configUserLoginSuccess = false;
 
@@ -71,6 +72,7 @@ public class WebKitConfigBean extends ABaseManagedBean {
 		public static final String WhiteLabel = "WhiteLabel";
 		public static final String CompanyLogoFilePath = "CompanyLogoFilePath";
 		public static final String WebKit = "WebKit";
+		public static final String WebKitPersonalInventory = "WebKitPersonalInventory";
 	}
 
 	@PostConstruct
@@ -112,6 +114,8 @@ public class WebKitConfigBean extends ABaseManagedBean {
 						this.setCompanyLogoFilepath(configuration.getValue());
 					} else if (ConfigKey.WebKit.equals(configName)) {
 						this.setWebKitGlobalJSON(configuration.getValue());
+					} else if (ConfigKey.WebKitPersonalInventory.equals(configName)) {
+						this.setWebKitPersonalInventoryJSON(configuration.getValue());
 					}
 				}
 		);

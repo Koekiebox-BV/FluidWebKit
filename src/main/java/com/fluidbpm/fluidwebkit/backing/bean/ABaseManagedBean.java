@@ -276,18 +276,14 @@ public abstract class ABaseManagedBean implements Serializable {
 		ExternalContext externalContext = (facCont == null) ? null : facCont.getExternalContext();
 
 		Map<String, Object> sessionMap = (externalContext == null) ? null :externalContext.getSessionMap();
-		if (sessionMap == null) {
-			throw new WebSessionExpiredException("No session. Session expired.");
-		}
+		if (sessionMap == null) throw new WebSessionExpiredException("No session. Session expired.");
 
 		if (sessionMap.containsKey(SessionVariable.USER)) {
 			User returnVal = (User) sessionMap.get(SessionVariable.USER);
 			return returnVal;
 		}
 
-		if (this.getHttpSession() != null) {
-			this.getHttpSession().invalidate();
-		}
+		if (this.getHttpSession() != null) this.getHttpSession().invalidate();
 
 		throw new WebSessionExpiredException("No session. Session expired. User logged out.");
 	}

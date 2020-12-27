@@ -25,7 +25,7 @@ import com.fluidbpm.program.api.vo.flow.JobView;
 import com.fluidbpm.program.api.vo.form.Form;
 import com.fluidbpm.program.api.vo.item.FluidItem;
 import com.fluidbpm.program.api.vo.user.User;
-import com.fluidbpm.program.api.vo.webkit.WebKitForm;
+import com.fluidbpm.program.api.vo.webkit.form.WebKitForm;
 import lombok.Getter;
 import lombok.Setter;
 

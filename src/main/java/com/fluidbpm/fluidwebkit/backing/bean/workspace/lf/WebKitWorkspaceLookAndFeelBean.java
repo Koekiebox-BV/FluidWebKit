@@ -24,9 +24,10 @@ import com.fluidbpm.program.api.vo.config.ConfigurationListing;
 import com.fluidbpm.program.api.vo.field.Field;
 import com.fluidbpm.program.api.vo.flow.JobView;
 import com.fluidbpm.program.api.vo.userquery.UserQuery;
-import com.fluidbpm.program.api.vo.webkit.WebKitForm;
-import com.fluidbpm.program.api.vo.webkit.WebKitFormListing;
-import com.fluidbpm.program.api.vo.webkit.WebKitGlobal;
+import com.fluidbpm.program.api.vo.webkit.form.WebKitForm;
+import com.fluidbpm.program.api.vo.webkit.form.WebKitFormListing;
+import com.fluidbpm.program.api.vo.webkit.global.WebKitGlobal;
+import com.fluidbpm.program.api.vo.webkit.global.WebKitPersonalInventory;
 import com.fluidbpm.program.api.vo.webkit.userquery.WebKitMenuItem;
 import com.fluidbpm.program.api.vo.webkit.userquery.WebKitUserQuery;
 import com.fluidbpm.program.api.vo.webkit.userquery.WebKitUserQueryListing;
@@ -88,6 +89,10 @@ public class WebKitWorkspaceLookAndFeelBean extends ABaseManagedBean {
 
 	private WebKitGlobal webKitGlobal;
 
+	@Getter
+	@Setter
+	private WebKitPersonalInventory webKitPersonalInventory;
+
 	//User Query related objects...
 	@Getter
 	@Setter
@@ -121,62 +126,6 @@ public class WebKitWorkspaceLookAndFeelBean extends ABaseManagedBean {
 		tabPersonalInventory
 	}
 
-	public enum VisibleColumnItems {
-		showColumnID,
-		showColumnFormType,
-		showColumnTitle,
-		showColumnStepEntryTime,
-		showColumnDateCreated,
-		showColumnDateLastUpdated,
-		showColumnCurrentFlow,
-		showColumnCurrentStep,
-		showColumnCurrentView,
-		showColumnProgressPercentage,
-		showColumnAttachment;
-
-		public static List<String> asListFrom(WebKitViewGroup group) {
-			List<String> returnVal = new ArrayList<>();
-			if (group == null) return returnVal;
-
-			if (group.isShowColumnID()) returnVal.add(VisibleColumnItems.showColumnID.name());
-			if (group.isShowColumnFormType()) returnVal.add(VisibleColumnItems.showColumnFormType.name());
-			if (group.isShowColumnTitle()) returnVal.add(VisibleColumnItems.showColumnTitle.name());
-			if (group.isShowColumnStepEntryTime()) returnVal.add(VisibleColumnItems.showColumnStepEntryTime.name());
-			if (group.isShowColumnCurrentFlow()) returnVal.add(VisibleColumnItems.showColumnCurrentFlow.name());
-			if (group.isShowColumnCurrentStep()) returnVal.add(VisibleColumnItems.showColumnCurrentStep.name());
-			if (group.isShowColumnCurrentView()) returnVal.add(VisibleColumnItems.showColumnCurrentView.name());
-			if (group.isShowColumnProgressPercentage()) returnVal.add(VisibleColumnItems.showColumnProgressPercentage.name());
-			if (group.isShowColumnDateCreated()) returnVal.add(VisibleColumnItems.showColumnDateCreated.name());
-			if (group.isShowColumnDateLastUpdated()) returnVal.add(VisibleColumnItems.showColumnDateLastUpdated.name());
-
-			return returnVal;
-		}
-	}
-
-	public enum VisibleButtonItems {
-		showButtonBulkUpdate,
-		showButtonExport,
-		showButtonSendOn,
-		showButtonDelete,
-		showButtonLock,
-		showButtonAddToPI,
-		;
-
-		public static List<String> asListFrom(WebKitViewGroup group) {
-			List<String> returnVal = new ArrayList<>();
-			if (group == null) return returnVal;
-
-			if (group.isShowButtonBulkUpdate()) returnVal.add(VisibleButtonItems.showButtonBulkUpdate.name());
-			if (group.isShowButtonExport()) returnVal.add(VisibleButtonItems.showButtonExport.name());
-			if (group.isShowButtonSendOn()) returnVal.add(VisibleButtonItems.showButtonSendOn.name());
-			if (group.isShowButtonDelete()) returnVal.add(VisibleButtonItems.showButtonDelete.name());
-			if (group.isShowButtonLock()) returnVal.add(VisibleButtonItems.showButtonLock.name());
-			if (group.isShowButtonAddToPI()) returnVal.add(VisibleButtonItems.showButtonAddToPI.name());
-
-			return returnVal;
-		}
-	}
-
 	/**
 	 * Prepare to change the look and feel for workspace.
 	 */
@@ -203,7 +152,10 @@ public class WebKitWorkspaceLookAndFeelBean extends ABaseManagedBean {
 			}
 
 			//Populate the menu items...
-			this.populateUserQueryMenu();
+			ConfigurationListing configurationListing =
+					this.getFluidClientDSConfig().getConfigurationClient().getAllConfigurations();
+			this.populateUserQueryMenu(configurationListing);
+			this.populatePersonalInventory(configurationListing);
 
 			try {
 				this.webKitUserQueries = this.getFluidClientDSConfig().getUserQueryClient().getUserQueryWebKit().getListing();
@@ -256,8 +208,8 @@ public class WebKitWorkspaceLookAndFeelBean extends ABaseManagedBean {
 			//Merge the properties with what is stored...
 			this.webKitViewGroups.forEach(groupItm -> {
 				String groupName = groupItm.getJobViewGroupName();
-				this.inputVisibleColumns.put(groupName, VisibleColumnItems.asListFrom(groupItm));
-				this.inputVisibleButtons.put(groupName, VisibleButtonItems.asListFrom(groupItm));
+				this.inputVisibleColumns.put(groupName, WebKitViewGroup.VisibleColumnItems.asListFrom(groupItm));
+				this.inputVisibleButtons.put(groupName, WebKitViewGroup.VisibleButtonItems.asListFrom(groupItm));
 
 				List<WebKitViewSub> subsForGroup = groupItm.getWebKitViewSubs();
 				if (subsForGroup == null || subsForGroup.isEmpty()) return;
@@ -315,16 +267,23 @@ public class WebKitWorkspaceLookAndFeelBean extends ABaseManagedBean {
 		}
 	}
 
-	private void populateUserQueryMenu() {
-		ConfigurationListing configurationListing =
-				this.getFluidClientDSConfig().getConfigurationClient().getAllConfigurations();
+	private void populatePersonalInventory(ConfigurationListing configurationListing) {
+		Configuration webKitPI = configurationListing.getListing().stream()
+				.filter(itm -> WebKitConfigBean.ConfigKey.WebKitPersonalInventory.equals(itm.getKey()))
+				.findFirst()
+				.orElse(null);
+		String jsonVal = (webKitPI == null ||
+				(webKitPI.getValue() == null || webKitPI.getValue().trim().isEmpty())) ? "{}" : webKitPI.getValue();
+		this.webKitPersonalInventory = new WebKitPersonalInventory(new JSONObject(jsonVal));
+	}
+
+	private void populateUserQueryMenu(ConfigurationListing configurationListing) {
 		Configuration webKitGlobal = configurationListing.getListing().stream()
 				.filter(itm -> WebKitConfigBean.ConfigKey.WebKit.equals(itm.getKey()))
 				.findFirst()
 				.orElse(null);
 		String jsonVal = (webKitGlobal == null ||
-				(webKitGlobal.getValue() == null || webKitGlobal.getValue().trim().isEmpty())) ? "{}" :
-				webKitGlobal.getValue();
+				(webKitGlobal.getValue() == null || webKitGlobal.getValue().trim().isEmpty())) ? "{}" : webKitGlobal.getValue();
 		this.webKitGlobal = new WebKitGlobal(new JSONObject(jsonVal));
 		if (this.webKitGlobal.getWebKitMenuItems() == null) this.webKitGlobal.setWebKitMenuItems(new ArrayList<>());
 
@@ -530,6 +489,12 @@ public class WebKitWorkspaceLookAndFeelBean extends ABaseManagedBean {
 			final ConfigurationClient configurationClient = configDs.getConfigurationClient();
 			configurationClient.upsertConfiguration(WebKitConfigBean.ConfigKey.WebKit, this.webKitGlobal.toString());
 
+			//Personal Inventory...
+			if (this.tabsViewed.contains(TabId.tabPersonalInventory)) {
+				configurationClient.upsertConfiguration(WebKitConfigBean.ConfigKey.WebKitPersonalInventory,
+						this.webKitPersonalInventory.toString());
+			}
+
 			//View Groups...
 			if (this.webKitViewGroups != null && this.tabsViewed.contains(TabId.tabWS)) {
 				this.webKitViewGroups.forEach(groupItm -> {
@@ -689,89 +654,89 @@ public class WebKitWorkspaceLookAndFeelBean extends ABaseManagedBean {
 		WebKitViewGroup groupToUpdate
 	) {
 		//Columns...
-		if (visibleColumns.contains(VisibleColumnItems.showColumnID.name())) {
+		if (visibleColumns.contains(WebKitViewGroup.VisibleColumnItems.showColumnID.name())) {
 			groupToUpdate.setShowColumnID(true);
 		} else {
 			groupToUpdate.setShowColumnID(false);
 		}
-		if (visibleColumns.contains(VisibleColumnItems.showColumnFormType.name())) {
+		if (visibleColumns.contains(WebKitViewGroup.VisibleColumnItems.showColumnFormType.name())) {
 			groupToUpdate.setShowColumnFormType(true);
 		} else {
 			groupToUpdate.setShowColumnFormType(false);
 		}
-		if (visibleColumns.contains(VisibleColumnItems.showColumnTitle.name())) {
+		if (visibleColumns.contains(WebKitViewGroup.VisibleColumnItems.showColumnTitle.name())) {
 			groupToUpdate.setShowColumnTitle(true);
 		} else {
 			groupToUpdate.setShowColumnTitle(false);
 		}
-		if (visibleColumns.contains(VisibleColumnItems.showColumnStepEntryTime.name())) {
+		if (visibleColumns.contains(WebKitViewGroup.VisibleColumnItems.showColumnStepEntryTime.name())) {
 			groupToUpdate.setShowColumnStepEntryTime(true);
 		} else {
 			groupToUpdate.setShowColumnStepEntryTime(false);
 		}
-		if (visibleColumns.contains(VisibleColumnItems.showColumnDateCreated.name())) {
+		if (visibleColumns.contains(WebKitViewGroup.VisibleColumnItems.showColumnDateCreated.name())) {
 			groupToUpdate.setShowColumnDateCreated(true);
 		} else {
 			groupToUpdate.setShowColumnDateCreated(false);
 		}
-		if (visibleColumns.contains(VisibleColumnItems.showColumnDateLastUpdated.name())) {
+		if (visibleColumns.contains(WebKitViewGroup.VisibleColumnItems.showColumnDateLastUpdated.name())) {
 			groupToUpdate.setShowColumnDateLastUpdated(true);
 		} else {
 			groupToUpdate.setShowColumnDateLastUpdated(false);
 		}
-		if (visibleColumns.contains(VisibleColumnItems.showColumnCurrentFlow.name())) {
+		if (visibleColumns.contains(WebKitViewGroup.VisibleColumnItems.showColumnCurrentFlow.name())) {
 			groupToUpdate.setShowColumnCurrentFlow(true);
 		} else {
 			groupToUpdate.setShowColumnCurrentFlow(false);
 		}
-		if (visibleColumns.contains(VisibleColumnItems.showColumnCurrentStep.name())) {
+		if (visibleColumns.contains(WebKitViewGroup.VisibleColumnItems.showColumnCurrentStep.name())) {
 			groupToUpdate.setShowColumnCurrentStep(true);
 		} else {
 			groupToUpdate.setShowColumnCurrentStep(false);
 		}
-		if (visibleColumns.contains(VisibleColumnItems.showColumnCurrentView.name())) {
+		if (visibleColumns.contains(WebKitViewGroup.VisibleColumnItems.showColumnCurrentView.name())) {
 			groupToUpdate.setShowColumnCurrentView(true);
 		} else {
 			groupToUpdate.setShowColumnCurrentView(false);
 		}
-		if (visibleColumns.contains(VisibleColumnItems.showColumnProgressPercentage.name())) {
+		if (visibleColumns.contains(WebKitViewGroup.VisibleColumnItems.showColumnProgressPercentage.name())) {
 			groupToUpdate.setShowColumnProgressPercentage(true);
 		} else {
 			groupToUpdate.setShowColumnProgressPercentage(false);
 		}
-		if (visibleColumns.contains(VisibleColumnItems.showColumnAttachment.name())) {
+		if (visibleColumns.contains(WebKitViewGroup.VisibleColumnItems.showColumnAttachment.name())) {
 			groupToUpdate.setShowColumnAttachment(true);
 		} else {
 			groupToUpdate.setShowColumnAttachment(false);
 		}
 
 		//Buttons...
-		if (visibleButtons.contains(VisibleButtonItems.showButtonBulkUpdate.name())) {
+		if (visibleButtons.contains(WebKitViewGroup.VisibleButtonItems.showButtonBulkUpdate.name())) {
 			groupToUpdate.setShowButtonBulkUpdate(true);
 		} else {
 			groupToUpdate.setShowButtonBulkUpdate(false);
 		}
-		if (visibleButtons.contains(VisibleButtonItems.showButtonExport.name())) {
+		if (visibleButtons.contains(WebKitViewGroup.VisibleButtonItems.showButtonExport.name())) {
 			groupToUpdate.setShowButtonExport(true);
 		} else {
 			groupToUpdate.setShowButtonExport(false);
 		}
-		if (visibleButtons.contains(VisibleButtonItems.showButtonSendOn.name())) {
+		if (visibleButtons.contains(WebKitViewGroup.VisibleButtonItems.showButtonSendOn.name())) {
 			groupToUpdate.setShowButtonSendOn(true);
 		} else {
 			groupToUpdate.setShowButtonSendOn(false);
 		}
-		if (visibleButtons.contains(VisibleButtonItems.showButtonDelete.name())) {
+		if (visibleButtons.contains(WebKitViewGroup.VisibleButtonItems.showButtonDelete.name())) {
 			groupToUpdate.setShowButtonDelete(true);
 		} else {
 			groupToUpdate.setShowButtonDelete(false);
 		}
-		if (visibleButtons.contains(VisibleButtonItems.showButtonLock.name())) {
+		if (visibleButtons.contains(WebKitViewGroup.VisibleButtonItems.showButtonLock.name())) {
 			groupToUpdate.setShowButtonLock(true);
 		} else {
 			groupToUpdate.setShowButtonLock(false);
 		}
-		if (visibleButtons.contains(VisibleButtonItems.showButtonAddToPI.name())) {
+		if (visibleButtons.contains(WebKitViewGroup.VisibleButtonItems.showButtonAddToPI.name())) {
 			groupToUpdate.setShowButtonAddToPI(true);
 		} else {
 			groupToUpdate.setShowButtonAddToPI(false);

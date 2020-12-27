@@ -17,7 +17,7 @@ import com.fluidbpm.program.api.vo.form.FormListing;
 import com.fluidbpm.program.api.vo.form.TableRecord;
 import com.fluidbpm.program.api.vo.item.FluidItem;
 import com.fluidbpm.program.api.vo.user.User;
-import com.fluidbpm.program.api.vo.webkit.WebKitForm;
+import com.fluidbpm.program.api.vo.webkit.form.WebKitForm;
 import com.fluidbpm.ws.client.v1.flowitem.FlowItemClient;
 import com.fluidbpm.ws.client.v1.form.FormContainerClient;
 import lombok.Getter;
