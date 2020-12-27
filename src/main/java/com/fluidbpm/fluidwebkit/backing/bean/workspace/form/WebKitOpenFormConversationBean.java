@@ -1,7 +1,7 @@
 package com.fluidbpm.fluidwebkit.backing.bean.workspace.form;
 
 import com.fluidbpm.fluidwebkit.backing.bean.ABaseManagedBean;
-import com.fluidbpm.fluidwebkit.backing.bean.attachment.AttachmentBean;
+import com.fluidbpm.fluidwebkit.backing.bean.attachment.WebKitAttachmentBean;
 import com.fluidbpm.fluidwebkit.backing.bean.config.WebKitAccessBean;
 import com.fluidbpm.fluidwebkit.backing.bean.workspace.WorkspaceFluidItem;
 import com.fluidbpm.fluidwebkit.backing.bean.workspace.lf.WebKitWorkspaceLookAndFeelBean;
@@ -91,7 +91,7 @@ public class WebKitOpenFormConversationBean extends ABaseManagedBean {
 	private WebKitWorkspaceLookAndFeelBean lookAndFeelBean;
 
 	@Inject
-	private AttachmentBean attachmentBean;
+	private WebKitAttachmentBean attachmentBean;
 
 	@PostConstruct
 	public void init() {

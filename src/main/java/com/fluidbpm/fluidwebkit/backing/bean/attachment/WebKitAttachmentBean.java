@@ -25,10 +25,16 @@ import com.fluidbpm.program.api.vo.attachment.Attachment;
 import com.fluidbpm.program.api.vo.form.Form;
 import com.fluidbpm.ws.client.v1.attachment.AttachmentClient;
 import com.google.common.cache.Cache;
+import com.google.common.io.BaseEncoding;
+import org.primefaces.model.DefaultStreamedContent;
+import org.primefaces.model.StreamedContent;
 
 import javax.enterprise.context.RequestScoped;
+import javax.faces.context.FacesContext;
+import javax.faces.event.PhaseId;
 import javax.inject.Inject;
 import javax.inject.Named;
+import java.io.ByteArrayInputStream;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -37,7 +43,7 @@ import java.util.stream.Collectors;
 
 @RequestScoped
 @Named("webKitAttachmentBean")
-public class AttachmentBean extends ABaseManagedBean {
+public class WebKitAttachmentBean extends ABaseManagedBean {
 	@Inject
 	@FormAttachmentsCache
 	private Cache<Long, List<Attachment>> attachmentCache;
@@ -128,6 +134,14 @@ public class AttachmentBean extends ABaseManagedBean {
 		return postFix;
 	}
 
+	public String actionGenerateURLForRAW(WorkspaceFluidItem wfItem, Attachment attachment) {
+		String postFix = String.format(
+				"/get_form_raw?formId=%d&attachmentId=%d",
+				wfItem.getFluidItemFormId(),
+				attachment.getId());
+		return postFix;
+	}
+
 	public void addAttachmentFreshToCache(
 		Attachment attachment,
 		String conversationId,
@@ -139,6 +153,28 @@ public class AttachmentBean extends ABaseManagedBean {
 				attachment.getName());
 		String key = String.format("%s_%d", conversationId, attachmentIndex);
 		this.formImageCache.put(key, streamedContent);
+	}
+
+	public StreamedContent fetchAttachmentData(Attachment attachment) {
+		FacesContext context = FacesContext.getCurrentInstance();
+		if ((context.getCurrentPhaseId() == PhaseId.RENDER_RESPONSE) && false) {
+			return new DefaultStreamedContent();
+		} else {
+			Attachment attForData = this.getFluidClientDS().getAttachmentClient().getAttachmentById(
+					attachment.getId(), true);
+			byte[] rawData = BaseEncoding.base64().decode(attForData.getAttachmentDataBase64());
+
+			return new DefaultStreamedContent(
+					new ByteArrayInputStream(rawData),
+					attachment.getContentType(),
+					attachment.getName());
+			    /*
+			return DefaultStreamedContent.builder()
+					.name(attachment.getName())
+					.contentEncoding(attachment.getContentType())
+					.stream(() -> new ByteArrayInputStream(rawData))
+					.build();       */
+		}
 	}
 
 }

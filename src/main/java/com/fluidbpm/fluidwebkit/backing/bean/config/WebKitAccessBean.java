@@ -190,7 +190,6 @@ public class WebKitAccessBean extends ABaseManagedBean {
 				(System.currentTimeMillis() - now),
 				this.fieldsForViewing.size(),
 				realtimeCounter));
-
 	}
 
 	private void cacheUserQueries() {
