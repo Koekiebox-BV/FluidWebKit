@@ -41,6 +41,7 @@ import javax.inject.Named;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
@@ -93,8 +94,7 @@ public class WebKitMenuBean extends ABaseManagedBean {
 		}
 
 		this.populateWebKitUserQueries();
-		this.buildLeftMenu();
-
+		this.buildLeftMenuUserQueries();
 
 		//TODO need to fetch these from listing / config...
 		this.submenuWorkspace = new UISubmenu();
@@ -122,13 +122,11 @@ public class WebKitMenuBean extends ABaseManagedBean {
 		}
 	}
 
-	private void buildLeftMenu() {
+	private void buildLeftMenuUserQueries() {
 		this.submenusUserQuery = new ArrayList<>();
 		WebKitGlobal wkGlobal = this.guestPreferencesBean.getWebKitGlobal();
 		final List<WebKitMenuItem> menuItems = wkGlobal.getWebKitMenuItems();
-		if (menuItems == null || menuItems.isEmpty()) {
-			return;
-		}
+		if (menuItems == null || menuItems.isEmpty()) return;
 
 		menuItems.stream()
 				.filter(itm -> itm.getParentMenuId() == null || itm.getParentMenuId().trim().isEmpty())
@@ -137,10 +135,8 @@ public class WebKitMenuBean extends ABaseManagedBean {
 					subMenToAdd.setId(String.format("om_%s", itm.getMenuId()));
 					subMenToAdd.setLabel(itm.getMenuLabel());
 					subMenToAdd.setIcon(itm.getMenuIcon());
-					this.submenusUserQuery.add(subMenToAdd);
+					if (this.populateSubmenuUserQuery(subMenToAdd, menuItems)) this.submenusUserQuery.add(subMenToAdd);
 				});
-		//Populate sub-menus
-		this.submenusUserQuery.forEach(subMenParent -> this.populateSubmenu(subMenParent, menuItems));
 	}
 
 	public boolean isSubmenusUserQueryAvailForIndex(int index) {
@@ -238,24 +234,27 @@ public class WebKitMenuBean extends ABaseManagedBean {
 		this.writeSubMenuForIndex(9, menu);
 	}
 
-	private void populateSubmenu(UISubmenu submenu, List<WebKitMenuItem> menuItems) {
-		if (submenu == null) return;
+	private boolean populateSubmenuUserQuery(UISubmenu submenu, List<WebKitMenuItem> menuItems) {
+		if (submenu == null) return false;
 
 		String idNoPrefix = submenu.getId().substring(3);//[om_] removed...
 		//Find all where parent is...
 		List<WebKitMenuItem> menusWithNodeAsParent = menuItems.stream()
 				.filter(itm -> idNoPrefix.equals(itm.getParentMenuId()))
 				.collect(Collectors.toList());
-		if (menusWithNodeAsParent == null) return;
+		if (menusWithNodeAsParent == null) return false;
+
+		AtomicBoolean userHasAccess = new AtomicBoolean(false);
 
 		menusWithNodeAsParent.forEach(menuItmWhereParent -> {
+			boolean userHasAccLcl = false;
 			if (this.lookAndFeelBean.doesMenuHaveChildren(menuItmWhereParent, menuItems)) {
 				UISubmenu subMenToAdd = new UISubmenu();
 				subMenToAdd.setId(String.format("om_%s", menuItmWhereParent.getMenuId()));
 				subMenToAdd.setLabel(menuItmWhereParent.getMenuLabel());
 				subMenToAdd.setIcon(menuItmWhereParent.getMenuIcon());
-				submenu.getElements().add(subMenToAdd);
-				this.populateSubmenu(subMenToAdd, menuItems);
+				if (userHasAccLcl = this.populateSubmenuUserQuery(subMenToAdd, menuItems))
+					submenu.getElements().add(subMenToAdd);
 			} else {
 				WebKitUserQuery wkUserQryByMenu = this.configWebKitUserQueries.stream()
 						.filter(itm -> menuItmWhereParent.getId() != null &&
@@ -292,21 +291,18 @@ public class WebKitMenuBean extends ABaseManagedBean {
 							submenu.getLabel(),
 							ReqParam.USER_QUERY_ID,
 							userQuery.getId());
+					userHasAccLcl = true;
 				} else {
 					onCompleteJS = String.format("javascript:rcOpenNoConfig([{name:'%s', value:\"%s\"}]);",
 							ReqParam.MISSING_CONFIG_MSG,
 							String.format("No Access. Please request Access to User Query '%s'.", userQuery.getName()));
 				}
 				menuItemSub.setOncomplete(onCompleteJS);
-				submenu.getElements().add(menuItemSub);
+				if (userHasAccLcl) submenu.getElements().add(menuItemSub);
 			}
+			if (userHasAccLcl) userHasAccess.set(true);
 		});
-
-//		if (submenu.getElementsCount() > 0) {
-//			submenu.getElements().stream()
-//					.filter(itm -> itm instanceof UISubmenu)
-//					.forEach(itm -> this.populateSubmenu((UISubmenu)itm, menuItems));
-//		}
+		return userHasAccess.get();
 	}
 
 	private void buildWorkspaceMenu() {
