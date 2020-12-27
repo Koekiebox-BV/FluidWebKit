@@ -118,6 +118,8 @@ public class WebKitWorkspaceLookAndFeelBean extends ABaseManagedBean {
 	@Setter
 	private String inputNewRootMenuLabel;
 
+	private Map<String, List<SelectItem>> tableFieldsByFormDef;
+
 	private List<TabId> tabsViewed;
 	private enum TabId {
 		tabForm,
@@ -807,6 +809,10 @@ public class WebKitWorkspaceLookAndFeelBean extends ABaseManagedBean {
 	}
 
 	public List<SelectItem> extractTableFieldsFrom(String formDef) {
+		if (this.tableFieldsByFormDef == null) this.tableFieldsByFormDef = new HashMap<>();
+
+		if (this.tableFieldsByFormDef.containsKey(formDef)) return this.tableFieldsByFormDef.get(formDef);
+
 		List<Field> fieldsForFormDef = this.getFluidClientDSConfig().getFormFieldClient().getFieldsByFormNameAndLoggedInUser(
 						formDef, false).getListing();
 		List<SelectItem> returnVal = new ArrayList<>();
@@ -816,6 +822,8 @@ public class WebKitWorkspaceLookAndFeelBean extends ABaseManagedBean {
 				.filter(itm -> Field.Type.Table == itm.getTypeAsEnum())
 				.map(itm -> itm.getFieldName())
 				.forEach(itm -> returnVal.add(new SelectItem(itm, itm)));
+
+		this.tableFieldsByFormDef.put(formDef, returnVal);
 		return returnVal;
 	}
 }
