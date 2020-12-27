@@ -111,6 +111,10 @@ public class WebKitAttachmentBean extends ABaseManagedBean {
 		return (att == null) ? 0 : att.size();
 	}
 
+	public int actionGetColumnCountForAttachment(Form formToCheck) {
+		return 1;
+	}
+
 	public String actionGenerateURLForThumbnail(WorkspaceFluidItem wfItem, int thumbnailScale) {
 		//String contextPath = FacesContext.getCurrentInstance().getExternalContext().getRequestContextPath();
 		StringBuffer buffer = new StringBuffer();
