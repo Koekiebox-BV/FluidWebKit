@@ -29,10 +29,7 @@ import com.fluidbpm.program.api.vo.webkit.form.WebKitForm;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Workspace object to host the {@code JobView} and {@code ABaseWebVO}.
@@ -120,6 +117,16 @@ public class WorkspaceFluidItem extends ABaseFluidVO {
 	public String getFluidItemTitle() {
 		if (this.getFluidItemForm() == null) return null;
 		return this.getFluidItemForm().getTitle();
+	}
+
+	public Date getFluidItemStepEntered() {
+		if (this.getFluidItem() == null) return null;
+		return this.getFluidItem().getStepEnteredTime();
+	}
+
+	public Long getFluidItemStepEnteredTimestamp() {
+		if (this.getFluidItemStepEntered() == null) return null;
+		return this.getFluidItemStepEntered().getTime();
 	}
 
 	public String getFluidItemFlow() {

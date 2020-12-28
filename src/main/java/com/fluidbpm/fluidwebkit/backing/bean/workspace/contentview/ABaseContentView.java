@@ -497,14 +497,10 @@ public abstract class ABaseContentView implements Serializable {
 	 * @return List of {@code WorkspaceFluidItem}
 	 */
 	public List<WorkspaceFluidItem> getWorkspaceFluidItemsForSection(String sectionParam) {
-		if (this.fluidItemsForSection == null) {
-			return null;
-		}
+		if (this.fluidItemsForSection == null) return null;
 
 		//Key not found, just return new arraylist...
-		if (!this.fluidItemsForSection.containsKey(sectionParam)) {
-			return new ArrayList<>();
-		}
+		if (!this.fluidItemsForSection.containsKey(sectionParam)) return new ArrayList<>();
 
 		return this.fluidItemsForSection.get(sectionParam);
 	}
@@ -519,9 +515,7 @@ public abstract class ABaseContentView implements Serializable {
 		String sectionParam,
 		List<WorkspaceFluidItem> newListParam
 	) {
-		if (this.fluidItemsForSection == null) {
-			return;
-		}
+		if (this.fluidItemsForSection == null) return;
 
 		this.fluidItemsForSection.put(sectionParam, newListParam);
 	}
@@ -554,6 +548,9 @@ public abstract class ABaseContentView implements Serializable {
 					this.getWorkspaceFluidItemsFor(section, data);
 			if (itemsForSection == null || itemsForSection.isEmpty()) continue;
 
+			//Sort the items by when they entered...
+			itemsForSection.sort(Comparator.comparing(WorkspaceFluidItem::getFluidItemStepEnteredTimestamp));
+
 			this.fluidItemsForSection.put(section, itemsForSection);
 		}
 	}
@@ -565,14 +562,9 @@ public abstract class ABaseContentView implements Serializable {
 	 * @return {@code true} If any one of the elements for {@code booleansToCheckParam} is {@code true}.
 	 */
 	protected final boolean isAnyTrue(boolean ... booleansToCheckParam) {
-		if (booleansToCheckParam == null || booleansToCheckParam.length == 0) {
-			return false;
-		}
-		for (boolean toCheck : booleansToCheckParam) {
-			if (toCheck) {
-				return true;
-			}
-		}
+		if (booleansToCheckParam == null || booleansToCheckParam.length == 0) return false;
+
+		for (boolean toCheck : booleansToCheckParam) if (toCheck) return true;
 
 		return false;
 	}
@@ -594,9 +586,7 @@ public abstract class ABaseContentView implements Serializable {
 	 * @return {@code true} if the section {@code sectionParam} is empty, otherwise {@code false}.
 	 */
 	public boolean areItemsForSectionEmpty(String sectionParam) {
-		if ((sectionParam == null || sectionParam.trim().isEmpty())) {
-			return true;
-		}
+		if ((sectionParam == null || sectionParam.trim().isEmpty())) return true;
 
 		if (this.getWorkspaceFluidItemsForSection(sectionParam) == null ||
 				this.getWorkspaceFluidItemsForSection(sectionParam).isEmpty()) {
@@ -655,9 +645,8 @@ public abstract class ABaseContentView implements Serializable {
 	 * @return First {@code WorkspaceFluidItem} with Form Id {@code formIdParam} and of class type {@code typeParam}.
 	 */
 	public WorkspaceFluidItem getWSFIItemByIdFromCache(Long formIdParam, Class typeParam) {
-		if (this.fluidItemsForSection == null || this.fluidItemsForSection.isEmpty()) {
-			return null;
-		}
+		if (this.fluidItemsForSection == null || this.fluidItemsForSection.isEmpty()) return null;
+
 		String classTypeParam = (typeParam == null) ? null : typeParam.getName();
 		
 		return this.fluidItemsForSection.keySet().stream()
@@ -679,12 +668,9 @@ public abstract class ABaseContentView implements Serializable {
 	 * @see JobView
 	 */
 	public WebKitWorkspaceJobView retrieveJobViewFromId(Long jobViewIdParam) {
-		if (jobViewIdParam == null) {
-			return null;
-		}
-		if (this.data == null) {
-			return null;
-		}
+		if (jobViewIdParam == null) return null;
+
+		if (this.data == null) return null;
 
 		return this.data.keySet().stream()
 				.map(itm -> itm.getJobViews())
@@ -699,9 +685,8 @@ public abstract class ABaseContentView implements Serializable {
 	) {
 		List<ABaseManagedBean.ColumnModel> headers = this.getColumnHeadersForSection(sectionAliasParam);
 		int headerSize = (headers == null) ? 0:headers.size();
-		if ((columnIndexParam + 1) > headerSize){
-			return null;
-		}
+		if ((columnIndexParam + 1) > headerSize) return null;
+
 		return headers.get(columnIndexParam);
 	}
 
