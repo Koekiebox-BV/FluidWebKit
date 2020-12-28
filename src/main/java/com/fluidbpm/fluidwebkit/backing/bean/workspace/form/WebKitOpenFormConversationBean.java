@@ -27,6 +27,7 @@ import org.primefaces.event.RowEditEvent;
 import org.primefaces.model.DefaultStreamedContent;
 import org.primefaces.model.StreamedContent;
 import org.primefaces.model.file.UploadedFile;
+import org.primefaces.model.menu.*;
 
 import javax.annotation.PostConstruct;
 import javax.enterprise.context.Conversation;
@@ -82,6 +83,10 @@ public class WebKitOpenFormConversationBean extends ABaseManagedBean {
 	@Getter
 	@Setter
 	private List<Attachment> freshAttachments;
+
+	@Getter
+	@Setter
+	private MenuModel contextMenuModel;
 
 	//----BEANS-----
 	@Inject
@@ -268,6 +273,71 @@ public class WebKitOpenFormConversationBean extends ABaseManagedBean {
 			});
 		} catch (Exception except) {
 			this.raiseError(except);
+		}
+
+		//The Context Menu...
+		this.buildContextMenuForConversation();
+	}
+
+	private void buildContextMenuForConversation() {
+		this.contextMenuModel = new DefaultMenuModel();
+
+		Separator sep = new DefaultSeparator();
+		//Save Button...
+		if (!this.getWsFluidItem().isFormLocked() || this.getWsFluidItem().isFormLockedByLoggedInUser()) {
+			DefaultMenuItem itemSave = DefaultMenuItem.builder()
+					.value("Save")
+					.icon("pi pi-save")
+					.command("#{webKitOpenFormConversationBean.actionSaveForm('varFormDialog', '')}")
+					.update("manage-product-content growl")
+					.icon("pi pi-home")
+					.build();
+			this.contextMenuModel.getElements().add(itemSave);
+			this.contextMenuModel.getElements().add(sep);
+		}
+
+		//TODO need to also confirm the user has access to upload an attachment...
+		WebKitForm webKitForm = this.lookAndFeelBean.getWebKitFormWithFormDef(
+				this.getWsFluidItem().getFluidItemFormType());
+		
+		if (!"none".equals(webKitForm.getAttachmentDisplayLocation())) {
+			DefaultMenuItem itemUploadNewAtt = DefaultMenuItem.builder()
+					.value("Upload New Attachment")
+					.icon("pi pi-cloud-upload")
+					.command("#{webKitOpenFormConversationBean.actionPrepToUploadNewAttachment}")
+					.process("@this :frmOpenForm")
+					.update(":frmUploadAttachmentForm")
+					.oncomplete("PF('varNewAttachmentUploadDialog').show();")
+					.build();
+			this.contextMenuModel.getElements().add(itemUploadNewAtt);
+
+			if (this.getFreshAndExistingAttachmentCount() > 0) {
+				this.contextMenuModel.getElements().add(sep);
+				this.getFreshAndExistingAttachments().forEach(attItm -> {
+					DefaultMenuItem itmReplAtt = DefaultMenuItem.builder()
+							.value(String.format("Replace '%s'", attItm.getName()))
+							.icon("fa fa-file")
+							.command("#{webKitOpenFormConversationBean.actionPrepToUploadNewAttachment}")
+							.process("@this :frmOpenForm")
+							.update(":frmUploadAttachmentForm")
+							.oncomplete("PF('varNewAttachmentUploadDialog').show();")
+							.build();
+					this.contextMenuModel.getElements().add(itmReplAtt);
+				});
+				this.contextMenuModel.getElements().add(sep);
+
+				this.getFreshAndExistingAttachments().forEach(attItm -> {
+					DefaultMenuItem itmReplAtt = DefaultMenuItem.builder()
+							.value(String.format("Delete '%s'", attItm.getName()))
+							.icon("fa fa-trash")
+							.command("#{webKitOpenFormConversationBean.actionPrepToUploadNewAttachment}")
+							.process("@this :frmOpenForm")
+							.update(":frmUploadAttachmentForm")
+							.oncomplete("PF('varNewAttachmentUploadDialog').show();")
+							.build();
+					this.contextMenuModel.getElements().add(itmReplAtt);
+				});
+			}
 		}
 	}
 

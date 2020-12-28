@@ -421,18 +421,15 @@ public class WebKitMenuBean extends ABaseManagedBean {
 	}
 
 	public List<Long> getViewIdsForGroup(WebKitViewGroup viewGroup) {
-		if (viewGroup == null || viewGroup.getWebKitViewSubs() == null) {
-			return null;
-		}
+		if (viewGroup == null || viewGroup.getWebKitViewSubs() == null) return null;
 
 		List<Long> returnVal = new ArrayList<>();
 		List<WebKitViewSub> subs = viewGroup.getWebKitViewSubs();
 		subs.sort(Comparator.comparing(WebKitViewSub::getSubOrder));
 		subs.forEach(viewSub -> {
 			List<Long> viewIdsForSub = this.getViewIdsForSub(viewSub);
-			if (viewIdsForSub == null || viewIdsForSub.isEmpty()) {
-				return;
-			}
+			if (viewIdsForSub == null || viewIdsForSub.isEmpty()) return;
+
 			viewIdsForSub.stream()
 					.filter(itm -> !returnVal.contains(itm))
 					.forEach(viewItm -> {
@@ -443,9 +440,8 @@ public class WebKitMenuBean extends ABaseManagedBean {
 	}
 
 	public List<Long> getViewIdsForSub(WebKitViewSub viewSub) {
-		if (viewSub == null || viewSub.getJobViews() == null) {
-			return null;
-		}
+		if (viewSub == null || viewSub.getJobViews() == null) return null;
+
 		List<Long> returnVal = new ArrayList<>();
 		List<WebKitWorkspaceJobView> views = viewSub.getJobViews();
 		views.sort(Comparator.comparing(WebKitWorkspaceJobView::getViewFlowStepViewOrder));
@@ -461,9 +457,7 @@ public class WebKitMenuBean extends ABaseManagedBean {
 	}
 
 	public List<WebKitWorkspaceJobView> getUniqueViewsForGroup(WebKitViewGroup viewGroup) {
-		if (viewGroup == null || viewGroup.getWebKitViewSubs() == null) {
-			return null;
-		}
+		if (viewGroup == null || viewGroup.getWebKitViewSubs() == null) return null;
 
 		List<WebKitWorkspaceJobView> returnVal = new ArrayList<>();
 		List<Long> addedViewIds = new ArrayList<>();
@@ -483,18 +477,16 @@ public class WebKitMenuBean extends ABaseManagedBean {
 	}
 
 	public List<WebKitWorkspaceJobView> getViewsForSub(WebKitViewSub viewSub) {
-		if (viewSub == null || viewSub.getJobViews() == null) {
-			return null;
-		}
+		if (viewSub == null || viewSub.getJobViews() == null) return null;
+
 		List<WebKitWorkspaceJobView> returnVal = viewSub.getJobViews();
 		returnVal.sort(Comparator.comparing(WebKitWorkspaceJobView::getViewFlowStepViewOrder));
 		return returnVal;
 	}
 
 	public WebKitViewGroup getGroupWithName(String groupName) {
-		if (groupName == null) {
-			return null;
-		}
+		if (groupName == null) return null;
+
 		return this.getJobViewGroups().stream()
 				.filter(itm -> groupName.equals(itm.getJobViewGroupName()))
 				.findFirst()
