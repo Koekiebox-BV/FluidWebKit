@@ -23,7 +23,10 @@ import static java.lang.annotation.ElementType.*;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- *
+ * Image attachments cache relating to a {@code Form}.
+ * 
+ * @see com.fluidbpm.program.api.vo.form.Form
+ * @see com.fluidbpm.program.api.vo.attachment.Attachment
  */
 @Target({ TYPE, METHOD, FIELD, PARAMETER })
 @Retention(RUNTIME)

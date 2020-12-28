@@ -140,8 +140,9 @@ public class WebKitAttachmentBean extends ABaseManagedBean {
 
 	public String actionGenerateURLForRAW(WorkspaceFluidItem wfItem, Attachment attachment) {
 		String postFix = String.format(
-				"/get_form_raw?formId=%d&attachmentId=%d",
+				"/get_attachment_raw?formId=%d&formDefinition=%s&attachmentId=%d",
 				wfItem.getFluidItemFormId(),
+				wfItem.getFluidItemFormTypeURLSafe(),
 				attachment.getId());
 		return postFix;
 	}

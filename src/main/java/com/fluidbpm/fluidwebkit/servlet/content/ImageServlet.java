@@ -73,10 +73,8 @@ public class ImageServlet extends ABaseFWKServlet {
 		if ("null".equals(formId)) return;
 		String formDef = reqParam.getParameter(PARAM_FORM_DEFINITION);
 		if ("null".equals(formDef)) return;
-		if ((formId == null || formId.trim().isEmpty()) ||
-				(formDef == null || formDef.trim().isEmpty())) {
-			return;
-		}
+		if ((formId == null || formId.trim().isEmpty()) || (formDef == null || formDef.trim().isEmpty())) return;
+
 		String attachmentId = reqParam.getParameter(PARAM_ATTACHMENT_ID);
 		Long attachmentIdLong = -1L;
 		if (attachmentId == null) {
@@ -87,9 +85,8 @@ public class ImageServlet extends ABaseFWKServlet {
 
 		String thumbnailScale = reqParam.getParameter(PARAM_THUMBNAIL_SCALE);
 		int thumbScale = -1;
-		if (thumbnailScale != null && !thumbnailScale.trim().isEmpty()) {
+		if (thumbnailScale != null && !thumbnailScale.trim().isEmpty())
 			thumbScale = Integer.parseInt(thumbnailScale.trim());
-		}
 
 		Long formIdParam = null;
 		try {
@@ -114,14 +111,11 @@ public class ImageServlet extends ABaseFWKServlet {
 		}
 
 		User loggedInUser = this.getLoggedInUser(reqParam);
-		if (loggedInUser == null) {
-			return;
-		}
+		if (loggedInUser == null) return;
 
 		FluidClientDS fcp = this.getFcp().get(reqParam.getSession(false).getId());
-		if (fcp == null) {
-			return;
-		}
+		if (fcp == null) return;
+
 		final AttachmentClient attachmentClient = fcp.getAttachmentClient();
 		try {
 			ImageStreamedContent imageStreamedContent = this.getImageStreamedContentForFirstImageAttachmentForForm(
@@ -215,9 +209,7 @@ public class ImageServlet extends ABaseFWKServlet {
 		Form formToCheckForParam
 	) {
 		List<Attachment> cacheAttachments = this.attachmentCache.getIfPresent(formToCheckForParam.getId());
-		if (cacheAttachments != null) {
-			return cacheAttachments;
-		}
+		if (cacheAttachments != null) return cacheAttachments;
 
 		List<Attachment> attachmentsForForm =
 				attachmentClientParam.getImageAttachmentsByForm(formToCheckForParam, false);

@@ -37,13 +37,10 @@ public class ImageStreamedContent extends DefaultStreamedContent {
 	}
 	
 	public DefaultStreamedContent cloneAsDefaultStreamedContent() {
-//		return DefaultStreamedContent.builder()
-//				.stream(new ByteArrayInputStream(this.imageBytes))
-//				.contentType(this,getContentType())
-//				.name(this.getName());
-		return new DefaultStreamedContent(
-				new ByteArrayInputStream(this.imageBytes),
-				this.getContentType(),
-				this.getName());
+		return DefaultStreamedContent.builder()
+				.stream(() -> new ByteArrayInputStream(this.imageBytes))
+				.contentType(this.getContentType())
+				.name(this.getName())
+				.build();
 	}
 }

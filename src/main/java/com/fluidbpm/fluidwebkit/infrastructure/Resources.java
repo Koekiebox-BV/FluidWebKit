@@ -20,6 +20,7 @@ import com.fluidbpm.fluidwebkit.infrastructure.cache.ExitEventForFluidAPI;
 import com.fluidbpm.fluidwebkit.qualifier.WebKitResource;
 import com.fluidbpm.fluidwebkit.qualifier.cache.FormAttachmentsCache;
 import com.fluidbpm.fluidwebkit.qualifier.cache.FormImageCache;
+import com.fluidbpm.fluidwebkit.qualifier.cache.RAWAttachmentsCache;
 import com.fluidbpm.fluidwebkit.servlet.content.ImageStreamedContent;
 import com.fluidbpm.program.api.vo.attachment.Attachment;
 import com.google.common.cache.Cache;
@@ -34,7 +35,7 @@ import java.util.concurrent.TimeUnit;
  */
 public class Resources {
 	private static final Cache<String, FluidClientDS> cacheFluidDS = CacheBuilder.newBuilder()
-			.expireAfterAccess(3, TimeUnit.DAYS)
+			.expireAfterAccess(2, TimeUnit.DAYS)
 			.removalListener(new ExitEventForFluidAPI())
 			.build();
 
@@ -43,6 +44,9 @@ public class Resources {
 
 	public static Cache<Long, List<Attachment>> imageAttachmentsByFormCache =
 			CacheBuilder.newBuilder().expireAfterWrite(60, TimeUnit.MINUTES).build();
+
+	public static Cache<Long, Attachment> rawAttachmentsByIdCache =
+			CacheBuilder.newBuilder().expireAfterWrite(20, TimeUnit.MINUTES).build();
 
 	@Produces
 	@WebKitResource
@@ -60,6 +64,12 @@ public class Resources {
 	@FormAttachmentsCache
 	public Cache<Long, List<Attachment>> getFormAttachmentsCache(){
 		return Resources.imageAttachmentsByFormCache;
+	}
+
+	@Produces
+	@RAWAttachmentsCache
+	public Cache<Long, Attachment> getRAWAttachmentsCache(){
+		return Resources.rawAttachmentsByIdCache;
 	}
 
 }
