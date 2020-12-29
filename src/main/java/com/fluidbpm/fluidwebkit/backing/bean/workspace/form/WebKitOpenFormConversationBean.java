@@ -39,6 +39,7 @@ import javax.inject.Named;
 import java.io.ByteArrayInputStream;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import static com.fluidbpm.fluidwebkit.backing.bean.workspace.pi.PersonalInventoryItemVO.PLACEHOLDER_TITLE;
 
@@ -86,6 +87,18 @@ public class WebKitOpenFormConversationBean extends ABaseManagedBean {
 
 	@Getter
 	@Setter
+	private List<Attachment> updatedAttachments;
+
+	@Getter
+	@Setter
+	private List<Attachment> deletedAttachments;
+
+	@Getter
+	@Setter
+	private Attachment attachmentToReplaceDelete;
+
+	@Getter
+	@Setter
 	private MenuModel contextMenuModel;
 
 	//----BEANS-----
@@ -130,7 +143,10 @@ public class WebKitOpenFormConversationBean extends ABaseManagedBean {
 		this.setTableRecordWSFluidItems(null);
 		this.setTableRecordViewableFields(new HashMap<>());
 		this.setTableRecordEditableFields(new HashMap<>());
+		//Attachments...
 		this.setFreshAttachments(new ArrayList<>());
+		this.setUpdatedAttachments(new ArrayList<>());
+		this.setDeletedAttachments(new ArrayList<>());
 
 		//Send to a specific workflow...
 		this.setInputWorkflowsForFormDef(new ArrayList<>());
@@ -296,11 +312,10 @@ public class WebKitOpenFormConversationBean extends ABaseManagedBean {
 			this.contextMenuModel.getElements().add(sep);
 		}
 
-		//TODO need to also confirm the user has access to upload an attachment...
-		WebKitForm webKitForm = this.lookAndFeelBean.getWebKitFormWithFormDef(
-				this.getWsFluidItem().getFluidItemFormType());
+		String formDef = this.getWsFluidItem().getFluidItemFormType();
+		WebKitForm webKitForm = this.lookAndFeelBean.getWebKitFormWithFormDef(formDef);
 		
-		if (!"none".equals(webKitForm.getAttachmentDisplayLocation())) {
+		if (this.accessBean.attachmentCanEdit(formDef) && !"none".equals(webKitForm.getAttachmentDisplayLocation())) {
 			DefaultMenuItem itemUploadNewAtt = DefaultMenuItem.builder()
 					.value("Upload New Attachment")
 					.icon("pi pi-cloud-upload")
@@ -317,32 +332,41 @@ public class WebKitOpenFormConversationBean extends ABaseManagedBean {
 					DefaultMenuItem itmReplAtt = DefaultMenuItem.builder()
 							.value(String.format("Replace '%s'", attItm.getName()))
 							.icon("fa fa-file")
-							.command("#{webKitOpenFormConversationBean.actionPrepToUploadNewAttachment}")
+							.command(String.format("#{webKitOpenFormConversationBean.actionPrepToReplaceExistingAttachment(%d)}", attItm.getId()))
 							.process("@this :frmOpenForm")
-							.update(":frmUploadAttachmentForm")
-							.oncomplete("PF('varNewAttachmentUploadDialog').show();")
+							.update(":frmReplaceAttachmentForm")
+							.oncomplete("PF('varReplaceAttachmentUploadDialog').show();")
 							.build();
 					this.contextMenuModel.getElements().add(itmReplAtt);
 				});
-				this.contextMenuModel.getElements().add(sep);
 
-				this.getFreshAndExistingAttachments().forEach(attItm -> {
-					DefaultMenuItem itmReplAtt = DefaultMenuItem.builder()
-							.value(String.format("Delete '%s'", attItm.getName()))
-							.icon("fa fa-trash")
-							.command("#{webKitOpenFormConversationBean.actionPrepToUploadNewAttachment}")
-							.process("@this :frmOpenForm")
-							.update(":frmUploadAttachmentForm")
-							.oncomplete("PF('varNewAttachmentUploadDialog').show();")
-							.build();
-					this.contextMenuModel.getElements().add(itmReplAtt);
-				});
+				if (this.doesUserHavePermission("delete_electronic_form")) {
+					this.contextMenuModel.getElements().add(sep);
+					this.getFreshAndExistingAttachments().forEach(attItm -> {
+						DefaultMenuItem itmReplAtt = DefaultMenuItem.builder()
+								.value(String.format("Delete '%s'", attItm.getName()))
+								.icon("fa fa-trash")
+								.command(String.format("#{webKitOpenFormConversationBean.actionPrepToReplaceExistingAttachment(%d)}", attItm.getId()))
+								.process("@this :frmOpenForm")
+								.update(":frmDeleteAttachmentForm")
+								.oncomplete("PF('varDeleteAttachmentDialog').show();")
+								.build();
+						this.contextMenuModel.getElements().add(itmReplAtt);
+					});
+				}
 			}
 		}
 	}
 
 	public void actionPrepToUploadNewAttachment() {
 
+	}
+
+	public void actionPrepToReplaceExistingAttachment(Long attachmentId) {
+		this.attachmentToReplaceDelete = this.getFreshAndExistingAttachments().stream()
+				.filter(itm -> attachmentId.equals(itm.getId()))
+				.findFirst()
+				.orElse(new Attachment());
 	}
 
 	public void actionUploadNewAttachment(FileUploadEvent fileUploadEvent) {
@@ -360,6 +384,72 @@ public class WebKitOpenFormConversationBean extends ABaseManagedBean {
 		FacesMessage fMsg = new FacesMessage(FacesMessage.SEVERITY_INFO,
 				"Success", String.format("Uploaded '%s'.", uploaded.getFileName()));
 		FacesContext.getCurrentInstance().addMessage(null, fMsg);
+	}
+
+	public void actionReplaceExistingAttachment(FileUploadEvent fileUploadEvent) {
+		try {
+			UploadedFile uploaded = fileUploadEvent.getFile();
+
+			String newAttContentType = uploaded.getContentType();
+			String existingContentType = this.getAttachmentToReplaceDelete().getContentType();
+			if (!newAttContentType.equals(existingContentType))
+				throw new ClientDashboardException(String.format(
+						"New attachment content type is '%s', expected '%s' for '%s'.",
+						newAttContentType, existingContentType, this.attachmentToReplaceDelete.getName()),
+						ClientDashboardException.ErrorCode.VALIDATION);
+
+			this.attachmentToReplaceDelete.setContentType(this.getAttachmentToReplaceDelete().getContentType());
+			this.attachmentToReplaceDelete.setAttachmentDataBase64(UtilGlobal.encodeBase64(uploaded.getContent()));
+
+			//If not part of fresh attachments...Add to Update List...
+			AtomicBoolean isInFresh = new AtomicBoolean(false);
+			this.getFreshAttachments().stream()
+					.filter(itm -> itm.getName().equals(this.attachmentToReplaceDelete.getName()))
+					.findFirst()
+					.ifPresent(attFomFresh -> {
+						isInFresh.set(true);
+					});
+			if (!isInFresh.get()) {
+				//Replace Already Updated Attachment...
+				Attachment inUpdated = this.getUpdatedAttachments().stream()
+						.filter(itm -> itm.getName().equals(this.attachmentToReplaceDelete.getName()))
+						.findFirst()
+						.orElse(null);
+				if (inUpdated == null) this.getUpdatedAttachments().add(this.attachmentToReplaceDelete);
+			}
+
+			//TODO
+		/*this.attachmentBean.addAttachmentFreshToCache(
+				this.attachmentToReplaceDelete,
+				this.conversation.getId(),
+				this.getFreshAttachments().size() - 1);*/
+
+			FacesMessage fMsg = new FacesMessage(FacesMessage.SEVERITY_INFO,
+					"Success", String.format("Uploaded '%s'.", uploaded.getFileName()));
+			FacesContext.getCurrentInstance().addMessage(null, fMsg);
+		} catch (Exception except) {
+			this.raiseError(except);
+		}
+	}
+
+	public void actionDeleteExistingAttachment() {
+		if (this.deletedAttachments == null) this.deletedAttachments = new ArrayList<>();
+
+		this.getDeletedAttachments().add(this.attachmentToReplaceDelete);
+
+		this.getFreshAttachments().stream()
+				.filter(itm -> itm.getName().equals(this.attachmentToReplaceDelete.getName()))
+				.findFirst()
+				.ifPresent(attFomFresh -> {
+					this.getFreshAttachments().remove(attFomFresh);
+				});
+
+		this.getUpdatedAttachments().stream()
+				.filter(itm -> itm.getName().equals(this.attachmentToReplaceDelete.getName()))
+				.findFirst()
+				.ifPresent(attFomFresh -> {
+					this.getUpdatedAttachments().remove(attFomFresh);
+				});
 	}
 
 	public void actionUpdateSelectedWorkflow() {
@@ -643,13 +733,26 @@ public class WebKitOpenFormConversationBean extends ABaseManagedBean {
 
 	public List<Attachment> getFreshAndExistingAttachments() {
 		List<Attachment> freshAttachments = this.getFreshAttachments();
+		List<Attachment> updatedAttachments = this.getUpdatedAttachments();
+		List<Attachment> deletedAttachments = this.getUpdatedAttachments();
+
 		List<Attachment> returnVal = new ArrayList<>(freshAttachments);
+		returnVal.addAll(updatedAttachments);
 
 		WorkspaceFluidItem wsFlItem = this.getWsFluidItem();
 		if (wsFlItem.isFluidItemFormSet()) {
 			List<Attachment> existingAttachments = this.attachmentBean.actionFetchAttachmentsForForm(wsFlItem.getFluidItemForm());
 			if (existingAttachments != null) returnVal.addAll(existingAttachments);
 		}
+
+		deletedAttachments.forEach(deleted -> {
+			Attachment toRemoveFromReturnVal = returnVal.stream()
+					.filter(itm -> deleted.getName().equals(itm.getName()))
+					.findFirst()
+					.orElse(null);
+			if (toRemoveFromReturnVal != null) returnVal.remove(toRemoveFromReturnVal);
+		});
+
 		return returnVal;
 	}
 

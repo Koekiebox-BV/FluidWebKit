@@ -88,6 +88,7 @@ public class WebKitAccessBean extends ABaseManagedBean {
 			this.getLogger().info("FFC-Bean: Fields ALREADY CACHED.");
 			return;
 		}
+
 		if (this.getFluidClientDS() == null) return;
 
 		try {
@@ -434,7 +435,6 @@ public class WebKitAccessBean extends ABaseManagedBean {
 	 * @return {@code null}
 	 */
 	protected List<String> getFormDefsToIgnore() {
-		//TODO need to fetch this from the web kit client...
 		return null;
 	}
 
@@ -461,5 +461,23 @@ public class WebKitAccessBean extends ABaseManagedBean {
 	public UserQuery fetchUserQueryWithNameUsingConfigUser(String userQueryName) {
 		UserQueryClient userQueryClient = this.getFluidClientDSConfig().getUserQueryClient();
 		return userQueryClient.getUserQueryByName(userQueryName);
+	}
+
+	public boolean attachmentCanEdit(String formDefinition) {
+		if (this.formDefinitionsAttachmentCanEdit == null || this.formDefinitionsAttachmentCanEdit.isEmpty()) return false;
+
+		return this.formDefinitionsAttachmentCanEdit.stream()
+				.filter(toCheck -> formDefinition.equals(toCheck.getFormType()))
+				.findFirst()
+				.isPresent();
+	}
+
+	public boolean attachmentCanView(String formDefinition) {
+		if (this.formDefinitionsAttachmentCanView == null || this.formDefinitionsAttachmentCanView.isEmpty()) return false;
+
+		return this.formDefinitionsAttachmentCanView.stream()
+				.filter(toCheck -> formDefinition.equals(toCheck.getFormType()))
+				.findFirst()
+				.isPresent();
 	}
 }
