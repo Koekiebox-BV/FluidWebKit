@@ -378,8 +378,7 @@ public class WebKitOpenFormConversationBean extends ABaseManagedBean {
 		toAdd.setName(uploaded.getFileName());
 
 		this.getFreshAttachments().add(toAdd);
-		this.attachmentBean.addAttachmentFreshToCache(
-				toAdd, this.conversation.getId(), this.getFreshAttachments().size() - 1);
+		//TODO this.attachmentBean.addAttachmentFreshToCache(toAdd, this.conversation.getId(), this.getFreshAttachments().size() - 1);
 
 		FacesMessage fMsg = new FacesMessage(FacesMessage.SEVERITY_INFO,
 				"Success", String.format("Uploaded '%s'.", uploaded.getFileName()));
