@@ -549,7 +549,7 @@ public abstract class ABaseContentView implements Serializable {
 			if (itemsForSection == null || itemsForSection.isEmpty()) continue;
 
 			//Sort the items by when they entered...
-			itemsForSection.sort(Comparator.comparing(WorkspaceFluidItem::getFluidItemStepEnteredTimestamp));
+			itemsForSection.sort(Comparator.comparing(WorkspaceFluidItem::getFluidItemFormId));
 
 			this.fluidItemsForSection.put(section, itemsForSection);
 		}

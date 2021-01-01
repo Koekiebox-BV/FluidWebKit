@@ -81,9 +81,8 @@ implements IConversationCallback {
 		WebKitViewSub selectedSub
 	) {
 		try {
-			if (this.getFluidClientDS() == null) {
-				return null;
-			}
+			if (this.getFluidClientDS() == null) return null;
+
 			PersonalInventoryClient persInvClient = this.getFluidClientDS().getPersonalInventoryClient();
 			List<FluidItem> piItems = persInvClient.getPersonalInventoryItems();
 			List<WorkspaceFluidItem> wsFldItms = new ArrayList<>();

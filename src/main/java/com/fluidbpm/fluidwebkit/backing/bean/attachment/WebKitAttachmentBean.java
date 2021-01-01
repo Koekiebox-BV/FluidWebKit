@@ -147,7 +147,6 @@ public class WebKitAttachmentBean extends ABaseManagedBean {
 		return postFix;
 	}
 
-	@Deprecated
 	public void addAttachmentFreshToCache(
 		Attachment attachment,
 		String conversationId,
@@ -158,7 +157,23 @@ public class WebKitAttachmentBean extends ABaseManagedBean {
 				attachment.getContentType(),
 				attachment.getName());
 		String key = String.format("%s_%d", conversationId, attachmentIndex);
-		//this.formImageCache.put(key, streamedContent);
+		this.formImageCache.put(key, streamedContent);
+	}
+
+	public void removeAttachmentFreshFromCache(
+		String conversationId,
+		int numberOfAttachments
+	) {
+		for (int index = 0; index < numberOfAttachments; index++) {
+			String key = String.format("%s_%d", conversationId, index);
+			this.formImageCache.invalidate(key);
+		}
+	}
+
+	public void removeAttachmentFromRAWCache(Long attachmentId) {
+		if (attachmentId == null || attachmentId < 1) return;
+
+		this.attachmentCache.invalidate(attachmentId);
 	}
 
 	public StreamedContent fetchAttachmentData(Attachment attachment) {

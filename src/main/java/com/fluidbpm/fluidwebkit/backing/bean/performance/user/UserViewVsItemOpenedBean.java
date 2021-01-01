@@ -15,7 +15,6 @@
 
 package com.fluidbpm.fluidwebkit.backing.bean.performance.user;
 
-import com.fluidbpm.fluidwebkit.backing.bean.ABaseManagedBean;
 import com.fluidbpm.fluidwebkit.backing.bean.performance.ABasePerformanceBean;
 import com.fluidbpm.fluidwebkit.backing.bean.performance.PerformanceBean;
 import com.fluidbpm.program.api.util.UtilGlobal;
@@ -70,9 +69,7 @@ public class UserViewVsItemOpenedBean extends ABasePerformanceBean {
 		this.mostProductiveView = UtilGlobal.EMPTY;
 		this.bubbleChartModel = new BubbleChartModel();
 
-		if (viewOpenedAndSentOnEntries == null || viewOpenedAndSentOnEntries.isEmpty()) {
-			return;
-		}
+		if (viewOpenedAndSentOnEntries == null || viewOpenedAndSentOnEntries.isEmpty()) return;
 
 		this.setChartBasics(this.bubbleChartModel);
 
@@ -118,22 +115,16 @@ public class UserViewVsItemOpenedBean extends ABasePerformanceBean {
 	}
 
 	public int getOpenAndCompletePercentage() {
-		if(this.openAndCompletePercentage < 0) {
-			return 0;
-		}
+		if(this.openAndCompletePercentage < 0) return 0;
 		return this.openAndCompletePercentage;
 	}
 
 	public String getMostProductiveView() {
-		if (this.mostProductiveView == null || this.mostProductiveView.trim().isEmpty()) {
-			return UtilGlobal.EMPTY;
-		}
-
+		if (this.mostProductiveView == null || this.mostProductiveView.trim().isEmpty()) return UtilGlobal.EMPTY;
 		return this.mostProductiveView;
 	}
 
 	public boolean isBubbleChartModelEmpty() {
-		return (this.bubbleChartModel.getData() == null ||
-				this.bubbleChartModel.getData().isEmpty());
+		return (this.bubbleChartModel.getData() == null || this.bubbleChartModel.getData().isEmpty());
 	}
 }

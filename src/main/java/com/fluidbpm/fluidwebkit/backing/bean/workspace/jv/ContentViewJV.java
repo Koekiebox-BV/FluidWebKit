@@ -133,7 +133,11 @@ public class ContentViewJV extends ABaseContentView {
 			WorkspaceJobViewLDM workFluidItmLazy = this.fluidItemsLazyModel.getOrDefault(section, new WorkspaceJobViewLDM());
 			workFluidItmLazy.clearInitialListing();
 
-			if (items != null) workFluidItmLazy.addToInitialListing(items);
+			if (items != null) {
+				//Sort the items by when they entered...
+				items.sort(Comparator.comparing(WorkspaceFluidItem::getFluidItemStepEnteredTimestamp));
+				workFluidItmLazy.addToInitialListing(items);
+			}
 
 			this.fluidItemsLazyModel.put(section, workFluidItmLazy);
 			if ((this.getWkGroup() == null || this.getWkGroup().isEnableRenderEmptyTable()) ||

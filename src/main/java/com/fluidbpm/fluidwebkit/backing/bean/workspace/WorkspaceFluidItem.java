@@ -125,7 +125,7 @@ public class WorkspaceFluidItem extends ABaseFluidVO {
 	}
 
 	public Long getFluidItemStepEnteredTimestamp() {
-		if (this.getFluidItemStepEntered() == null) return null;
+		if (this.getFluidItemStepEntered() == null) return new Date().getTime();
 		return this.getFluidItemStepEntered().getTime();
 	}
 
@@ -230,7 +230,10 @@ public class WorkspaceFluidItem extends ABaseFluidVO {
 	}
 
 	public boolean isFluidItemInWIPState() {
-		return (this.getFluidItemId() != null && this.getFluidItemId() > 0);
+		if (this.getFluidItemId() != null && this.getFluidItemId() > 0) return true;
+		if (FluidItem.FlowState.isFlowStateWIP(this.getFluidItemFormFlowState())) return true;
+
+		return false;
 	}
 
 	public boolean isFormLocked() {
