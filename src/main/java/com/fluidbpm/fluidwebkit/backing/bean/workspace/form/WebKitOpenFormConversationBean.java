@@ -643,6 +643,23 @@ public class WebKitOpenFormConversationBean extends ABaseManagedBean {
 		}
 	}
 
+	public void actionSendOn(String dialogToHideAfterSuccess, String varBtnToEnableFailedSendOn) {
+		try {
+			FlowItemClient fiClient = this.getFluidClientDS().getFlowItemClient();
+			WorkspaceFluidItem wsFlItem = this.getWsFluidItem();
+			fiClient.sendFlowItemOn(wsFlItem.getFluidItem(), true);
+			
+			this.executeJavaScript(String.format("PF('%s').hide();", dialogToHideAfterSuccess));
+			FacesMessage fMsg = new FacesMessage(FacesMessage.SEVERITY_INFO,
+					"Success", String.format("'%s' %s.", this.wsFluidItem.getFluidItemTitle(), "Send On."));
+			FacesContext.getCurrentInstance().addMessage(null, fMsg);
+		} catch (Exception except) {
+			if (UtilGlobal.isNotBlank(varBtnToEnableFailedSendOn))
+				this.executeJavaScript(String.format("PF('%s').enable();", varBtnToEnableFailedSendOn));
+			this.raiseError(except);
+		}
+	}
+
 	private void handleAttachmentStorageForForm(Long formId) {
 		this.getFreshAttachments().forEach(attItm -> {
 			attItm.setFormId(formId);

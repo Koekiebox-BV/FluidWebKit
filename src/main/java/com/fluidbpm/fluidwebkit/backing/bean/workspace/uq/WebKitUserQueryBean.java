@@ -20,8 +20,10 @@ import com.fluidbpm.fluidwebkit.backing.bean.workspace.ABaseWorkspaceBean;
 import com.fluidbpm.fluidwebkit.backing.bean.workspace.WorkspaceFluidItem;
 import com.fluidbpm.fluidwebkit.backing.bean.workspace.contentview.WebKitViewContentModelBean;
 import com.fluidbpm.fluidwebkit.backing.bean.workspace.form.IConversationCallback;
+import com.fluidbpm.fluidwebkit.backing.bean.workspace.lf.WebKitWorkspaceLookAndFeelBean;
 import com.fluidbpm.fluidwebkit.backing.bean.workspace.menu.WebKitMenuBean;
 import com.fluidbpm.program.api.vo.item.FluidItem;
+import com.fluidbpm.program.api.vo.userquery.UserQuery;
 import com.fluidbpm.program.api.vo.webkit.userquery.WebKitUserQuery;
 import com.fluidbpm.program.api.vo.webkit.viewgroup.WebKitViewGroup;
 import com.fluidbpm.program.api.vo.webkit.viewgroup.WebKitViewSub;
@@ -34,9 +36,11 @@ import javax.annotation.PostConstruct;
 import javax.enterprise.context.SessionScoped;
 import javax.inject.Inject;
 import javax.inject.Named;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
- * Bean storing personal inventory related items.
+ * Bean storing user query related items.
  */
 @SessionScoped
 @Named("webKitUserQueryBean")
@@ -55,6 +59,9 @@ public class WebKitUserQueryBean extends ABaseWorkspaceBean<UserQueryItemVO, Con
 
 	@Inject
 	private WebKitMenuBean webKitMenuBean;
+
+	@Inject
+	private WebKitWorkspaceLookAndFeelBean webKitWorkspaceLookAndFeelBean;
 
 	public static final String TGM_TABLE_PER_VIEW_SECTION_FORMAT = "%s - %s";
 	public static final String TGM_TABLE_PER_VIEW_SECTION_DEL = " - ";
@@ -170,4 +177,22 @@ public class WebKitUserQueryBean extends ABaseWorkspaceBean<UserQueryItemVO, Con
 		if (this.contentView.getSections() == null || this.contentView.getSections().length < 1) return null;
 		return this.contentView.getSections()[0];
 	}
+
+	public int getEnabledNumberOfUserQueriesCanExecute() {
+		return this.getEnabledUserQueriesCanExecuteSorted().size();
+	}
+
+	public List<UserQuery> getEnabledUserQueriesCanExecuteSorted() {
+		if (this.accessBean.getNumberOfUserQueriesCanExecute() < 1) return new ArrayList<>();
+
+		List<UserQuery> uqEnabled = new ArrayList<>();
+		this.accessBean.getUserQueriesCanExecuteSorted().stream().forEach(uqCanExec -> {
+			WebKitUserQuery wkUserQueryWithName = this.webKitWorkspaceLookAndFeelBean.getUserQueryWithName(uqCanExec.getName());
+			if (wkUserQueryWithName == null) return;
+
+			if (wkUserQueryWithName.isEnableForTopBar()) uqEnabled.add(uqCanExec);
+		});
+		return uqEnabled;
+	}
+
 }

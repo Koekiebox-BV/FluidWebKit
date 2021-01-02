@@ -144,7 +144,6 @@ public class WebKitAccessBean extends ABaseManagedBean {
 		}
 
 		//Attachments...
-
 		this.formDefinitionsAttachmentCanView = formDefinitionClient.getAllByLoggedInUserWhereCanViewAttachments();
 		this.formDefinitionsAttachmentCanEdit = formDefinitionClient.getAllByLoggedInUserWhereCanEditAttachments();
 
