@@ -100,8 +100,8 @@ public class QuickSearchBean extends ABaseManagedBean {
 			this.setTitle(formContainerParam.getTitle());
 
 			User currentUser = formContainerParam.getCurrentUser();
-			this.setActiveUser(((currentUser == null || currentUser.getUsername().trim().isEmpty())
-							? UtilGlobal.NONE: currentUser.getUsername()));
+			this.setActiveUser(((currentUser == null || UtilGlobal.isBlank(currentUser.getUsername()))
+							? UtilGlobal.NONE : currentUser.getUsername()));
 
 			this.setDateCreated(formContainerParam.getDateCreated());
 			this.setDateLastUpdated(formContainerParam.getDateLastUpdated());

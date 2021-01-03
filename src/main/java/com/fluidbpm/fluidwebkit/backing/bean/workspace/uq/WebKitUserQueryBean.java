@@ -15,6 +15,7 @@
 
 package com.fluidbpm.fluidwebkit.backing.bean.workspace.uq;
 
+import com.fluidbpm.fluidwebkit.backing.bean.ABaseManagedBean;
 import com.fluidbpm.fluidwebkit.backing.bean.config.WebKitAccessBean;
 import com.fluidbpm.fluidwebkit.backing.bean.workspace.ABaseWorkspaceBean;
 import com.fluidbpm.fluidwebkit.backing.bean.workspace.WorkspaceFluidItem;
@@ -22,6 +23,9 @@ import com.fluidbpm.fluidwebkit.backing.bean.workspace.contentview.WebKitViewCon
 import com.fluidbpm.fluidwebkit.backing.bean.workspace.form.IConversationCallback;
 import com.fluidbpm.fluidwebkit.backing.bean.workspace.lf.WebKitWorkspaceLookAndFeelBean;
 import com.fluidbpm.fluidwebkit.backing.bean.workspace.menu.WebKitMenuBean;
+import com.fluidbpm.program.api.util.UtilGlobal;
+import com.fluidbpm.program.api.vo.field.Field;
+import com.fluidbpm.program.api.vo.field.MultiChoice;
 import com.fluidbpm.program.api.vo.item.FluidItem;
 import com.fluidbpm.program.api.vo.userquery.UserQuery;
 import com.fluidbpm.program.api.vo.webkit.userquery.WebKitUserQuery;
@@ -38,6 +42,7 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Bean storing user query related items.
@@ -55,13 +60,13 @@ public class WebKitUserQueryBean extends ABaseWorkspaceBean<UserQueryItemVO, Con
 	private WebKitViewContentModelBean webKitViewContentModelBean;
 
 	@Inject
-	private WebKitAccessBean accessBean;
+	protected WebKitAccessBean accessBean;
 
 	@Inject
 	private WebKitMenuBean webKitMenuBean;
 
 	@Inject
-	private WebKitWorkspaceLookAndFeelBean webKitWorkspaceLookAndFeelBean;
+	protected WebKitWorkspaceLookAndFeelBean webKitWorkspaceLookAndFeelBean;
 
 	public static final String TGM_TABLE_PER_VIEW_SECTION_FORMAT = "%s - %s";
 	public static final String TGM_TABLE_PER_VIEW_SECTION_DEL = " - ";
@@ -123,9 +128,8 @@ public class WebKitUserQueryBean extends ABaseWorkspaceBean<UserQueryItemVO, Con
 		String sectionName = String.format("User Query - %s", userQueryLabel);
 		//String userQuerySection = this.getStringRequestParam(WebKitMenuBean.ReqParam.USER_QUERY_SECTION);
 		try {
-			if (this.getFluidClientDS() == null) {
-				return null;
-			}
+			if (this.getFluidClientDS() == null) return null;
+
 			Long userQueryId = this.getLongRequestParam(WebKitMenuBean.ReqParam.USER_QUERY_ID);
 			WebKitUserQuery wkUserQuery = this.webKitMenuBean.getWebKitUserQueryWithId(userQueryId);
 
@@ -164,18 +168,46 @@ public class WebKitUserQueryBean extends ABaseWorkspaceBean<UserQueryItemVO, Con
 
 	@Override
 	public UserQueryItemVO createABaseWebVO(
-			WebKitViewGroup group,
-			WebKitViewSub sub,
-			WebKitWorkspaceJobView view,
-			FluidItem item
+		WebKitViewGroup group,
+		WebKitViewSub sub,
+		WebKitWorkspaceJobView view,
+		FluidItem item
 	) {
 		UserQueryItemVO returnVal = new UserQueryItemVO(item);
 		return returnVal;
 	}
 
 	public String getSectionName() {
+		if (this.contentView == null) return null;
 		if (this.contentView.getSections() == null || this.contentView.getSections().length < 1) return null;
 		return this.contentView.getSections()[0];
+	}
+
+	public List<Field> getInputFieldValues() {
+		String sectionName = this.getSectionName();
+		List<Field> inputFields = new ArrayList<>();
+		if (this.getContentView() == null) return inputFields;
+
+		Map<String, List<ColumnModel>> completeColMap = this.getContentView().getColumnModelsFilterable();
+		if (sectionName != null && (completeColMap != null && completeColMap.containsKey(sectionName))) {
+			List<ABaseManagedBean.ColumnModel> columnModels = completeColMap.get(sectionName);
+			if (columnModels != null) {
+				columnModels.forEach(clmItm -> {
+					String fluidFieldName = clmItm.getFluidFieldName();
+					if (this.getContentView().getFilterByTextValueMap().get(sectionName).containsKey(fluidFieldName)) {
+						String value = this.getContentView().getFilterByTextValueMap().get(sectionName).get(fluidFieldName);
+						if (!UtilGlobal.isBlank(value)) inputFields.add(new Field(fluidFieldName, value, Field.Type.Text));
+					} else if (this.getContentView().getFilterByDecimalValueMap().containsKey(fluidFieldName)) {
+						Double val =  this.getContentView().getFilterByDecimalValueMap().get(sectionName).get(fluidFieldName);
+						if (val != null && val.doubleValue() > 0) inputFields.add(new Field(fluidFieldName, val, Field.Type.Decimal));
+					} else if (this.getContentView().getFilterBySelectItemMap().get(sectionName).containsKey(fluidFieldName)) {
+						String[] value = this.getContentView().getFilterBySelectItemMap().get(sectionName).get(fluidFieldName);
+						if (value != null && value.length > 0) inputFields.add(new Field(fluidFieldName, new MultiChoice(value), Field.Type.MultipleChoice));
+					}
+				});
+			}
+		}
+		return inputFields;
 	}
 
 	public int getEnabledNumberOfUserQueriesCanExecute() {

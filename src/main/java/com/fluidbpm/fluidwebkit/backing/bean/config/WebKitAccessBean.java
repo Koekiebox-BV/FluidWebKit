@@ -315,6 +315,17 @@ public class WebKitAccessBean extends ABaseManagedBean {
 		return (this.userQueriesCanExecute == null) ? 0 : this.userQueriesCanExecute.size();
 	}
 
+	public UserQuery getUserQueryCanExecuteById(Long userQueryId) {
+		if (this.getNumberOfUserQueriesCanExecute() < 1) return null;
+
+		if (userQueryId == null || userQueryId < 1) return null;
+
+		return this.getUserQueriesCanExecuteSorted().stream()
+				.filter(userQuery -> userQueryId.equals(userQuery.getId()))
+				.findFirst()
+				.orElse(null);
+	}
+
 	private void setFieldsForEditAndViewing(
 		FormFieldClient formFieldClientParam,
 		String formNameParam,

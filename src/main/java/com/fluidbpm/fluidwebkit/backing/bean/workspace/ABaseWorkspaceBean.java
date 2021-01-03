@@ -105,6 +105,10 @@ public abstract class ABaseWorkspaceBean<T extends ABaseWebVO, J extends ABaseCo
 		//Create new Form instance...
 		public static final String FORM_TYPE = "formType";
 		public static final String FORM_TYPE_ID = "formTypeId";
+
+		//User Query Search...
+		public static final String USER_QUERY = "userQuery";
+		public static final String USER_QUERY_ID = "userQueryId";
 	}
 
 	/**
