@@ -79,6 +79,9 @@ public class WebKitUserQueryTopBarBean extends WebKitUserQueryBean implements IC
 
 			this.setExecutingUserQueryWebKit(wkUserQueryWithName);
 			this.setExecutingUserQuery(byId);
+
+			//Set the Content View...
+			this.actionOpenMainPage();
 		} catch (Exception except) {
 			this.raiseError(except);
 		}

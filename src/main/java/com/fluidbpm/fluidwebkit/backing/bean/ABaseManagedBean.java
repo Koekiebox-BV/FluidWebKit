@@ -125,11 +125,28 @@ public abstract class ABaseManagedBean implements Serializable {
 	public static class ColumnModel implements Serializable {
 		private String header;
 		private String fluidFieldName;
+		private String fluidFieldDescription;
 		private Field.Type fluidFieldColumnType;
 
 		private boolean enabled;
 		private boolean visible;
 		private boolean filterable;
+
+		public ColumnModel(
+			String header,
+			String fluidFieldName,
+			Field.Type fluidFieldColumnType,
+			boolean enabled,
+			boolean visible,
+			boolean filterable
+		) {
+			this.setHeader(header);
+			this.setFluidFieldName(fluidFieldName);
+			this.setFluidFieldColumnType(fluidFieldColumnType);
+			this.setEnabled(enabled);
+			this.setVisible(visible);
+			this.setFilterable(filterable);
+		}
 
 		public String getFluidFieldColumnTypeTxt() {
 			return (this.getFluidFieldColumnType() == null) ? null:

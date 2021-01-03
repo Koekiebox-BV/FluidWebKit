@@ -276,6 +276,7 @@ public class ContentViewUQ extends ABaseContentView {
 							return new ABaseManagedBean.ColumnModel(
 									fieldByName.getFieldName(),
 									fieldByName.getFieldName(),
+									fieldByName.getFieldDescription(),
 									fieldByName.getTypeAsEnum(),
 									true,
 									true,
