@@ -10,6 +10,8 @@ import com.fluidbpm.ws.client.v1.userquery.UserQueryClient;
 import org.primefaces.model.FilterMeta;
 import org.primefaces.model.SortOrder;
 
+import javax.faces.application.FacesMessage;
+import javax.faces.context.FacesContext;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -41,6 +43,7 @@ public class WorkspaceUserQueryLDM extends ABaseLDM<WorkspaceFluidItem> {
 		SortOrder sortOrder,
 		Map<String, FilterMeta> filters
 	) {
+		long now = System.currentTimeMillis();
 		this.webKitUserQueryBean.setEmptyMessage(String.format("No items for '%s'.", this.label));
 		this.setRowCount(0);
 		if (this.dataListing == null) return null;
@@ -61,6 +64,18 @@ public class WorkspaceUserQueryLDM extends ABaseLDM<WorkspaceFluidItem> {
 					UserQueryItemVO vo = this.webKitUserQueryBean.createABaseWebVO(null, null, null, flItm);
 					wfiList.add(new WorkspaceFluidItem(vo));
 				});
+			}
+
+			if (result.getListingCount() > 0) {
+				FacesMessage fMsg = new FacesMessage(FacesMessage.SEVERITY_INFO,
+						"Success.", String.format("Total of %d results took %d millis.",
+						result.getListingCount(), System.currentTimeMillis() - now));
+				FacesContext.getCurrentInstance().addMessage(null, fMsg);
+			} else {
+				FacesMessage fMsg = new FacesMessage(FacesMessage.SEVERITY_WARN,
+						"No Result.", String.format("Took %d millis.",
+						result.getListingCount(), System.currentTimeMillis() - now));
+				FacesContext.getCurrentInstance().addMessage(null, fMsg);
 			}
 			return wfiList;
 		} catch (Exception err) {

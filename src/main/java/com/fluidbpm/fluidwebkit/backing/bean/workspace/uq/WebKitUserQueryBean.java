@@ -57,6 +57,7 @@ public class WebKitUserQueryBean extends ABaseWorkspaceBean<UserQueryItemVO, Con
 	private String emptyMessage;
 
 	@Inject
+	@Getter
 	private WebKitViewContentModelBean webKitViewContentModelBean;
 
 	@Inject

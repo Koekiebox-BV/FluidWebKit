@@ -20,6 +20,7 @@ import com.fluidbpm.fluidwebkit.backing.bean.config.WebKitAccessBean;
 import com.fluidbpm.fluidwebkit.backing.bean.workspace.WorkspaceFluidItem;
 import com.fluidbpm.fluidwebkit.backing.bean.workspace.contentview.ABaseContentView;
 import com.fluidbpm.fluidwebkit.backing.bean.workspace.contentview.WebKitViewContentModelBean;
+import com.fluidbpm.fluidwebkit.exception.ClientDashboardException;
 import com.fluidbpm.program.api.util.UtilGlobal;
 import com.fluidbpm.program.api.vo.field.Field;
 import com.fluidbpm.program.api.vo.field.MultiChoice;
@@ -48,7 +49,10 @@ public class ContentViewUQ extends ABaseContentView {
 	@Setter
 	private WorkspaceUserQueryLDM fluidItemsLazyModel = null;
 
+	@Getter
+	@Setter
 	private Map<String, List<ABaseManagedBean.ColumnModel>> sectionFilterableColumns;
+
 	private Map<String, List<String>> multiSelectMapping;
 
 	public static final class SystemField {
@@ -258,6 +262,10 @@ public class ContentViewUQ extends ABaseContentView {
 
 		if (this.sectionFilterableColumns == null) {
 			this.sectionFilterableColumns = new HashMap<>();
+
+			if (this.wkUserQuery == null)
+				throw new ClientDashboardException("WebKit UserQuery is not set.",
+						ClientDashboardException.ErrorCode.VALIDATION);
 
 			String userQueryName = this.wkUserQuery.getUserQuery().getName();
 			UserQuery freshFetch = this.accessBean.fetchUserQueryWithNameUsingConfigUser(userQueryName);

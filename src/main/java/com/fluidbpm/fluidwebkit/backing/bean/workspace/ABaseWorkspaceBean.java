@@ -33,6 +33,7 @@ import com.fluidbpm.program.api.vo.webkit.viewgroup.WebKitWorkspaceJobView;
 import com.fluidbpm.ws.client.FluidClientException;
 import com.fluidbpm.ws.client.v1.flow.FlowStepClient;
 import com.fluidbpm.ws.client.v1.flowitem.FlowItemClient;
+import com.fluidbpm.ws.client.v1.form.FormContainerClient;
 import com.fluidbpm.ws.client.v1.sqlutil.wrapper.SQLUtilWebSocketRESTWrapper;
 import com.fluidbpm.ws.client.v1.userquery.UserQueryClient;
 import lombok.AllArgsConstructor;
@@ -108,6 +109,7 @@ public abstract class ABaseWorkspaceBean<T extends ABaseWebVO, J extends ABaseCo
 
 		//User Query Search...
 		public static final String USER_QUERY = "userQuery";
+		public static final String RETAIN_USER_QUERY = "retainUserQuery";
 		public static final String USER_QUERY_ID = "userQueryId";
 	}
 
@@ -517,8 +519,7 @@ public abstract class ABaseWorkspaceBean<T extends ABaseWebVO, J extends ABaseCo
 	 * 
 	 * @param currentlyHaveItemOpenParam Set whether an item is currently open.
 	 *
-	 * @see this#actionOpenFormForEditingFromWorkspace()
-	 * @see this#actionOpenFormForEditingFromWorkspace(JobView, Long)
+	 * @see this#actionOpenFormForEditingFromWorkspace(WorkspaceFluidItem)
 	 */
 	public void setCurrentlyHaveItemOpen(boolean currentlyHaveItemOpenParam) {
 		this.currentlyHaveItemOpen = currentlyHaveItemOpenParam;
@@ -544,5 +545,20 @@ public abstract class ABaseWorkspaceBean<T extends ABaseWebVO, J extends ABaseCo
 
 	public String getCategory() {
 		return this.contentView == null ? null : this.contentView.getCategory();
+	}
+
+	public void actionDeleteForm(WorkspaceFluidItem workspaceFluidItem) {
+		try {
+			if (this.getFluidClientDS() == null) return;
+			if (workspaceFluidItem.getFluidItemForm() == null) return;
+
+			FormContainerClient fcc = this.getFluidClientDS().getFormContainerClient();
+			fcc.deleteFormContainer(workspaceFluidItem.getFluidItemForm());
+
+			//Refresh the data...
+			this.actionOpenMainPage();
+		} catch (Exception err) {
+			this.raiseError(err);
+		}
 	}
 }
