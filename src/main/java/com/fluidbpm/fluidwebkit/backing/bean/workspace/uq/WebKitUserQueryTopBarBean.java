@@ -18,6 +18,7 @@ package com.fluidbpm.fluidwebkit.backing.bean.workspace.uq;
 import com.fluidbpm.fluidwebkit.backing.bean.workspace.WorkspaceFluidItem;
 import com.fluidbpm.fluidwebkit.backing.bean.workspace.form.IConversationCallback;
 import com.fluidbpm.fluidwebkit.exception.ClientDashboardException;
+import com.fluidbpm.program.api.util.UtilGlobal;
 import com.fluidbpm.program.api.vo.field.Field;
 import com.fluidbpm.program.api.vo.userquery.UserQuery;
 import com.fluidbpm.program.api.vo.webkit.userquery.WebKitUserQuery;
@@ -26,8 +27,11 @@ import lombok.Getter;
 import lombok.Setter;
 
 import javax.enterprise.context.SessionScoped;
+import javax.faces.application.FacesMessage;
+import javax.faces.context.FacesContext;
 import javax.inject.Named;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
@@ -83,7 +87,10 @@ public class WebKitUserQueryTopBarBean extends WebKitUserQueryBean implements IC
 			this.setExecutingUserQuery(byId);
 
 			//Load the complete config...
-			//this.actionOpenMainPage();
+			this.actionOpenMainPage();
+
+			//Populate the model for input...
+			this.getInputFieldValues();
 		} catch (Exception except) {
 			this.raiseError(except);
 		}
@@ -98,8 +105,19 @@ public class WebKitUserQueryTopBarBean extends WebKitUserQueryBean implements IC
 	public void actionExecuteUserQueryFromTopBar(String toHideIfAnyResults, String toDisplayIfAnyResults) {
 		long now = System.currentTimeMillis();
 		try {
-			Map<String, List<ColumnModel>> completeColMap =
-					this.getContentView() == null ? null : this.getContentView().getSectionFilterableColumns();
+			Map<String, List<ColumnModel>> completeColMap = this.getContentView() == null ?
+					null : this.getContentView().getSectionFilterableColumns();
+			Map<String, Map<String, Date>> filterMapDate = this.getContentView() == null ?
+					null : this.getContentView().getFilterByDateValueMap();
+			Map<String, Map<String, Double>> filterMapDouble = this.getContentView() == null ?
+					null : this.getContentView().getFilterByDecimalValueMap();
+			Map<String, Map<String, String>> filterMapText = this.getContentView() == null ?
+					null : this.getContentView().getFilterByTextValueMap();
+			Map<String, Map<String,String[]>> filterMapSelectItm = this.getContentView() == null ?
+					null : this.getContentView().getFilterBySelectItemMap();
+
+			String userQueryLabel = this.executingUserQuery.getName();
+			//String sectionName = String.format("User Query - %s", userQueryLabel);
 
 			ContentViewUQ contentViewUserQuery = new ContentViewUQ(
 					this.getLoggedInUser(),
@@ -107,16 +125,23 @@ public class WebKitUserQueryTopBarBean extends WebKitUserQueryBean implements IC
 					this.getExecutingUserQueryWebKit(),
 					this.getWebKitViewContentModelBean(),
 					this.accessBean);
+
+			contentViewUserQuery.setSectionFilterableColumns(completeColMap);
+
+			contentViewUserQuery.setFilterByDateValueMap(filterMapDate);
+			contentViewUserQuery.setFilterByDecimalValueMap(filterMapDouble);
+			contentViewUserQuery.setFilterByTextValueMap(filterMapText);
+			contentViewUserQuery.setFilterBySelectItemMap(filterMapSelectItm);
+			
+			contentViewUserQuery.mapColumnModel();
+			contentViewUserQuery.refreshData(null);
+
 			contentViewUserQuery.setFluidItemsLazyModel(new WorkspaceUserQueryLDM(
 					this.getFluidClientDS(),
 					this.getExecutingUserQuery().getId(),
-					this.getSectionName(),
+					userQueryLabel,
 					this)
 			);
-
-			contentViewUserQuery.mapColumnModel();
-			contentViewUserQuery.refreshData(null);
-			contentViewUserQuery.setSectionFilterableColumns(completeColMap);
 
 			//Set the filter columns to what it was before...
 			this.contentView = contentViewUserQuery;
@@ -124,7 +149,8 @@ public class WebKitUserQueryTopBarBean extends WebKitUserQueryBean implements IC
 			//Map the input criteria...
 			List<Field> inputFields = this.getInputFieldValues();
 
-			this.executeJavaScript(String.format("PF('%s').hide();PF('%s').show();", toHideIfAnyResults, toDisplayIfAnyResults));
+			if (UtilGlobal.isNotBlank(toHideIfAnyResults, toDisplayIfAnyResults))
+				this.executeJavaScript(String.format("PF('%s').hide();PF('%s').show();", toHideIfAnyResults, toDisplayIfAnyResults));
 		} catch (Exception except) {
 			this.raiseError(except);
 		}
@@ -140,10 +166,18 @@ public class WebKitUserQueryTopBarBean extends WebKitUserQueryBean implements IC
 			fcc.deleteFormContainer(workspaceFluidItem.getFluidItemForm());
 
 			//Refresh the data... No need top update the whole configuration...
-			//this.actionOpenMainPage();
+			this.actionExecuteUserQueryFromTopBar(UtilGlobal.EMPTY, UtilGlobal.EMPTY);
+
+			FacesMessage fMsg = new FacesMessage(FacesMessage.SEVERITY_INFO,
+					"Success.", String.format("Deleted '%s'.", workspaceFluidItem.getFluidItemTitle()));
+			FacesContext.getCurrentInstance().addMessage(null, fMsg);
 		} catch (Exception err) {
 			this.raiseError(err);
 		}
 	}
 
+	@Override
+	protected String getAreaToUpdateAfterSave() {
+		return ":frmExecuteTopUserQueryResults:dataTableUserQueryTopBar";
+	}
 }

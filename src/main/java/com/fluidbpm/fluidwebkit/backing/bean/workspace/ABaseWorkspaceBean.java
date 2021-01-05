@@ -557,6 +557,10 @@ public abstract class ABaseWorkspaceBean<T extends ABaseWebVO, J extends ABaseCo
 
 			//Refresh the data...
 			this.actionOpenMainPage();
+
+			FacesMessage fMsg = new FacesMessage(FacesMessage.SEVERITY_INFO,
+					"Success.", String.format("Deleted '%s'.", workspaceFluidItem.getFluidItemTitle()));
+			FacesContext.getCurrentInstance().addMessage(null, fMsg);
 		} catch (Exception err) {
 			this.raiseError(err);
 		}

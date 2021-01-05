@@ -105,13 +105,17 @@ public class WebKitUserQueryBean extends ABaseWorkspaceBean<UserQueryItemVO, Con
 		this.setAreaToUpdateForDialogAfterSubmit(null);
 		try {
 			this.openFormBean.startConversation();
-			this.openFormBean.setAreaToUpdateAfterSave(":formUserQueryResults");
+			this.openFormBean.setAreaToUpdateAfterSave(this.getAreaToUpdateAfterSave());
 			this.openFormBean.setConversationCallback(this);
 			this.actionOpenForm(workspaceFluidItem);
 			this.currentlyHaveItemOpen = true;
 		} catch (Exception except) {
 			this.raiseError(except);
 		}
+	}
+
+	protected String getAreaToUpdateAfterSave() {
+		return ":formUserQueryResults";
 	}
 
 	@Override
@@ -127,7 +131,7 @@ public class WebKitUserQueryBean extends ABaseWorkspaceBean<UserQueryItemVO, Con
 	) {
 		String userQueryLabel = this.getStringRequestParam(WebKitMenuBean.ReqParam.USER_QUERY_LABEL);
 		String sectionName = String.format("User Query - %s", userQueryLabel);
-		//String userQuerySection = this.getStringRequestParam(WebKitMenuBean.ReqParam.USER_QUERY_SECTION);
+		
 		try {
 			if (this.getFluidClientDS() == null) return null;
 
