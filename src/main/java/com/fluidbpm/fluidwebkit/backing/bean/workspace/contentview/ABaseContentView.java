@@ -70,19 +70,19 @@ public abstract class ABaseContentView implements Serializable {
 
 	@Getter
 	@Setter
-	private Map<String, Map<String,String[]>> filterBySelectItemMap;
+	private Map<String, Map<String,String[]>> filterBySelectItemMap = new HashMap<>();
 
 	@Getter
 	@Setter
-	private Map<String, Map<String, String>> filterByTextValueMap;
+	private Map<String, Map<String, String>> filterByTextValueMap = new HashMap<>();
 
 	@Getter
 	@Setter
-	private Map<String,Map<String,Double>> filterByDecimalValueMap;
+	private Map<String,Map<String,Double>> filterByDecimalValueMap = new HashMap<>();
 
 	@Getter
 	@Setter
-	private Map<String, Map<String, Date>> filterByDateValueMap;
+	private Map<String, Map<String, Date>> filterByDateValueMap = new HashMap<>();
 
 	protected User loggedInUser;
 	private String textToFilterBy;
@@ -249,13 +249,9 @@ public abstract class ABaseContentView implements Serializable {
 		String sectionParam,
 		List<ABaseManagedBean.ColumnModel> columnModelForSection
 	) {
-		if (sectionParam == null || sectionParam.trim().isEmpty()) {
-			return;
-		}
+		if (sectionParam == null || sectionParam.trim().isEmpty()) return;
 
-		if (this.filterBySelectItemMap == null) {
-			this.filterBySelectItemMap = new HashMap<>();
-		}
+		if (this.filterBySelectItemMap == null) this.filterBySelectItemMap = new HashMap<>();
 
 		if (true) {
 			return;//TODO @jason, remove this.... To the select items properly...
@@ -283,8 +279,9 @@ public abstract class ABaseContentView implements Serializable {
 	/**
 	 * Update the visible column configs.
 	 */
-	public void actionUpdateVisibleColumn() {
-
+	public void actionUpdateVisibleColumn(ABaseManagedBean.ColumnModel columnModel) {
+		if (columnModel == null) return;
+		columnModel.flipVisibility();
 	}
 
 	/**
@@ -800,22 +797,18 @@ public abstract class ABaseContentView implements Serializable {
 				.forEach(itm -> {
 					String fieldName = itm.getFluidFieldName();
 					if (itm.getFluidFieldColumnType() == Field.Type.Text) {//Text
-						if (this.filterByTextValueMap == null) this.filterByTextValueMap = new HashMap<>();
 						Map<String, String> fields = this.filterByTextValueMap.getOrDefault(sectionParam, new HashMap<>());
 						fields.put(fieldName, UtilGlobal.EMPTY);
 						this.filterByTextValueMap.put(sectionParam, fields);
 					} else if (itm.getFluidFieldColumnType() == Field.Type.Decimal) {//Decimal
-						if (this.filterByDecimalValueMap == null) this.filterByDecimalValueMap = new HashMap<>();
 						Map<String, Double> fields = this.filterByDecimalValueMap.getOrDefault(sectionParam, new HashMap<>());
 						fields.put(fieldName, null);
 						this.filterByDecimalValueMap.put(sectionParam, fields);
 					} else if (itm.getFluidFieldColumnType() == Field.Type.MultipleChoice) {//Multi Choice
-						if (this.filterBySelectItemMap == null) this.filterBySelectItemMap = new HashMap<>();
 						Map<String, String[]> fields = this.filterBySelectItemMap.getOrDefault(sectionParam, new HashMap<>());
 						fields.put(fieldName, new String[]{});
 						this.filterBySelectItemMap.put(sectionParam, fields);
 					} else if (itm.getFluidFieldColumnType() == Field.Type.DateTime) {//Date Time
-						if (this.filterByDateValueMap == null) this.filterByDateValueMap = new HashMap<>();
 						Map<String, Date> fields = this.filterByDateValueMap.getOrDefault(sectionParam, new HashMap<>());
 						//fields.put(fieldName, new Date(System.currentTimeMillis()));
 						this.filterByDateValueMap.put(sectionParam, fields);

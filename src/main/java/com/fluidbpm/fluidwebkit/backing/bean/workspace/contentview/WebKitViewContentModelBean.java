@@ -41,7 +41,11 @@ public class WebKitViewContentModelBean extends ABaseManagedBean {
 		synchronized (this.columnModels) {
 			Map<String, List<ABaseManagedBean.ColumnModel>> sectionMapping =
 					this.columnModels.getOrDefault(category, new HashMap<>());
-			sectionMapping.put(sectionAlias, model);
+			List<ABaseManagedBean.ColumnModel> cloned = new ArrayList<>();
+			model.forEach(itm -> {
+				cloned.add(itm.cloneCM());
+			});
+			sectionMapping.put(sectionAlias, cloned);
 			this.columnModels.put(category, sectionMapping);
 		}
 	}

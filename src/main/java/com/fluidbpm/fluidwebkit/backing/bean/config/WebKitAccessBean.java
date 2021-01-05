@@ -176,8 +176,10 @@ public class WebKitAccessBean extends ABaseManagedBean {
 							this.fieldsForViewing.put(formDefTitle, formFieldsForView);
 							this.fieldsForEditing.put(formDefTitle, formFieldsForEdit);
 
-							this.getLogger().info(String.format("FFC-Bean: PART-2-[%s]-COMPLETE TK(%d)",
-									formDefTitle, (System.currentTimeMillis() - starting)));
+							this.getLogger().info(String.format("FFC-Bean: PART-2-[%s]-COMPLETE TK(%d) on Thread(%s)",
+									formDefTitle,
+									(System.currentTimeMillis() - starting),
+									Thread.currentThread().getName()));
 							realtimeCounter += (System.currentTimeMillis() - starting);
 						}
 					});
@@ -185,7 +187,7 @@ public class WebKitAccessBean extends ABaseManagedBean {
 		}
 
 		//We are waiting for all of them to complete...
-		CompletableFuture.allOf(allAsyncs.toArray(new CompletableFuture[]{})).join();
+		//TODO CompletableFuture.allOf(allAsyncs.toArray(new CompletableFuture[]{})).join();
 		this.getLogger().info(String.format("FFC-Bean: PART-3-COMPLETE: %d millis. Total of %d items. Should have taken %d.",
 				(System.currentTimeMillis() - now),
 				this.fieldsForViewing.size(),

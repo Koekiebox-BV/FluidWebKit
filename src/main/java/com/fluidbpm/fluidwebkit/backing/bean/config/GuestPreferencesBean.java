@@ -1,6 +1,7 @@
 package com.fluidbpm.fluidwebkit.backing.bean.config;
 
 import com.fluidbpm.fluidwebkit.backing.bean.ABaseManagedBean;
+import com.fluidbpm.program.api.util.UtilGlobal;
 import com.fluidbpm.program.api.vo.config.Configuration;
 import com.fluidbpm.program.api.vo.config.ConfigurationListing;
 import com.fluidbpm.program.api.vo.webkit.global.WebKitGlobal;
@@ -97,21 +98,21 @@ public class GuestPreferencesBean extends ABaseManagedBean {
 	public WebKitGlobal populateWebKitGlobal(String json) {
 		JSONObject jsonObj = (json == null || json.trim().isEmpty()) ?
 				new JSONObject() : new JSONObject(json);
-		if (jsonObj.isEmpty()) {
-			WebKitGlobal defaultWebKit = new WebKitGlobal(new JSONObject());
-			defaultWebKit.setLayoutMode("light");//darkMode
-			defaultWebKit.setFormType("outlined");//inputStyle
-			defaultWebKit.setLayoutColors("amber");//layoutPrimaryColors
-			defaultWebKit.setTopbarTheme("dark");//topbarTheme
-			defaultWebKit.setMenuTheme("dark");//menuTheme
-			defaultWebKit.setMenuModeDefault("layout-static layout-static-active");//menuMode
-			defaultWebKit.setMenuTypeDefault(true);//groupedMenu
-			defaultWebKit.setProfileModeDefault("popup");//profileMode
-			defaultWebKit.setComponentColors("amber");//componentThemes
-			return defaultWebKit;
-		}
 
-		return new WebKitGlobal(new JSONObject(json));
+		WebKitGlobal returnVal = (jsonObj.isEmpty()) ?
+				new WebKitGlobal(new JSONObject()) : new WebKitGlobal(new JSONObject(json));
+
+		if (UtilGlobal.isBlank(returnVal.getLayoutMode())) returnVal.setLayoutMode("light");
+		if (UtilGlobal.isBlank(returnVal.getFormType())) returnVal.setFormType("outlined");
+		if (UtilGlobal.isBlank(returnVal.getLayoutColors())) returnVal.setLayoutColors("amber");
+		if (UtilGlobal.isBlank(returnVal.getTopbarTheme())) returnVal.setTopbarTheme("dark");
+		if (UtilGlobal.isBlank(returnVal.getMenuTheme())) returnVal.setMenuTheme("dark");
+		if (returnVal.getMenuTypeDefault() == null) returnVal.setMenuTypeDefault(true);
+		if (UtilGlobal.isBlank(returnVal.getMenuModeDefault())) returnVal.setMenuModeDefault("layout-static layout-static-active");
+		if (UtilGlobal.isBlank(returnVal.getProfileModeDefault())) returnVal.setProfileModeDefault("popup");
+		if (UtilGlobal.isBlank(returnVal.getComponentColors())) returnVal.setComponentColors("amber");
+
+		return returnVal;
 	}
 
 	public String getDarkMode() {

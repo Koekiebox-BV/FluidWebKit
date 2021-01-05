@@ -27,10 +27,7 @@ import com.fluidbpm.program.api.vo.field.Field;
 import com.fluidbpm.program.api.vo.role.Role;
 import com.fluidbpm.program.api.vo.user.User;
 import com.fluidbpm.ws.client.v1.user.LoginClient;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 import org.primefaces.PrimeFaces;
 
 import javax.faces.application.FacesMessage;
@@ -120,8 +117,8 @@ public abstract class ABaseManagedBean implements Serializable {
 
 	@Getter
 	@Setter
-	@AllArgsConstructor
 	@NoArgsConstructor
+	@EqualsAndHashCode
 	public static class ColumnModel implements Serializable {
 		private String header;
 		private String fluidFieldName;
@@ -132,25 +129,76 @@ public abstract class ABaseManagedBean implements Serializable {
 		private boolean visible;
 		private boolean filterable;
 
+		private ColumnModel(ColumnModel colMdl) {
+			if (colMdl == null) return;
+
+			this.header = colMdl.header;
+			this.fluidFieldName = colMdl.fluidFieldName;
+			this.fluidFieldDescription = colMdl.fluidFieldDescription;
+			this.fluidFieldColumnType = colMdl.fluidFieldColumnType;
+			this.enabled = colMdl.enabled;
+			this.visible = colMdl.visible;
+			this.filterable = colMdl.filterable;
+		}
+
 		public ColumnModel(
 			String header,
 			String fluidFieldName,
+			String fluidFieldDescription,
 			Field.Type fluidFieldColumnType,
 			boolean enabled,
 			boolean visible,
 			boolean filterable
 		) {
-			this.setHeader(header);
-			this.setFluidFieldName(fluidFieldName);
-			this.setFluidFieldColumnType(fluidFieldColumnType);
-			this.setEnabled(enabled);
-			this.setVisible(visible);
-			this.setFilterable(filterable);
+			this.header = header;
+			this.fluidFieldName = fluidFieldName;
+			this.fluidFieldDescription = fluidFieldDescription;
+			this.fluidFieldColumnType = (fluidFieldColumnType);
+			this.enabled = (enabled);
+			this.visible = (visible);
+			this.filterable = (filterable);
+		}
+
+		public ColumnModel(
+				String header,
+				String fluidFieldName,
+				Field.Type fluidFieldColumnType,
+				boolean enabled,
+				boolean visible,
+				boolean filterable
+		) {
+			this.header = (header);
+			this.fluidFieldName = (fluidFieldName);
+			this.fluidFieldColumnType = (fluidFieldColumnType);
+			this.enabled = (enabled);
+			this.visible = (visible);
+			this.filterable = (filterable);
+		}
+
+		public void setVisible(boolean vis) {
+			//this.visible = vis;
+			//System.out.println("ignore: Hidden: "+vis);
+		}
+
+		public boolean isVisible() {
+			return this.visible;
+		}
+
+		public boolean getVisible() {
+			return this.isVisible();
 		}
 
 		public String getFluidFieldColumnTypeTxt() {
 			return (this.getFluidFieldColumnType() == null) ? null:
 					this.getFluidFieldColumnType().toString();
+		}
+
+		public ColumnModel cloneCM() {
+			return new ColumnModel(this);
+		}
+
+		public void flipVisibility() {
+			this.visible = !this.visible;
 		}
 	}
 

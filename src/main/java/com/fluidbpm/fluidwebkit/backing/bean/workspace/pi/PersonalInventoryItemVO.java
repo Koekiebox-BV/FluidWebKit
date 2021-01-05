@@ -1,6 +1,7 @@
 package com.fluidbpm.fluidwebkit.backing.bean.workspace.pi;
 
 import com.fluidbpm.fluidwebkit.backing.vo.ABaseWebVO;
+import com.fluidbpm.program.api.util.UtilGlobal;
 import com.fluidbpm.program.api.vo.field.Field;
 import com.fluidbpm.program.api.vo.form.Form;
 import com.fluidbpm.program.api.vo.item.FluidItem;
@@ -43,7 +44,7 @@ public class PersonalInventoryItemVO extends ABaseWebVO {
 		this.state = form.getState();
 
 		this.currentUser = (form.getCurrentUser() == null ||
-				form.getCurrentUser().getUsername().trim().isEmpty()) ? "[None]" :
+				UtilGlobal.isBlank(form.getCurrentUser().getUsername())) ? "[None]" :
 				form.getCurrentUser().getUsername();
 	}
 

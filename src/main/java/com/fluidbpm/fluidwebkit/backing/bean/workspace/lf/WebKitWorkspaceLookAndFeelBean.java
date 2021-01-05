@@ -19,6 +19,7 @@ import com.fluidbpm.fluidwebkit.backing.bean.ABaseManagedBean;
 import com.fluidbpm.fluidwebkit.backing.bean.config.WebKitConfigBean;
 import com.fluidbpm.fluidwebkit.ds.FluidClientDS;
 import com.fluidbpm.fluidwebkit.exception.ClientDashboardException;
+import com.fluidbpm.program.api.util.UtilGlobal;
 import com.fluidbpm.program.api.vo.config.Configuration;
 import com.fluidbpm.program.api.vo.config.ConfigurationListing;
 import com.fluidbpm.program.api.vo.field.Field;
@@ -345,17 +346,16 @@ public class WebKitWorkspaceLookAndFeelBean extends ABaseManagedBean {
 
 	public void actionAddNewViewSub(WebKitViewGroup groupToAddFor) {
 		try {
-			if (this.getInputNewGroupSubName() == null || this.getInputNewGroupSubName().trim().isEmpty()) {
+			String toAddFor = this.getStringRequestParam("groupToAddFor");
+
+			if (UtilGlobal.isBlank(this.getInputNewGroupSubName()))
 				throw new ClientDashboardException(
 						"'View Sub Name' cannot be empty.", ClientDashboardException.ErrorCode.VALIDATION);
-			}
 
 			WebKitViewSub wkViewSubToAdd = new WebKitViewSub();
 			wkViewSubToAdd.setLabel(this.getInputNewGroupSubName().trim());
 
-			if (groupToAddFor.getWebKitViewSubs() == null) {
-				groupToAddFor.setWebKitViewSubs(new ArrayList<>());
-			}
+			if (groupToAddFor.getWebKitViewSubs() == null) groupToAddFor.setWebKitViewSubs(new ArrayList<>());
 
 			Integer maxWebKitMaxOrder = groupToAddFor.getWebKitViewSubs().stream()
 					.max(Comparator.comparing(WebKitViewSub::getSubOrder))

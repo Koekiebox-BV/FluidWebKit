@@ -280,6 +280,7 @@ public class ContentViewUQ extends ABaseContentView {
 							int lastIndexOfBracket = inputRule.indexOf(RIGHT_SQ_BRACKET);
 							String formFieldName = inputRule.substring(firstIndexOfBracket+1, lastIndexOfBracket);
 							Field fieldByName = this.accessBean.getFieldBy(formFieldName);
+							if (fieldByName == null) return null;
 
 							return new ABaseManagedBean.ColumnModel(
 									fieldByName.getFieldName(),
@@ -290,6 +291,7 @@ public class ContentViewUQ extends ABaseContentView {
 									true,
 									true);
 						})
+						.filter(itm -> itm != null)
 						.collect(Collectors.toList());
 			}
 			if (inputModels == null) inputModels = new ArrayList<>();
