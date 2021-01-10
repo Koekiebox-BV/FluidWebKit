@@ -19,6 +19,7 @@ import com.fluidbpm.fluidwebkit.backing.bean.ABaseManagedBean;
 import com.fluidbpm.fluidwebkit.backing.bean.config.GuestPreferencesBean;
 import com.fluidbpm.fluidwebkit.backing.bean.config.WebKitAccessBean;
 import com.fluidbpm.fluidwebkit.backing.bean.workspace.lf.WebKitWorkspaceLookAndFeelBean;
+import com.fluidbpm.program.api.util.UtilGlobal;
 import com.fluidbpm.program.api.vo.flow.JobView;
 import com.fluidbpm.program.api.vo.userquery.UserQuery;
 import com.fluidbpm.program.api.vo.webkit.global.WebKitGlobal;
@@ -134,7 +135,6 @@ public class WebKitMenuBean extends ABaseManagedBean {
 					UISubmenu subMenToAdd = new UISubmenu();
 					subMenToAdd.setId(String.format("om_%s", itm.getMenuId()));
 					subMenToAdd.setLabel(itm.getMenuLabel());
-					subMenToAdd.setIcon(itm.getMenuIcon());
 					if (this.populateSubmenuUserQuery(subMenToAdd, menuItems)) this.submenusUserQuery.add(subMenToAdd);
 				});
 	}
@@ -252,7 +252,6 @@ public class WebKitMenuBean extends ABaseManagedBean {
 				UISubmenu subMenToAdd = new UISubmenu();
 				subMenToAdd.setId(String.format("om_%s", menuItmWhereParent.getMenuId()));
 				subMenToAdd.setLabel(menuItmWhereParent.getMenuLabel());
-				subMenToAdd.setIcon(menuItmWhereParent.getMenuIcon());
 				if (userHasAccLcl = this.populateSubmenuUserQuery(subMenToAdd, menuItems))
 					submenu.getElements().add(subMenToAdd);
 			} else {
@@ -272,11 +271,12 @@ public class WebKitMenuBean extends ABaseManagedBean {
 							.isPresent();
 				}
 
-				UIMenuItem menuItemSub = new UIMenuItem();
-				menuItemSub.setId(String.format("menUQId_%s", menuItmWhereParent.getMenuId()));
-				menuItemSub.setIcon(menuItmWhereParent.getMenuIcon());
-				menuItemSub.setValue(menuItmWhereParent.getMenuLabel());
-				menuItemSub.setAjax(true);
+				UIMenuItem menuItem = new UIMenuItem();
+				menuItem.setId(String.format("menUQId_%s", menuItmWhereParent.getMenuId()));
+				String menuIcon = menuItmWhereParent.getMenuIcon();
+				menuItem.setIcon(this.iconSafe(menuIcon, ICON_DEFAULT_SUB));
+				menuItem.setValue(menuItmWhereParent.getMenuLabel());
+				menuItem.setAjax(true);
 				final String onCompleteJS;
 				if (userQuery == null) {
 					onCompleteJS = String.format("javascript:rcOpenNoConfig([{name:'%s', value:\"%s\"}]);",
@@ -297,12 +297,16 @@ public class WebKitMenuBean extends ABaseManagedBean {
 							ReqParam.MISSING_CONFIG_MSG,
 							String.format("No Access. Please request Access to User Query '%s'.", userQuery.getName()));
 				}
-				menuItemSub.setOncomplete(onCompleteJS);
-				if (userHasAccLcl) submenu.getElements().add(menuItemSub);
+				menuItem.setOncomplete(onCompleteJS);
+				if (userHasAccLcl) submenu.getElements().add(menuItem);
 			}
 			if (userHasAccLcl) userHasAccess.set(true);
 		});
 		return userHasAccess.get();
+	}
+
+	private String iconSafe(String icon, String defaultVal) {
+		return String.format(" %s ", UtilGlobal.isBlank(icon) ? defaultVal : icon);
 	}
 
 	private void buildWorkspaceMenu() {
@@ -327,7 +331,6 @@ public class WebKitMenuBean extends ABaseManagedBean {
 			if (!webKitGroupItm.isTGMCombined()) {
 				UISubmenu menuItemGroup = new UISubmenu();
 				menuItemGroup.setLabel(groupLabel);
-				menuItemGroup.setIcon((groupIcon == null || groupIcon.trim().isEmpty()) ? ICON_DEFAULT_GROUP : groupIcon);
 
 				List<WebKitViewSub> subsForGroup = webKitGroupItm.getWebKitViewSubs();
 				if (subsForGroup != null && !subsForGroup.isEmpty()) {
@@ -337,7 +340,7 @@ public class WebKitMenuBean extends ABaseManagedBean {
 						String subIcon = sub.getIcon();
 						UIMenuItem menuItemSub = new UIMenuItem();
 						menuItemSub.setId(String.format("menSubId%d", sub.getSubOrder()));
-						menuItemSub.setIcon((subIcon == null || subIcon.trim().isEmpty()) ? ICON_DEFAULT_SUB : subIcon);
+						menuItemSub.setIcon(this.iconSafe(subIcon, ICON_DEFAULT_SUB));
 						menuItemSub.setValue(subLabel);
 						menuItemSub.setAjax(true);
 						List<Long> jobViews = this.getViewIdsForSub(sub);
@@ -371,7 +374,7 @@ public class WebKitMenuBean extends ABaseManagedBean {
 				groupBaseToAdd = menuItemGroup;
 			} else {
 				UIMenuItem menuItemGroup = new UIMenuItem();
-				menuItemGroup.setIcon((groupIcon == null || groupIcon.trim().isEmpty()) ? ICON_DEFAULT_GROUP : groupIcon);
+				menuItemGroup.setIcon(this.iconSafe(groupIcon, ICON_DEFAULT_GROUP));
 				menuItemGroup.setValue(groupLabel);
 				menuItemGroup.setAjax(true);
 				List<Long> jobViews = this.getViewIdsForGroup(webKitGroupItm);

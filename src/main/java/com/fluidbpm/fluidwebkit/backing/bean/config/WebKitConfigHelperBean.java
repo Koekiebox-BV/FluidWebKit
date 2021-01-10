@@ -121,7 +121,7 @@ public class WebKitConfigHelperBean extends ABaseManagedBean {
 
 	public void actionDoNothing() {
 		//Do nothing...
-		this.getLogger().debug("Action fired to do nothing.");
+		//this.getLogger().debug("Action fired to do nothing.");
 	}
 
 	public String convertToUpper(String toConvert) {

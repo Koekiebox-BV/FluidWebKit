@@ -33,7 +33,6 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.util.Date;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -187,10 +186,10 @@ public class PushServlet extends ABaseFWKServlet {
 
 					if ((lastUnreadCount != lastUnreadCountUpdated) || lastReadCount != lastReadCountUpdated) {
 						this.addRefreshNotificationCommandObjectToArray(jsonCmdObject, 0);
-						this.webKitNotificationsBean.getLogger().info(String.format(
+						/*this.webKitNotificationsBean.getLogger().debug(String.format(
 							"%s: Sent update for '%s'.",
 							new Date().toString(), Commands.REFRESH_USER_NOTIFICATION
-						));
+						));*/
 					}
 				}
 		}
