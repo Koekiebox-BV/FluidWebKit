@@ -82,10 +82,6 @@ public class WebKitWorkspaceLookAndFeelBean extends ABaseManagedBean {
 
 	@Getter
 	@Setter
-	private Map<String, List<String>> inputVisibleColumns;
-
-	@Getter
-	@Setter
 	private Map<String, List<String>> inputVisibleButtons;
 
 	private WebKitGlobal webKitGlobal;
@@ -137,7 +133,6 @@ public class WebKitWorkspaceLookAndFeelBean extends ABaseManagedBean {
 		this.inputSubToRouteFieldMapping = new HashMap<>();
 		this.groupToViewMapping = new HashMap<>();
 		this.groupToRouteFieldMapping = new HashMap<>();
-		this.inputVisibleColumns = new HashMap<>();
 		this.inputVisibleButtons = new HashMap<>();
 		this.webKitUserQueries = new ArrayList<>();
 		this.webKitForms = new ArrayList<>();
@@ -193,7 +188,6 @@ public class WebKitWorkspaceLookAndFeelBean extends ABaseManagedBean {
 
 			//Set the Route Fields for the Groups...
 			this.groupToViewMapping.forEach((key, value) -> {
-				this.inputVisibleColumns.put(key, new ArrayList<>());
 				this.inputVisibleButtons.put(key, new ArrayList<>());
 
 				List<Field> routeFieldsForGroup = new ArrayList<>();
@@ -211,7 +205,6 @@ public class WebKitWorkspaceLookAndFeelBean extends ABaseManagedBean {
 			//Merge the properties with what is stored...
 			this.webKitViewGroups.forEach(groupItm -> {
 				String groupName = groupItm.getJobViewGroupName();
-				this.inputVisibleColumns.put(groupName, WebKitViewGroup.VisibleColumnItems.asListFrom(groupItm));
 				this.inputVisibleButtons.put(groupName, WebKitViewGroup.VisibleButtonItems.asListFrom(groupItm));
 
 				List<WebKitViewSub> subsForGroup = groupItm.getWebKitViewSubs();
@@ -501,17 +494,13 @@ public class WebKitWorkspaceLookAndFeelBean extends ABaseManagedBean {
 			if (this.webKitViewGroups != null && this.tabsViewed.contains(TabId.tabWS)) {
 				this.webKitViewGroups.forEach(groupItm -> {
 					String groupName = groupItm.getJobViewGroupName();
-					List<String> visibleColumns = new ArrayList<>();
 					List<String> visibleButtons = new ArrayList<>();
-					Object objVisibleColumns = this.inputVisibleColumns.get(groupName);
-					if (objVisibleColumns instanceof String[])
-						for (String selected : (String[])objVisibleColumns) visibleColumns.add(selected);
 
 					Object objVisibleButtons = this.inputVisibleButtons.get(groupName);
 					if (objVisibleButtons instanceof String[])
 						for (String selected : (String[])objVisibleButtons) visibleButtons.add(selected);
 
-					this.updateGroupPropertyBasedOnSelected(visibleColumns, visibleButtons, groupItm);
+					this.updateGroupPropertyBasedOnSelected(visibleButtons, groupItm);
 				});
 
 				WebKitViewGroupListing listingVg = new WebKitViewGroupListing();
@@ -651,67 +640,9 @@ public class WebKitWorkspaceLookAndFeelBean extends ABaseManagedBean {
 	}
 
 	private void updateGroupPropertyBasedOnSelected(
-		List<String> visibleColumns,
 		List<String> visibleButtons,
 		WebKitViewGroup groupToUpdate
 	) {
-		//Columns...
-		if (visibleColumns.contains(WebKitViewGroup.VisibleColumnItems.showColumnID.name())) {
-			groupToUpdate.setShowColumnID(true);
-		} else {
-			groupToUpdate.setShowColumnID(false);
-		}
-		if (visibleColumns.contains(WebKitViewGroup.VisibleColumnItems.showColumnFormType.name())) {
-			groupToUpdate.setShowColumnFormType(true);
-		} else {
-			groupToUpdate.setShowColumnFormType(false);
-		}
-		if (visibleColumns.contains(WebKitViewGroup.VisibleColumnItems.showColumnTitle.name())) {
-			groupToUpdate.setShowColumnTitle(true);
-		} else {
-			groupToUpdate.setShowColumnTitle(false);
-		}
-		if (visibleColumns.contains(WebKitViewGroup.VisibleColumnItems.showColumnStepEntryTime.name())) {
-			groupToUpdate.setShowColumnStepEntryTime(true);
-		} else {
-			groupToUpdate.setShowColumnStepEntryTime(false);
-		}
-		if (visibleColumns.contains(WebKitViewGroup.VisibleColumnItems.showColumnDateCreated.name())) {
-			groupToUpdate.setShowColumnDateCreated(true);
-		} else {
-			groupToUpdate.setShowColumnDateCreated(false);
-		}
-		if (visibleColumns.contains(WebKitViewGroup.VisibleColumnItems.showColumnDateLastUpdated.name())) {
-			groupToUpdate.setShowColumnDateLastUpdated(true);
-		} else {
-			groupToUpdate.setShowColumnDateLastUpdated(false);
-		}
-		if (visibleColumns.contains(WebKitViewGroup.VisibleColumnItems.showColumnCurrentFlow.name())) {
-			groupToUpdate.setShowColumnCurrentFlow(true);
-		} else {
-			groupToUpdate.setShowColumnCurrentFlow(false);
-		}
-		if (visibleColumns.contains(WebKitViewGroup.VisibleColumnItems.showColumnCurrentStep.name())) {
-			groupToUpdate.setShowColumnCurrentStep(true);
-		} else {
-			groupToUpdate.setShowColumnCurrentStep(false);
-		}
-		if (visibleColumns.contains(WebKitViewGroup.VisibleColumnItems.showColumnCurrentView.name())) {
-			groupToUpdate.setShowColumnCurrentView(true);
-		} else {
-			groupToUpdate.setShowColumnCurrentView(false);
-		}
-		if (visibleColumns.contains(WebKitViewGroup.VisibleColumnItems.showColumnProgressPercentage.name())) {
-			groupToUpdate.setShowColumnProgressPercentage(true);
-		} else {
-			groupToUpdate.setShowColumnProgressPercentage(false);
-		}
-		if (visibleColumns.contains(WebKitViewGroup.VisibleColumnItems.showColumnAttachment.name())) {
-			groupToUpdate.setShowColumnAttachment(true);
-		} else {
-			groupToUpdate.setShowColumnAttachment(false);
-		}
-
 		//Buttons...
 		if (visibleButtons.contains(WebKitViewGroup.VisibleButtonItems.showButtonBulkUpdate.name())) {
 			groupToUpdate.setShowButtonBulkUpdate(true);

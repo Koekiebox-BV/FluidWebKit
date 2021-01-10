@@ -161,13 +161,15 @@ public class ContentViewJV extends ABaseContentView {
 	public List<ABaseManagedBean.ColumnModel> getColumnHeadersForSection(String sectionAlias) {
 		List<ABaseManagedBean.ColumnModel> returnVal = new ArrayList<>();
 		if (this.wkGroup == null) return returnVal;
+		if (this.wkSub == null) return returnVal;
+
 
 		//Index - 01 - Attachment
 		returnVal.add(new ABaseManagedBean.ColumnModel(
 				this.wkGroup.getAttachmentColumnLabel(),
 				this.wkGroup.getAttachmentColumnLabel(),
 				Field.Type.Label,
-				this.wkGroup.isShowColumnAttachment(),
+				this.wkSub.isShowColumnAttachment(),
 				true,
 				false));
 
@@ -176,7 +178,7 @@ public class ContentViewJV extends ABaseContentView {
 				SystemField.TITLE,
 				SystemField.TITLE,
 				Field.Type.Text,
-				this.wkGroup.isShowColumnTitle(),
+				this.wkSub.isShowColumnTitle(),
 				true,
 				true));
 
@@ -185,7 +187,7 @@ public class ContentViewJV extends ABaseContentView {
 				SystemField.ID,
 				SystemField.ID,
 				Field.Type.Text,
-				this.wkGroup.isShowColumnID(),
+				this.wkSub.isShowColumnID(),
 				true,
 				true));
 
@@ -194,7 +196,7 @@ public class ContentViewJV extends ABaseContentView {
 				SystemField.FORM_TYPE,
 				SystemField.FORM_TYPE,
 				Field.Type.MultipleChoice,
-				this.wkGroup.isShowColumnFormType(),
+				this.wkSub.isShowColumnFormType(),
 				true,
 				true));
 
@@ -203,7 +205,7 @@ public class ContentViewJV extends ABaseContentView {
 				SystemField.FLOW,
 				SystemField.FLOW,
 				Field.Type.MultipleChoice,
-				this.wkGroup.isShowColumnCurrentFlow(),
+				this.wkSub.isShowColumnCurrentFlow(),
 				true,
 				true));
 
@@ -212,7 +214,7 @@ public class ContentViewJV extends ABaseContentView {
 				SystemField.STEP,
 				SystemField.STEP,
 				Field.Type.MultipleChoice,
-				this.wkGroup.isShowColumnCurrentStep(),
+				this.wkSub.isShowColumnCurrentStep(),
 				true,
 				true));
 
@@ -221,7 +223,7 @@ public class ContentViewJV extends ABaseContentView {
 				SystemField.VIEW,
 				SystemField.VIEW,
 				Field.Type.MultipleChoice,
-				this.wkGroup.isShowColumnCurrentView(),
+				this.wkSub.isShowColumnCurrentView(),
 				true,
 				true));
 
@@ -230,7 +232,7 @@ public class ContentViewJV extends ABaseContentView {
 				SystemField.DATE_STEP_ENTERED,
 				SystemField.DATE_STEP_ENTERED,
 				Field.Type.DateTime,
-				this.wkGroup.isShowColumnStepEntryTime(),
+				this.wkSub.isShowColumnStepEntryTime(),
 				true,
 				true));
 
@@ -239,7 +241,7 @@ public class ContentViewJV extends ABaseContentView {
 				SystemField.DATE_CREATED,
 				SystemField.DATE_CREATED,
 				Field.Type.DateTime,
-				this.wkGroup.isShowColumnDateCreated(),
+				this.wkSub.isShowColumnDateCreated(),
 				true,
 				true));
 
@@ -248,7 +250,7 @@ public class ContentViewJV extends ABaseContentView {
 				SystemField.DATE_LAST_UPDATED,
 				SystemField.DATE_LAST_UPDATED,
 				Field.Type.DateTime,
-				this.wkGroup.isShowColumnDateLastUpdated(),
+				this.wkSub.isShowColumnDateLastUpdated(),
 				true,
 				true));
 
