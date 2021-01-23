@@ -15,6 +15,7 @@ import com.fluidbpm.program.api.vo.flow.Flow;
 import com.fluidbpm.program.api.vo.form.Form;
 import com.fluidbpm.program.api.vo.form.FormListing;
 import com.fluidbpm.program.api.vo.form.TableRecord;
+import com.fluidbpm.program.api.vo.item.CustomWebAction;
 import com.fluidbpm.program.api.vo.item.FluidItem;
 import com.fluidbpm.program.api.vo.user.User;
 import com.fluidbpm.program.api.vo.webkit.form.WebKitForm;
@@ -544,10 +545,17 @@ public class WebKitOpenFormConversationBean extends ABaseManagedBean {
 					tableRecordToSave.getFormType(), tableRecordToSave.getFormFields()));
 			tableRecordToSave.setCurrentUser(this.getLoggedInUser());
 
-			Field fieldBy = this.accessBean.getFieldBy(
-					this.getWsFluidItem().getFluidItemFormType(),
-					tableFieldToAddFor.getFieldName());
+			Field fieldBy = this.accessBean.getFieldBy(this.getWsFluidItem().getFluidItemFormType(), tableFieldToAddFor.getFieldName());
 			if (fieldBy != null) tableRecordToSave.setTableFieldParentId(fieldBy.getId());
+
+			//Apply the Custom Action when applicable...
+			String customAction = this.getThirdPartyWebActionTaskIdForFormType(tableRecordToSave.getFormType());
+			if (customAction != null) {
+				FormContainerClient fcc = this.getFluidClientDS().getFormContainerClient();
+				CustomWebAction execActionResult = fcc.executeCustomWebAction(
+						customAction, true, fieldBy.getId(), tableRecordToSave);
+				this.mergeFormFieldsFromCustomAction(execActionResult, tableRecordToSave);
+			}
 
 			//Add another placeholder...
 			if (PLACEHOLDER_TITLE.equals(prevTitle))
@@ -591,7 +599,7 @@ public class WebKitOpenFormConversationBean extends ABaseManagedBean {
 				}
 
 				//Update the Table Records...
-				Form formToSave = this.toFormToSave(wsFlItem);
+				Form formToSave = this.toFormToSave(wsFlItem, fcClient);
 				this.upsertTableRecordsInFluid(formToSave);
 
 				//Existing Item...
@@ -611,7 +619,7 @@ public class WebKitOpenFormConversationBean extends ABaseManagedBean {
 				//Create a new item...
 				boolean sendingOn = (webKitForm.isSendToWorkflowAfterCreate() &&
 						UtilGlobal.isNotBlank(this.inputSelectedWorkflow));
-				Form formToSave = this.toFormToSave(wsFlItem);
+				Form formToSave = this.toFormToSave(wsFlItem, fcClient);
 				final Form createdForm = fcClient.createFormContainer(formToSave, !sendingOn);
 				formToSave.setId(createdForm.getId());
 
@@ -714,7 +722,10 @@ public class WebKitOpenFormConversationBean extends ABaseManagedBean {
 				});
 	}
 
-	private Form toFormToSave(WorkspaceFluidItem fluidItem) {
+	private Form toFormToSave(
+		WorkspaceFluidItem fluidItem,
+		FormContainerClient formContClient
+	) {
 		Form returnVal = new Form(fluidItem.getFluidItemFormType());
 		returnVal.setId(fluidItem.getFluidItemFormId());
 		returnVal.setFormType(fluidItem.getFluidItemFormType());
@@ -722,9 +733,34 @@ public class WebKitOpenFormConversationBean extends ABaseManagedBean {
 
 		WebKitForm wkForm = this.lookAndFeelBean.getWebKitFormWithFormDef(returnVal.getFormType());
 		returnVal.setFormTypeId(fluidItem.getFluidItemForm().getFormTypeId());
+		returnVal.setFormType(fluidItem.getFluidItemForm().getFormType());
 		returnVal.setTitle(this.generateNewFormTitle(wkForm == null ? null : wkForm.getNewFormTitleFormula(),
 				fluidItem.getFluidItemFormType(), fluidItem.getFormFieldsEdit()));
+
+		//Apply the Custom Action when applicable...
+		String customAction = this.getThirdPartyWebActionTaskIdForFormType(returnVal.getFormType());
+		if (customAction != null) {
+			CustomWebAction execActionResult = formContClient.executeCustomWebAction(customAction, returnVal);
+			this.mergeFormFieldsFromCustomAction(execActionResult, returnVal);
+		}
+
 		return returnVal;
+	}
+
+	private void mergeFormFieldsFromCustomAction(CustomWebAction execActionResult, Form formToUpdate) {
+		Form execForm = execActionResult.getForm();
+		if (execForm != null && (execForm.getTitle() != null && !execForm.getTitle().trim().isEmpty()))
+			formToUpdate.setTitle(execForm.getTitle());
+		List<Field> execFields = (execForm == null) ? null : execForm.getFormFields();
+		if (execFields == null || execFields.isEmpty()) return;
+
+		execFields.forEach(fieldItemFromExec -> {
+			formToUpdate.setFieldValue(
+					fieldItemFromExec.getFieldName(),
+					fieldItemFromExec.getFieldValue(),
+					fieldItemFromExec.getTypeAsEnum()
+			);
+		});
 	}
 
 	protected String generateNewFormTitle(

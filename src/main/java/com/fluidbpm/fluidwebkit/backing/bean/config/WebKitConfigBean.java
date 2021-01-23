@@ -18,6 +18,8 @@ package com.fluidbpm.fluidwebkit.backing.bean.config;
 import com.fluidbpm.fluidwebkit.backing.bean.ABaseManagedBean;
 import com.fluidbpm.program.api.util.UtilGlobal;
 import com.fluidbpm.program.api.vo.config.ConfigurationListing;
+import com.fluidbpm.program.api.vo.thirdpartylib.ThirdPartyLibraryTaskIdentifier;
+import com.fluidbpm.ws.client.v1.config.ConfigurationClient;
 import lombok.Getter;
 import lombok.Setter;
 import org.primefaces.model.DefaultStreamedContent;
@@ -29,6 +31,7 @@ import javax.inject.Named;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.util.List;
 
 /**
  * Bean to take care of the config login.
@@ -50,6 +53,8 @@ public class WebKitConfigBean extends ABaseManagedBean {
 	private String webKitPersonalInventoryJSON;
 
 	private boolean configUserLoginSuccess = false;
+	
+	private List<ThirdPartyLibraryTaskIdentifier> thirdPartyLibTaskIdentifiers;
 
 	/**
 	 * Login related configuration keys.
@@ -82,11 +87,15 @@ public class WebKitConfigBean extends ABaseManagedBean {
 			this.bindConfigFluidClientDS();
 
 			//CONFIGS...
-			ConfigurationListing configurationListing =
-					this.getFluidClientDSConfig().getConfigurationClient().getAllConfigurations();
+			ConfigurationClient configClient = this.getFluidClientDSConfig().getConfigurationClient();
+
+			ConfigurationListing configurationListing = configClient.getAllConfigurations();
 			//Populate...
 			this.setPropertiesBasedOnListing(configurationListing);
 			this.configUserLoginSuccess = true;
+			
+			//Third Party Libs...
+			this.thirdPartyLibTaskIdentifiers = configClient.getAllThirdPartyTaskIdentifiers();
 		} catch (Exception fce) {
 			this.raiseError(fce);
 		}

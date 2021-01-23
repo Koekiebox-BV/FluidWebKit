@@ -16,6 +16,7 @@
 package com.fluidbpm.fluidwebkit.backing.bean;
 
 import com.fluidbpm.GitDescribe;
+import com.fluidbpm.fluidwebkit.backing.bean.config.WebKitConfigBean;
 import com.fluidbpm.fluidwebkit.backing.bean.logger.ILogger;
 import com.fluidbpm.fluidwebkit.backing.utility.Globals;
 import com.fluidbpm.fluidwebkit.backing.utility.RaygunUtil;
@@ -23,11 +24,17 @@ import com.fluidbpm.fluidwebkit.ds.FluidClientDS;
 import com.fluidbpm.fluidwebkit.ds.FluidClientPool;
 import com.fluidbpm.fluidwebkit.exception.ClientDashboardException;
 import com.fluidbpm.fluidwebkit.exception.WebSessionExpiredException;
+import com.fluidbpm.program.api.util.UtilGlobal;
 import com.fluidbpm.program.api.vo.field.Field;
+import com.fluidbpm.program.api.vo.form.Form;
 import com.fluidbpm.program.api.vo.role.Role;
+import com.fluidbpm.program.api.vo.thirdpartylib.ThirdPartyLibraryTaskIdentifier;
 import com.fluidbpm.program.api.vo.user.User;
 import com.fluidbpm.ws.client.v1.user.LoginClient;
-import lombok.*;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 import org.primefaces.PrimeFaces;
 
 import javax.faces.application.FacesMessage;
@@ -45,6 +52,8 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+
+import static com.fluidbpm.program.api.vo.thirdpartylib.ThirdPartyLibraryTaskIdentifier.ThirdPartyLibraryTaskType.CustomWebAction;
 
 /**
  * Base backing bean for all JSF beans.
@@ -70,6 +79,9 @@ public abstract class ABaseManagedBean implements Serializable {
 	public static final String CONFIG_USER_GLOBAL_ID = "FCP_CONFIG_USER";
 	private static Long LAST_TIME_CONF_LOGGED_IN = 0L;
 	private static int LOGIN_DURATION_HOURS = 4;
+
+	@Inject
+	private WebKitConfigBean webKitConfigBean;
 
 	/**
 	 * Get the standard Raygun error tag.
@@ -310,26 +322,19 @@ public abstract class ABaseManagedBean implements Serializable {
 	}
 
 	protected String getCustomUserFieldByName(String fieldNameParam){
-		if (fieldNameParam == null || fieldNameParam.isEmpty()){
-			return null;
-		}
+		if (fieldNameParam == null || fieldNameParam.isEmpty()) return null;
 
 		try {
 			List<Field> userFields = this.getLoggedInUser().getUserFields();
-			if (userFields == null || userFields.isEmpty()){
-				return null;
-			}
+			if (userFields == null || userFields.isEmpty()) return null;
 
 			for (Field userField : userFields) {
 				if (fieldNameParam.equals(userField.getFieldName())) {
-					if (userField.getFieldValue() == null) {
-						return null;
-					}
+					if (userField.getFieldValue() == null) return null;
 
 					return userField.getFieldValue().toString();
 				}
 			}
-
 			return null;
 		} catch (WebSessionExpiredException wsee) {
 			return null;
@@ -358,9 +363,7 @@ public abstract class ABaseManagedBean implements Serializable {
 		ExternalContext externalContext = (facCont == null) ? null : facCont.getExternalContext();
 		Object sessObj = (externalContext == null) ? null :externalContext.getSession(false);
 
-		if (sessObj instanceof HttpSession) {
-			return (HttpSession)sessObj;
-		}
+		if (sessObj instanceof HttpSession) return (HttpSession)sessObj;
 
 		return null;
 	}
@@ -431,9 +434,7 @@ public abstract class ABaseManagedBean implements Serializable {
 		Map<String, String> params =
 				FacesContext.getCurrentInstance().getExternalContext().getRequestParameterMap();
 
-		if (params == null) {
-			params = new HashMap<>();
-		}
+		if (params == null) params = new HashMap<>();
 
 		return params;
 	}
@@ -444,9 +445,7 @@ public abstract class ABaseManagedBean implements Serializable {
 	}
 
 	public boolean doesUserHavePermissionArray(String ... permissionParam) {
-		if (permissionParam == null || permissionParam.length == 0) {
-			return false;
-		}
+		if (permissionParam == null || permissionParam.length == 0) return false;
 
 		User loggedInUser = null;
 		try {
@@ -458,15 +457,11 @@ public abstract class ABaseManagedBean implements Serializable {
 			return false;
 		}
 
-		if (User.ADMIN_USERNAME.equals(loggedInUser.getUsername().toLowerCase())) {
-			return true;
-		}
+		if (User.ADMIN_USERNAME.equals(loggedInUser.getUsername().toLowerCase())) return true;
 
 		//When not the admin user...
 		List<Role> roles = loggedInUser.getRoles();
-		if (roles == null || roles.isEmpty()) {
-			return false;
-		}
+		if (roles == null || roles.isEmpty()) return false;
 
 		Map<String, Boolean> accessMap = new HashMap<>();
 		for (String param : permissionParam) {
@@ -498,9 +493,7 @@ public abstract class ABaseManagedBean implements Serializable {
 
 	protected long getLongRequestParam(String paramName) {
 		Map<String, String> params = getFacesRequestParameterMap();
-		if (params == null || params.isEmpty()) {
-			return -1;
-		}
+		if (params == null || params.isEmpty()) return -1;
 
 		try {
 			return Long.parseLong(params.get(paramName));
@@ -512,9 +505,7 @@ public abstract class ABaseManagedBean implements Serializable {
 	protected boolean getBooleanRequestParam(String paramName) {
 		Map<String, String> params = getFacesRequestParameterMap();
 
-		if (params == null || params.isEmpty()) {
-			return false;
-		}
+		if (params == null || params.isEmpty()) return false;
 
 		try {
 			return Boolean.parseBoolean(params.get(paramName));
@@ -538,9 +529,7 @@ public abstract class ABaseManagedBean implements Serializable {
 
 	protected String getStringRequestParam(String paramName) {
 		Map<String, String> params = getFacesRequestParameterMap();
-		if (params == null || params.isEmpty()) {
-			return null;
-		}
+		if (params == null || params.isEmpty()) return null;
 
 		return params.get(paramName);
 	}
@@ -551,9 +540,7 @@ public abstract class ABaseManagedBean implements Serializable {
 
 	protected void redirectToPage(String pageParam,boolean isRootParam) {
 		String pagesFolder = "/pages/";
-		if (isRootParam) {
-			pagesFolder = "/";
-		}
+		if (isRootParam) pagesFolder = "/";
 
 		FacesContext facesContext = FacesContext.getCurrentInstance();
 		HttpServletResponse response = (HttpServletResponse) facesContext.getExternalContext().getResponse();
@@ -628,9 +615,7 @@ public abstract class ABaseManagedBean implements Serializable {
 
 	protected boolean doesUserHaveAccessToRole(String roleParam) {
 		try {
-			if (this.getLoggedInUser().getUsername().equals("admin")) {
-				return true;
-			}
+			if (this.getLoggedInUser().getUsername().equals(User.ADMIN_USERNAME)) return true;
 			return this.getLoggedInUser().doesUserHaveAccessToRole(roleParam);
 		} catch (WebSessionExpiredException exp) {
 			return false;
@@ -642,9 +627,8 @@ public abstract class ABaseManagedBean implements Serializable {
 	 * @param javascriptParam
 	 */
 	public void executeJavaScript(String javascriptParam) {
-		if (javascriptParam == null || javascriptParam.trim().isEmpty()) {
-			return;
-		}
+		if (javascriptParam == null || javascriptParam.trim().isEmpty()) return;
+
 		//For PF 6.2 >
 		PrimeFaces.current().executeScript(javascriptParam);
 	}
@@ -660,4 +644,29 @@ public abstract class ABaseManagedBean implements Serializable {
 	protected String getConfigUserPasswordProperty() {
 		return Globals.getConfigUserPasswordProperty();
 	}
+
+	protected boolean isThirdPartyWebActionEnabledFormType(String formType) {
+		String actionForFormType = this.getThirdPartyWebActionTaskIdForFormType(formType);
+		return UtilGlobal.isNotBlank(actionForFormType);
+	}
+
+	protected String getThirdPartyWebActionTaskIdForFormType(String formType) {
+		List<ThirdPartyLibraryTaskIdentifier> thirdPartyLibs = this.webKitConfigBean.getThirdPartyLibTaskIdentifiers();
+		if (thirdPartyLibs == null) return null;
+
+		ThirdPartyLibraryTaskIdentifier taskIdentifier = thirdPartyLibs.stream()
+				.filter(itm -> itm.getThirdPartyLibraryTaskType() == CustomWebAction && itm.getFormDefinitions() != null)
+				.filter(itm -> {
+					List<Form> formDefs = itm.getFormDefinitions();
+					Form matchedForm = formDefs.stream()
+							.filter(formDefItm -> formType.equals(formDefItm.getFormType()))
+							.findFirst()
+							.orElse(null);
+					return matchedForm != null;
+				})
+				.findFirst()
+				.orElse(null);
+		return (taskIdentifier == null) ? null : taskIdentifier.getTaskIdentifier();
+	}
+
 }
