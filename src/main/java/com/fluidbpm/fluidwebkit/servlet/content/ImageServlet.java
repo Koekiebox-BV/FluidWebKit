@@ -162,21 +162,22 @@ public class ImageServlet extends ABaseFWKServlet {
 			return new ImageStreamedContent(
 					placeholderImageBytes,
 					"image/png",
-					"lost.png");
+					"no_attachments_yet.png");
 		}
 
-		attachmentsForForm = attachmentsForForm.stream()
+		List<Attachment> imgAttachmentsForForm = attachmentsForForm.stream()
 				.filter(itm -> itm.isFileTypeImage())
 				.collect(Collectors.toList());
-		if (attachmentsForForm == null || attachmentsForForm.isEmpty()) {
-			byte[] placeholderImageBytes = ImageUtil.getThumbnailPlaceholderImageForLost();
+		if (imgAttachmentsForForm.isEmpty()) {
+			byte[] placeholderImageBytes = this.getNonImagePreviewForContentType(attachmentsForForm.get(0).getContentType());
 			if (thumbnailScale > 0) placeholderImageBytes = this.scale(placeholderImageBytes, thumbnailScale, 0);
 			return new ImageStreamedContent(
 					placeholderImageBytes,
 					"image/png",
-					"lost.png");
+					"prev_for_non_image_attachment.png");
 		}
 
+		//Ideal...
 		Attachment imageAttachmentById = null;
 		if (attachmentId > 0) {
 			imageAttachmentById = attachmentClientParam.getAttachmentById(
@@ -255,8 +256,16 @@ public class ImageServlet extends ABaseFWKServlet {
 
 		String contentTypeLower = contentType.trim().toLowerCase();
 		switch (contentTypeLower) {
-			case "application/pdf" : return ImageUtil.getThumbnailPlaceholderImageForPDF();
-			default: return null;
+			case "application/pdf" :
+				return ImageUtil.getThumbnailPlaceholderImageForPDF();
+			case "image/png" :
+			case "image/jpeg" :
+				return null;
+			default: {
+				this.raiseError(new Exception(
+						String.format("Content Type [%s] is not yet mapped for default image.", contentTypeLower)), null);
+				return null;
+			}
 		}
 	}
 }

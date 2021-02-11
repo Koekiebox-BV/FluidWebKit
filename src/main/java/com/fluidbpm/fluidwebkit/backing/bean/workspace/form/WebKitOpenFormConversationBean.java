@@ -671,7 +671,8 @@ public class WebKitOpenFormConversationBean extends ABaseManagedBean {
 	private void handleAttachmentStorageForForm(Long formId) {
 		this.getFreshAttachments().forEach(attItm -> {
 			attItm.setFormId(formId);
-			this.getFluidClientDS().getAttachmentClient().createAttachment(attItm);
+			Attachment created = this.getFluidClientDS().getAttachmentClient().createAttachment(attItm);
+			attItm.setId(created.getId());
 		});
 		this.getDeletedAttachments().forEach(attItm -> {
 			attItm.setFormId(formId);
@@ -679,7 +680,7 @@ public class WebKitOpenFormConversationBean extends ABaseManagedBean {
 		});
 		this.getUpdatedAttachments().forEach(attItm -> {
 			attItm.setFormId(formId);
-			this.attachmentBean.removeAttachmentFromRAWCache(attItm.getId());
+			this.attachmentBean.removeAttachmentFromRAWCache(formId);
 			this.getFluidClientDS().getAttachmentClient().createAttachment(attItm);
 		});
 		this.attachmentBean.clearAttachmentCacheFor(new Form(formId));

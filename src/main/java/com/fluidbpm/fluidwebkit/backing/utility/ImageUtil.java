@@ -68,6 +68,10 @@ public class ImageUtil {
 		return getContentForPath("/image/thumbnail/pdf.png");
 	}
 
+	public static byte[] getThumbnailPlaceholderImageForImage() throws IOException {
+		return getContentForPath("/image/thumbnail/image.png");
+	}
+
 	public static byte[] getThumbnailPlaceholderImageForLost() throws IOException {
 		return getContentForPath("/image/thumbnail/lost.png");
 	}

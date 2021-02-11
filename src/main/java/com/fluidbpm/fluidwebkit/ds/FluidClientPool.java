@@ -17,19 +17,9 @@ package com.fluidbpm.fluidwebkit.ds;
 
 import com.fluidbpm.fluidwebkit.exception.WebSessionExpiredException;
 import com.fluidbpm.fluidwebkit.qualifier.WebKitResource;
-import com.fluidbpm.program.api.util.cache.exception.FluidCacheException;
-import com.fluidbpm.ws.client.FluidClientException;
-import com.fluidbpm.ws.client.v1.ABaseClientWS;
-import com.fluidbpm.ws.client.v1.config.ConfigurationClient;
-import com.fluidbpm.ws.client.v1.sqlutil.wrapper.SQLUtilWebSocketRESTWrapper;
-import com.fluidbpm.ws.client.v1.user.PersonalInventoryClient;
-import com.fluidbpm.ws.client.v1.user.UserClient;
 import com.google.common.cache.Cache;
 
 import javax.inject.Inject;
-import java.io.Closeable;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Data Source for all the Fluid API's.
@@ -59,9 +49,7 @@ public class FluidClientPool {
 	 * @return
 	 */
 	public FluidClientDS get(String uiSessionId) {
-		if (uiSessionId == null) {
-			return null;
-		}
+		if (uiSessionId == null) return null;
 		FluidClientDS returnVal = this.fluidDS.getIfPresent(uiSessionId);
 		if (returnVal == null) {
 			throw new WebSessionExpiredException(

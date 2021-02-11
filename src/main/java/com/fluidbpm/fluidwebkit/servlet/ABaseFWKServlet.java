@@ -33,17 +33,13 @@ public class ABaseFWKServlet extends HttpServlet {
 		return null;
 	}
 
-	/**
-	 * @param exception
-	 */
 	public void raiseError(Exception exception, HttpServletRequest req) {
 		this.webKitHelpBean.getLogger().error(exception.getMessage(), exception);
 		if (RaygunUtil.isRaygunEnabled()) {
 			new RaygunUtil(this.webKitHelpBean.getRaygunUITag()).raiseErrorToRaygun(exception, this.getLoggedInUser(req));
 		}
-		if (FacesContext.getCurrentInstance() == null) {
-			return;
-		}
+		if (FacesContext.getCurrentInstance() == null) return;
+
 		FacesMessage fMsg = new FacesMessage(
 				FacesMessage.SEVERITY_ERROR, "Failed.", exception.getMessage());
 		FacesContext.getCurrentInstance().addMessage(null, fMsg);

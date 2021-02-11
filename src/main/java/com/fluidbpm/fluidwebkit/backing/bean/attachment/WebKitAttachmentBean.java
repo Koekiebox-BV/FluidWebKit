@@ -19,6 +19,7 @@ import com.fluidbpm.fluidwebkit.backing.bean.ABaseManagedBean;
 import com.fluidbpm.fluidwebkit.backing.bean.workspace.WorkspaceFluidItem;
 import com.fluidbpm.fluidwebkit.qualifier.cache.FormAttachmentsCache;
 import com.fluidbpm.fluidwebkit.qualifier.cache.FormImageCache;
+import com.fluidbpm.fluidwebkit.qualifier.cache.RAWAttachmentsCache;
 import com.fluidbpm.fluidwebkit.servlet.content.ImageStreamedContent;
 import com.fluidbpm.program.api.util.UtilGlobal;
 import com.fluidbpm.program.api.vo.attachment.Attachment;
@@ -46,11 +47,15 @@ import java.util.stream.Collectors;
 public class WebKitAttachmentBean extends ABaseManagedBean {
 	@Inject
 	@FormAttachmentsCache
-	private Cache<Long, List<Attachment>> attachmentCache;
+	private Cache<Long, List<Attachment>> formAttachmentCache;
+
+	@Inject
+	@RAWAttachmentsCache
+	private Cache<Long, Attachment> attachmentCache;
 
 	@Inject
 	@FormImageCache
-	private Cache<String, ImageStreamedContent> formImageCache;
+	private Cache<String, ImageStreamedContent> formImageStreamedCache;
 
 	public List<Attachment> actionFetchAttachmentsForForm(Form form, int fromIndex, int maxAllowed) {
 		List<Attachment> returnVal = this.actionFetchAttachmentsForForm(form);
@@ -66,7 +71,7 @@ public class WebKitAttachmentBean extends ABaseManagedBean {
 		try {
 			if (this.getFluidClientDS() == null || (form == null || form.getId() == null)) return null;
 
-			List<Attachment> attachments = this.attachmentCache.getIfPresent(form.getId());
+			List<Attachment> attachments = this.formAttachmentCache.getIfPresent(form.getId());
 			if (attachments != null) {
 				return attachments.stream()
 						.map(toMap -> {
@@ -81,7 +86,7 @@ public class WebKitAttachmentBean extends ABaseManagedBean {
 			attachments = attachmentClient.getAttachmentsByForm(form, true);
 			if (attachments == null) return null;attachments.sort(Comparator.comparing(Attachment::getId));
 
-			this.attachmentCache.put(form.getId(), attachments);
+			this.formAttachmentCache.put(form.getId(), attachments);
 			List<Attachment> returnVal = attachments.stream()
 							.map(toMap -> {
 								Attachment returnValClone = toMap.clone();
@@ -99,7 +104,7 @@ public class WebKitAttachmentBean extends ABaseManagedBean {
 
 	public void clearAttachmentCacheFor(Form formToClearFor) {
 		if (formToClearFor == null || formToClearFor.getId() == null) return;
-		this.attachmentCache.invalidate(formToClearFor.getId());
+		this.formAttachmentCache.invalidate(formToClearFor.getId());
 	}
 
 	public boolean actionDoesAttachmentExist(Form formToCheck) {
@@ -157,7 +162,7 @@ public class WebKitAttachmentBean extends ABaseManagedBean {
 				attachment.getContentType(),
 				attachment.getName());
 		String key = String.format("%s_%d", conversationId, attachmentIndex);
-		this.formImageCache.put(key, streamedContent);
+		this.formImageStreamedCache.put(key, streamedContent);
 	}
 
 	public void removeAttachmentFreshFromCache(
@@ -166,13 +171,17 @@ public class WebKitAttachmentBean extends ABaseManagedBean {
 	) {
 		for (int index = 0; index < numberOfAttachments; index++) {
 			String key = String.format("%s_%d", conversationId, index);
-			this.formImageCache.invalidate(key);
+			this.formImageStreamedCache.invalidate(key);
 		}
 	}
 
 	public void removeAttachmentFromRAWCache(Long attachmentId) {
 		if (attachmentId == null || attachmentId < 1) return;
 
+		this.formImageStreamedCache.invalidate(attachmentId);
+
+		//Need to optimise later. We need only remove the items for specific att...
+		this.formImageStreamedCache.invalidateAll();
 		this.attachmentCache.invalidate(attachmentId);
 	}
 

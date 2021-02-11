@@ -19,6 +19,7 @@ import com.fluidbpm.fluidwebkit.backing.bean.ABaseManagedBean;
 import com.fluidbpm.program.api.util.UtilGlobal;
 import com.fluidbpm.program.api.vo.config.ConfigurationListing;
 import com.fluidbpm.program.api.vo.thirdpartylib.ThirdPartyLibraryTaskIdentifier;
+import com.fluidbpm.ws.client.FluidClientException;
 import com.fluidbpm.ws.client.v1.config.ConfigurationClient;
 import lombok.Getter;
 import lombok.Setter;
@@ -31,6 +32,7 @@ import javax.inject.Named;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -95,7 +97,14 @@ public class WebKitConfigBean extends ABaseManagedBean {
 			this.configUserLoginSuccess = true;
 			
 			//Third Party Libs...
-			this.thirdPartyLibTaskIdentifiers = configClient.getAllThirdPartyTaskIdentifiers();
+			try {
+				this.thirdPartyLibTaskIdentifiers = configClient.getAllThirdPartyTaskIdentifiers();
+			} catch (FluidClientException fce) {
+				if (FluidClientException.ErrorCode.NO_RESULT == fce.getErrorCode())
+					this.thirdPartyLibTaskIdentifiers = new ArrayList<>();
+				else
+					throw fce;
+			}
 		} catch (Exception fce) {
 			this.raiseError(fce);
 		}
