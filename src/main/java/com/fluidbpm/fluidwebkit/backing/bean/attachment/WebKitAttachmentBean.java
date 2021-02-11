@@ -104,6 +104,9 @@ public class WebKitAttachmentBean extends ABaseManagedBean {
 
 	public void clearAttachmentCacheFor(Form formToClearFor) {
 		if (formToClearFor == null || formToClearFor.getId() == null) return;
+
+		this.formImageStreamedCache.invalidateAll();
+
 		this.formAttachmentCache.invalidate(formToClearFor.getId());
 	}
 
@@ -178,10 +181,7 @@ public class WebKitAttachmentBean extends ABaseManagedBean {
 	public void removeAttachmentFromRAWCache(Long attachmentId) {
 		if (attachmentId == null || attachmentId < 1) return;
 
-		this.formImageStreamedCache.invalidate(attachmentId);
-
 		//Need to optimise later. We need only remove the items for specific att...
-		this.formImageStreamedCache.invalidateAll();
 		this.attachmentCache.invalidate(attachmentId);
 	}
 
