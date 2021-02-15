@@ -24,6 +24,8 @@ public class ABaseFWKServlet extends HttpServlet {
 	private WebKitConfigHelperBean webKitHelpBean;
 
 	protected User getLoggedInUser(HttpServletRequest req) {
+		if (req == null) return null;
+		
 		HttpSession httpSession = req.getSession(false);
 		Object loggedInUser = null;
 		if (httpSession != null) {
@@ -35,9 +37,8 @@ public class ABaseFWKServlet extends HttpServlet {
 
 	public void raiseError(Exception exception, HttpServletRequest req) {
 		this.webKitHelpBean.getLogger().error(exception.getMessage(), exception);
-		if (RaygunUtil.isRaygunEnabled()) {
-			new RaygunUtil(this.webKitHelpBean.getRaygunUITag()).raiseErrorToRaygun(exception, this.getLoggedInUser(req));
-		}
+		if (RaygunUtil.isRaygunEnabled()) new RaygunUtil(this.webKitHelpBean.getRaygunUITag()).raiseErrorToRaygun(exception, this.getLoggedInUser(req));
+
 		if (FacesContext.getCurrentInstance() == null) return;
 
 		FacesMessage fMsg = new FacesMessage(
