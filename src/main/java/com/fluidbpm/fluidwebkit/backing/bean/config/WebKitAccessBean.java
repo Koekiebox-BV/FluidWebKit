@@ -21,7 +21,6 @@ import com.fluidbpm.program.api.vo.field.MultiChoice;
 import com.fluidbpm.program.api.vo.flow.JobView;
 import com.fluidbpm.program.api.vo.flow.JobViewListing;
 import com.fluidbpm.program.api.vo.form.Form;
-import com.fluidbpm.program.api.vo.form.FormFieldListing;
 import com.fluidbpm.program.api.vo.user.User;
 import com.fluidbpm.program.api.vo.userquery.UserQuery;
 import com.fluidbpm.program.api.vo.userquery.UserQueryListing;
@@ -91,6 +90,8 @@ public class WebKitAccessBean extends ABaseManagedBean {
 
 		if (this.getFluidClientDS() == null) return;
 
+		long start = System.currentTimeMillis();
+
 		try {
 			this.loggedInUsername = this.getLoggedInUserUsername();
 			this.getLogger().info("FFC-Bean: Caching FormFieldsAndDef");
@@ -104,7 +105,7 @@ public class WebKitAccessBean extends ABaseManagedBean {
 		} catch (Exception except) {
 			this.raiseError(except);
 		} finally {
-			this.getLogger().info("FFC-Bean: DONE");
+			this.getLogger().info(String.format("FFC-Bean: DONE [%d] millis.", (System.currentTimeMillis() - start)));
 		}
 	}
 
@@ -155,43 +156,34 @@ public class WebKitAccessBean extends ABaseManagedBean {
 		long now = System.currentTimeMillis();
 
 		//Set all the field definitions...
-		List<CompletableFuture> allAsyncs = new ArrayList<>();
+		//List<CompletableFuture> allAsyncs = new ArrayList<>();
+
+		List<String> formDefsToFetchFor = new ArrayList<>();
 		for (Form formDef : this.allFormDefinitionsForLoggedIn) {
 			//Ignore any configuration [Form Definitions]...
 			String formDefTitle = formDef.getFormType();
 			if (this.getFormDefsToIgnore() != null && this.getFormDefsToIgnore().contains(formDefTitle)) continue;
+			formDefsToFetchFor.add(formDefTitle);
+		}
+		
+		try (FormFieldClient formFieldClient = new FormFieldClient(
+			this.getFluidClientDS().getEndpoint(), this.getFluidClientDS().getServiceTicket())
+		) {
+			List<Form> allFormsWithViewFields =
+					formFieldClient.getFieldsByFormNamesAndLoggedInUser(false, true, formDefsToFetchFor);
+			allFormsWithViewFields.forEach(itm -> {
+				this.fieldsForViewing.put(itm.getFormType(), itm.getFormFields());
+			});
 
-			//Run the following asynchronous...
-			String endpoint = this.getFluidClientDS().getEndpoint(),
-					serviceTicket = this.getFluidClientDS().getServiceTicket();
-			CompletableFuture toAdd = CompletableFuture.runAsync(
-					() -> {
-						try (FormFieldClient formFieldClient = new FormFieldClient(endpoint, serviceTicket)) {
-							long starting = System.currentTimeMillis();
-							List<Field> formFieldsForView = new ArrayList<>();
-							List<Field> formFieldsForEdit = new ArrayList<>();
-
-							this.setFieldsForEditAndViewing(formFieldClient, formDefTitle, formFieldsForView, formFieldsForEdit);
-
-							this.fieldsForViewing.put(formDefTitle, formFieldsForView);
-							this.fieldsForEditing.put(formDefTitle, formFieldsForEdit);
-
-							this.getLogger().info(String.format("FFC-Bean: PART-2-[%s]-COMPLETE TK(%d) on Thread(%s)",
-									formDefTitle,
-									(System.currentTimeMillis() - starting),
-									Thread.currentThread().getName()));
-							realtimeCounter += (System.currentTimeMillis() - starting);
-						}
-					});
-			allAsyncs.add(toAdd);
+			List<Form> allFormsWithEditFields =
+					formFieldClient.getFieldsByFormNamesAndLoggedInUser(true, false, formDefsToFetchFor);
+			allFormsWithEditFields.forEach(itm -> {
+				this.fieldsForEditing.put(itm.getFormType(), itm.getFormFields());
+			});
 		}
 
-		//We are waiting for all of them to complete...
-		//TODO CompletableFuture.allOf(allAsyncs.toArray(new CompletableFuture[]{})).join();
 		this.getLogger().info(String.format("FFC-Bean: PART-3-COMPLETE: %d millis. Total of %d items. Should have taken %d.",
-				(System.currentTimeMillis() - now),
-				this.fieldsForViewing.size(),
-				realtimeCounter));
+				(System.currentTimeMillis() - now), this.fieldsForViewing.size(), realtimeCounter));
 	}
 
 	private void cacheUserQueries() {
@@ -226,6 +218,7 @@ public class WebKitAccessBean extends ABaseManagedBean {
 		FlowStepClient stepClient = this.getFluidClientDS().getFlowStepClient();
 		JobViewListing jobViewsListing = stepClient.getJobViewsByLoggedInUser();
 		this.jobViewsCanAccess = jobViewsListing.getListing();
+
 		if (this.jobViewsCanAccess != null) {
 			Collections.sort(this.jobViewsCanAccess,
 					Comparator
@@ -236,6 +229,7 @@ public class WebKitAccessBean extends ABaseManagedBean {
 
 	public List<Field> getFieldsViewableForFormDef(String formDefinitionParam) {
 		if (formDefinitionParam == null || formDefinitionParam.trim().isEmpty()) return null;
+
 		if (this.fieldsForViewing == null || this.fieldsForViewing.isEmpty()) return null;
 
 		return this.fieldsForViewing.get(formDefinitionParam);
@@ -259,12 +253,11 @@ public class WebKitAccessBean extends ABaseManagedBean {
 				.orElse(null);
 	}
 
-	public Field getFieldBy(
-			String formDefinitionParam,
-			String formFieldParam
-	) {
+	public Field getFieldBy(String formDefinitionParam, String formFieldParam) {
 		if (formDefinitionParam == null || formDefinitionParam.trim().isEmpty()) return null;
+
 		if (formFieldParam == null || formFieldParam.trim().isEmpty()) return null;
+
 		if (this.fieldsForViewing == null || this.fieldsForViewing.isEmpty()) return null;
 
 		List<Field> fieldsForFormDef = this.fieldsForViewing.get(formDefinitionParam);
@@ -280,6 +273,7 @@ public class WebKitAccessBean extends ABaseManagedBean {
 
 	public Field getFieldBy(String formFieldParam) {
 		if (formFieldParam == null || formFieldParam.trim().isEmpty()) return null;
+
 		if (this.fieldsForViewing == null || this.fieldsForViewing.isEmpty()) return null;
 
 		return this.fieldsForViewing.values().stream()
@@ -291,6 +285,7 @@ public class WebKitAccessBean extends ABaseManagedBean {
 
 	public List<Field> getFieldsEditableForFormDef(String formDefinitionParam) {
 		if (formDefinitionParam == null || formDefinitionParam.trim().isEmpty()) return null;
+
 		if (this.fieldsForEditing == null || this.fieldsForEditing.isEmpty()) return null;
 
 		return this.fieldsForEditing.get(formDefinitionParam);
@@ -301,8 +296,7 @@ public class WebKitAccessBean extends ABaseManagedBean {
 	}
 
 	public int getNumberOfFormDefinitionsCanCreateInstanceOf() {
-		return (this.formDefinitionsCanCreateInstanceOf == null) ? 0 :
-				this.formDefinitionsCanCreateInstanceOf.size();
+		return (this.formDefinitionsCanCreateInstanceOf == null) ? 0 : this.formDefinitionsCanCreateInstanceOf.size();
 	}
 
 	public List<Form> getFormDefinitionsCanCreateInstanceOfIncTableFieldsSorted() {
@@ -326,41 +320,6 @@ public class WebKitAccessBean extends ABaseManagedBean {
 				.filter(userQuery -> userQueryId.equals(userQuery.getId()))
 				.findFirst()
 				.orElse(null);
-	}
-
-	private void setFieldsForEditAndViewing(
-		FormFieldClient formFieldClientParam,
-		String formNameParam,
-		List<Field> fieldsForViewingParam,
-		List<Field> fieldsForEditingParam
-	) {
-		//View fields...
-		FormFieldListing formFieldViewFields =
-				formFieldClientParam.getFieldsByFormNameAndLoggedInUser(
-						formNameParam, false);
-		List<Field> viewListing = formFieldViewFields.getListing();
-		if (fieldsForViewingParam != null && viewListing != null) fieldsForViewingParam.addAll(viewListing);
-
-		//Populate Multi Choice Fields...
-		this.populateAvailableMultiChoicesForFields(
-				this.getFluidClientDSConfig().getFormFieldClient(), fieldsForViewingParam);
-
-		//Edit fields...
-		FormFieldListing formFieldEditFields =
-				formFieldClientParam.getFieldsByFormNameAndLoggedInUser(
-						formNameParam,
-						true);
-
-		List<Field> editListing = formFieldEditFields.getListing();
-		if (fieldsForEditingParam != null && editListing != null) fieldsForEditingParam.addAll(editListing);
-	}
-
-	private void populateAvailableMultiChoicesForFields(FormFieldClient formFieldClientParam, List<Field> fieldsForViewingParam) {
-		if (fieldsForViewingParam == null || fieldsForViewingParam.isEmpty()) return;
-
-		for (Field fieldToPopulate : fieldsForViewingParam) {
-			this.populateAvailableMultiChoicesForField(formFieldClientParam, fieldToPopulate);
-		}
 	}
 
 	public void populateAvailableMultiChoicesForField(FormFieldClient formFieldClientParam, Field fieldsForViewingParam) {

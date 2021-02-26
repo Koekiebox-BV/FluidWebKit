@@ -68,6 +68,18 @@ public class ImageUtil {
 		return getContentForPath("/image/thumbnail/pdf.png");
 	}
 
+	public static byte[] getThumbnailPlaceholderImageForTXT() throws IOException {
+		return getContentForPath("/image/thumbnail/txt.png");
+	}
+
+	public static byte[] getThumbnailPlaceholderImageForEXCEL() throws IOException {
+		return getContentForPath("/image/thumbnail/excel.png");
+	}
+
+	public static byte[] getThumbnailPlaceholderImageForWORD() throws IOException {
+		return getContentForPath("/image/thumbnail/word.png");
+	}
+
 	public static byte[] getThumbnailPlaceholderImageForImage() throws IOException {
 		return getContentForPath("/image/thumbnail/image.png");
 	}

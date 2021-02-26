@@ -170,6 +170,9 @@ public class ImageServlet extends ABaseFWKServlet {
 				.collect(Collectors.toList());
 		if (imgAttachmentsForForm.isEmpty()) {
 			byte[] placeholderImageBytes = this.getNonImagePreviewForContentType(attachmentsForForm.get(0).getContentType());
+			if (placeholderImageBytes == null) {
+				placeholderImageBytes = ImageUtil.getThumbnailPlaceholderImageForLost();
+			}
 			if (thumbnailScale > 0) placeholderImageBytes = this.scale(placeholderImageBytes, thumbnailScale, 0);
 			return new ImageStreamedContent(
 					placeholderImageBytes,
@@ -258,6 +261,12 @@ public class ImageServlet extends ABaseFWKServlet {
 		switch (contentTypeLower) {
 			case "application/pdf" :
 				return ImageUtil.getThumbnailPlaceholderImageForPDF();
+			case "text/plain" :
+				return ImageUtil.getThumbnailPlaceholderImageForTXT();
+			case "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" :
+				return ImageUtil.getThumbnailPlaceholderImageForEXCEL();
+			case "application/vnd.openxmlformats-officedocument.wordprocessingml.document" :
+				return ImageUtil.getThumbnailPlaceholderImageForWORD();
 			case "image/png" :
 			case "image/jpeg" :
 				return null;
