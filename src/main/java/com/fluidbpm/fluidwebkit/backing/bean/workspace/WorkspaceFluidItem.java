@@ -173,7 +173,6 @@ public class WorkspaceFluidItem extends ABaseFluidVO {
 
 		List<Field> editFieldsList = new ArrayList<>();
 		visibleFields.forEach(visibleField -> {
-
 			Object fieldValueToSet = formFields.stream()
 							.filter(itm -> itm.getFieldName().equals(visibleField.getFieldName()))
 							.findFirst()

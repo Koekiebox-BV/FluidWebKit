@@ -161,11 +161,9 @@ public class WebKitOpenFormConversationBean extends ABaseManagedBean {
 
 			WebKitForm webKitForm = this.lookAndFeelBean.getWebKitFormWithFormDef(formType);
 			if (webKitForm == null && WebKitForm.EMAIL_FORM_TYPE.equals(formType)) webKitForm = WebKitForm.emailWebKitForm();
-			else if (webKitForm == null) {
-				throw new ClientDashboardException(
-						String.format("Form Type '%s' WebKit Form not configured.", formType),
-						ClientDashboardException.ErrorCode.VALIDATION);
-			}
+			else if (webKitForm == null) throw new ClientDashboardException(
+					String.format("Form Type '%s' WebKit Form not configured.", formType),
+					ClientDashboardException.ErrorCode.VALIDATION);
 
 			List<Field> editable = this.accessBean.getFieldsEditableForFormDef(formType);
 			List<Field> viewable = this.accessBean.getFieldsViewableForFormDef(formType);
@@ -261,8 +259,9 @@ public class WebKitOpenFormConversationBean extends ABaseManagedBean {
 				this.setDialogHeaderTitle(freshFetchForm.getTitle());
 
 				if (webKitForm.isSendToWorkflowAfterCreate()) {
-					if (associatedFlowsForFormDef != null && associatedFlowsForFormDef.size() == 1)
+					if (associatedFlowsForFormDef != null && associatedFlowsForFormDef.size() == 1) {
 						this.setInputSelectedWorkflow(associatedFlowsForFormDef.get(0).getName());
+					}
 				}
 			}
 			fluidItem.setForm(freshFetchForm);

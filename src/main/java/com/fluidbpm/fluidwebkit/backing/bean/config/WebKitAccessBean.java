@@ -34,7 +34,6 @@ import javax.annotation.PostConstruct;
 import javax.enterprise.context.SessionScoped;
 import javax.inject.Named;
 import java.util.*;
-import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
 /**
@@ -195,21 +194,12 @@ public class WebKitAccessBean extends ABaseManagedBean {
 		//Run the following asynchronous...
 		String endpoint = this.getFluidClientDSConfig().getEndpoint(),
 				serviceTicket = this.getFluidClientDSConfig().getServiceTicket();
-		List<CompletableFuture> allAsyncs = new ArrayList<>();
-		this.userQueriesCanExecute.forEach(itm -> {
-			CompletableFuture toAdd = CompletableFuture.runAsync(
-					() -> {
-						try (FormFieldClient formFieldClient = new FormFieldClient(endpoint, serviceTicket)) {
-							List<Field> fieldsForUserQuery = formFieldClient.getFormFieldsByUserQuery(itm);
-							synchronized (this.userQueryFieldMapping) {
-								this.userQueryFieldMapping.put(itm.getId(), fieldsForUserQuery);
-							}
-						}
-					});
-			allAsyncs.add(toAdd);
-		});
-		//We are waiting for all of them to complete...
-		CompletableFuture.allOf(allAsyncs.toArray(new CompletableFuture[]{})).join();
+		try (FormFieldClient formFieldClient = new FormFieldClient(endpoint, serviceTicket)) {
+			List<UserQuery> uqWithFields = formFieldClient.getFormFieldsByUserQueries(this.userQueriesCanExecute);
+			uqWithFields.forEach(uqItm -> {
+				this.userQueryFieldMapping.put(uqItm.getId(), uqItm.getInputs());
+			});
+		}
 
 		Collections.sort(this.userQueriesCanExecute, Comparator.comparing(UserQuery::getName));
 	}
