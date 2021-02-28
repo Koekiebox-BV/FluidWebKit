@@ -190,6 +190,8 @@ public class WebKitAccessBean extends ABaseManagedBean {
 		UserQueryListing userQueries = userQueryClient.getAllUserQueriesByLoggedInUser();
 		this.userQueriesCanExecute = userQueries.getListing();
 		if (this.userQueriesCanExecute == null) this.userQueriesCanExecute = new ArrayList<>();
+		
+		this.getLogger().info("FFC-Bean: We have all the user queries. Now to fetch the fields for them.");
 
 		//Run the following asynchronous...
 		String endpoint = this.getFluidClientDSConfig().getEndpoint(),

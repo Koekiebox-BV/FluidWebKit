@@ -167,6 +167,7 @@ public class QuickSearchBean extends ABaseManagedBean {
 		dataToSend.setId(selected.getId());
 		dataToSend.setFormType(selected.getFormContainerType());
 		dataToSend.setCurrentUser(this.getLoggedInUser());
+		dataToSend.setTitle(selected.getTitle());
 		this.setDialogHeaderTitle(null);
 
 		WorkspaceFluidItem newItem = new WorkspaceFluidItem(

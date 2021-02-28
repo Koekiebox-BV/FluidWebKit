@@ -16,6 +16,7 @@
 package com.fluidbpm.fluidwebkit.backing.bean.workspace.lf;
 
 import com.fluidbpm.fluidwebkit.backing.bean.ABaseManagedBean;
+import com.fluidbpm.fluidwebkit.backing.bean.config.WebKitAccessBean;
 import com.fluidbpm.fluidwebkit.backing.bean.config.WebKitConfigBean;
 import com.fluidbpm.fluidwebkit.ds.FluidClientDS;
 import com.fluidbpm.fluidwebkit.exception.ClientDashboardException;
@@ -50,6 +51,7 @@ import javax.faces.application.FacesMessage;
 import javax.faces.context.FacesContext;
 import javax.faces.event.AjaxBehaviorEvent;
 import javax.faces.model.SelectItem;
+import javax.inject.Inject;
 import javax.inject.Named;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -116,6 +118,9 @@ public class WebKitWorkspaceLookAndFeelBean extends ABaseManagedBean {
 	private String inputNewRootMenuLabel;
 
 	private Map<String, List<SelectItem>> tableFieldsByFormDef;
+
+	@Inject
+	private WebKitAccessBean accessBean;
 
 	private List<TabId> tabsViewed;
 	private enum TabId {
@@ -744,10 +749,9 @@ public class WebKitWorkspaceLookAndFeelBean extends ABaseManagedBean {
 
 		if (this.tableFieldsByFormDef.containsKey(formDef)) return this.tableFieldsByFormDef.get(formDef);
 
-		List<Field> fieldsForFormDef = this.getFluidClientDSConfig().getFormFieldClient().getFieldsByFormNameAndLoggedInUser(
-						formDef, false).getListing();
+		List<Field> fieldsForFormDef = this.accessBean.getFieldsViewableForFormDef(formDef);
 		List<SelectItem> returnVal = new ArrayList<>();
-		if (fieldsForFormDef == null) return null;
+		if (fieldsForFormDef == null) return returnVal;
 
 		fieldsForFormDef.stream()
 				.filter(itm -> Field.Type.Table == itm.getTypeAsEnum())
