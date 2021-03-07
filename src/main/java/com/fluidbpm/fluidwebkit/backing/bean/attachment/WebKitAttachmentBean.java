@@ -155,6 +155,15 @@ public class WebKitAttachmentBean extends ABaseManagedBean {
 		return postFix;
 	}
 
+	public String actionGenerateURLForAttToPDF(WorkspaceFluidItem wfItem, Attachment attachment) {
+		String postFix = String.format(
+				"/convert_attachment_raw_to_pdf?formId=%d&formDefinition=%s&attachmentId=%d",
+				wfItem.getFluidItemFormId(),
+				wfItem.getFluidItemFormTypeURLSafe(),
+				attachment.getId());
+		return postFix;
+	}
+
 	public void addAttachmentFreshToCache(
 		Attachment attachment,
 		String conversationId,

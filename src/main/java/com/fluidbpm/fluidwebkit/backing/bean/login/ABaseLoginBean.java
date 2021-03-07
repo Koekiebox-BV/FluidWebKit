@@ -119,9 +119,8 @@ public abstract class ABaseLoginBean extends ABaseManagedBean {
 		} catch (FluidClientException fce) {
 			this.getLogger().error(fce.getMessage(), fce);
 			if (FluidClientException.ErrorCode.LOGIN_FAILURE == fce.getErrorCode()) {
-				//TODO this.getFluidClientDSConfig().getUserClient().incrementInvalidLoginForUser(user)
-				FacesMessage fMsg = new FacesMessage(FacesMessage.SEVERITY_ERROR,
-						"Failed to Login.", "");
+				this.getFluidClientDSConfig().getUserClient().incrementInvalidLoginForUser(user);
+				FacesMessage fMsg = new FacesMessage(FacesMessage.SEVERITY_ERROR, "Failed to Login.", "");
 				FacesContext.getCurrentInstance().addMessage(null, fMsg);
 				return null;
 			}

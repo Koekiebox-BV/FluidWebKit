@@ -121,6 +121,7 @@ public class WebKitAccessBean extends ABaseManagedBean {
 		this.allFormDefinitionsForLoggedIn = new ArrayList<>();
 
 		//Retrieve Forms and their Workflows...
+		long nowCanCreateInstance = System.currentTimeMillis();
 		this.formDefinitionsCanCreateInstanceOf = formDefinitionClient.getAllByLoggedInUserWhereCanCreateInstanceOf(
 				false, true);
 		if (this.formDefinitionsCanCreateInstanceOf != null) {
@@ -143,11 +144,16 @@ public class WebKitAccessBean extends ABaseManagedBean {
 			Collections.sort(this.formDefinitionsCanCreateInstanceOfIncTableFields, Comparator.comparing(Form::getFormType));
 		}
 
+		long doneCanCreateInstance = (System.currentTimeMillis() - nowCanCreateInstance);
+
 		//Attachments...
+		long nowAttachmentPerms = System.currentTimeMillis();
 		this.formDefinitionsAttachmentCanView = formDefinitionClient.getAllByLoggedInUserWhereCanViewAttachments();
 		this.formDefinitionsAttachmentCanEdit = formDefinitionClient.getAllByLoggedInUserWhereCanEditAttachments();
+		long doneAttachmentPerms = (System.currentTimeMillis() - nowAttachmentPerms);
 
-		this.getLogger().info("FFC-Bean: PART-1-COMPLETE.");
+		this.getLogger().info("FFC-Bean: PART-1-COMPLETE (CanCreateInstanceOf[%d],AttachmentsViewEdit[%d]).",
+				doneCanCreateInstance, doneAttachmentPerms);
 		this.allFormDefinitionsForLoggedIn = formDefinitionClient.getAllByLoggedInUser(true);
 		if (allFormDefinitionsForLoggedIn == null) return;
 
@@ -155,8 +161,6 @@ public class WebKitAccessBean extends ABaseManagedBean {
 		long now = System.currentTimeMillis();
 
 		//Set all the field definitions...
-		//List<CompletableFuture> allAsyncs = new ArrayList<>();
-
 		List<String> formDefsToFetchFor = new ArrayList<>();
 		for (Form formDef : this.allFormDefinitionsForLoggedIn) {
 			//Ignore any configuration [Form Definitions]...

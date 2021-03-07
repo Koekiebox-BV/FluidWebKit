@@ -42,6 +42,7 @@ import javax.inject.Named;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.UUID;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
@@ -339,7 +340,8 @@ public class WebKitMenuBean extends ABaseManagedBean {
 						String subLabel = sub.getLabel();
 						String subIcon = sub.getIcon();
 						UIMenuItem menuItemSub = new UIMenuItem();
-						menuItemSub.setId(String.format("menSubId%d", sub.getSubOrder()));
+						menuItemSub.setId(String.format("menSubId_%d_%s",
+								sub.getSubOrder(), UUID.randomUUID().toString().substring(0, 5)));
 						menuItemSub.setIcon(this.iconSafe(subIcon, ICON_DEFAULT_SUB));
 						menuItemSub.setValue(subLabel);
 						menuItemSub.setAjax(true);

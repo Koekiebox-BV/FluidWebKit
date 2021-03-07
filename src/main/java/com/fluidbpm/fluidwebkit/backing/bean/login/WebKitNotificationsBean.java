@@ -173,8 +173,7 @@ public class WebKitNotificationsBean extends ABaseManagedBean {
 				if (this.getReadUserNotifications() == null) this.setReadUserNotifications(new ArrayList<>());
 				
 				this.getReadUserNotifications().add(unreadMsg);
-				this.getLogger().info(String.format("actionMarkUnreadNotificationsAsRead(%s:%d)",
-						unreadMsg.getMessage(), unreadMsg.getId()));
+				//this.getLogger().info(String.format("actionMarkUnreadNotificationsAsRead(%s:%d)", unreadMsg.getMessage(), unreadMsg.getId()));
 			});
 			this.getUnreadUserNotifications().clear();
 			this.setNotificationState(NotificationState.UnreadNotificationsNowRead);

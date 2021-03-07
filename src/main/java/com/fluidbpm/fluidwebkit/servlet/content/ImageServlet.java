@@ -120,9 +120,7 @@ public class ImageServlet extends ABaseFWKServlet {
 		try {
 			ImageStreamedContent imageStreamedContent = this.getImageStreamedContentForFirstImageAttachmentForForm(
 					attachmentClient, new Form(formIdParam), attachmentIdLong, thumbScale);
-			if (imageStreamedContent == null) {
-				return;
-			}
+			if (imageStreamedContent == null) return;
 
 			//Store the Image...
 			this.formImageCache.put(imageKey, imageStreamedContent);
@@ -198,9 +196,7 @@ public class ImageServlet extends ABaseFWKServlet {
 					imageAttachmentById.getName());
 		}
 
-		byte[] imageBytes =
-				UtilGlobal.decodeBase64(
-						imageAttachmentById.getAttachmentDataBase64());
+		byte[] imageBytes = UtilGlobal.decodeBase64(imageAttachmentById.getAttachmentDataBase64());
 		if (thumbnailScale > 0) imageBytes = this.scale(imageBytes, thumbnailScale, 0);
 		return new ImageStreamedContent(
 				imageBytes,

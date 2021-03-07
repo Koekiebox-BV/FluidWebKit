@@ -228,7 +228,8 @@ public class WebKitOpenFormConversationBean extends ABaseManagedBean {
 			associatedFlowsForFormDef.forEach(flowItm -> this.getInputWorkflowsForFormDef().add(flowItm.getName()));
 			
 			if (wfiParam.isFluidItemFormSet()) {
-				freshFetchForm = fcClient.getFormContainerById(wfiParam.getFluidItemFormId());
+				freshFetchForm = fcClient.getFormContainerById(
+						wfiParam.getFluidItemFormId(), webKitForm.isEnableCalculatedLabels());
 				//Lock the Form as it is being opened...
 				if (webKitForm.isLockFormOnOpen() && Form.State.OPEN.equals(freshFetchForm.getState())) {
 					fcClient.lockFormContainer(freshFetchForm, wfiParam.getJobView());

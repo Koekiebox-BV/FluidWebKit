@@ -35,44 +35,24 @@ public class QuickSearchConverter implements Converter {
 	@Inject
 	private ProfileBean profileBean;
 
-	/**
-	 *
-	 * @param facesContextParam
-	 * @param uiComponentParam
-	 * @param stringValueParam
-	 * @return
-	 */
 	@Override
 	public Object getAsObject(
 		FacesContext facesContextParam,
 		UIComponent uiComponentParam,
 		String stringValueParam
 	) {
-		if (stringValueParam == null || stringValueParam.trim().isEmpty()) {
-			return null;
-		}
+		if (stringValueParam == null || stringValueParam.trim().isEmpty()) return null;
 
 		long fieldId = UtilGlobal.toLongSafe(stringValueParam);
-		if (fieldId < 1) {
-			return null;
-		}
+		if (fieldId < 1) return null;
 
 		Form form = profileBean.getFluidClientDS().getFormContainerClient().getFormContainerById(fieldId);
 		return new QuickSearchBean.QuickSearchResultVO(form, new SimpleDateFormat(this.profileBean.getDateAndTimeFormat()));
 	}
 
-	/**
-	 *
-	 * @param facesContextParam
-	 * @param uiComponentParam
-	 * @param valueParam
-	 * @return
-	 */
 	@Override
 	public String getAsString(FacesContext facesContextParam, UIComponent uiComponentParam, Object valueParam) {
-		if (valueParam == null) {
-			return UtilGlobal.EMPTY;
-		}
+		if (valueParam == null) return UtilGlobal.EMPTY;
 
 		if (valueParam instanceof QuickSearchBean.QuickSearchResultVO) {
 			QuickSearchBean.QuickSearchResultVO casted = (QuickSearchBean.QuickSearchResultVO) valueParam;
