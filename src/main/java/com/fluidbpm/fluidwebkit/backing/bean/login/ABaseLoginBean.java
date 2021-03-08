@@ -94,6 +94,9 @@ public abstract class ABaseLoginBean extends ABaseManagedBean {
 			user.setServiceTicket(serviceTicket);
 			this.bindFluidClientDSToSession(serviceTicket);
 
+			//Bind the config for the Fluid DS User...
+			this.bindConfigFluidClientDS();
+
 			this.getLogger().debug("User logged in. Retrieving logged in user info.");
 
 			FluidClientDS fcDSConfig = this.getFluidClientDSConfig();

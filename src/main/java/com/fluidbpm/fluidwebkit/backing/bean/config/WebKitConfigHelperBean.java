@@ -19,6 +19,9 @@ import com.fluidbpm.fluidwebkit.backing.bean.ABaseManagedBean;
 import com.fluidbpm.fluidwebkit.backing.utility.Globals;
 import com.fluidbpm.fluidwebkit.backing.utility.WebUtil;
 import com.fluidbpm.program.api.util.UtilGlobal;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 import javax.enterprise.context.RequestScoped;
 import javax.faces.application.FacesMessage;
@@ -140,6 +143,19 @@ public class WebKitConfigHelperBean extends ABaseManagedBean {
 		return metaDataTxt.startsWith("Rating");
 	}
 
+	public boolean isFieldTypeDecimalMetaTypeSpinner(String metaDataTxt) {
+		if (UtilGlobal.isBlank(metaDataTxt)) return false;
+		return metaDataTxt.startsWith("Spinner");
+	}
+
+	public boolean isFieldTypeDecimalMetaTypeSlider(String metaDataTxt) {
+		if (UtilGlobal.isBlank(metaDataTxt)) return false;
+		return metaDataTxt.startsWith("Slider");
+	}
+
+	public DecimalMetaFormat parseDecimalFormat(String metaDataToParse) {
+		return DecimalMetaFormat.parse(metaDataToParse);
+	}
 
 	public boolean isFieldTypeTextMetaTypeBarcode(String metaDataTxt) {
 		if (UtilGlobal.isBlank(metaDataTxt)) return false;
@@ -178,5 +194,59 @@ public class WebKitConfigHelperBean extends ABaseManagedBean {
 			return validBarcodeValue;
 		}
 		return null;
+	}
+
+	@AllArgsConstructor
+	@NoArgsConstructor
+	@Getter
+	public static class DecimalMetaFormat {
+		private String type;
+		private String prefix;
+		private double min;
+		private double max;
+		private double stepFactor;
+
+		private static final String MIN = "Min";
+		private static final String MAX = "Max";
+		private static final String STEP_FACTOR = "StepFactor";
+		private static final String PREFIX = "Prefix";
+
+		public static final DecimalMetaFormat parse(String theStringToProcessParam) {
+			if (theStringToProcessParam == null || theStringToProcessParam.isEmpty()) return null;
+
+			UtilGlobal ug = new UtilGlobal();
+
+			String[] initialSplit = theStringToProcessParam.split("\\_");
+			if (initialSplit == null || initialSplit.length == 0) return null;
+
+			if (initialSplit.length != 5) return null;
+
+			//Type...
+			String type = initialSplit[0];
+
+			//Min...
+			String minString = getValueFrom(MIN, initialSplit[1]);
+			double min = ug.toDoubleSafe(minString);
+
+			//Max...
+			String maxString = getValueFrom(MAX, initialSplit[2]);
+			double max = ug.toDoubleSafe(maxString);
+
+			//Step Factor...
+			String stepFactorString = getValueFrom(STEP_FACTOR,initialSplit[3]);
+			double stepFactor = ug.toDoubleSafe(stepFactorString);
+
+			//Prefix...
+			String prefix = getValueFrom(PREFIX, initialSplit[4]);
+
+			return new DecimalMetaFormat(type,prefix,min,max,stepFactor);
+		}
+
+		private static String getValueFrom(String variableNameParam, String toRetrieveFromParam) {
+			if (variableNameParam == null || toRetrieveFromParam == null) return null;
+
+			int startIndex = variableNameParam.length();
+			return toRetrieveFromParam.substring(startIndex + 1, toRetrieveFromParam.length() - 1);
+		}
 	}
 }
