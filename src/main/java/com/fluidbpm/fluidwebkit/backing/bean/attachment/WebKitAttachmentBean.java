@@ -83,7 +83,7 @@ public class WebKitAttachmentBean extends ABaseManagedBean {
 			}
 
 			final AttachmentClient attachmentClient = this.getFluidClientDS().getAttachmentClient();
-			attachments = attachmentClient.getAttachmentsByForm(form, true);
+			attachments = attachmentClient.getAttachmentsByForm(form, false);
 			if (attachments == null) return null;attachments.sort(Comparator.comparing(Attachment::getId));
 
 			this.formAttachmentCache.put(form.getId(), attachments);

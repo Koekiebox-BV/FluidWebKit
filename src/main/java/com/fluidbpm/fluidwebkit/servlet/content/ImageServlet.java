@@ -178,14 +178,14 @@ public class ImageServlet extends ABaseFWKServlet {
 					"prev_for_non_image_attachment.png");
 		}
 
-		//Ideal...
+		//First image...
 		Attachment imageAttachmentById = null;
 		if (attachmentId > 0) {
 			imageAttachmentById = attachmentClientParam.getAttachmentById(
 					attachmentId, true);
 		} else {
 			imageAttachmentById = attachmentClientParam.getAttachmentById(
-							attachmentsForForm.get(0).getId(), true);
+					attachmentsForForm.get(0).getId(), true);
 		}
 
 		byte[] nonImageData = this.getNonImagePreviewForContentType(imageAttachmentById.getContentType());

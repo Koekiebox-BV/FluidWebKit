@@ -315,11 +315,15 @@ public class WebKitOpenFormConversationBean extends ABaseManagedBean {
 
 		String formDef = this.getWsFluidItem().getFluidItemFormType();
 		WebKitForm webKitForm = this.lookAndFeelBean.getWebKitFormWithFormDef(formDef);
-		
-		if (this.accessBean.attachmentCanEdit(formDef) && !"none".equals(webKitForm.getAttachmentDisplayLocation())) {
+
+		//Enable attachment upload components....
+		String attDisplayType = webKitForm.getAttachmentDisplayType();
+
+		if (UtilGlobal.isBlank(attDisplayType) || "galleria".equals(attDisplayType) &&
+				(this.accessBean.attachmentCanEdit(formDef) && !"none".equals(webKitForm.getAttachmentDisplayLocation()))) {
 			DefaultMenuItem itemUploadNewAtt = DefaultMenuItem.builder()
 					.value("Upload New Attachment")
-					.icon("pi pi-cloud-upload")
+					.icon("pi pi-upload")
 					.command("#{webKitOpenFormConversationBean.actionPrepToUploadNewAttachment}")
 					.process("@this :frmOpenForm")
 					.update(":frmUploadAttachmentForm")
@@ -336,7 +340,7 @@ public class WebKitOpenFormConversationBean extends ABaseManagedBean {
 
 					DefaultMenuItem itmReplAtt = DefaultMenuItem.builder()
 							.value(String.format("Replace '%s'", attItm.getName()))
-							.icon("fa fa-file")
+							.icon("pi pi-share-alt")
 							.command(command)
 							.process("@this")
 							.update(":frmReplaceAttachmentForm")
@@ -354,7 +358,7 @@ public class WebKitOpenFormConversationBean extends ABaseManagedBean {
 						
 						DefaultMenuItem itmReplAtt = DefaultMenuItem.builder()
 								.value(String.format("Delete '%s'", attItm.getName()))
-								.icon("fa fa-trash")
+								.icon("pi pi-trash")
 								.command(command)
 								.process("@this")
 								.update(":frmDeleteAttachmentForm")
@@ -846,7 +850,8 @@ public class WebKitOpenFormConversationBean extends ABaseManagedBean {
 
 		WorkspaceFluidItem wsFlItem = this.getWsFluidItem();
 		if (wsFlItem.isFluidItemFormSet()) {
-			List<Attachment> existingAttachments = this.attachmentBean.actionFetchAttachmentsForForm(wsFlItem.getFluidItemForm());
+			List<Attachment> existingAttachments = this.attachmentBean.actionFetchAttachmentsForForm(
+					wsFlItem.getFluidItemForm());
 			if (existingAttachments != null) {
 				existingAttachments.forEach(existingAtt -> {
 					Attachment replaced = updatedAttachments.stream()
