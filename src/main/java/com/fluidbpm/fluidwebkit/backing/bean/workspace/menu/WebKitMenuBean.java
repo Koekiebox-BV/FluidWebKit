@@ -243,12 +243,22 @@ public class WebKitMenuBean extends ABaseManagedBean {
 		List<WebKitMenuItem> menusWithNodeAsParent = menuItems.stream()
 				.filter(itm -> idNoPrefix.equals(itm.getParentMenuId()))
 				.collect(Collectors.toList());
-		if (menusWithNodeAsParent == null) return false;
+		if (menusWithNodeAsParent.isEmpty()) {//No parent...
+
+			WebKitMenuItem menuWithId = menuItems.stream()
+					.filter(itm -> idNoPrefix.equals(itm.getMenuId()))
+					.findFirst()
+					.orElse(null);
+			if (menuWithId == null) return false;
+
+			this.createMenuItem(submenu, menuWithId);
+			return true;
+		}
 
 		AtomicBoolean userHasAccess = new AtomicBoolean(false);
 
 		menusWithNodeAsParent.forEach(menuItmWhereParent -> {
-			boolean userHasAccLcl = false;
+			boolean userHasAccLcl;
 			if (this.lookAndFeelBean.doesMenuHaveChildren(menuItmWhereParent, menuItems)) {
 				UISubmenu subMenToAdd = new UISubmenu();
 				subMenToAdd.setId(String.format("om_%s", menuItmWhereParent.getMenuId()));
@@ -256,54 +266,61 @@ public class WebKitMenuBean extends ABaseManagedBean {
 				if (userHasAccLcl = this.populateSubmenuUserQuery(subMenToAdd, menuItems))
 					submenu.getElements().add(subMenToAdd);
 			} else {
-				WebKitUserQuery wkUserQryByMenu = this.configWebKitUserQueries.stream()
-						.filter(itm -> menuItmWhereParent.getId() != null &&
-								menuItmWhereParent.getId().equals(itm.getUserQuery().getId()))
-						.findFirst()
-						.orElse(null);
-				UserQuery userQuery = null;
-				boolean foundByIdAccess = false;
-				if (wkUserQryByMenu != null && wkUserQryByMenu.getUserQuery() != null) {
-					userQuery = wkUserQryByMenu.getUserQuery();
-					foundByIdAccess = (this.webKitAccessBean.getUserQueriesCanExecute() == null) ? false :
-							this.webKitAccessBean.getUserQueriesCanExecute().stream()
-							.filter(itm -> menuItmWhereParent.getId().equals(itm.getId()))
-							.findFirst()
-							.isPresent();
-				}
-
-				UIMenuItem menuItem = new UIMenuItem();
-				menuItem.setId(String.format("menUQId_%s", menuItmWhereParent.getMenuId()));
-				String menuIcon = menuItmWhereParent.getMenuIcon();
-				menuItem.setIcon(this.iconSafe(menuIcon, ICON_DEFAULT_SUB));
-				menuItem.setValue(menuItmWhereParent.getMenuLabel());
-				menuItem.setAjax(true);
-				final String onCompleteJS;
-				if (userQuery == null) {
-					onCompleteJS = String.format("javascript:rcOpenNoConfig([{name:'%s', value:\"%s\"}]);",
-							ReqParam.MISSING_CONFIG_MSG,
-							String.format("No User Query configured for Menu '%s'.", menuItmWhereParent.getMenuLabel()));
-				} else if (foundByIdAccess) {
-					onCompleteJS = String.format("javascript:rcOpenUserQueryItem" +
-									"([{name:'%s', value:\"%s\"}, {name:'%s', value:\"%s\"}, {name:'%s', value:'%d'}]);",
-							ReqParam.USER_QUERY_LABEL,
-							menuItmWhereParent.getMenuLabel(),
-							ReqParam.USER_QUERY_SECTION,
-							submenu.getLabel(),
-							ReqParam.USER_QUERY_ID,
-							userQuery.getId());
-					userHasAccLcl = true;
-				} else {
-					onCompleteJS = String.format("javascript:rcOpenNoConfig([{name:'%s', value:\"%s\"}]);",
-							ReqParam.MISSING_CONFIG_MSG,
-							String.format("No Access. Please request Access to User Query '%s'.", userQuery.getName()));
-				}
-				menuItem.setOncomplete(onCompleteJS);
-				if (userHasAccLcl) submenu.getElements().add(menuItem);
+				userHasAccLcl = this.createMenuItem(submenu, menuItmWhereParent);
 			}
 			if (userHasAccLcl) userHasAccess.set(true);
 		});
 		return userHasAccess.get();
+	}
+
+	private boolean createMenuItem(UISubmenu submenu, WebKitMenuItem menuItmWhereParent) {
+		WebKitUserQuery wkUserQryByMenu = this.configWebKitUserQueries.stream()
+				.filter(itm -> menuItmWhereParent.getId() != null &&
+						menuItmWhereParent.getId().equals(itm.getUserQuery().getId()))
+				.findFirst()
+				.orElse(null);
+		UserQuery userQuery = null;
+		boolean foundByIdAccess = false, userHasAccLcl = false;
+		if (wkUserQryByMenu != null && wkUserQryByMenu.getUserQuery() != null) {
+			userQuery = wkUserQryByMenu.getUserQuery();
+			foundByIdAccess = (this.webKitAccessBean.getUserQueriesCanExecute() == null) ? false :
+					this.webKitAccessBean.getUserQueriesCanExecute().stream()
+							.filter(itm -> menuItmWhereParent.getId().equals(itm.getId()))
+							.findFirst()
+							.isPresent();
+		}
+
+		UIMenuItem menuItem = new UIMenuItem();
+		menuItem.setId(String.format("menUQId_%s", menuItmWhereParent.getMenuId()));
+		String menuIcon = menuItmWhereParent.getMenuIcon();
+		menuItem.setIcon(this.iconSafe(menuIcon, ICON_DEFAULT_SUB));
+		menuItem.setValue(menuItmWhereParent.getMenuLabel());
+		menuItem.setAjax(true);
+		final String onCompleteJS;
+		if (userQuery == null) {
+			onCompleteJS = String.format("javascript:rcOpenNoConfig([{name:'%s', value:\"%s\"}]);",
+					ReqParam.MISSING_CONFIG_MSG,
+					String.format("No User Query configured for Menu '%s'.", menuItmWhereParent.getMenuLabel()));
+		} else if (foundByIdAccess) {
+			onCompleteJS = String.format("javascript:rcOpenUserQueryItem" +
+							"([{name:'%s', value:\"%s\"}, {name:'%s', value:\"%s\"}, {name:'%s', value:'%d'}]);",
+					ReqParam.USER_QUERY_LABEL,
+					menuItmWhereParent.getMenuLabel(),
+					ReqParam.USER_QUERY_SECTION,
+					submenu.getLabel(),
+					ReqParam.USER_QUERY_ID,
+					userQuery.getId());
+			userHasAccLcl = true;
+		} else {
+			onCompleteJS = String.format("javascript:rcOpenNoConfig([{name:'%s', value:\"%s\"}]);",
+					ReqParam.MISSING_CONFIG_MSG,
+					String.format("No Access. Please request Access to User Query '%s'.", userQuery.getName()));
+		}
+		menuItem.setOncomplete(onCompleteJS);
+
+		if (userHasAccLcl) submenu.getElements().add(menuItem);
+
+		return userHasAccLcl;
 	}
 
 	private String iconSafe(String icon, String defaultVal) {

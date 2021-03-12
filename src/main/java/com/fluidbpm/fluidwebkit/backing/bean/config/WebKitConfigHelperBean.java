@@ -27,10 +27,13 @@ import javax.enterprise.context.RequestScoped;
 import javax.faces.application.FacesMessage;
 import javax.faces.context.ExternalContext;
 import javax.faces.context.FacesContext;
+import javax.faces.model.SelectItem;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.servlet.http.HttpSession;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * Bean storing all access for the logged in user.
@@ -248,5 +251,19 @@ public class WebKitConfigHelperBean extends ABaseManagedBean {
 			int startIndex = variableNameParam.length();
 			return toRetrieveFromParam.substring(startIndex + 1, toRetrieveFromParam.length() - 1);
 		}
+	}
+
+	public String createLabelFor(Object forLabel) {
+		if (forLabel == null) return "";
+
+		if (forLabel instanceof SelectItem) return ((SelectItem)forLabel).getLabel();
+
+		if (forLabel instanceof List) {
+			if (((List<String>)forLabel).isEmpty()) return "";
+
+			return ((List<String>)forLabel).stream().collect(Collectors.joining(", "));
+		}
+		
+		return forLabel.toString();
 	}
 }

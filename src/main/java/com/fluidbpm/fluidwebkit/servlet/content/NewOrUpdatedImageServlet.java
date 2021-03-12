@@ -61,7 +61,7 @@ public class NewOrUpdatedImageServlet extends ImageServlet {
 		String imageKey = this.getImageCacheKey(conversationId, attachmentIndexInt);
 		ImageStreamedContent cacheImageStreamedContent = this.formImageCache.getIfPresent(imageKey);
 		if (cacheImageStreamedContent != null) {
-			byte[] nonImageData = this.getNonImagePreviewForContentType(cacheImageStreamedContent.getContentType());
+			byte[] nonImageData = ImageUtil.getNonImagePreviewForContentType(cacheImageStreamedContent.getContentType());
 			if (nonImageData == null) {
 				this.writeImageToResponseOutput(respParam, cacheImageStreamedContent.cloneAsDefaultStreamedContent());
 			} else {

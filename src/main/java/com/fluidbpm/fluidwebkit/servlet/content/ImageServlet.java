@@ -134,6 +134,7 @@ public class ImageServlet extends ABaseFWKServlet {
 		HttpServletResponse respParam,
 		StreamedContent streamedContentParam
 	) throws IOException {
+		respParam.setHeader("Content-Disposition", String.format("attachment; filename=\"%s\"", streamedContentParam.getName()));
 		respParam.setContentType(streamedContentParam.getContentType());
 		InputStream is = streamedContentParam.getStream();
 
@@ -167,11 +168,9 @@ public class ImageServlet extends ABaseFWKServlet {
 				.filter(itm -> itm.isFileTypeImage())
 				.collect(Collectors.toList());
 		if (imgAttachmentsForForm.isEmpty()) {
-			byte[] placeholderImageBytes = this.getNonImagePreviewForContentType(attachmentsForForm.get(0).getContentType());
-			if (placeholderImageBytes == null) {
-				placeholderImageBytes = ImageUtil.getThumbnailPlaceholderImageForLost();
-			}
-			if (thumbnailScale > 0) placeholderImageBytes = this.scale(placeholderImageBytes, thumbnailScale, 0);
+			byte[] placeholderImageBytes = ImageUtil.getNonImagePreviewForContentType(attachmentsForForm.get(0).getContentType());
+			if (placeholderImageBytes == null) placeholderImageBytes = ImageUtil.getThumbnailPlaceholderImageForLost();
+			
 			return new ImageStreamedContent(
 					placeholderImageBytes,
 					"image/png",
@@ -188,11 +187,11 @@ public class ImageServlet extends ABaseFWKServlet {
 					attachmentsForForm.get(0).getId(), true);
 		}
 
-		byte[] nonImageData = this.getNonImagePreviewForContentType(imageAttachmentById.getContentType());
+		byte[] nonImageData = ImageUtil.getNonImagePreviewForContentType(imageAttachmentById.getContentType());
 		if (nonImageData != null) {
 			return new ImageStreamedContent(
 					nonImageData,
-					imageAttachmentById.getContentType(),
+					"image/svg+xml",
 					imageAttachmentById.getName());
 		}
 
@@ -250,27 +249,5 @@ public class ImageServlet extends ABaseFWKServlet {
 		return String.format("%d_%d_%d", formId, attachmentId, scale);
 	}
 
-	protected byte[] getNonImagePreviewForContentType(String contentType) throws IOException {
-		if (contentType == null) return null;
 
-		String contentTypeLower = contentType.trim().toLowerCase();
-		switch (contentTypeLower) {
-			case "application/pdf" :
-				return ImageUtil.getThumbnailPlaceholderImageForPDF();
-			case "text/plain" :
-				return ImageUtil.getThumbnailPlaceholderImageForTXT();
-			case "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" :
-				return ImageUtil.getThumbnailPlaceholderImageForEXCEL();
-			case "application/vnd.openxmlformats-officedocument.wordprocessingml.document" :
-				return ImageUtil.getThumbnailPlaceholderImageForWORD();
-			case "image/png" :
-			case "image/jpeg" :
-				return null;
-			default: {
-				this.raiseError(new Exception(
-						String.format("Content Type [%s] is not yet mapped for default image.", contentTypeLower)), null);
-				return null;
-			}
-		}
-	}
 }

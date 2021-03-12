@@ -507,7 +507,7 @@ public class WebKitOpenFormConversationBean extends ABaseManagedBean {
 					new PersonalInventoryItemVO(fluidItmToAdd).cloneVO(
 							fluidItmToAdd, tableRecordFieldsView, tableRecordFieldsEditable, null));
 			wfi.refreshFormFieldsEdit();
-			toAdd.setFormFields(wfi.getFormFieldsEdit());
+			toAdd.setFormFields(wfi.getFormFieldsEditAsFields());
 			toAdd.setCurrentUser(this.getLoggedInUserSafe());
 			toAdd.setTitle(PLACEHOLDER_TITLE);
 			
@@ -533,7 +533,7 @@ public class WebKitOpenFormConversationBean extends ABaseManagedBean {
 					new PersonalInventoryItemVO(fluidItmToAdd).cloneVO(
 							fluidItmToAdd, tableRecordFieldsView, tableRecordFieldsEditable, null));
 			wfi.refreshFormFieldsEdit();
-			toAdd.setFormFields(wfi.getFormFieldsEdit());
+			toAdd.setFormFields(wfi.getFormFieldsEditAsFields());
 			if (tableField.getTableRecords() == null) tableField.setTableRecords(new ArrayList<>());
 			tableField.getTableRecords().add(toAdd);
 		});
@@ -734,19 +734,30 @@ public class WebKitOpenFormConversationBean extends ABaseManagedBean {
 		Form returnVal = new Form(fluidItem.getFluidItemFormType());
 		returnVal.setId(fluidItem.getFluidItemFormId());
 		returnVal.setFormType(fluidItem.getFluidItemFormType());
-		returnVal.setFormFields(fluidItem.getFormFieldsEdit());
+		returnVal.setFormFields(fluidItem.getFormFieldsEditAsFields());
 
 		WebKitForm wkForm = this.lookAndFeelBean.getWebKitFormWithFormDef(returnVal.getFormType());
 		returnVal.setFormTypeId(fluidItem.getFluidItemForm().getFormTypeId());
 		returnVal.setFormType(fluidItem.getFluidItemForm().getFormType());
 		returnVal.setTitle(this.generateNewFormTitle(wkForm == null ? null : wkForm.getNewFormTitleFormula(),
-				fluidItem.getFluidItemFormType(), fluidItem.getFormFieldsEdit()));
+				fluidItem.getFluidItemFormType(), fluidItem.getFormFieldsEditAsFields()));
 
 		//Apply the Custom Action when applicable...
 		String customAction = this.getThirdPartyWebActionTaskIdForFormType(returnVal.getFormType());
 		if (customAction != null) {
 			CustomWebAction execActionResult = formContClient.executeCustomWebAction(customAction, returnVal);
 			this.mergeFormFieldsFromCustomAction(execActionResult, returnVal);
+		}
+
+		//Set the selected field values...
+		if (returnVal.getFormFields() != null) {
+			returnVal.getFormFields().stream()
+					.filter(itm -> Field.Type.MultipleChoice == itm.getTypeAsEnum())
+					.map(itm -> itm.getFieldValueAsMultiChoice())
+					.forEach(multiChoice -> {
+						System.out.println(multiChoice);
+						
+					});
 		}
 
 		return returnVal;

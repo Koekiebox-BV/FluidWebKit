@@ -15,6 +15,7 @@
 
 package com.fluidbpm.fluidwebkit.backing.bean.workspace;
 
+import com.fluidbpm.fluidwebkit.backing.bean.workspace.field.WebKitField;
 import com.fluidbpm.fluidwebkit.backing.vo.ABaseWebVO;
 import com.fluidbpm.program.api.util.UtilGlobal;
 import com.fluidbpm.program.api.vo.ABaseFluidVO;
@@ -30,6 +31,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * Workspace object to host the {@code JobView} and {@code ABaseWebVO}.
@@ -52,7 +54,7 @@ public class WorkspaceFluidItem extends ABaseFluidVO {
 
 	@Getter
 	@Setter
-	private List<Field> formFieldsEdit;
+	private List<WebKitField> formFieldsEdit;
 
 	@Getter
 	@Setter
@@ -171,7 +173,7 @@ public class WorkspaceFluidItem extends ABaseFluidVO {
 		if (visibleFields == null) visibleFields = new ArrayList<>();
 		final List<Field> formFields = (this.getFormFields() == null) ? new ArrayList<>() : this.getFormFields();
 
-		List<Field> editFieldsList = new ArrayList<>();
+		List<WebKitField> editFieldsList = new ArrayList<>();
 		visibleFields.forEach(visibleField -> {
 			Object fieldValueToSet = formFields.stream()
 							.filter(itm -> itm.getFieldName().equals(visibleField.getFieldName()))
@@ -185,7 +187,7 @@ public class WorkspaceFluidItem extends ABaseFluidVO {
 				fieldValueToSet = null;//Clear the records...
 			}
 
-			Field fieldToAdd = new Field(
+			WebKitField fieldToAdd = new WebKitField(
 					null,
 					visibleField.getFieldName(),
 					fieldValueToSet,
@@ -195,6 +197,13 @@ public class WorkspaceFluidItem extends ABaseFluidVO {
 			editFieldsList.add(fieldToAdd);
 		});
 		this.formFieldsEdit = editFieldsList;
+	}
+
+	public List<Field> getFormFieldsEditAsFields() {
+		if (this.formFieldsEdit == null) return null;
+		return this.formFieldsEdit.stream()
+				.map(itm -> itm.asField())
+				.collect(Collectors.toList());
 	}
 
 	public List<Field> getFormFieldsViewable() {
