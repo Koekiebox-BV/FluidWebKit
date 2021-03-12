@@ -655,6 +655,10 @@ public class WebKitOpenFormConversationBean extends ABaseManagedBean {
 		}
 	}
 
+	public void actionSetAttachmentToPreviewWithDialog(Attachment attachment) {
+		this.attachmentToReplaceDelete = attachment;
+	}
+
 	public void actionSendOn(String dialogToHideAfterSuccess, String varBtnToEnableFailedSendOn) {
 		try {
 			FlowItemClient fiClient = this.getFluidClientDS().getFlowItemClient();
@@ -747,17 +751,6 @@ public class WebKitOpenFormConversationBean extends ABaseManagedBean {
 		if (customAction != null) {
 			CustomWebAction execActionResult = formContClient.executeCustomWebAction(customAction, returnVal);
 			this.mergeFormFieldsFromCustomAction(execActionResult, returnVal);
-		}
-
-		//Set the selected field values...
-		if (returnVal.getFormFields() != null) {
-			returnVal.getFormFields().stream()
-					.filter(itm -> Field.Type.MultipleChoice == itm.getTypeAsEnum())
-					.map(itm -> itm.getFieldValueAsMultiChoice())
-					.forEach(multiChoice -> {
-						System.out.println(multiChoice);
-						
-					});
 		}
 
 		return returnVal;

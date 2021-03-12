@@ -39,6 +39,7 @@ import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.*;
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 /**
@@ -173,8 +174,8 @@ public class ImageServlet extends ABaseFWKServlet {
 			
 			return new ImageStreamedContent(
 					placeholderImageBytes,
-					"image/png",
-					"prev_for_non_image_attachment.png");
+					"image/svg+xml",
+					String.format("prev_for_non_image_attachment_%s.svg", UUID.randomUUID().toString().substring(0, 5)));
 		}
 
 		//First image...

@@ -26,6 +26,7 @@ import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.util.UUID;
 
 /**
  * Servlet used to retrieve image content for a form.
@@ -66,7 +67,8 @@ public class NewOrUpdatedImageServlet extends ImageServlet {
 				this.writeImageToResponseOutput(respParam, cacheImageStreamedContent.cloneAsDefaultStreamedContent());
 			} else {
 				ImageStreamedContent noPreview = new ImageStreamedContent(
-						nonImageData, "image/png", "preview.pdf");
+						nonImageData, "image/svg+xml",
+						String.format("preview_%s.svg", UUID.randomUUID().toString().substring(0, 5)));
 				this.writeImageToResponseOutput(respParam, noPreview);
 			}
 			return;

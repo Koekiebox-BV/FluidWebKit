@@ -12,6 +12,10 @@ import java.util.stream.Collectors;
 
 public class WebKitField extends Field {
 
+	public WebKitField() {
+		super();
+	}
+
 	public WebKitField(
 		Long fieldIdParam,
 		String fieldNameParam,
@@ -128,6 +132,7 @@ public class WebKitField extends Field {
 		return returnVal;
 	}
 
+	@XmlTransient
 	public Field asField() {
 		return this;
 	}

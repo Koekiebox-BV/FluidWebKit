@@ -124,7 +124,6 @@ public class WebKitAttachmentBean extends ABaseManagedBean {
 	}
 
 	public String actionGenerateURLForThumbnail(WorkspaceFluidItem wfItem, int thumbnailScale) {
-		//String contextPath = FacesContext.getCurrentInstance().getExternalContext().getRequestContextPath();
 		StringBuffer buffer = new StringBuffer();
 		String postFix = String.format(
 				"/get_form_image?formId=%d&formDefinition=%s&thumbnailScale=%d",
@@ -137,6 +136,8 @@ public class WebKitAttachmentBean extends ABaseManagedBean {
 	}
 
 	public String actionGenerateURLForThumbnail(WorkspaceFluidItem wfItem, Attachment attachment, int thumbnailScale) {
+		if (wfItem == null || attachment == null) return null;
+
 		String postFix = String.format(
 				"/get_form_image?formId=%d&formDefinition=%s&attachmentId=%d&thumbnailScale=%d",
 				wfItem.getFluidItemFormId(),
@@ -147,6 +148,8 @@ public class WebKitAttachmentBean extends ABaseManagedBean {
 	}
 
 	public String actionGenerateURLForRAW(WorkspaceFluidItem wfItem, Attachment attachment) {
+		if (wfItem == null || attachment == null) return null;
+
 		String postFix = String.format(
 				"/get_attachment_raw?formId=%d&formDefinition=%s&attachmentId=%d",
 				wfItem.getFluidItemFormId(),

@@ -103,7 +103,7 @@ public class ImageUtil {
 	}
 
 	public static byte[] getThumbnailPlaceholderImageForNoAccess() throws IOException {
-		return getContentForPath("/image/thumbnail/no-access.png");
+		return getContentForPath("/image/thumbnail/no-access.svg");
 	}
 
 	public static byte[] getThumbnailPlaceholderImageForPDF() throws IOException {
@@ -147,7 +147,7 @@ public class ImageUtil {
 	}
 
 	public static byte[] getThumbnailPlaceholderImageForJAVACLASS() throws IOException {
-		return getContentForPath("/image/thumbnail/javaclass.svg");
+		return getContentForPath("/image/thumbnail/java-class.svg");
 	}
 
 	public static byte[] getThumbnailPlaceholderImageForOUTLOOK() throws IOException {
@@ -179,7 +179,7 @@ public class ImageUtil {
 	}
 
 	public static byte[] getThumbnailPlaceholderImageForLost() throws IOException {
-		return getContentForPath("/image/thumbnail/lost.png");
+		return getContentForPath("/image/thumbnail/lost.svg");
 	}
 
 	public static byte[] getContentForPath(String path) throws IOException {
