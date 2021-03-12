@@ -259,7 +259,7 @@ public class WebKitConfigHelperBean extends ABaseManagedBean {
 		if (forLabel instanceof SelectItem) return ((SelectItem)forLabel).getLabel();
 
 		if (forLabel instanceof List) {
-			if (((List<String>)forLabel).isEmpty()) return "";
+			if (((List<String>)forLabel).isEmpty()) return "None Selected. Select to perform lookup.";
 
 			return ((List<String>)forLabel).stream().collect(Collectors.joining(", "));
 		}
