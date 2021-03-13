@@ -228,7 +228,15 @@ public class WebKitAccessBean extends ABaseManagedBean {
 
 		if (this.fieldsForViewing == null || this.fieldsForViewing.isEmpty()) return null;
 
-		return this.fieldsForViewing.get(formDefinitionParam);
+		return this.cloneFields(this.fieldsForViewing.get(formDefinitionParam));
+	}
+
+	private List<Field> cloneFields(List<Field> fieldsToClone) {
+		if (fieldsToClone == null) return null;
+
+		return fieldsToClone.stream()
+				.map(itm -> itm.clone())
+				.collect(Collectors.toList());
 	}
 
 	public String getFormDefinitionFromTableField(Field tableField) {
@@ -284,7 +292,7 @@ public class WebKitAccessBean extends ABaseManagedBean {
 
 		if (this.fieldsForEditing == null || this.fieldsForEditing.isEmpty()) return null;
 
-		return this.fieldsForEditing.get(formDefinitionParam);
+		return this.cloneFields(this.fieldsForEditing.get(formDefinitionParam));
 	}
 
 	public List<Form> getFormDefinitionsCanCreateInstanceOfSorted() {

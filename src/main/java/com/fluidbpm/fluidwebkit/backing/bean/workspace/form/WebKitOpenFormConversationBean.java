@@ -307,10 +307,8 @@ public class WebKitOpenFormConversationBean extends ABaseManagedBean {
 					.icon("pi pi-save")
 					.command("#{webKitOpenFormConversationBean.actionSaveForm('varFormDialog', '')}")
 					.update("manage-product-content growl")
-					.icon("pi pi-home")
 					.build();
 			this.contextMenuModel.getElements().add(itemSave);
-			this.contextMenuModel.getElements().add(sep);
 		}
 
 		String formDef = this.getWsFluidItem().getFluidItemFormType();
@@ -321,6 +319,8 @@ public class WebKitOpenFormConversationBean extends ABaseManagedBean {
 
 		if (UtilGlobal.isBlank(attDisplayType) || "galleria".equals(attDisplayType) &&
 				(this.accessBean.attachmentCanEdit(formDef) && !"none".equals(webKitForm.getAttachmentDisplayLocation()))) {
+			this.contextMenuModel.getElements().add(sep);
+			
 			DefaultMenuItem itemUploadNewAtt = DefaultMenuItem.builder()
 					.value("Upload New Attachment")
 					.icon("pi pi-upload")
@@ -369,6 +369,22 @@ public class WebKitOpenFormConversationBean extends ABaseManagedBean {
 				}
 			}
 		}
+
+		//Goto...
+		this.contextMenuModel.getElements().add(sep);
+		DefaultMenuItem itemGotoFields = DefaultMenuItem.builder()
+				.value("Goto 'Input Form'")
+				.url("#frmOpenForm:outPanelFormBdy")
+				.icon("fa fa-link")
+				.build();
+		DefaultMenuItem itemGotoAttachments = DefaultMenuItem.builder()
+				.value("Goto 'Attachments'")
+				.url("#attachmentsAsListingGridList")
+				.icon("fa fa-link")
+				.build();
+
+		this.contextMenuModel.getElements().add(itemGotoFields);
+		this.contextMenuModel.getElements().add(itemGotoAttachments);
 	}
 
 	public void actionPrepToUploadNewAttachment() {

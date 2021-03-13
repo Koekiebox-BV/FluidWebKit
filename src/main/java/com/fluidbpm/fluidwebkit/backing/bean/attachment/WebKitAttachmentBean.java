@@ -102,6 +102,21 @@ public class WebKitAttachmentBean extends ABaseManagedBean {
 		}
 	}
 
+	public String actionFetchTxtBasedAttachmentData(Attachment attachment) {
+		try {
+			if (this.getFluidClientDS() == null || (attachment == null || attachment.getId() == null)) return null;
+
+			final AttachmentClient attachmentClient = this.getFluidClientDS().getAttachmentClient();
+
+			Attachment attByIdWithData = attachmentClient.getAttachmentById(
+					attachment.getId(), true);
+			return new String(attByIdWithData.getAttachmentDataRAW());
+		} catch (Exception except) {
+			this.raiseError(except);
+			return null;
+		}
+	}
+
 	public void clearAttachmentCacheFor(Form formToClearFor) {
 		if (formToClearFor == null || formToClearFor.getId() == null) return;
 
