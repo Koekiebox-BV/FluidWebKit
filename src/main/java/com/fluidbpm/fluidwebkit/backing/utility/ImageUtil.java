@@ -140,8 +140,8 @@ public class ImageUtil {
 		return getContentForPath("/image/thumbnail/image.svg");
 	}
 
-	public static byte[] getThumbnailPlaceholderImageForLost() throws IOException {
-		return getContentForPath("/image/thumbnail/lost.svg");
+	public static byte[] getThumbnailPlaceholderImageForNone() throws IOException {
+		return getContentForPath("/image/thumbnail/none.svg");
 	}
 
 	public static byte[] getContentForPath(String path) throws IOException {

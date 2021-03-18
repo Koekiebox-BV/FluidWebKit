@@ -157,12 +157,11 @@ public class ImageServlet extends ABaseFWKServlet {
 		List<Attachment> attachmentsForForm =
 				this.getImageAttachmentByFormNoDataUseCache(attachmentClientParam, formToCheckForParam);
 		if (attachmentsForForm == null || attachmentsForForm.isEmpty()) {
-			byte[] placeholderImageBytes = ImageUtil.getThumbnailPlaceholderImageForLost();
-			if (thumbnailScale > 0) placeholderImageBytes = this.scale(placeholderImageBytes, thumbnailScale, 0);
+			byte[] placeholderImageBytes = ImageUtil.getThumbnailPlaceholderImageForNone();
 			return new ImageStreamedContent(
 					placeholderImageBytes,
-					"image/png",
-					"no_attachments_yet.png");
+					"image/svg+xml",
+					String.format("no_attachments_yet_%s.svg", UUID.randomUUID().toString().substring(0, 5)));
 		}
 
 		List<Attachment> imgAttachmentsForForm = attachmentsForForm.stream()
@@ -170,7 +169,7 @@ public class ImageServlet extends ABaseFWKServlet {
 				.collect(Collectors.toList());
 		if (imgAttachmentsForForm.isEmpty()) {
 			byte[] placeholderImageBytes = ImageUtil.getNonImagePreviewForContentType(attachmentsForForm.get(0).getContentType());
-			if (placeholderImageBytes == null) placeholderImageBytes = ImageUtil.getThumbnailPlaceholderImageForLost();
+			if (placeholderImageBytes == null) placeholderImageBytes = ImageUtil.getThumbnailPlaceholderImageForNone();
 			
 			return new ImageStreamedContent(
 					placeholderImageBytes,

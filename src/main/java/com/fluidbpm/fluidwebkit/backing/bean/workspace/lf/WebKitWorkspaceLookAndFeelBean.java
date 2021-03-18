@@ -761,4 +761,15 @@ public class WebKitWorkspaceLookAndFeelBean extends ABaseManagedBean {
 		this.tableFieldsByFormDef.put(formDef, returnVal);
 		return returnVal;
 	}
+
+	public String calculateCSSClassBasedOnConfig(WebKitForm webKitForm) {
+		if (webKitForm == null) return WebKitForm.InputLayout.VERTICAL;
+
+		switch (webKitForm.getInputLayout()) {
+			case WebKitForm.InputLayout.VERTICAL:
+				return "p-field";
+			default:
+				return WebKitForm.InputLayout.VERTICAL;
+		}
+	}
 }
