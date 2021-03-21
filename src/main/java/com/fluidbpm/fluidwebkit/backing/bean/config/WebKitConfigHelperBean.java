@@ -31,6 +31,8 @@ import javax.faces.model.SelectItem;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.servlet.http.HttpSession;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -184,6 +186,28 @@ public class WebKitConfigHelperBean extends ABaseManagedBean {
 		return metaDataTxt.substring(7);
 	}
 
+
+	public String extractDateTimeFormatFromMetaData(String metaDataTxt) {
+		if ("Date".equals(metaDataTxt)) {
+			return this.getDateFormat();
+		} else if ("Date and Time".equals(metaDataTxt)) {
+			return this.getDateAndTimeFormat();
+		}
+		return "yyyy-MM-dd hh:mm";
+	}
+
+	public String extractDateAsTxt(Object dateValue, String fieldMetaTxt) {
+		if (dateValue == null) return null;
+
+		String format = this.extractDateTimeFormatFromMetaData(fieldMetaTxt);
+		if (dateValue instanceof Date) {
+			return new SimpleDateFormat(format).format((Date)dateValue);
+		} else {
+			this.raiseError(new IllegalStateException(String.format("Object of type '%s' is not supported for date conversion.", dateValue.getClass().getName())));
+			return "[Not Supported]";
+		}
+	}
+
 	private static final String BARCODE_TXT_META = "Barcode";
 	public String getBarcodeType(String metaDataTxt) {
 		if (UtilGlobal.isBlank(metaDataTxt)) return null;
@@ -265,5 +289,9 @@ public class WebKitConfigHelperBean extends ABaseManagedBean {
 		}
 		
 		return forLabel.toString();
+	}
+
+	public String getDecimalFormat() {
+		return "###,###,###,###.00";
 	}
 }
