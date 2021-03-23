@@ -794,7 +794,7 @@ public class WebKitOpenFormConversationBean extends ABaseManagedBean {
 		List<Field> formFields
 	) {
 		if (UtilGlobal.isBlank(formula))
-			return String.format("%s - %s", formType, new Date().toString());
+			return String.format("Attachments for %s - %s", formType, new Date().toString());
 
 		int lastIndexOfPipe = formula.lastIndexOf("|");
 		String formFieldsString = formula.substring(lastIndexOfPipe);
@@ -900,7 +900,7 @@ public class WebKitOpenFormConversationBean extends ABaseManagedBean {
 	}
 
 	public boolean actionIsAttachmentNewOrUpdated(Attachment toCheck) {
-		if (this.getFreshAttachments().isEmpty()) return false;
+		if ((toCheck == null || this.getFreshAttachments() == null) || this.getFreshAttachments().isEmpty()) return false;
 
 		return this.getFreshAttachments().stream()
 				.filter(itm -> itm.getName().equals(toCheck.getName()))
