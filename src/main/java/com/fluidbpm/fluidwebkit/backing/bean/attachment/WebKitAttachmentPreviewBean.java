@@ -21,16 +21,16 @@ import com.fluidbpm.program.api.vo.attachment.Attachment;
 import lombok.Getter;
 import lombok.Setter;
 
-import javax.enterprise.context.Conversation;
-import javax.enterprise.context.ConversationScoped;
+import javax.enterprise.context.SessionScoped;
+import javax.faces.model.SelectItem;
 import javax.inject.Inject;
 import javax.inject.Named;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 
-@ConversationScoped
+@SessionScoped
 @Named("webKitAttachmentPreviewBean")
 @Getter
 @Setter
@@ -38,8 +38,8 @@ public class WebKitAttachmentPreviewBean extends ABaseManagedBean {
 	@Inject
 	private WebKitAttachmentBean attachmentBean;
 
-	@Inject
-	private Conversation conversation;
+	//TODO @Inject
+	//private Conversation conversation;
 
 	private List<Attachment> allAttachmentsForForm;
 	private Attachment currentViewedAttachmentForForm;
@@ -49,10 +49,10 @@ public class WebKitAttachmentPreviewBean extends ABaseManagedBean {
 	private int dialogWidth;
 
 	public void actionLoadAttachmentsForForm(WorkspaceFluidItem fluidItem, int dialogWidth) {
-		if (this.conversation.isTransient()) {
+		/*TODO if (this.conversation.isTransient()) {
 			this.conversation.setTimeout(TimeUnit.MINUTES.toMillis(180));
 			this.conversation.begin();
-		}
+		}*/
 
 		this.setDialogWidth(dialogWidth);
 		this.setWorkspaceFluidItem(fluidItem);
@@ -70,23 +70,31 @@ public class WebKitAttachmentPreviewBean extends ABaseManagedBean {
 			if (this.getAllAttachmentsForForm().isEmpty()) this.setCurrentViewedAttachmentForForm(new Attachment());
 			else this.setCurrentViewedAttachmentForForm(this.getAllAttachmentsForForm().get(0));
 
-			this.setDialogHeaderTitle(String.format("%s - %d of %d",
-					this.getCurrentViewedAttachmentForForm().getName(),
-					this.getCurrentAttachmentIndex() + 1,
+			this.setDialogHeaderTitle(String.format("%s - %d Total",
+					fluidItem.getFluidItemForm().getTitle(),
 					this.getAllAttachmentsForForm().size()));
 		}
 	}
 
 	public void actionNextAttachment() {
-
+		this.setCurrentAttachmentIndex(this.getCurrentAttachmentIndex() + 1);
+		this.setCurrentViewedAttachmentForForm(this.getAllAttachmentsForForm().get(this.getCurrentAttachmentIndex()));
 	}
 
 	public void actionPreviousAttachment() {
-
+		this.setCurrentAttachmentIndex(this.getCurrentAttachmentIndex() - 1);
+		this.setCurrentViewedAttachmentForForm(this.getAllAttachmentsForForm().get(this.getCurrentAttachmentIndex()));
 	}
 
 	public void actionLoadThumbnailClicked(int index) {
+		int intReq = this.getIntRequestParam("attIndexToLoad");
 
+		this.setCurrentAttachmentIndex(intReq);
+		this.setCurrentViewedAttachmentForForm(this.getAllAttachmentsForForm().get(this.getCurrentAttachmentIndex()));
+	}
+
+	public void actionHandleIndexChange() {
+		this.actionLoadThumbnailClicked(this.getCurrentAttachmentIndex());
 	}
 
 	public boolean isAtFirstAttachment() {
@@ -99,9 +107,18 @@ public class WebKitAttachmentPreviewBean extends ABaseManagedBean {
 	}
 
 	public void actionCloseDialog() {
-		if (!this.conversation.isTransient()) this.conversation.end();
+		//TODO if (!this.conversation.isTransient()) this.conversation.end();
 	}
 
-	
-	
+	public List<SelectItem> getAttachmentIndexesAsSelectItems() {
+		List<SelectItem> returnVal = new ArrayList<>();
+		if (this.getAllAttachmentsForForm() != null) {
+			AtomicInteger atInt = new AtomicInteger(0);
+			this.getAllAttachmentsForForm().forEach(itm -> {
+				int pageNumber = atInt.getAndIncrement();
+				returnVal.add(new SelectItem(Integer.valueOf(pageNumber), Integer.toString(pageNumber + 1)));
+			});
+		}
+		return returnVal;
+	}
 }
