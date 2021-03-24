@@ -94,7 +94,10 @@ public class WebKitAttachmentPreviewBean extends ABaseManagedBean {
 	}
 
 	public void actionHandleIndexChange() {
-		this.actionLoadThumbnailClicked(this.getCurrentAttachmentIndex());
+		int currentIndex = this.getCurrentAttachmentIndex();
+
+		this.setCurrentAttachmentIndex(currentIndex);
+		this.setCurrentViewedAttachmentForForm(this.getAllAttachmentsForForm().get(this.getCurrentAttachmentIndex()));
 	}
 
 	public boolean isAtFirstAttachment() {
