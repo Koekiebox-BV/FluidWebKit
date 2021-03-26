@@ -586,8 +586,8 @@ public class WebKitOpenFormConversationBean extends ABaseManagedBean {
 	}
 
 	public void actionOnRowEdit(RowEditEvent<Form> event) {
-		FacesMessage msg = new FacesMessage("Edited",
-				String.format("%s", event.getObject().getFormType()));
+		FacesMessage msg = new FacesMessage("Edited", String.format("%s - %s",
+				event.getObject().getFormType(), event.getObject().getTitle()));
 		FacesContext.getCurrentInstance().addMessage(null, msg);
 	}
 
@@ -793,8 +793,7 @@ public class WebKitOpenFormConversationBean extends ABaseManagedBean {
 		String formType,
 		List<Field> formFields
 	) {
-		if (UtilGlobal.isBlank(formula))
-			return String.format("Attachments for %s - %s", formType, new Date().toString());
+		if (UtilGlobal.isBlank(formula)) return String.format("Attachments for %s - %s", formType, new Date().toString());
 
 		int lastIndexOfPipe = formula.lastIndexOf("|");
 		String formFieldsString = formula.substring(lastIndexOfPipe);
@@ -829,8 +828,7 @@ public class WebKitOpenFormConversationBean extends ABaseManagedBean {
 	}
 
 	public int getInputWorkflowsForFormDefCount() {
-		return this.inputWorkflowsForFormDef == null ? 0 :
-				this.inputWorkflowsForFormDef.size();
+		return this.inputWorkflowsForFormDef == null ? 0 : this.inputWorkflowsForFormDef.size();
 	}
 
 	public boolean getRenderWorkflowSelectDropdown() {

@@ -16,6 +16,8 @@
 package com.fluidbpm.fluidwebkit.backing.bean.attachment;
 
 import com.fluidbpm.fluidwebkit.backing.bean.ABaseManagedBean;
+import com.fluidbpm.fluidwebkit.backing.bean.attachment.sheet.FluidWorkspaceUtil;
+import com.fluidbpm.fluidwebkit.backing.bean.attachment.sheet.Worksheet;
 import com.fluidbpm.fluidwebkit.backing.bean.workspace.WorkspaceFluidItem;
 import com.fluidbpm.fluidwebkit.qualifier.cache.FormAttachmentsCache;
 import com.fluidbpm.fluidwebkit.qualifier.cache.FormImageCache;
@@ -36,6 +38,8 @@ import javax.faces.event.PhaseId;
 import javax.inject.Inject;
 import javax.inject.Named;
 import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -212,6 +216,25 @@ public class WebKitAttachmentBean extends ABaseManagedBean {
 
 		//Need to optimise later. We need only remove the items for specific att...
 		this.attachmentCache.invalidate(attachmentId);
+	}
+
+	public List<Worksheet> fetchExcelWorksheets(Long attachmentIdParam, String excelPasswordParam) {
+		InputStream inputStream = null;
+		try {
+			StreamedContent sc = this.fetchAttachmentData(new Attachment(attachmentIdParam));
+			inputStream = sc.getStream();
+			FluidWorkspaceUtil fluidWorkspaceUtil = new FluidWorkspaceUtil();
+			List<Worksheet> returnVal = fluidWorkspaceUtil.getWorksheetsFromExcel(inputStream, excelPasswordParam);
+			return returnVal;
+		} finally {
+			if (inputStream != null) {
+				try {
+					inputStream.close();
+				} catch (IOException eParam) {
+					this.raiseError(eParam);
+				}
+			}
+		}
 	}
 
 	public StreamedContent fetchAttachmentData(Attachment attachment) {

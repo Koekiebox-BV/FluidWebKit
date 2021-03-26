@@ -119,10 +119,8 @@ public class WebKitConfigHelperBean extends ABaseManagedBean {
 				FacesContext.getCurrentInstance().getExternalContext().getSession(false);
 		if (httpSessionObj instanceof HttpSession) {
 			HttpSession casted = (HttpSession)httpSessionObj;
-			Object heightValue = casted.getAttribute(
-					SessionVariable.USER_BROWSER_WINDOW_HEIGHT);
-			if (heightValue != null && heightValue instanceof Number)
-				return ((Number)heightValue).intValue();
+			Object heightValue = casted.getAttribute(SessionVariable.USER_BROWSER_WINDOW_HEIGHT);
+			if (heightValue != null && heightValue instanceof Number) return ((Number)heightValue).intValue();
 		}
 		return 900;
 	}
@@ -176,6 +174,11 @@ public class WebKitConfigHelperBean extends ABaseManagedBean {
 	public boolean isFieldTypeLabelMetaTypeJavascript(String metaDataTxt) {
 		if (UtilGlobal.isBlank(metaDataTxt)) return false;
 		return metaDataTxt.startsWith("Javascript_");
+	}
+
+	public boolean isFieldTypeMultiMetaTypeNotPlain(String metaDataTxt) {
+		if (UtilGlobal.isBlank(metaDataTxt)) return false;
+		return !"Plain".equals(metaDataTxt);
 	}
 
 	public String getJavascriptValueFromMetaData(String metaDataTxt) {
@@ -283,7 +286,7 @@ public class WebKitConfigHelperBean extends ABaseManagedBean {
 		if (forLabel instanceof SelectItem) return ((SelectItem)forLabel).getLabel();
 
 		if (forLabel instanceof List) {
-			if (((List<String>)forLabel).isEmpty()) return "None Selected. Select to perform lookup.";
+			if (((List<String>)forLabel).isEmpty()) return "None Selected.";
 
 			return ((List<String>)forLabel).stream().collect(Collectors.joining(", "));
 		}

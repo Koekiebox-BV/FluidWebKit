@@ -91,9 +91,7 @@ public class WebKitMenuBean extends ABaseManagedBean {
 
 	@PostConstruct
 	public void actionPopulateInit() {
-		if (this.getFluidClientDS() == null) {
-			return;
-		}
+		if (this.getFluidClientDS() == null) return;
 
 		this.populateWebKitUserQueries();
 		this.buildLeftMenuUserQueries();

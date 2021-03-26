@@ -16,6 +16,9 @@
 package com.fluidbpm.fluidwebkit.backing.bean.attachment;
 
 import com.fluidbpm.fluidwebkit.backing.bean.ABaseManagedBean;
+import com.fluidbpm.fluidwebkit.backing.bean.attachment.sheet.Cell;
+import com.fluidbpm.fluidwebkit.backing.bean.attachment.sheet.Row;
+import com.fluidbpm.fluidwebkit.backing.bean.attachment.sheet.Worksheet;
 import com.fluidbpm.fluidwebkit.backing.bean.workspace.WorkspaceFluidItem;
 import com.fluidbpm.program.api.vo.attachment.Attachment;
 import lombok.Getter;
@@ -48,6 +51,8 @@ public class WebKitAttachmentPreviewBean extends ABaseManagedBean {
 	private int currentAttachmentIndex;
 	private int dialogWidth;
 
+	private List<Worksheet> worksheets;
+
 	public void actionLoadAttachmentsForForm(WorkspaceFluidItem fluidItem, int dialogWidth) {
 		/*TODO if (this.conversation.isTransient()) {
 			this.conversation.setTimeout(TimeUnit.MINUTES.toMillis(180));
@@ -74,6 +79,53 @@ public class WebKitAttachmentPreviewBean extends ABaseManagedBean {
 					fluidItem.getFluidItemForm().getTitle(),
 					this.getAllAttachmentsForForm().size()));
 		}
+	}
+
+	public void actionLoadSheetsForExcelAttachment(long attIdParam) {
+		this.setWorksheets(new ArrayList<>());
+		if (attIdParam > 0) {
+			this.setWorksheets(this.attachmentBean.fetchExcelWorksheets(attIdParam, null));
+		}
+	}
+
+	public Row actionGetRowAtIndex(int sheetIndexParam, int rowIndexParam) {
+		Worksheet worksheet = this.actionGetWorksheetAtIndex(sheetIndexParam);
+		if (worksheet == null) return null;
+
+		return worksheet.getRows().get(rowIndexParam);
+	}
+	
+	public int actionGetColumnWidth(int sheetIndexParam, int columnIndexParam) {
+		Worksheet worksheet = this.actionGetWorksheetAtIndex(sheetIndexParam);
+		if(worksheet == null) return 5;
+
+		List<Row> rows = worksheet.getRows();
+		if(rows == null) return 10;
+
+		int maxCharsInColumn = 0;
+		for(Row row : rows) {
+			List<Cell> cells = row.getCells();
+			if (cells != null && (columnIndexParam < cells.size())) {
+				String cellValue = cells.get(columnIndexParam).getValue();
+				if(cellValue == null) continue;
+
+				maxCharsInColumn = Math.max(maxCharsInColumn,cellValue.length());
+			}
+		}
+
+		if (maxCharsInColumn > 0) {
+			return 100;
+		} else {
+			return 10;
+		}
+	}
+
+	public Worksheet actionGetWorksheetAtIndex(int sheetIndexParam) {
+		if (this.getWorksheets() == null) return null;
+
+		if (sheetIndexParam < this.getWorksheets().size()) return this.getWorksheets().get(sheetIndexParam);
+
+		return null;
 	}
 
 	public void actionNextAttachment() {
