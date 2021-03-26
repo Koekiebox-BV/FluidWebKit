@@ -51,6 +51,7 @@ public class WebKitField extends Field {
 		if (multi == null) return returnList;
 		
 		List<String> availSelectItems = multi.getAvailableMultiChoices();
+		if (availSelectItems == null) return returnList;
 		return new ArrayList<>(availSelectItems.stream()
 				.map(itm -> new SelectItem(itm, itm))
 				.collect(Collectors.toList()));
