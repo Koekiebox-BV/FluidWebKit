@@ -723,7 +723,7 @@ public class WebKitOpenFormConversationBean extends ABaseManagedBean {
 				.filter(itm -> itm.getTypeAsEnum() == Field.Type.Table)
 				.map(itm -> itm.getFieldValueAsTableField())
 				//Only where there is table records...
-				.filter(tblField -> tblField.getTableRecords() != null && !tblField.getTableRecords().isEmpty())
+				.filter(tblField -> tblField != null && (tblField.getTableRecords() != null && !tblField.getTableRecords().isEmpty()))
 				.map(tblRecords -> tblRecords.getTableRecords())
 				.flatMap(Collection::stream)
 				//Only where modified by currently logged in user and not a placeholder...
