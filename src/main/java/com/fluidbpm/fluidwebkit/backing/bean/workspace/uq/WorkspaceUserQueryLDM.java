@@ -6,6 +6,7 @@ import com.fluidbpm.fluidwebkit.ds.FluidClientDS;
 import com.fluidbpm.program.api.vo.field.Field;
 import com.fluidbpm.program.api.vo.item.FluidItemListing;
 import com.fluidbpm.program.api.vo.userquery.UserQuery;
+import com.fluidbpm.program.api.vo.webkit.userquery.WebKitUserQuery;
 import com.fluidbpm.ws.client.v1.userquery.UserQueryClient;
 import org.primefaces.model.FilterMeta;
 import org.primefaces.model.SortOrder;
@@ -48,13 +49,20 @@ public class WorkspaceUserQueryLDM extends ABaseLDM<WorkspaceFluidItem> {
 		this.setRowCount(0);
 		if (this.dataListing == null) return null;
 
+		WebKitUserQuery webKitUserQuery = this.webKitUserQueryBean.getContentView().getWkUserQuery();
+		boolean executeCustomProgramLabels = false;
+		if (webKitUserQuery != null) {
+			executeCustomProgramLabels = webKitUserQuery.isEnableCalculatedLabels();
+		}
+
 		List<Field> inputFields = this.webKitUserQueryBean.getInputFieldValues();
 		try {
 			UserQueryClient userQueryClient = this.clientDS.getUserQueryClient();
 			UserQuery userQueryToExec = new UserQuery(this.userQueryId);
 			userQueryToExec.setInputs(inputFields);
 
-			FluidItemListing result = userQueryClient.executeUserQuery(userQueryToExec, false, pageSize, first);
+			FluidItemListing result = userQueryClient.executeUserQuery(
+					userQueryToExec, false, executeCustomProgramLabels, pageSize, first, false);
 
 			List<WorkspaceFluidItem> wfiList = new ArrayList<>();
 			this.setRowCount(result.getListingCount());

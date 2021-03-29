@@ -86,8 +86,7 @@ public class ImageServlet extends ABaseFWKServlet {
 
 		String thumbnailScale = reqParam.getParameter(PARAM_THUMBNAIL_SCALE);
 		int thumbScale = -1;
-		if (thumbnailScale != null && !thumbnailScale.trim().isEmpty())
-			thumbScale = Integer.parseInt(thumbnailScale.trim());
+		if (thumbnailScale != null && !thumbnailScale.trim().isEmpty()) thumbScale = Integer.parseInt(thumbnailScale.trim());
 
 		Long formIdParam = null;
 		try {
@@ -192,7 +191,7 @@ public class ImageServlet extends ABaseFWKServlet {
 			return new ImageStreamedContent(
 					nonImageData,
 					"image/svg+xml",
-					imageAttachmentById.getName());
+					String.format("type_icon_%s.svg", UUID.randomUUID().toString().substring(0, 5)));
 		}
 
 		byte[] imageBytes = UtilGlobal.decodeBase64(imageAttachmentById.getAttachmentDataBase64());
