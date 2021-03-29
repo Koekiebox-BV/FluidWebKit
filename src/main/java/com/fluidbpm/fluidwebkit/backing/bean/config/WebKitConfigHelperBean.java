@@ -178,7 +178,12 @@ public class WebKitConfigHelperBean extends ABaseManagedBean {
 
 	public boolean isFieldTypeMultiMetaTypeNotPlain(String metaDataTxt) {
 		if (UtilGlobal.isBlank(metaDataTxt)) return false;
-		return !"Plain".equals(metaDataTxt);
+		return !this.isFieldTypeMultiMetaTypePlain(metaDataTxt);
+	}
+
+	public boolean isFieldTypeMultiMetaTypePlain(String metaDataTxt) {
+		if (UtilGlobal.isBlank(metaDataTxt)) return false;
+		return metaDataTxt.startsWith("Plain");
 	}
 
 	public String getJavascriptValueFromMetaData(String metaDataTxt) {

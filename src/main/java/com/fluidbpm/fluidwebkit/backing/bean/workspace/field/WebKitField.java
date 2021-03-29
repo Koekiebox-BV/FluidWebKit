@@ -120,7 +120,7 @@ public class WebKitField extends Field {
 	@XmlTransient
 	public int getInputValueColumnCount() {
 		MultiChoice multi = this.getFieldValueAsMultiChoice();
-		if (multi == null) return 1;
+		if (multi == null || multi.getAvailableMultiChoices() == null) return 1;
 
 		int count = multi.getAvailableMultiChoices().size();
 
