@@ -578,8 +578,9 @@ public class WebKitOpenFormConversationBean extends ABaseManagedBean {
 			}
 
 			//Add another placeholder...
-			if (PLACEHOLDER_TITLE.equals(prevTitle))
+			if (PLACEHOLDER_TITLE.equals(prevTitle)) {
 				this.actionAddPlaceholderRowOfType(tableFieldToAddFor);
+			}
 		} catch (Exception except) {
 			this.raiseError(except);
 		}
@@ -754,7 +755,9 @@ public class WebKitOpenFormConversationBean extends ABaseManagedBean {
 		Form returnVal = new Form(fluidItem.getFluidItemFormType());
 		returnVal.setId(fluidItem.getFluidItemFormId());
 		returnVal.setFormType(fluidItem.getFluidItemFormType());
-		returnVal.setFormFields(fluidItem.getFormFieldsEditAsFields());
+
+		List<Field> editFormFields = fluidItem.getFormFieldsEditAsFields();
+		returnVal.setFormFields(editFormFields);
 
 		WebKitForm wkForm = this.lookAndFeelBean.getWebKitFormWithFormDef(returnVal.getFormType());
 		returnVal.setFormTypeId(fluidItem.getFluidItemForm().getFormTypeId());
@@ -774,16 +777,22 @@ public class WebKitOpenFormConversationBean extends ABaseManagedBean {
 
 	private void mergeFormFieldsFromCustomAction(CustomWebAction execActionResult, Form formToUpdate) {
 		Form execForm = execActionResult.getForm();
-		if (execForm != null && (execForm.getTitle() != null && !execForm.getTitle().trim().isEmpty()))
+		if (execForm != null && (execForm.getTitle() != null && !execForm.getTitle().trim().isEmpty())) {
 			formToUpdate.setTitle(execForm.getTitle());
+		}
 		List<Field> execFields = (execForm == null) ? null : execForm.getFormFields();
 		if (execFields == null || execFields.isEmpty()) return;
 
-		execFields.forEach(fieldItemFromExec -> {
-			formToUpdate.setFieldValue(
-					fieldItemFromExec.getFieldName(),
-					fieldItemFromExec.getFieldValue(),
-					fieldItemFromExec.getTypeAsEnum()
+		execFields.stream()
+				.filter(itm -> itm.getTypeAsEnum() != Field.Type.Table)//We do not update table records...
+				.forEach(fieldItemFromExec -> {
+					if (fieldItemFromExec.getTypeAsEnum() == null ||
+							fieldItemFromExec.getTypeAsEnum() == Field.Type.Table) return;
+
+					formToUpdate.setFieldValue(
+							fieldItemFromExec.getFieldName(),
+							fieldItemFromExec.getFieldValue(),
+							fieldItemFromExec.getTypeAsEnum()
 			);
 		});
 	}
@@ -793,7 +802,7 @@ public class WebKitOpenFormConversationBean extends ABaseManagedBean {
 		String formType,
 		List<Field> formFields
 	) {
-		if (UtilGlobal.isBlank(formula)) return String.format("Attachments for %s - %s", formType, new Date().toString());
+		if (UtilGlobal.isBlank(formula)) return String.format("%s - %s", formType, new Date().toString());
 
 		int lastIndexOfPipe = formula.lastIndexOf("|");
 		String formFieldsString = formula.substring(lastIndexOfPipe);

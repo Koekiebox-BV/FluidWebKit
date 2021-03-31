@@ -3,6 +3,7 @@ package com.fluidbpm.fluidwebkit.backing.bean.workspace.field;
 import com.fluidbpm.program.api.util.UtilGlobal;
 import com.fluidbpm.program.api.vo.field.Field;
 import com.fluidbpm.program.api.vo.field.MultiChoice;
+import lombok.NoArgsConstructor;
 
 import javax.faces.model.SelectItem;
 import javax.xml.bind.annotation.XmlTransient;
@@ -10,11 +11,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+@NoArgsConstructor
 public class WebKitField extends Field {
-
-	public WebKitField() {
-		super();
-	}
 
 	public WebKitField(
 		Long fieldIdParam,

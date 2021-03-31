@@ -202,7 +202,7 @@ public class WorkspaceFluidItem extends ABaseFluidVO {
 	public List<Field> getFormFieldsEditAsFields() {
 		if (this.formFieldsEdit == null) return null;
 		return this.formFieldsEdit.stream()
-				.map(itm -> itm.asField())
+				.map(WebKitField::asField)
 				.collect(Collectors.toList());
 	}
 
