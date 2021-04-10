@@ -219,7 +219,8 @@ implements IConversationCallback {
 
 		Form formDefWithNewInstanceAccess =
 				this.accessBean.getFormDefinitionsCanCreateInstanceOfSorted().stream()
-				.filter(itm -> itm.getFormType().equals(formType) || itm.getFormTypeId().equals(formIdType))
+				.filter(itm -> itm.getFormType().equals(formType) ||
+								(itm.getFormTypeId() != null && itm.getFormTypeId().equals(formIdType)))
 				.findFirst()
 				.orElse(null);
 		if (formDefWithNewInstanceAccess == null) {
