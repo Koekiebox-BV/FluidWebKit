@@ -35,6 +35,7 @@ import javax.enterprise.context.Conversation;
 import javax.enterprise.context.ConversationScoped;
 import javax.faces.application.FacesMessage;
 import javax.faces.context.FacesContext;
+import javax.faces.event.AjaxBehaviorEvent;
 import javax.inject.Inject;
 import javax.inject.Named;
 import java.io.ByteArrayInputStream;
@@ -110,6 +111,22 @@ public class WebKitOpenFormConversationBean extends ABaseManagedBean {
 
 	@Inject
 	private WebKitAttachmentBean attachmentBean;
+
+	@Getter
+	@Setter
+	private boolean inputIncludeCompanyLogo;
+
+	@Getter
+	@Setter
+	private boolean inputIncludeProperties;
+
+	@Getter
+	@Setter
+	private boolean inputIncludeAncestor;
+
+	@Getter
+	@Setter
+	private boolean inputIncludeDescendant;
 
 	@PostConstruct
 	public void init() {
@@ -382,13 +399,63 @@ public class WebKitOpenFormConversationBean extends ABaseManagedBean {
 				.url("#attachmentsAsListingGridList")
 				.icon("fa fa-link")
 				.build();
+		
+		DefaultMenuItem itemPrint = DefaultMenuItem.builder()
+				.value("Print")
+				.command("#{webKitOpenFormConversationBean.actionPrepToPrint()}")
+				.process("@this")
+				.update(":frmPrintForm")
+				.oncomplete("PF('varPrintFormDialog').show();")
+				.icon("fa fa-print")
+				.build();
 
 		this.contextMenuModel.getElements().add(itemGotoFields);
 		this.contextMenuModel.getElements().add(itemGotoAttachments);
+		if (this.doesUserHavePermission("print_forms")) {
+			this.contextMenuModel.getElements().add(sep);
+			this.contextMenuModel.getElements().add(itemPrint);
+		}
 	}
 
 	public void actionPrepToUploadNewAttachment() {
 
+	}
+
+	public StreamedContent getPrintFileContent() {
+		Long formId = this.getLongRequestParam("formId");
+		Boolean inputIncludeCompanyLogo = this.getBooleanRequestParam("inputIncludeCompanyLogo");
+		Boolean inputIncludeProperties = this.getBooleanRequestParam("inputIncludeProperties");
+
+		try {
+			FormContainerClient fcc = this.getFluidClientDS().getFormContainerClient();
+			Attachment pdfPrint = fcc.printForm(
+				this.wsFluidItem.getFluidItemForm(),
+				this.inputIncludeCompanyLogo,
+				this.inputIncludeAncestor,
+				this.inputIncludeDescendant,
+				this.inputIncludeProperties
+			);
+
+			return DefaultStreamedContent.builder()
+					.name(pdfPrint.getName())
+					.contentType(pdfPrint.getContentType())
+					.stream(() -> new ByteArrayInputStream(pdfPrint.getAttachmentDataRAW()))
+					.build();
+		} catch (Exception except) {
+			this.raiseError(except);
+			return null;
+		}
+	}
+
+	public void actionOnBoolChange(AjaxBehaviorEvent boolEvent) {
+
+	}
+
+	public void actionPrepToPrint() {
+		this.inputIncludeCompanyLogo = true;
+		this.inputIncludeProperties = false;
+		this.inputIncludeAncestor = false;
+		this.inputIncludeDescendant = false;
 	}
 
 	public void actionPrepToReplaceExistingAttachmentByName(String attachmentName) {

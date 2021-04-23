@@ -66,7 +66,7 @@ public class RAWContentServlet extends ImageServlet {
 		}
 		String attachmentId = reqParam.getParameter(PARAM_ATTACHMENT_ID);
 		Long attachmentIdLong = -1L;
-		if (attachmentId == null) {
+		if (attachmentId == null || "null".equals(attachmentId.trim())) {
 			attachmentId = UtilGlobal.EMPTY;
 		} else {
 			attachmentIdLong = Long.valueOf(attachmentId.trim());
