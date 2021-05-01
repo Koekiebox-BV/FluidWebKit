@@ -24,8 +24,6 @@
 		<version.jdk.compile>1.8</version.jdk.compile>
 	</properties>
 
-	<url>https://github.com/Koekiebox-PTY-LTD/FluidWebKit</url>
-
 	<licenses>
 		<license>
 			<name>GNU GENERAL PUBLIC LICENSE, Version 3</name>
