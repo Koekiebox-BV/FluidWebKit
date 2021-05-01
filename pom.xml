@@ -4,7 +4,7 @@
 
 	<groupId>com.fluidbpm</groupId>
 	<artifactId>fluidwebkit</artifactId>
-	<version>1.1-SNAPSHOT</version>
+	<version>1.1</version>
 	<packaging>jar</packaging>
 
 	<name>Fluid Webkit</name>
