@@ -218,8 +218,7 @@ public class WebKitNotificationsBean extends ABaseManagedBean {
 	}
 
 	/**
-	 *
-	 * @return
+	 * @return if there are notifications.
 	 */
 	public boolean isNoUserNotifications() {
 		return this.getTotalNumberOfNotifications() < 1;

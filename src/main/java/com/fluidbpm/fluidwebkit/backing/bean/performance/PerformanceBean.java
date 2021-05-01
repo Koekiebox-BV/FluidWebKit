@@ -83,11 +83,6 @@ public class PerformanceBean extends ABaseManagedBean {
 		return Integer.parseInt(formatted);
 	}
 
-	/**
-	 *
-	 * @param dateParam
-	 * @return
-	 */
 	public static String DOUBLE_DATE_HOUR = "kk.mm";
 	public static double getHourAndMinuteAsDouble(Date dateParam) {
 		if (dateParam == null) {
@@ -97,33 +92,20 @@ public class PerformanceBean extends ABaseManagedBean {
 		String formatted = new SimpleDateFormat(DOUBLE_DATE_HOUR).format(dateParam);
 		return Double.parseDouble(formatted);
 	}
-
-	/**
-	 *
-	 * @param dateParam
-	 * @return
-	 */
+	
 	public static String INT_DATE_MONTH_FORMAT = "MM";
 	public static int getMonthAsInt(Date dateParam) {
 		if (dateParam == null) {
 			return 0;
 		}
 
-		String formatted = new SimpleDateFormat(
-				INT_DATE_MONTH_FORMAT).format(dateParam);
+		String formatted = new SimpleDateFormat(INT_DATE_MONTH_FORMAT).format(dateParam);
 		return Integer.parseInt(formatted);
 	}
 
-	/**
-	 *
-	 * @param dateParam
-	 * @return
-	 */
 	public static String DATE_FORMAT_YEAR_MONTH = "yyyy MMM";
 	public static String getYearMonthAsString(Date dateParam) {
-		if (dateParam == null) {
-			return null;
-		}
+		if (dateParam == null) return null;
 
 		return new SimpleDateFormat(DATE_FORMAT_YEAR_MONTH).format(dateParam);
 	}

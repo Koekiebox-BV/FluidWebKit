@@ -119,8 +119,8 @@ public abstract class ABaseWorkspaceBean<T extends ABaseWebVO, J extends ABaseCo
 	 * Further customised grouping may be done by overriding the {@code this#getViewGroupForUI(String,String)} method.
 	 * 
 	 * The following will be loaded;
-	 * -> The {@code JobView}'s the logged in user has access to.
-	 * -> The list of {@code UserQuery}'s the logged in user has access to.
+	 * - The {@code JobView}'s the logged in user has access to.
+	 * - The list of {@code UserQuery}'s the logged in user has access to.
 	 *
 	 * @see com.fluidbpm.program.api.vo.userquery.UserQuery
 	 * @see JobView
@@ -252,13 +252,17 @@ public abstract class ABaseWorkspaceBean<T extends ABaseWebVO, J extends ABaseCo
 	 * Open an 'Form' for editing or viewing.
 	 * Custom functionality needs to be placed in {@code this#actionOpenFormForEditingFromWorkspace}.
 	 *
-	 * @see this#actionOpenForm(WorkspaceFluidItem)
+	 * @param workspaceFluidItem The workspace item.
+	 *
+	 * @see #actionOpenForm(WorkspaceFluidItem)
 	 */
 	public abstract void actionOpenFormForEditingFromWorkspace(WorkspaceFluidItem workspaceFluidItem);
 
 	/**
 	 * Custom functionality for when a Form is clicked on to be opened.
 	 * Open an 'Form' for editing or viewing.
+	 *
+	 * @param workspaceFluidItem The workitem to open.
 	 */
 	public abstract void actionOpenForm(WorkspaceFluidItem workspaceFluidItem);
 
@@ -271,11 +275,11 @@ public abstract class ABaseWorkspaceBean<T extends ABaseWebVO, J extends ABaseCo
 	 * When the main page for the workspace is opened or refreshed.
 	 * Custom sub {@code ABaseWebVO} object may be created via {@code createABaseWebVO}.
 	 *
-	 * The {@code actionOpenMainPage} will create the 'Content View' while the
-	 * {@code createABaseWebVO} method will map each one of the custom objects.
+	 * The {@code actionOpenMainPage} will create the 'Content View' while the {@code createABaseWebVO}
+	 * method will map each one of the custom objects.
 	 *
-	 * @see this#actionOpenMainPage(WebKitViewGroup, WebKitViewSub)
-	 * @see this#createABaseWebVO(WebKitViewGroup,WebKitViewSub,WebKitWorkspaceJobView,FluidItem))
+	 * @see #actionOpenMainPage(WebKitViewGroup, WebKitViewSub)
+	 * @see #createABaseWebVO(WebKitViewGroup,WebKitViewSub,WebKitWorkspaceJobView,FluidItem)
 	 */
 	public void actionOpenMainPage() {
 		this.areaToUpdateForDialogAfterSubmit = null;
@@ -438,7 +442,10 @@ public abstract class ABaseWorkspaceBean<T extends ABaseWebVO, J extends ABaseCo
 	/**
 	 * Custom functionality for when a workspace is loaded.
 	 * The menu-option clicked by the user will be passed through as {@code workspaceAimParam}.
-	 * 
+	 *
+	 * @param webKitGroup The group.
+	 * @param selectedSub The sub.
+	 *
 	 * @return ABaseContentView to use based on {@code workspaceAimParam}.
 	 *
 	 * @see ABaseContentView
@@ -447,7 +454,10 @@ public abstract class ABaseWorkspaceBean<T extends ABaseWebVO, J extends ABaseCo
 
 	/**
 	 * Create a custom value object based on {@code wrapperParam} and {@code fluidItemParam}.
-	 * 
+	 *
+	 * @param group The view group.
+	 * @param sub The view sub.
+	 * @param view The view.
 	 * @param item The Fluid {@code FluidItem} to map from.
 	 *
 	 * @return ABaseWebVO subclass based on {@code fluidItemParam}.
@@ -519,7 +529,7 @@ public abstract class ABaseWorkspaceBean<T extends ABaseWebVO, J extends ABaseCo
 	 * 
 	 * @param currentlyHaveItemOpenParam Set whether an item is currently open.
 	 *
-	 * @see this#actionOpenFormForEditingFromWorkspace(WorkspaceFluidItem)
+	 * @see #actionOpenFormForEditingFromWorkspace(WorkspaceFluidItem)
 	 */
 	public void setCurrentlyHaveItemOpen(boolean currentlyHaveItemOpenParam) {
 		this.currentlyHaveItemOpen = currentlyHaveItemOpenParam;

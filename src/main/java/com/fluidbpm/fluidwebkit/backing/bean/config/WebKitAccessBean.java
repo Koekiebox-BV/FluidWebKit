@@ -77,8 +77,6 @@ public class WebKitAccessBean extends ABaseManagedBean {
 
 	/**
 	 * Log a user into the Design Dashboard.
-	 *
-	 * @return navigation {@code dashboard}
 	 */
 	@PostConstruct
 	public void actionPopulateInit() {

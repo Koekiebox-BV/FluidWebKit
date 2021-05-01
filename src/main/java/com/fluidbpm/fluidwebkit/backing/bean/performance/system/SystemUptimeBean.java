@@ -17,24 +17,13 @@ package com.fluidbpm.fluidwebkit.backing.bean.performance.system;
 
 import com.fluidbpm.fluidwebkit.backing.bean.ABaseManagedBean;
 import com.fluidbpm.fluidwebkit.backing.bean.performance.PerformanceBean;
-import com.fluidbpm.fluidwebkit.backing.bean.performance.user.PunchCardChartVO;
-import com.fluidbpm.fluidwebkit.backing.bean.performance.user.PunchCardEntryComp;
 import com.fluidbpm.program.api.vo.report.system.SystemUpHourMin;
 import com.fluidbpm.program.api.vo.report.system.SystemUptimeReport;
-import com.fluidbpm.program.api.vo.report.userstats.PunchCardEntry;
-import lombok.Getter;
-import lombok.Setter;
-import org.primefaces.model.chart.AxisType;
-import org.primefaces.model.chart.OhlcChartModel;
-import org.primefaces.model.chart.OhlcChartSeries;
 
 import javax.enterprise.context.RequestScoped;
 import javax.inject.Inject;
 import javax.inject.Named;
-import java.text.SimpleDateFormat;
 import java.util.*;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
@@ -46,8 +35,8 @@ public class SystemUptimeBean extends ABaseManagedBean {
 	private PerformanceBean performanceBean;
 
 	/**
-	 * Return a mappig of dowmtime. If value for day is {@code true}, there was downtime.
-	 * @return
+	 * Return a mapping of downtime. If value for day is {@code true}, there was downtime.
+	 * @return Map
 	 */
 	public Map<String, Integer> getDowntimeMapping() {
 		SystemUptimeReport sysUptimeReport = this.performanceBean.getSystemUptimeReport();

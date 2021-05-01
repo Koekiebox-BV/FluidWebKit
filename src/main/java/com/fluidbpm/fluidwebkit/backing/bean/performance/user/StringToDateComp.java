@@ -27,43 +27,24 @@ public class StringToDateComp implements Comparator<PunchCardChartVO> {
 
 	private String dateFormat = null;
 
-	/**
-	 *
-	 * @param dateFormatParam
-	 */
+
 	public StringToDateComp(String dateFormatParam) {
 		this.dateFormat = dateFormatParam;
 	}
 
-	/**
-	 *
-	 * @param objectOneParam
-	 * @param objectTwoParam
-	 * @return
-	 */
+
 	@Override
 	public int compare(PunchCardChartVO objectOneParam, PunchCardChartVO objectTwoParam) {
-
-		if (objectOneParam == null || objectTwoParam == null) {
-			return 0;
-		}
+		if (objectOneParam == null || objectTwoParam == null) return 0;
 
 		Date objOneDate = this.toDate(objectOneParam.getYearMonthLabel());
 		Date objTwoDate = this.toDate(objectTwoParam.getYearMonthLabel());
 
-		if(objOneDate == null || objTwoDate == null)
-		{
-			return 0;
-		}
+		if (objOneDate == null || objTwoDate == null) return 0;
 
 		return objOneDate.compareTo(objTwoDate);
 	}
 
-	/**
-	 *
-	 * @param stringValParam
-	 * @return
-	 */
 	private Date toDate(String stringValParam) {
 		return UtilGlobal.fromStringToDateSafe(stringValParam , this.dateFormat);
 	}

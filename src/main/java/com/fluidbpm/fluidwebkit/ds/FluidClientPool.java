@@ -32,9 +32,9 @@ public class FluidClientPool {
 	/**
 	 * Init communication with Fluid for session.
 	 *
-	 * @param uiSessionId
-	 * @param serviceTicket
-	 * @param endpoint
+	 * @param uiSessionId The web session id
+	 * @param serviceTicket The service ticket
+	 * @param endpoint The URL endpoint
 	 */
 	public void init(
 		String uiSessionId,
@@ -44,10 +44,6 @@ public class FluidClientPool {
 		this.fluidDS.put(uiSessionId, new FluidClientDS(serviceTicket, endpoint));
 	}
 
-	/**
-	 * @param uiSessionId
-	 * @return
-	 */
 	public FluidClientDS get(String uiSessionId) {
 		if (uiSessionId == null) return null;
 		FluidClientDS returnVal = this.fluidDS.getIfPresent(uiSessionId);

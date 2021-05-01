@@ -18,31 +18,15 @@ package com.fluidbpm.fluidwebkit.backing.bean.login;
 import com.fluidbpm.fluidwebkit.backing.bean.ABaseManagedBean;
 import com.fluidbpm.fluidwebkit.backing.bean.config.WebKitConfigBean;
 import com.fluidbpm.fluidwebkit.ds.FluidClientDS;
-import com.fluidbpm.program.api.vo.field.Field;
-import com.fluidbpm.program.api.vo.user.User;
-import com.fluidbpm.program.api.vo.user.UserFieldListing;
 import com.fluidbpm.ws.client.FluidClientException;
-import com.fluidbpm.ws.client.v1.user.UserClient;
 import lombok.Getter;
 import lombok.Setter;
-import org.primefaces.model.DefaultStreamedContent;
-import org.primefaces.model.StreamedContent;
 
 import javax.enterprise.context.RequestScoped;
-import javax.enterprise.context.SessionScoped;
 import javax.faces.application.FacesMessage;
 import javax.faces.context.FacesContext;
-import javax.faces.event.PhaseId;
 import javax.inject.Inject;
 import javax.inject.Named;
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * Bean to handle password reset related operations.
@@ -60,6 +44,7 @@ public class ResetPasswordBean extends ABaseManagedBean {
 
 	/**
 	 * Send a password reset email.
+	 * @return action request.
 	 */
 	public String actionRequestPasswordResetEmail() {
 		try {

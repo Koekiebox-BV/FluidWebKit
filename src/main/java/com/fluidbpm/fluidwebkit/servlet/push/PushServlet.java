@@ -83,11 +83,6 @@ public class PushServlet extends ABaseFWKServlet {
 		public static final String MAKE_USE_OF_REMOTE_COMMAND = "makeUseOfRemoteCommand";
 	}
 
-	/**
-	 *
-	 * @param sessionId
-	 * @return
-	 */
 	public FluidClientDS getFluidClientDS(String sessionId) {
 		try {
 			return this.fcp.get(sessionId);
@@ -96,25 +91,11 @@ public class PushServlet extends ABaseFWKServlet {
 		}
 	}
 
-	/**
-	 *
-	 * @param httpServletRequestParam
-	 * @param httpServletResponseParam
-	 * @throws ServletException
-	 * @throws IOException
-	 */
 	@Override
 	protected void doGet(HttpServletRequest httpServletRequestParam, HttpServletResponse httpServletResponseParam) throws ServletException, IOException {
 		this.doPost(httpServletRequestParam, httpServletResponseParam);
 	}
 
-	/**
-	 *
-	 * @param httpServletRequestParam
-	 * @param httpServletResponseParam
-	 * @throws ServletException
-	 * @throws IOException
-	 */
 	@Override
 	protected void doPost(
 		HttpServletRequest httpServletRequestParam,

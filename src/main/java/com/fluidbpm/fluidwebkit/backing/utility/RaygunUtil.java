@@ -43,35 +43,19 @@ import java.util.Set;
 public class RaygunUtil {
 	private String[] tags;
 
-	/**
-	 * 
-	 * @return
-	 */
 	public static boolean isRaygunEnabled() {
 		return (UtilGlobal.Raygun.API_KEY != null &&
 				!UtilGlobal.Raygun.API_KEY.trim().isEmpty());
 	}
 
-	/**
-	 * 
-	 * @param tagParam
-	 */
 	public RaygunUtil(String tagParam) {
 		this.tags = new String[]{tagParam};
 	}
 
-	/**
-	 *
-	 * @param tagsParam
-	 */
 	public RaygunUtil(String ... tagsParam) {
 		this.tags = tagsParam;
 	}
 
-	/**
-	 * 
-	 * @param contextParam
-	 */
 	public void raiseErrorToRaygun(ExceptionQueuedEventContext contextParam) {
 		if (!RaygunUtil.isRaygunEnabled()) {
 			return;
@@ -103,11 +87,6 @@ public class RaygunUtil {
 				sessionMap);
 	}
 
-	/**
-	 *
-	 * @param throwableParam
-	 * @param httpServletRequestParam
-	 */
 	public void raiseErrorToRaygun(
 		Throwable throwableParam,
 		HttpServletRequest httpServletRequestParam,
@@ -134,25 +113,15 @@ public class RaygunUtil {
 		client.send(throwableParam, this.generateMap(additionalPropertiesMapParam));
 	}
 
-	/**
-	 * @param exceptionThrownParam
-	 */
 	public void raiseErrorToRaygun(Throwable exceptionThrownParam) {
 		this.raiseErrorToRaygun(exceptionThrownParam, null);
 	}
 
-	/**
-	 *
-	 * @param exceptionThrownParam
-	 * @param loggedInUserParam
-	 */
 	public void raiseErrorToRaygun(
 		Throwable exceptionThrownParam,
 		User loggedInUserParam
 	) {
-		if( !RaygunUtil.isRaygunEnabled()) {
-			return;
-		}
+		if ( !RaygunUtil.isRaygunEnabled()) return;
 
 		RaygunClient client = this.getRaygunClient(null,null);
 		if(loggedInUserParam != null && loggedInUserParam.getUsername() != null) {
@@ -162,19 +131,11 @@ public class RaygunUtil {
 		client.send(exceptionThrownParam, this.generateMap(null));
 	}
 
-	/**
-	 * 
-	 * @param throwableParam
-	 * @param httpServletRequestParam
-	 * @param httpServletResponseParam
-	 */
 	public void raiseErrorToRaygun(
 			Throwable throwableParam,
 			HttpServletRequest httpServletRequestParam,
 			HttpServletResponse httpServletResponseParam) {
-		if (!RaygunUtil.isRaygunEnabled()) {
-			return;
-		}
+		if (!RaygunUtil.isRaygunEnabled()) return;
 
 		RaygunClient client = this.getRaygunClient(
 						httpServletRequestParam,
@@ -182,12 +143,7 @@ public class RaygunUtil {
 
 		client.send(throwableParam, this.generateMap(null));
 	}
-
-	/**
-	 * 
-	 * @param existingMapParam
-	 * @return
-	 */
+	
 	private Map<String,String> generateMap(Map existingMapParam) {
 		Map<String, String> addData = new HashMap<>();
 		if (existingMapParam != null){
@@ -203,12 +159,6 @@ public class RaygunUtil {
 		return addData;
 	}
 
-	/**
-	 *
-	 * @param httpServletRequestParam
-	 * @param httpServletResponseParam
-	 * @return
-	 */
 	private RaygunClient getRaygunClient(
 		HttpServletRequest httpServletRequestParam,
 		HttpServletResponse httpServletResponseParam

@@ -17,6 +17,7 @@
 
 		<!--Plugins-->
 		<version.plugin.gpg>1.6</version.plugin.gpg>
+		<version.plugin.java.doc>3.2.0</version.plugin.java.doc>
 		<version.plugin.compiler>3.6.0</version.plugin.compiler>
 		<version.jdk.compile>1.8</version.jdk.compile>
 	</properties>
@@ -211,6 +212,24 @@
                         <arg>java.xml.bind</arg-->
 					</compilerArgs>
 				</configuration>
+			</plugin>
+
+			<!--Maven Javadoc Plugin-->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-javadoc-plugin</artifactId>
+				<version>${version.plugin.java.doc}</version>
+				<configuration>
+					<source>8</source>
+				</configuration>
+				<executions>
+					<execution>
+						<id>attach-javadocs</id>
+						<goals>
+							<goal>jar</goal>
+						</goals>
+					</execution>
+				</executions>
 			</plugin>
 		</plugins>
 	</build>

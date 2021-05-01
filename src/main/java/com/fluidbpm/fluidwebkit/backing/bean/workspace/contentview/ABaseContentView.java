@@ -94,6 +94,7 @@ public abstract class ABaseContentView implements Serializable {
 	 * 
 	 * @param loggedInUserParam The currently logged in user.
 	 * @param sectionsParam The list of sections applicable to the view.
+	 * @param webKitViewContentModelBean The column model.
 	 */
 	public ABaseContentView(
 			User loggedInUserParam,
@@ -110,6 +111,7 @@ public abstract class ABaseContentView implements Serializable {
 	 * 
 	 * @param loggedInUserParam The currently logged in user.
 	 * @param sectionsParam The list of sections applicable to the view.
+	 * @param webKitViewContentModelBean The column model.
 	 */
 	public ABaseContentView(
 		User loggedInUserParam,
@@ -125,6 +127,7 @@ public abstract class ABaseContentView implements Serializable {
 	 * @param loggedInUserParam The currently logged in user.
 	 * @param sectionsParam The list of sections applicable to the view.
 	 * @param data The mapped fluid items per view.
+	 * @param webKitViewContentModelBean The model.
 	 *
 	 * @see JobView
 	 * @see WorkspaceFluidItem
@@ -144,6 +147,7 @@ public abstract class ABaseContentView implements Serializable {
 	 * @param loggedInUserParam The currently logged in user.
 	 * @param sectionsParam The list of sections applicable to the view.
 	 * @param fluidItemsForViewsParam The mapped fluid items per view.
+	 * @param webKitViewContentModelBean WebKit model.
 	 *
 	 * @see JobView
 	 * @see WorkspaceFluidItem
@@ -278,6 +282,7 @@ public abstract class ABaseContentView implements Serializable {
 
 	/**
 	 * Update the visible column configs.
+	 * @param columnModel The model.
 	 */
 	public void actionUpdateVisibleColumn(ABaseManagedBean.ColumnModel columnModel) {
 		if (columnModel == null) return;
@@ -313,6 +318,8 @@ public abstract class ABaseContentView implements Serializable {
 	 *
 	 * The filtered listing value {@code this.fluidItemsForSectionFiltered} will be updated with the
 	 * filtered data.
+	 *
+	 * @param selectedSection The section to set filtered list on.
 	 * 
 	 * @see #getTextToFilterBy
 	 */
@@ -411,7 +418,7 @@ public abstract class ABaseContentView implements Serializable {
 	/**
 	 *
 	 * [Section][0].fieldNameAndValMap['']
-	 * Section->FieldName->RowIndex
+	 * Section - FieldName - RowIndex
 	 *
 	 * @param sectionItemParam The section/datatable to retrieve data from.
 	 * @param fluidFieldNameParam The name of the Fluid field.
@@ -607,8 +614,6 @@ public abstract class ABaseContentView implements Serializable {
 	 * Get the first item from the list of selected items.
 	 *
 	 * @return {@code WorkspaceFluidItem} First entry from the selected Fluid items.
-	 *
-	 * @see this#getFluidItemsSelectedList
 	 */
 	public WorkspaceFluidItem getFirstSelectedWorkspaceFluidItem() {
 		List<WorkspaceFluidItem> selectedItems = this.getFluidItemsSelectedList();
@@ -839,7 +844,7 @@ public abstract class ABaseContentView implements Serializable {
 	/**
 	 * Clear the filtered results.
 	 *
-	 * @param selectedSectionParam
+	 * @param selectedSectionParam The section to clear.
 	 */
 	public void actionClearFilteredList(String selectedSectionParam) {
 		this.filterCurrentlyActive = false;
