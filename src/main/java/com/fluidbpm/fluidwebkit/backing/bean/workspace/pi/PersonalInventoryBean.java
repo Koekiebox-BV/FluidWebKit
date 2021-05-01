@@ -125,7 +125,7 @@ implements IConversationCallback {
 	 * Open an 'Form' for editing or viewing.
 	 * Custom functionality needs to be placed in {@code this#actionOpenFormForEditingFromWorkspace}.
 	 *
-	 * @see this#actionOpenForm(WorkspaceFluidItem)
+	 * @see #actionOpenForm(WorkspaceFluidItem)
 	 */
 	public void actionOpenFormForEditingFromWorkspace(WorkspaceFluidItem workspaceFluidItem) {
 		this.setAreaToUpdateForDialogAfterSubmit(null);

@@ -19,9 +19,6 @@ import com.fluidbpm.program.api.util.cache.exception.FluidCacheException;
 import com.google.common.cache.RemovalListener;
 import com.google.common.cache.RemovalNotification;
 
-import java.io.Closeable;
-import java.io.IOException;
-
 /**
  * SQL util event when removing an entry from the cache util.
  *
@@ -29,10 +26,7 @@ import java.io.IOException;
  * @since 1.1
  */
 public class ExitEventForFluidAPI implements RemovalListener {
-
-	/**
-	 * @param notificationParam
-	 */
+	
 	@Override
 	public void onRemoval(RemovalNotification notificationParam) {
 		Object oldVal = notificationParam.getValue();

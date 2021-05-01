@@ -18,28 +18,15 @@ package com.fluidbpm.fluidwebkit.backing.utility.field;
 import com.fluidbpm.program.api.vo.field.Field;
 
 /**
- * TODO Description comes here.
  *
  * @author jasonbruwer on 24/09/2019.
  * @since 1.0
  */
 public interface IConvertMapping {
 
-	/**
-	 *
-	 * @return
-	 */
 	public abstract String getSQLColumnName();
 
-	/**
-	 * 
-	 * @return
-	 */
 	public abstract String getFluidFieldName();
 
-	/**
-	 * 
-	 * @return
-	 */
 	public abstract Field.Type getFluidFieldType();
 }

@@ -24,26 +24,13 @@ import java.util.Comparator;
  */
 public class PunchCardEntryComp implements Comparator<PunchCardEntry> {
 
-    /**
-     *
-     * @param objectOneParam
-     * @param objectTwoParam
-     * @return
-     */
-    @Override
-    public int compare(PunchCardEntry objectOneParam,
-                       PunchCardEntry objectTwoParam) {
+	@Override
+	public int compare(PunchCardEntry objectOneParam, PunchCardEntry objectTwoParam) {
 
-        if(objectOneParam == null || objectTwoParam == null)
-        {
-            return 0;
-        }
+		if (objectOneParam == null || objectTwoParam == null) return 0;
 
-        if(objectOneParam.getPunchCardDay() == null || objectTwoParam.getPunchCardDay() == null)
-        {
-            return 0;
-        }
+		if (objectOneParam.getPunchCardDay() == null || objectTwoParam.getPunchCardDay() == null) return 0;
 
-        return objectOneParam.getPunchCardDay().compareTo(objectTwoParam.getPunchCardDay());
-    }
+		return objectOneParam.getPunchCardDay().compareTo(objectTwoParam.getPunchCardDay());
+	}
 }

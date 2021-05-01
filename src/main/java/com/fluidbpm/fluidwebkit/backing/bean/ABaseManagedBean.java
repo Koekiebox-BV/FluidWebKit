@@ -584,6 +584,8 @@ public abstract class ABaseManagedBean implements Serializable {
 	/**
 	 * Confirm whether user is logged in.
 	 *
+	 * @param pagePath The path to the page.
+	 *
 	 * @return {@code true} if logged in.
 	 */
 	protected boolean checkLoggedIn(String pagePath) {
@@ -623,7 +625,7 @@ public abstract class ABaseManagedBean implements Serializable {
 
 	/**
 	 * Execute the JavaScript on the users browser.
-	 * @param javascriptParam
+	 * @param javascriptParam The js to exec.
 	 */
 	public void executeJavaScript(String javascriptParam) {
 		if (javascriptParam == null || javascriptParam.trim().isEmpty()) return;

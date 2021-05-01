@@ -30,22 +30,12 @@ import java.util.stream.Collectors;
  * @since 1.0
  */
 public class FieldMappingUtil {
-
-	/**
-	 * Convert list of columns to list of {@code Field}s
-	 * @param sqlColumnsParam
-	 * @return List<Field> of converted fields.
-	 *
-	 * @see Field
-	 * @see SQLColumn
-	 */
+	
 	public static List<Field> convertToFields(
 			IConvertMapping[] mappingParam,
 			List<SQLColumn> sqlColumnsParam
 	) {
-		if (sqlColumnsParam == null) {
-			return null;
-		}
+		if (sqlColumnsParam == null) return null;
 
 		return sqlColumnsParam.stream()
 				.map(itm -> convertToField(mappingParam, itm))
@@ -53,18 +43,11 @@ public class FieldMappingUtil {
 				.collect(Collectors.toList());
 	}
 
-	/**
-	 * 
-	 * @param sqlColumnParam
-	 * @return
-	 */
 	public static Field convertToField(
-			IConvertMapping[] mappingParam,
-			SQLColumn sqlColumnParam
+		IConvertMapping[] mappingParam,
+		SQLColumn sqlColumnParam
 	) {
-		if (sqlColumnParam == null) {
-			return null;
-		}
+		if (sqlColumnParam == null) return null;
 
 		String fieldName = sqlColumnParam.getColumnName();
 		Object objValue = sqlColumnParam.getSqlValue();

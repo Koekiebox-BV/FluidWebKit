@@ -39,6 +39,8 @@ public class ConfigLogin {
 	/**
 	 * Log in the config user.
 	 * If the config user is already logged in, the existing session will be used.
+	 *
+	 * @return AppRequestToken
 	 */
 	public AppRequestToken loginConfigUser() {
 		long now = System.currentTimeMillis();
