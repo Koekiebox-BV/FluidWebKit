@@ -9,6 +9,7 @@
 
 	<name>Fluid Webkit</name>
 	<description>The Fluid WebKit for JSP PrimeFaces applications.</description>
+	<url>https://github.com/Koekiebox-PTY-LTD/FluidWebKit</url>
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
