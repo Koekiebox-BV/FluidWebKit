@@ -29,11 +29,15 @@ import org.primefaces.model.StreamedContent;
 import javax.annotation.PostConstruct;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Named;
+import javax.net.ssl.HttpsURLConnection;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Bean to take care of the config login.
@@ -53,10 +57,15 @@ public class WebKitConfigBean extends ABaseManagedBean {
 	private String companyLogoFilepath;
 	private String webKitGlobalJSON;
 	private String webKitPersonalInventoryJSON;
+	private String googleCloudPlatformAPIKey;
 
 	private boolean configUserLoginSuccess = false;
 	
 	private List<ThirdPartyLibraryTaskIdentifier> thirdPartyLibTaskIdentifiers;
+
+	private Boolean isGoogleMapsApiReachable = null;
+
+	public static final String GOOGLE_MAPS_API_SERVER = "https://maps.google.com:443";
 
 	/**
 	 * Login related configuration keys.
@@ -80,6 +89,7 @@ public class WebKitConfigBean extends ABaseManagedBean {
 		public static final String CompanyLogoFilePath = "CompanyLogoFilePath";
 		public static final String WebKit = "WebKit";
 		public static final String WebKitPersonalInventory = "WebKitPersonalInventory";
+		public static final String GoogleAPIKey = "GoogleAPIKey";
 	}
 
 	@PostConstruct
@@ -134,6 +144,8 @@ public class WebKitConfigBean extends ABaseManagedBean {
 						this.setWebKitGlobalJSON(configuration.getValue());
 					} else if (ConfigKey.WebKitPersonalInventory.equals(configName)) {
 						this.setWebKitPersonalInventoryJSON(configuration.getValue());
+					} else if (ConfigKey.GoogleAPIKey.equals(configName)) {
+						this.setGoogleCloudPlatformAPIKey(configuration.getValue());
 					}
 				}
 		);
@@ -149,8 +161,47 @@ public class WebKitConfigBean extends ABaseManagedBean {
 	}
 
 	public boolean getCompanyLogoPathExists() {
-		return UtilGlobal.isBlank(this.companyLogoFilepath) ?
-				false : new File(this.companyLogoFilepath).exists();
+		return UtilGlobal.isBlank(this.companyLogoFilepath) ? false : new File(this.companyLogoFilepath).exists();
+	}
+
+	public String getGoogleMapsAPIJSURL() {
+		String prefix = String.format("%s/maps/api/js", GOOGLE_MAPS_API_SERVER);
+
+		//Config set and Value...
+		String fullURL = prefix;
+		if (UtilGlobal.isNotBlank(this.googleCloudPlatformAPIKey)) {
+			fullURL = String.format("%s?key=%s", fullURL, this.googleCloudPlatformAPIKey);
+		}
+		return fullURL;
+	}
+
+	public boolean isGoogleMapsAPIReachable() {
+		if (this.isGoogleMapsApiReachable == null) {
+			this.isGoogleMapsApiReachable = this.performCallToSeeIfGoogleReachable();
+		}
+		return this.isGoogleMapsApiReachable;
+	}
+	
+	private boolean performCallToSeeIfGoogleReachable() {
+		HttpsURLConnection con = null;
+		try {
+			URL url = new URL(GOOGLE_MAPS_API_SERVER);
+			con = (HttpsURLConnection)url.openConnection();
+
+			int timeout = (int) TimeUnit.SECONDS.toMillis(5);
+			con.setConnectTimeout(timeout);
+			con.setReadTimeout(timeout);
+			con.setRequestMethod("GET");
+			con.setRequestProperty("User-Agent","FluidWebKit Connect Tester");
+			con.connect();
+			return true;
+		} catch (IOException except) {
+			//IO Issue...
+			System.err.println("Error Checking connection (Unavailable). Link is ["+ GOOGLE_MAPS_API_SERVER+"]. "+except.getMessage());
+			return false;
+		} finally {
+			if (con != null) con.disconnect();
+		}
 	}
 
 	public StreamedContent getCustomCompanyLogoStreamedContent() {

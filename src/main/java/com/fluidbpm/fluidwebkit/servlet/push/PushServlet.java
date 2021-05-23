@@ -111,10 +111,10 @@ public class PushServlet extends ABaseFWKServlet {
 				returnObject.put(FieldMapping.ERROR, "User not logged in. Refresh browser.");
 				returnObject.put(FieldMapping.ERROR_CODE, ErrorCode.USER_NOT_LOGGED_IN);
 				//Invalidate...
-				if (httpSession != null) {
-					httpSession.invalidate();
-				}
+				if (httpSession != null) httpSession.invalidate();
 			} else {
+				if (httpSession == null) return;
+
 				//User Logged in...
 				this.webKitNotificationsBean.setSessionIdFallback(httpSession.getId());
 				boolean anyProcessed = false;

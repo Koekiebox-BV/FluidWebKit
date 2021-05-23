@@ -4,7 +4,7 @@ mvn clean && mvn clean install -U -Dgpg.skip
 echo '[INFO] Updating jar in FlowJob'
 
 #PROPERTIES
-export WORKSPACE_HOME='/home/jbruwer/GoogleDrive/Workspace'
+export WORKSPACE_HOME='/run/media/jbruwer/KB-Storage/Workspace/KB'
 export WF_HOME='/home/jbruwer/Applications/wildfly-20.0.1.Final'
 
 rm -rfv $WORKSPACE_HOME/FlowJob/flow-job-setup/docker/koekiebox/fluid_base/external_lib/com/fluidwebkit/fluidwebkit-*.jar
