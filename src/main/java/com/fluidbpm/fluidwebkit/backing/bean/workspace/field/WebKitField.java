@@ -1,5 +1,6 @@
 package com.fluidbpm.fluidwebkit.backing.bean.workspace.field;
 
+import com.fluidbpm.program.api.util.GeoUtil;
 import com.fluidbpm.program.api.util.UtilGlobal;
 import com.fluidbpm.program.api.vo.field.Field;
 import com.fluidbpm.program.api.vo.field.MultiChoice;
@@ -134,5 +135,19 @@ public class WebKitField extends Field {
 	@XmlTransient
 	public Field asField() {
 		return this;
+	}
+
+	@XmlTransient
+	public GeoUtil getFieldValueAsGeo() {
+		return new GeoUtil(this.getFieldValueAsString());
+	}
+
+	@XmlTransient
+	public void setFieldValueAsGeo(GeoUtil geo) {
+		if (geo == null) {
+			this.setFieldValue(null);
+			return;
+		}
+		this.setFieldValue(geo.toString());
 	}
 }

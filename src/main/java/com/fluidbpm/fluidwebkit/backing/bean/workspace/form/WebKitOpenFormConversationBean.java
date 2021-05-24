@@ -7,6 +7,7 @@ import com.fluidbpm.fluidwebkit.backing.bean.workspace.WorkspaceFluidItem;
 import com.fluidbpm.fluidwebkit.backing.bean.workspace.lf.WebKitWorkspaceLookAndFeelBean;
 import com.fluidbpm.fluidwebkit.backing.bean.workspace.pi.PersonalInventoryItemVO;
 import com.fluidbpm.fluidwebkit.exception.ClientDashboardException;
+import com.fluidbpm.program.api.util.GeoUtil;
 import com.fluidbpm.program.api.util.UtilGlobal;
 import com.fluidbpm.program.api.vo.attachment.Attachment;
 import com.fluidbpm.program.api.vo.field.Field;
@@ -28,12 +29,14 @@ import org.primefaces.event.RowEditEvent;
 import org.primefaces.model.DefaultStreamedContent;
 import org.primefaces.model.StreamedContent;
 import org.primefaces.model.file.UploadedFile;
+import org.primefaces.model.map.*;
 import org.primefaces.model.menu.*;
 
 import javax.annotation.PostConstruct;
 import javax.enterprise.context.Conversation;
 import javax.enterprise.context.ConversationScoped;
 import javax.faces.application.FacesMessage;
+import javax.faces.component.UIComponent;
 import javax.faces.context.FacesContext;
 import javax.faces.event.AjaxBehaviorEvent;
 import javax.inject.Inject;
@@ -127,6 +130,18 @@ public class WebKitOpenFormConversationBean extends ABaseManagedBean {
 	@Getter
 	@Setter
 	private boolean inputIncludeDescendant;
+
+	@Getter
+	@Setter
+	private MapModel conversationMapModel;
+
+	@Getter
+	@Setter
+	private String mapCenter;
+
+	@Getter
+	@Setter
+	private String mapZoom;
 
 	@PostConstruct
 	public void init() {
@@ -1015,6 +1030,36 @@ public class WebKitOpenFormConversationBean extends ABaseManagedBean {
 		} else {
 			return this.attachmentBean.actionGenerateURLForThumbnail(wfItem, attachment, thumbnailScale);
 		}
+	}
+
+	public void actionPrepareForMapDisplay() {
+		this.mapCenter = null;
+		this.conversationMapModel = new DefaultMapModel();
+
+		FacesContext context = FacesContext.getCurrentInstance();
+		GeoUtil geo = (GeoUtil) UIComponent.getCurrentComponent(context).getAttributes().get("geoLocationInfo");
+
+		//Set the Markers on the Map...
+		LatLng coord = new LatLng(geo.getLatitude(), geo.getLongitude());
+		this.mapCenter = String.format("%s,%s", geo.getLatitude(), geo.getLongitude());
+
+		//Basic marker
+		this.conversationMapModel.addOverlay(new Marker(coord, this.getWsFluidItem().getFluidItemTitle()));
+
+		this.addRadiusCircle(geo);
+	}
+
+	private void addRadiusCircle(GeoUtil model) {
+		if (model.getRadius() < 1) return;
+
+		Circle circle = new Circle(
+				new LatLng(model.getLatitude(), model.getLongitude()),
+				model.getRadius());
+		circle.setStrokeColor("#d93c3c");
+		circle.setFillColor("#d93c3c");
+		circle.setFillOpacity(0.5);
+
+		this.conversationMapModel.addOverlay(circle);
 	}
 
 }
