@@ -4,6 +4,7 @@ import com.fluidbpm.fluidwebkit.backing.bean.ABaseManagedBean;
 import com.fluidbpm.fluidwebkit.backing.bean.attachment.WebKitAttachmentBean;
 import com.fluidbpm.fluidwebkit.backing.bean.config.WebKitAccessBean;
 import com.fluidbpm.fluidwebkit.backing.bean.workspace.WorkspaceFluidItem;
+import com.fluidbpm.fluidwebkit.backing.bean.workspace.field.WebKitField;
 import com.fluidbpm.fluidwebkit.backing.bean.workspace.lf.WebKitWorkspaceLookAndFeelBean;
 import com.fluidbpm.fluidwebkit.backing.bean.workspace.pi.PersonalInventoryItemVO;
 import com.fluidbpm.fluidwebkit.exception.ClientDashboardException;
@@ -26,6 +27,8 @@ import lombok.Getter;
 import lombok.Setter;
 import org.primefaces.event.FileUploadEvent;
 import org.primefaces.event.RowEditEvent;
+import org.primefaces.event.map.GeocodeEvent;
+import org.primefaces.event.map.ReverseGeocodeEvent;
 import org.primefaces.model.DefaultStreamedContent;
 import org.primefaces.model.StreamedContent;
 import org.primefaces.model.file.UploadedFile;
@@ -137,12 +140,24 @@ public class WebKitOpenFormConversationBean extends ABaseManagedBean {
 
 	@Getter
 	@Setter
+	private WebKitField activeGeoField;
+
+	@Getter
+	@Setter
+	private GeoUtil activeGeo;
+
+	@Getter
+	@Setter
 	private String mapCenter;
 
 	@Getter
 	@Setter
 	private String mapZoom;
 
+	public static final String MAP_CENTER_DEFAULT = "41.850033, -87.6500523";
+	public static final String MAP_ZOOM_DEFAULT = "1";
+	public static final String MAP_ZOOM_CLOSE = "19";
+	
 	@PostConstruct
 	public void init() {
 
@@ -1037,16 +1052,114 @@ public class WebKitOpenFormConversationBean extends ABaseManagedBean {
 		this.conversationMapModel = new DefaultMapModel();
 
 		FacesContext context = FacesContext.getCurrentInstance();
-		GeoUtil geo = (GeoUtil) UIComponent.getCurrentComponent(context).getAttributes().get("geoLocationInfo");
+		WebKitField webKitField = (WebKitField) UIComponent.getCurrentComponent(context).getAttributes().get("geoLocationField");
+		GeoUtil geo = webKitField.getFieldValueAsGeo();
 
 		//Set the Markers on the Map...
 		LatLng coord = new LatLng(geo.getLatitude(), geo.getLongitude());
-		this.mapCenter = String.format("%s,%s", geo.getLatitude(), geo.getLongitude());
+		this.mapCenter = geo.getMapCenterLatLong();
 
 		//Basic marker
 		this.conversationMapModel.addOverlay(new Marker(coord, this.getWsFluidItem().getFluidItemTitle()));
 
 		this.addRadiusCircle(geo);
+	}
+
+	public void actionPrepareForMapAddressLookup() {
+		this.mapCenter = MAP_CENTER_DEFAULT;
+		this.mapZoom = MAP_ZOOM_DEFAULT;
+		this.conversationMapModel = new DefaultMapModel();
+
+		FacesContext context = FacesContext.getCurrentInstance();
+		this.activeGeoField = (WebKitField) UIComponent.getCurrentComponent(context).getAttributes().get("geoLocationField");
+		this.activeGeo = this.activeGeoField.getFieldValueAsGeo();
+
+		//Set the Markers on the Map...
+		if (!this.getActiveGeo().isLatOrLonNotSet()) {//Is set...
+			this.mapCenter = this.getActiveGeo().getMapCenterLatLong();
+			this.mapZoom = MAP_ZOOM_CLOSE;
+		}
+
+		this.addRadiusCircle(this.activeGeo);
+	}
+
+	public void actionUpdateRadiusForMap(AjaxBehaviorEvent abe) {
+		//Update the field value with the active geo value...
+		this.activeGeoField.setFieldValueAsGeo(this.activeGeo);
+	}
+
+	public void actionOnGeoCode(GeocodeEvent eventParam) {
+		this.conversationMapModel.getMarkers().clear();
+		this.conversationMapModel.getCircles().clear();
+
+		this.mapCenter = MAP_CENTER_DEFAULT;
+		this.mapZoom = MAP_ZOOM_DEFAULT;
+
+		List<GeocodeResult> results = eventParam.getResults();
+		if (results == null || results.isEmpty()) {
+			FacesMessage fMsg = new FacesMessage(
+					FacesMessage.SEVERITY_ERROR, "No Results.",
+					"No Coordinates found from Address '"+ eventParam.getQuery()+"'.");
+			FacesContext.getCurrentInstance().addMessage(null, fMsg);
+		} else if (results.size() == 1) {
+			//We found one result...
+			GeocodeResult result = results.get(0);
+			this.conversationMapModel.addOverlay(new Marker(result.getLatLng(), result.getAddress()));
+
+			this.getActiveGeo().setLatitude(result.getLatLng().getLat());
+			this.getActiveGeo().setLongitude(result.getLatLng().getLng());
+			this.getActiveGeo().setAddress(result.getAddress());
+
+			//Set the Markers on the Map...
+			if (!this.getActiveGeo().isLatOrLonNotSet()) {
+				this.mapCenter = this.getActiveGeo().getMapCenterLatLong();
+				this.mapZoom = MAP_ZOOM_CLOSE;
+
+				FacesMessage fMsg = new FacesMessage(
+						FacesMessage.SEVERITY_INFO, "Address Located.", result.getAddress());
+				FacesContext.getCurrentInstance().addMessage(null, fMsg);
+				this.addRadiusCircle(this.getActiveGeo());
+			}
+		} else {
+			for (int index = 0; index < results.size(); index++) {
+				GeocodeResult result = results.get(index);
+				this.conversationMapModel.addOverlay(new Marker(result.getLatLng(), result.getAddress()));
+			}
+			FacesMessage fMsg = new FacesMessage(
+					FacesMessage.SEVERITY_ERROR, "Too many results.",
+					String.format("Review Markers and refine lookup. Total '%s'.", results.size()));
+			FacesContext.getCurrentInstance().addMessage(null, fMsg);
+		}
+	}
+	
+	public void actionOnGeoCodeReverse(ReverseGeocodeEvent eventParam) {
+		this.mapCenter = MAP_CENTER_DEFAULT;
+		this.mapZoom = MAP_ZOOM_DEFAULT;
+
+		List<String> addresses = eventParam.getAddresses();
+		LatLng coord = eventParam.getLatlng();
+
+		if (addresses == null || addresses.isEmpty()) {
+			FacesMessage fMsg = new FacesMessage(
+					FacesMessage.SEVERITY_ERROR, "No Results.",
+					"No Address found from Latitude '"+ coord.getLat()+"' and Longitude '"+coord.getLng()+"'.");
+			FacesContext.getCurrentInstance().addMessage(null, fMsg);
+		} else {
+			String address = addresses.get(0);
+			this.conversationMapModel.addOverlay(new Marker(coord, address));
+
+			this.getActiveGeo().setLatitude(coord.getLat());
+			this.getActiveGeo().setLongitude(coord.getLng());
+			this.getActiveGeo().setAddress(address);
+
+			//Set the Markers on the Map...
+			if (!this.getActiveGeo().isLatOrLonNotSet()) {
+				this.mapCenter = this.getActiveGeo().getMapCenterLatLong();
+				this.mapZoom = MAP_ZOOM_CLOSE;
+				FacesMessage fMsg = new FacesMessage(FacesMessage.SEVERITY_INFO, "Address Located.", address);
+				FacesContext.getCurrentInstance().addMessage(null, fMsg);
+			}
+		}
 	}
 
 	private void addRadiusCircle(GeoUtil model) {
@@ -1055,11 +1168,10 @@ public class WebKitOpenFormConversationBean extends ABaseManagedBean {
 		Circle circle = new Circle(
 				new LatLng(model.getLatitude(), model.getLongitude()),
 				model.getRadius());
-		circle.setStrokeColor("#d93c3c");
+		circle.setStrokeColor("#d93c3c");//red
 		circle.setFillColor("#d93c3c");
 		circle.setFillOpacity(0.5);
 
 		this.conversationMapModel.addOverlay(circle);
 	}
-
 }
