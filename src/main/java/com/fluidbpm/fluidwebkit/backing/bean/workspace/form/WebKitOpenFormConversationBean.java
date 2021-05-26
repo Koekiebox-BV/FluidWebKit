@@ -1053,7 +1053,26 @@ public class WebKitOpenFormConversationBean extends ABaseManagedBean {
 
 		FacesContext context = FacesContext.getCurrentInstance();
 		WebKitField webKitField = (WebKitField) UIComponent.getCurrentComponent(context).getAttributes().get("geoLocationField");
-		GeoUtil geo = webKitField.getFieldValueAsGeo();
+		GeoUtil geo = null;
+		if (webKitField == null && this.wsFluidItem != null) {
+			Long paramFormId = this.getLongRequestParam("gMapPreviewFormId");
+			String paramFieldName = this.getStringRequestParam("gMapPreviewFieldName");
+			Long paramFieldValId = this.getLongRequestParam("gMapPreviewFieldValueId");
+
+			Field formFieldById = this.wsFluidItem.getFormFieldsEdit().stream()
+					.filter(field -> field.getTypeAsEnum() == Field.Type.Table)
+					.map(field -> field.getFieldValueAsTableField().getTableRecords())
+					.flatMap(Collection::stream)
+					.filter(tableRecordForm -> paramFormId.equals(tableRecordForm.getId()))
+					.map(tableForm -> tableForm.getFormFields())
+					.flatMap(Collection::stream)
+					.filter(tableField -> paramFieldName.equals(tableField.getFieldName()))
+					.findFirst()
+					.orElse(null);
+			getLogger().info(String.format("Found a field by id '%s'", formFieldById));
+		} else {
+			geo = webKitField.getFieldValueAsGeo();
+		}
 
 		//Set the Markers on the Map...
 		LatLng coord = new LatLng(geo.getLatitude(), geo.getLongitude());
@@ -1115,10 +1134,12 @@ public class WebKitOpenFormConversationBean extends ABaseManagedBean {
 				this.mapCenter = this.getActiveGeo().getMapCenterLatLong();
 				this.mapZoom = MAP_ZOOM_CLOSE;
 
+				this.activeGeoField.setFieldValueAsGeo(this.getActiveGeo());
+				this.addRadiusCircle(this.getActiveGeo());
+				
 				FacesMessage fMsg = new FacesMessage(
 						FacesMessage.SEVERITY_INFO, "Address Located.", result.getAddress());
 				FacesContext.getCurrentInstance().addMessage(null, fMsg);
-				this.addRadiusCircle(this.getActiveGeo());
 			}
 		} else {
 			for (int index = 0; index < results.size(); index++) {
@@ -1156,6 +1177,10 @@ public class WebKitOpenFormConversationBean extends ABaseManagedBean {
 			if (!this.getActiveGeo().isLatOrLonNotSet()) {
 				this.mapCenter = this.getActiveGeo().getMapCenterLatLong();
 				this.mapZoom = MAP_ZOOM_CLOSE;
+
+				this.activeGeoField.setFieldValueAsGeo(this.getActiveGeo());
+				this.addRadiusCircle(this.getActiveGeo());
+				
 				FacesMessage fMsg = new FacesMessage(FacesMessage.SEVERITY_INFO, "Address Located.", address);
 				FacesContext.getCurrentInstance().addMessage(null, fMsg);
 			}
