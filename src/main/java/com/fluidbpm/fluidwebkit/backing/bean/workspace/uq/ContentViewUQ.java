@@ -105,6 +105,7 @@ public class ContentViewUQ extends ABaseContentView {
 				this.wkUserQuery.getAttachmentHeader(),
 				this.wkUserQuery.getAttachmentHeader(),
 				Field.Type.Label,
+				META_DATA_PLAIN,
 				this.wkUserQuery.isShowColumnAttachment(),
 				true,
 				false));
@@ -114,6 +115,7 @@ public class ContentViewUQ extends ABaseContentView {
 				SystemField.TITLE,
 				SystemField.TITLE,
 				Field.Type.Text,
+				META_DATA_PLAIN,
 				this.wkUserQuery.isShowColumnTitle(),
 				true,
 				false));
@@ -123,6 +125,7 @@ public class ContentViewUQ extends ABaseContentView {
 				SystemField.ID,
 				SystemField.ID,
 				Field.Type.Text,
+				META_DATA_PLAIN,
 				this.wkUserQuery.isShowColumnID(),
 				true,
 				false));
@@ -132,6 +135,7 @@ public class ContentViewUQ extends ABaseContentView {
 				SystemField.FORM_TYPE,
 				SystemField.FORM_TYPE,
 				Field.Type.MultipleChoice,
+				META_DATA_PLAIN,
 				this.wkUserQuery.isShowColumnFormType(),
 				true,
 				false));
@@ -141,6 +145,7 @@ public class ContentViewUQ extends ABaseContentView {
 				SystemField.DATE_CREATED,
 				SystemField.DATE_CREATED,
 				Field.Type.DateTime,
+				META_DATA_DATE_AND_TIME,
 				this.wkUserQuery.isShowColumnDateCreated(),
 				true,
 				false));
@@ -150,6 +155,7 @@ public class ContentViewUQ extends ABaseContentView {
 				SystemField.DATE_LAST_UPDATED,
 				SystemField.DATE_LAST_UPDATED,
 				Field.Type.DateTime,
+				META_DATA_DATE_AND_TIME,
 				this.wkUserQuery.isShowColumnDateLastUpdated(),
 				true,
 				false));
@@ -159,6 +165,7 @@ public class ContentViewUQ extends ABaseContentView {
 				SystemField.USER,
 				SystemField.USER,
 				Field.Type.MultipleChoice,
+				META_DATA_PLAIN,
 				this.wkUserQuery.isShowColumnUser(),
 				true,
 				false));
@@ -168,6 +175,7 @@ public class ContentViewUQ extends ABaseContentView {
 				SystemField.STATE,
 				SystemField.STATE,
 				Field.Type.MultipleChoice,
+				META_DATA_PLAIN,
 				this.wkUserQuery.isShowColumnState(),
 				true,
 				false));
@@ -177,6 +185,7 @@ public class ContentViewUQ extends ABaseContentView {
 				SystemField.FLOW_STATE,
 				SystemField.FLOW_STATE,
 				Field.Type.MultipleChoice,
+				META_DATA_PLAIN,
 				this.wkUserQuery.isShowColumnFlowState(),
 				true,
 				false));
@@ -191,6 +200,7 @@ public class ContentViewUQ extends ABaseContentView {
 							formField.getFieldName(),
 							formField.getFieldName(),
 							formField.getTypeAsEnum(),
+							formField.getTypeMetaData(),
 							true,
 							true,
 							false);
@@ -287,6 +297,7 @@ public class ContentViewUQ extends ABaseContentView {
 									fieldByName.getFieldName(),
 									fieldByName.getFieldDescription(),
 									fieldByName.getTypeAsEnum(),
+									fieldByName.getTypeMetaData(),
 									true,
 									true,
 									true);

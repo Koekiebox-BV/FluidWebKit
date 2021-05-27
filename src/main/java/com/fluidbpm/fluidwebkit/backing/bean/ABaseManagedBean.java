@@ -135,6 +135,7 @@ public abstract class ABaseManagedBean implements Serializable {
 		private String fluidFieldName;
 		private String fluidFieldDescription;
 		private Field.Type fluidFieldColumnType;
+		private String fluidFieldMetaData;
 
 		private boolean enabled;
 		private boolean visible;
@@ -147,6 +148,7 @@ public abstract class ABaseManagedBean implements Serializable {
 			this.fluidFieldName = colMdl.fluidFieldName;
 			this.fluidFieldDescription = colMdl.fluidFieldDescription;
 			this.fluidFieldColumnType = colMdl.fluidFieldColumnType;
+			this.fluidFieldMetaData = colMdl.fluidFieldMetaData;
 			this.enabled = colMdl.enabled;
 			this.visible = colMdl.visible;
 			this.filterable = colMdl.filterable;
@@ -157,6 +159,7 @@ public abstract class ABaseManagedBean implements Serializable {
 			String fluidFieldName,
 			String fluidFieldDescription,
 			Field.Type fluidFieldColumnType,
+			String fluidFieldMetaData,
 			boolean enabled,
 			boolean visible,
 			boolean filterable
@@ -165,22 +168,25 @@ public abstract class ABaseManagedBean implements Serializable {
 			this.fluidFieldName = fluidFieldName;
 			this.fluidFieldDescription = fluidFieldDescription;
 			this.fluidFieldColumnType = (fluidFieldColumnType);
+			this.fluidFieldMetaData = (fluidFieldMetaData);
 			this.enabled = (enabled);
 			this.visible = (visible);
 			this.filterable = (filterable);
 		}
-
+		
 		public ColumnModel(
-				String header,
-				String fluidFieldName,
-				Field.Type fluidFieldColumnType,
-				boolean enabled,
-				boolean visible,
-				boolean filterable
+			String header,
+			String fluidFieldName,
+			Field.Type fluidFieldColumnType,
+			String fluidFieldMetaData,
+			boolean enabled,
+			boolean visible,
+			boolean filterable
 		) {
 			this.header = (header);
 			this.fluidFieldName = (fluidFieldName);
 			this.fluidFieldColumnType = (fluidFieldColumnType);
+			this.fluidFieldMetaData = (fluidFieldMetaData);
 			this.enabled = (enabled);
 			this.visible = (visible);
 			this.filterable = (filterable);
@@ -200,8 +206,7 @@ public abstract class ABaseManagedBean implements Serializable {
 		}
 
 		public String getFluidFieldColumnTypeTxt() {
-			return (this.getFluidFieldColumnType() == null) ? null:
-					this.getFluidFieldColumnType().toString();
+			return (this.getFluidFieldColumnType() == null) ? null: this.getFluidFieldColumnType().toString();
 		}
 
 		public ColumnModel cloneCM() {

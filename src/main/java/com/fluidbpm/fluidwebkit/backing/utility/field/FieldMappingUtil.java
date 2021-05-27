@@ -57,22 +57,17 @@ public class FieldMappingUtil {
 			String sqlColTrimLower = sqlColumnName.trim().toLowerCase();
 			for (IConvertMapping mapping : mappingParam) {
 				String sqlFieldNameIter = mapping.getSQLColumnName();
-				if (sqlFieldNameIter == null) {
-					continue;
-				}
+				if (sqlFieldNameIter == null) continue;
+
 				String sqlFieldNameIterTrimLower = sqlFieldNameIter.trim().toLowerCase();
-				if (!sqlColTrimLower.equals(sqlFieldNameIterTrimLower)) {
-					continue;
-				}
+				if (!sqlColTrimLower.equals(sqlFieldNameIterTrimLower)) continue;
 
 				fieldName = mapping.getFluidFieldName();
 				type = mapping.getFluidFieldType();
 			}
 		}
 
-		if (type == null) {
-			return null;
-		}
+		if (type == null) return null;
 
 		if (objValue != null) {
 			switch (type) {

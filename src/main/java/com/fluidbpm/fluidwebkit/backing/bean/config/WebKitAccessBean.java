@@ -426,7 +426,12 @@ public class WebKitAccessBean extends ABaseManagedBean {
 							.filter(itm -> itm.getFieldName().equals(fieldNameToFetch))
 							.findFirst()
 							.orElse(null);
-					return fieldWithName != null && fieldWithName.getId() > 0L;
+					if (fieldWithName != null && fieldWithName.getId() > 0L) {
+						usrQueryFieldItm.setTypeMetaData(fieldWithName.getTypeMetaData());
+						return true;
+					}
+
+					return false;
 				})
 				.collect(Collectors.toList());
 	}

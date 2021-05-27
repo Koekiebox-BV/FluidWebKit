@@ -163,12 +163,12 @@ public class ContentViewJV extends ABaseContentView {
 		if (this.wkGroup == null) return returnVal;
 		if (this.wkSub == null) return returnVal;
 
-
 		//Index - 01 - Attachment
 		returnVal.add(new ABaseManagedBean.ColumnModel(
 				this.wkGroup.getAttachmentColumnLabel(),
 				this.wkGroup.getAttachmentColumnLabel(),
 				Field.Type.Label,
+				META_DATA_PLAIN,
 				this.wkSub.isShowColumnAttachment(),
 				true,
 				false));
@@ -178,6 +178,7 @@ public class ContentViewJV extends ABaseContentView {
 				SystemField.TITLE,
 				SystemField.TITLE,
 				Field.Type.Text,
+				META_DATA_PLAIN,
 				this.wkSub.isShowColumnTitle(),
 				true,
 				true));
@@ -187,6 +188,7 @@ public class ContentViewJV extends ABaseContentView {
 				SystemField.ID,
 				SystemField.ID,
 				Field.Type.Text,
+				META_DATA_PLAIN,
 				this.wkSub.isShowColumnID(),
 				true,
 				true));
@@ -196,6 +198,7 @@ public class ContentViewJV extends ABaseContentView {
 				SystemField.FORM_TYPE,
 				SystemField.FORM_TYPE,
 				Field.Type.MultipleChoice,
+				META_DATA_PLAIN,
 				this.wkSub.isShowColumnFormType(),
 				true,
 				true));
@@ -205,6 +208,7 @@ public class ContentViewJV extends ABaseContentView {
 				SystemField.FLOW,
 				SystemField.FLOW,
 				Field.Type.MultipleChoice,
+				META_DATA_PLAIN,
 				this.wkSub.isShowColumnCurrentFlow(),
 				true,
 				true));
@@ -214,6 +218,7 @@ public class ContentViewJV extends ABaseContentView {
 				SystemField.STEP,
 				SystemField.STEP,
 				Field.Type.MultipleChoice,
+				META_DATA_PLAIN,
 				this.wkSub.isShowColumnCurrentStep(),
 				true,
 				true));
@@ -223,6 +228,7 @@ public class ContentViewJV extends ABaseContentView {
 				SystemField.VIEW,
 				SystemField.VIEW,
 				Field.Type.MultipleChoice,
+				META_DATA_PLAIN,
 				this.wkSub.isShowColumnCurrentView(),
 				true,
 				true));
@@ -232,6 +238,7 @@ public class ContentViewJV extends ABaseContentView {
 				SystemField.DATE_STEP_ENTERED,
 				SystemField.DATE_STEP_ENTERED,
 				Field.Type.DateTime,
+				META_DATA_PLAIN,
 				this.wkSub.isShowColumnStepEntryTime(),
 				true,
 				true));
@@ -241,6 +248,7 @@ public class ContentViewJV extends ABaseContentView {
 				SystemField.DATE_CREATED,
 				SystemField.DATE_CREATED,
 				Field.Type.DateTime,
+				META_DATA_PLAIN,
 				this.wkSub.isShowColumnDateCreated(),
 				true,
 				true));
@@ -250,6 +258,7 @@ public class ContentViewJV extends ABaseContentView {
 				SystemField.DATE_LAST_UPDATED,
 				SystemField.DATE_LAST_UPDATED,
 				Field.Type.DateTime,
+				META_DATA_PLAIN,
 				this.wkSub.isShowColumnDateLastUpdated(),
 				true,
 				true));
@@ -276,6 +285,7 @@ public class ContentViewJV extends ABaseContentView {
 							field.getFieldName(),
 							field.getFieldName(),
 							field.getTypeAsEnum(),
+							field.getTypeMetaData(),
 							true,
 							true,
 							canFilter);

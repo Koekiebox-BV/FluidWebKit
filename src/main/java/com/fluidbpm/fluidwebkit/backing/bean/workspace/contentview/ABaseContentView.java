@@ -20,6 +20,7 @@ import com.fluidbpm.fluidwebkit.backing.bean.workspace.WorkspaceFluidItem;
 import com.fluidbpm.fluidwebkit.backing.bean.workspace.jv.ContentViewJV;
 import com.fluidbpm.fluidwebkit.backing.utility.RaygunUtil;
 import com.fluidbpm.fluidwebkit.exception.ClientDashboardException;
+import com.fluidbpm.program.api.util.GeoUtil;
 import com.fluidbpm.program.api.util.UtilGlobal;
 import com.fluidbpm.program.api.vo.field.Field;
 import com.fluidbpm.program.api.vo.flow.JobView;
@@ -48,6 +49,9 @@ import java.util.stream.Collectors;
  * @see com.fluidbpm.fluidwebkit.backing.bean.workspace.ABaseWorkspaceBean
  */
 public abstract class ABaseContentView implements Serializable {
+
+	protected static String META_DATA_PLAIN = "Plain";
+	protected static String META_DATA_DATE_AND_TIME = "Date and Time";
 
 	private Map<WebKitViewSub, Map<WebKitWorkspaceJobView, List<WorkspaceFluidItem>>> data;
 
@@ -873,5 +877,12 @@ public abstract class ABaseContentView implements Serializable {
 		this.actionSetFilteredList(selectedSectionParam);
 	}
 
-
+	public String extractAddressFromGeoField(Object fieldValue) {
+		if (fieldValue instanceof String) {
+			return new GeoUtil(fieldValue.toString()).getAddress();
+		} else if (fieldValue instanceof GeoUtil) {
+			return ((GeoUtil)fieldValue).getAddress();
+		}
+		return fieldValue == null ? null : fieldValue.toString();
+	}
 }
