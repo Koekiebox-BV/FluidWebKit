@@ -67,6 +67,10 @@ public class WebKitWorkspaceLookAndFeelBean extends ABaseManagedBean {
 
 	@Getter
 	@Setter
+	private int activeTabIndex = 0;
+
+	@Getter
+	@Setter
 	private Map<String, WebKitWorkspaceJobViewLDM> inputSubToViewMapping;
 
 	@Getter
@@ -134,6 +138,7 @@ public class WebKitWorkspaceLookAndFeelBean extends ABaseManagedBean {
 	 * Prepare to change the look and feel for workspace.
 	 */
 	public void actionPrepareWorkspaceLookAndFeelUpdate() {
+		this.activeTabIndex = 0;
 		this.inputSubToViewMapping = new HashMap<>();
 		this.inputSubToRouteFieldMapping = new HashMap<>();
 		this.groupToViewMapping = new HashMap<>();
@@ -144,7 +149,7 @@ public class WebKitWorkspaceLookAndFeelBean extends ABaseManagedBean {
 		this.userQueryLDM = new WebKitWorkspaceUserQueryLDM();
 		this.formDefinitionLDM = new WebKitWorkspaceFormDefinitionLDM();
 		this.tabsViewed = new ArrayList<>();
-		this.tabsViewed.add(TabId.tabForm);
+		this.tabsViewed.add(TabId.tabForm);//Form is always added since its visible...
 
 		this.setDialogHeaderTitle("Workspace - Look & Feel");
 		try {
@@ -481,8 +486,9 @@ public class WebKitWorkspaceLookAndFeelBean extends ABaseManagedBean {
 
 	public void actionSaveWebKitViewGroups(String dialogToHideAfterSuccess) {
 		try {
-			if (this.formDefinitionLDM.getDataListing() != null)
+			if (this.formDefinitionLDM.getDataListing() != null) {
 				this.formDefinitionLDM.getDataListing().forEach(itm -> itm.validateAndFormatNewFormFormula());
+			}
 
 			//Global WebKit Config
 			FluidClientDS configDs = this.getFluidClientDSConfig();
@@ -502,8 +508,9 @@ public class WebKitWorkspaceLookAndFeelBean extends ABaseManagedBean {
 					List<String> visibleButtons = new ArrayList<>();
 
 					Object objVisibleButtons = this.inputVisibleButtons.get(groupName);
-					if (objVisibleButtons instanceof String[])
+					if (objVisibleButtons instanceof String[]) {
 						for (String selected : (String[])objVisibleButtons) visibleButtons.add(selected);
+					}
 
 					this.updateGroupPropertyBasedOnSelected(visibleButtons, groupItm);
 				});
