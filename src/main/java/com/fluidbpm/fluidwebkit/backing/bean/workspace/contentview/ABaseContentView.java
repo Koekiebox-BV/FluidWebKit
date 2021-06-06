@@ -177,18 +177,18 @@ public abstract class ABaseContentView implements Serializable {
 	}
 
 	public void mapColumnModel() {
-		if (this.getSections() != null) {
-			for (String section : this.getSections()) {
-				//Sections Headers...
-				if (this.webKitViewContentModelBean != null) {
-					List<ABaseManagedBean.ColumnModel> columnModForSection = this.getColumnHeadersForSection(section);
-					this.initInitialFilterFields(section, columnModForSection);
-					this.initSelectItemSelectedMap(section, columnModForSection);
-					this.webKitViewContentModelBean.storeModelFor(this.getCategory(), section, columnModForSection);
-				}
-				//Placeholder for Filter...
-				this.fluidItemsForSection.put(section, new ArrayList<>());
+		if (this.getSections() == null) return;
+
+		for (String section : this.getSections()) {
+			//Sections Headers...
+			if (this.webKitViewContentModelBean != null) {
+				List<ABaseManagedBean.ColumnModel> columnModForSection = this.getColumnHeadersForSection(section);
+				this.initInitialFilterFields(section, columnModForSection);
+				this.initSelectItemSelectedMap(section, columnModForSection);
+				this.webKitViewContentModelBean.storeModelFor(this.getCategory(), section, columnModForSection);
 			}
+			//Placeholder for Filter...
+			this.fluidItemsForSection.put(section, new ArrayList<>());
 		}
 	}
 

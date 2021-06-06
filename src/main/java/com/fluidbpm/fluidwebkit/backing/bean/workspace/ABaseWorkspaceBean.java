@@ -27,6 +27,7 @@ import com.fluidbpm.program.api.vo.flow.JobViewListing;
 import com.fluidbpm.program.api.vo.item.FluidItem;
 import com.fluidbpm.program.api.vo.item.FluidItemListing;
 import com.fluidbpm.program.api.vo.userquery.UserQueryListing;
+import com.fluidbpm.program.api.vo.webkit.RowExpansion;
 import com.fluidbpm.program.api.vo.webkit.viewgroup.WebKitViewGroup;
 import com.fluidbpm.program.api.vo.webkit.viewgroup.WebKitViewSub;
 import com.fluidbpm.program.api.vo.webkit.viewgroup.WebKitWorkspaceJobView;
@@ -314,8 +315,10 @@ public abstract class ABaseWorkspaceBean<T extends ABaseWebVO, J extends ABaseCo
 			List<WebKitWorkspaceJobView> viewToFetchFor = null;
 			if (groupWithName.isTGMCombined()) {
 				viewToFetchFor = this.webKitMenuBean.getUniqueViewsForGroup(groupWithName);
-				subFilter = null;//force no sub selection to pull all items...
-			} else viewToFetchFor = this.webKitMenuBean.getViewsForSub(subFilter);
+				subFilter = this.computeCombinedSubFromGroup(groupWithName);//force no sub selection to pull all items...
+			} else {
+				viewToFetchFor = this.webKitMenuBean.getViewsForSub(subFilter);
+			}
 
 			List<WebKitWorkspaceJobView> viewsWithAccess = this.filterViewsForUserAccess(viewToFetchFor, clickedGroupAlias);
 			if (viewsWithAccess == null || viewsWithAccess.isEmpty()) return;
@@ -330,7 +333,8 @@ public abstract class ABaseWorkspaceBean<T extends ABaseWebVO, J extends ABaseCo
 				CompletableFuture toAdd = CompletableFuture.runAsync(() -> {
 					FluidItemListing listOfItems = null;
 					try {
-						int fetchLimit = jobViewWK.getFetchLimit() == null ? 100 : jobViewWK.getFetchLimit();
+						int fetchLimit = (jobViewWK.getFetchLimit() == null) ? 100 : jobViewWK.getFetchLimit();
+
 						listOfItems = flowItemClient.getFluidItemsForView(
 								jobViewWK.getJobView(),
 								fetchLimit,
@@ -341,8 +345,9 @@ public abstract class ABaseWorkspaceBean<T extends ABaseWebVO, J extends ABaseCo
 						throw fluidClientExcept;
 					} finally {
 						//Set the items for the view...
-						if (listOfItems != null && !listOfItems.isListingEmpty())
+						if (listOfItems != null && !listOfItems.isListingEmpty()) {
 							mappingRawViewFetch.put(jobViewWK, listOfItems.getListing());
+						}
 					}
 				});
 				allAsyncs.add(toAdd);
@@ -398,9 +403,11 @@ public abstract class ABaseWorkspaceBean<T extends ABaseWebVO, J extends ABaseCo
 			//Map the layout...
 			this.contentView = this.actionOpenMainPage(groupWithName, subFilter);
 			//Set the correct content view...
-			if (this.contentView == null) throw new ClientDashboardException(
-					"Unable to set Content View for "+ workspaceAim+"'. Not supported.",
-					ClientDashboardException.ErrorCode.VALIDATION);
+			if (this.contentView == null) {
+				throw new ClientDashboardException(
+						"Unable to set Content View for "+ workspaceAim+"'. Not supported.",
+						ClientDashboardException.ErrorCode.VALIDATION);
+			}
 
 			//Refresh the data...
 			this.contentView.refreshData(data);
@@ -413,7 +420,68 @@ public abstract class ABaseWorkspaceBean<T extends ABaseWebVO, J extends ABaseCo
 		} finally { /*Do nothing for now...*/ }
 	}
 
+	private WebKitViewSub computeCombinedSubFromGroup(WebKitViewGroup groupWithName) {
+		if (groupWithName.getWebKitViewSubs() == null || groupWithName.getWebKitViewSubs().isEmpty()) return null;
 
+		WebKitViewSub returnVal = new WebKitViewSub();
+		returnVal.setIcon(groupWithName.getJobViewGroupIcon());
+		returnVal.setLabel(groupWithName.getJobViewGroupName());
+		returnVal.setJobViews(new ArrayList<>());
+		returnVal.setRouteFields(new ArrayList<>());
+		returnVal.setRowExpansion(new RowExpansion());
+		
+		for (WebKitViewSub sub : groupWithName.getWebKitViewSubs()) {
+			if (sub.getJobViews() != null) {
+				returnVal.getJobViews().addAll(sub.getJobViews().stream().filter(itm -> {
+					return returnVal.getJobViews().stream()
+							.filter(returnValViewItm -> returnValViewItm.getJobView().getId().equals(itm.getJobView().getId()))
+							.count() < 1;
+				}).collect(Collectors.toList()));
+			};
+
+			if (sub.getRouteFields() != null) {
+				returnVal.getRouteFields().addAll(sub.getRouteFields().stream().filter(itm -> {
+					return returnVal.getRouteFields().stream()
+							.filter(returnValFldItm -> returnValFldItm.getRouteField().getFieldName().equals(
+									itm.getRouteField().getFieldName()))
+							.count() < 1;
+				}).collect(Collectors.toList()));
+			}
+
+			returnVal.setShowColumnAttachment(returnVal.isShowColumnAttachment() | sub.isShowColumnAttachment());
+			returnVal.setShowColumnCurrentFlow(returnVal.isShowColumnCurrentFlow() | sub.isShowColumnCurrentFlow());
+			returnVal.setShowColumnCurrentStep(returnVal.isShowColumnCurrentStep() | sub.isShowColumnCurrentStep());
+			returnVal.setShowColumnCurrentView(returnVal.isShowColumnCurrentView() | sub.isShowColumnCurrentView());
+			returnVal.setShowColumnID(returnVal.isShowColumnID() | sub.isShowColumnID());
+			returnVal.setShowColumnDateCreated(returnVal.isShowColumnDateCreated() | sub.isShowColumnDateCreated());
+			returnVal.setShowColumnDateLastUpdated(returnVal.isShowColumnDateLastUpdated() | sub.isShowColumnDateLastUpdated());
+			returnVal.setShowColumnFormType(returnVal.isShowColumnFormType() | sub.isShowColumnFormType());
+			returnVal.setShowColumnProgressPercentage(returnVal.isShowColumnProgressPercentage() | sub.isShowColumnProgressPercentage());
+			returnVal.setShowColumnTitle(returnVal.isShowColumnTitle() | sub.isShowColumnTitle());
+
+			if (sub.getRowExpansion() != null) {
+				RowExpansion re = sub.getRowExpansion();
+				RowExpansion reReturnVal = returnVal.getRowExpansion();
+
+				reReturnVal.setTableExpansionDisplayAncestor(
+						reReturnVal.isTableExpansionDisplayAncestor() | re.isTableExpansionDisplayAncestor());
+				reReturnVal.setTableExpansionDisplayAttachments(
+						reReturnVal.isTableExpansionDisplayAttachments() | re.isTableExpansionDisplayAttachments());
+				reReturnVal.setTableExpansionDisplayDescendant(
+						reReturnVal.isTableExpansionDisplayDescendant() | re.isTableExpansionDisplayDescendant());
+				reReturnVal.setTableExpansionDisplayFlowHistory(
+						reReturnVal.isTableExpansionDisplayFlowHistory() | re.isTableExpansionDisplayFlowHistory());
+				reReturnVal.setTableExpansionDisplayFormHistory(
+						reReturnVal.isTableExpansionDisplayFormHistory() | re.isTableExpansionDisplayFormHistory());
+				reReturnVal.setTableExpansionDisplayRecords(
+						reReturnVal.isTableExpansionDisplayRecords() | re.isTableExpansionDisplayRecords());
+				reReturnVal.setTableExpansionDisplayRecordsInlineEdit(
+						reReturnVal.isTableExpansionDisplayRecordsInlineEdit() | re.isTableExpansionDisplayRecordsInlineEdit());
+			}
+			
+		}
+		return returnVal;
+	}
 
 	private List<WebKitWorkspaceJobView> filterViewsForUserAccess(
 		List<WebKitWorkspaceJobView> webKitConfigViews,
