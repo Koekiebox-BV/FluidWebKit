@@ -171,6 +171,11 @@ public class WebKitConfigHelperBean extends ABaseManagedBean {
 		return metaDataTxt.startsWith("Anchor_");
 	}
 
+	public boolean isFieldTypeLabelMetaTypePayment(String metaDataTxt) {
+		if (UtilGlobal.isBlank(metaDataTxt)) return false;
+		return metaDataTxt.startsWith("MakePayment");
+	}
+
 	public boolean isFieldTypeLabelMetaTypeJavascript(String metaDataTxt) {
 		if (UtilGlobal.isBlank(metaDataTxt)) return false;
 		return metaDataTxt.startsWith("Javascript_");

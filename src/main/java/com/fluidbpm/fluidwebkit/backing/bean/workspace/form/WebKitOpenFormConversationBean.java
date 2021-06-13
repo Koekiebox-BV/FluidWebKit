@@ -19,10 +19,12 @@ import com.fluidbpm.program.api.vo.form.FormListing;
 import com.fluidbpm.program.api.vo.form.TableRecord;
 import com.fluidbpm.program.api.vo.item.CustomWebAction;
 import com.fluidbpm.program.api.vo.item.FluidItem;
+import com.fluidbpm.program.api.vo.payment.PaymentLinkAdyen;
 import com.fluidbpm.program.api.vo.user.User;
 import com.fluidbpm.program.api.vo.webkit.form.WebKitForm;
 import com.fluidbpm.ws.client.v1.flowitem.FlowItemClient;
 import com.fluidbpm.ws.client.v1.form.FormContainerClient;
+import com.fluidbpm.ws.client.v1.payment.PaymentClient;
 import lombok.Getter;
 import lombok.Setter;
 import org.primefaces.event.FileUploadEvent;
@@ -1198,5 +1200,19 @@ public class WebKitOpenFormConversationBean extends ABaseManagedBean {
 		circle.setFillOpacity(0.5);
 
 		this.conversationMapModel.addOverlay(circle);
+	}
+
+	public void actionRequestAdyenPayment() {
+		try {
+			PaymentClient payClient = this.getFluidClientDS().getPaymentClient();
+			WorkspaceFluidItem wsFlItem = this.getWsFluidItem();
+
+			PaymentLinkAdyen paymentLinkReqAdyen = payClient.obtainPaymentLink(wsFlItem.getFluidItem());
+			String linkLocation = paymentLinkReqAdyen.getPaymentLink();
+
+			this.executeJavaScript(String.format("window.location = '%s';", linkLocation));
+		} catch (Exception except) {
+			this.raiseError(except);
+		}
 	}
 }

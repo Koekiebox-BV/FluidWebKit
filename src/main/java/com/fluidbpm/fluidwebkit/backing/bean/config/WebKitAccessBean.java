@@ -366,8 +366,13 @@ public class WebKitAccessBean extends ABaseManagedBean {
 
 		if (User.ADMIN_USERNAME.equals(this.getLoggedInUserUsername())) return true;
 
+		//Ensure the relevant data is fetched...
+		this.actionPopulateInit();
+
 		List<Form> formDefs = this.getFormDefinitionsCanCreateInstanceOfIncTableFieldsSorted();
 		if (formDefs == null || formDefs.isEmpty()) return false;
+
+		getLogger().info("Confirming if '%s' has access to '%s'. ", formToCheckForParam, formDefs);
 
 		List<String> formDefTitles = formDefs.stream()
 				.map(itm -> itm.getFormType())

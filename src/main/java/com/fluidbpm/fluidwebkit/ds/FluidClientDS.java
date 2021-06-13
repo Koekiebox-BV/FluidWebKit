@@ -27,6 +27,7 @@ import com.fluidbpm.ws.client.v1.flowitem.FlowItemClient;
 import com.fluidbpm.ws.client.v1.form.FormContainerClient;
 import com.fluidbpm.ws.client.v1.form.FormDefinitionClient;
 import com.fluidbpm.ws.client.v1.form.FormFieldClient;
+import com.fluidbpm.ws.client.v1.payment.PaymentClient;
 import com.fluidbpm.ws.client.v1.report.ReportSystemClient;
 import com.fluidbpm.ws.client.v1.report.ReportUserClient;
 import com.fluidbpm.ws.client.v1.sqlutil.wrapper.SQLUtilWebSocketRESTWrapper;
@@ -73,6 +74,10 @@ public class FluidClientDS implements Closeable {
 
 	public FlowItemClient getFlowItemClient() {
 		return this.getClientFor(FlowItemClient.class);
+	}
+
+	public PaymentClient getPaymentClient() {
+		return this.getClientFor(PaymentClient.class);
 	}
 
 	public UserQueryClient getUserQueryClient() {
@@ -178,6 +183,8 @@ public class FluidClientDS implements Closeable {
 			return new FlowStepClient(this.endpoint, this.serviceTicket);
 		} else if (clazz.isAssignableFrom(FlowItemClient.class)) {
 			return new FlowItemClient(this.endpoint, this.serviceTicket);
+		} else if (clazz.isAssignableFrom(PaymentClient.class)) {
+			return new PaymentClient(this.endpoint, this.serviceTicket);
 		} else if (clazz.isAssignableFrom(SQLUtilWebSocketRESTWrapper.class)) {
 			return new SQLUtilWebSocketRESTWrapper(this.endpoint, this.serviceTicket, TimeUnit.SECONDS.toMillis(30));
 		}
