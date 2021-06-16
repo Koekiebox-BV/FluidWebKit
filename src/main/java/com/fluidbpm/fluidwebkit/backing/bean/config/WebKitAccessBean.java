@@ -81,7 +81,7 @@ public class WebKitAccessBean extends ABaseManagedBean {
 	@PostConstruct
 	public void actionPopulateInit() {
 		if (this.cachingDone) {
-			this.getLogger().info("FFC-Bean: Fields ALREADY CACHED.");
+			//this.getLogger().info("FFC-Bean: Fields ALREADY CACHED.");
 			return;
 		}
 
@@ -372,7 +372,7 @@ public class WebKitAccessBean extends ABaseManagedBean {
 		List<Form> formDefs = this.getFormDefinitionsCanCreateInstanceOfIncTableFieldsSorted();
 		if (formDefs == null || formDefs.isEmpty()) return false;
 
-		getLogger().info("Confirming if '%s' has access to '%s'. ", formToCheckForParam, formDefs);
+		//getLogger().info("Confirming if '%s' has access to '%s'. ", formToCheckForParam, formDefs);
 
 		List<String> formDefTitles = formDefs.stream()
 				.map(itm -> itm.getFormType())

@@ -166,6 +166,12 @@ public class WebKitConfigHelperBean extends ABaseManagedBean {
 		return barcodeType != null && !barcodeType.trim().isEmpty();
 	}
 
+	public boolean isFieldTypeTextMetaTypeBarcodeQR(String metaDataTxt) {
+		if (UtilGlobal.isBlank(metaDataTxt)) return false;
+		String barcodeType = this.getBarcodeType(metaDataTxt);
+		return (barcodeType != null && "qr".equals(barcodeType.trim()));
+	}
+
 	public boolean isFieldTypeLabelMetaTypeAnchor(String metaDataTxt) {
 		if (UtilGlobal.isBlank(metaDataTxt)) return false;
 		return metaDataTxt.startsWith("Anchor_");

@@ -76,7 +76,7 @@ public class NewOrUpdatedImageServlet extends ImageServlet {
 
 		byte[] placeholderImageBytes = ImageUtil.getThumbnailPlaceholderImageForNoAccess();
 		ImageStreamedContent noAccessContent = new ImageStreamedContent(
-				placeholderImageBytes, "image/png", "no_access.png");
+				placeholderImageBytes, "image/svg+xml", "no-access.svg");
 		this.writeImageToResponseOutput(respParam, noAccessContent);
 	}
 

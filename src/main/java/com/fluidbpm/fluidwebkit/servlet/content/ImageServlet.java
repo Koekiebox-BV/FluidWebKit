@@ -98,7 +98,7 @@ public class ImageServlet extends ABaseFWKServlet {
 		if (this.webKitAccessBean == null || !this.webKitAccessBean.isCanUserAttachmentsView(formDef)) {
 			byte[] placeholderImageBytes = ImageUtil.getThumbnailPlaceholderImageForNoAccess();
 			ImageStreamedContent noAccessContent = new ImageStreamedContent(
-					placeholderImageBytes, "image/png", "no_access.png");
+					placeholderImageBytes, "image/svg+xml", "no-access.svg");
 			this.writeImageToResponseOutput(respParam, noAccessContent);
 			return;
 		}
