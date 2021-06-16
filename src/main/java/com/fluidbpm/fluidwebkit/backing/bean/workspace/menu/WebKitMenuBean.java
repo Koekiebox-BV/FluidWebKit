@@ -336,6 +336,10 @@ public class WebKitMenuBean extends ABaseManagedBean {
 			this.noAccess();
 			return;
 		}
+		
+		List<Long> viewIdsWhereUserHasAccess = jobViewsWithAccess.stream()
+				.map(itm -> itm.getId())
+				.collect(Collectors.toList());
 
 		AtomicInteger groupCounter = new AtomicInteger(1);
 		this.getJobViewGroups().stream().forEach(webKitGroupItm -> {
@@ -344,7 +348,42 @@ public class WebKitMenuBean extends ABaseManagedBean {
 			String groupIcon = webKitGroupItm.getJobViewGroupIcon();
 
 			final UIComponentBase groupBaseToAdd;
-			if (!webKitGroupItm.isTGMCombined()) {
+			if (webKitGroupItm.isTGMCombined()) {
+				UIMenuItem menuItemGroup = new UIMenuItem();
+				menuItemGroup.setIcon(this.iconSafe(groupIcon, ICON_DEFAULT_GROUP));
+				menuItemGroup.setValue(groupLabel);
+				menuItemGroup.setAjax(true);
+				List<Long> jobViews = this.getViewIdsForGroup(webKitGroupItm);
+				final String onCompleteJS;
+				if (jobViews == null || jobViews.isEmpty()) {
+					onCompleteJS = null;
+				} else {
+					List<Long> viewWhenUserHasAccess = jobViews.stream()
+							.filter(itm -> viewIdsWhereUserHasAccess.contains(itm))
+							.collect(Collectors.toList());
+					if (viewWhenUserHasAccess.isEmpty()) {
+						onCompleteJS = null;
+					} else {
+						String combinedViewsAsList = jobViews.stream()
+								.map(itm -> String.valueOf(itm))
+								.collect(Collectors.joining(","));
+						onCompleteJS = String.format("javascript:rcOpenWorkspaceItem([{name:'%s', value:'%d'}, {name:'%s', value:'%s'}, {name:'%s', value:\"%s\"}]);",
+								ReqParam.CLICKED_GROUP,
+								groupId,
+								ReqParam.CLICKED_VIEWS,
+								combinedViewsAsList,
+								ReqParam.CLICKED_GROUP_ALIAS,
+								groupLabel);
+					}
+				}
+
+				if (onCompleteJS == null) {
+					groupBaseToAdd = null;
+				} else {
+					menuItemGroup.setOncomplete(onCompleteJS);
+					groupBaseToAdd = menuItemGroup;
+				}
+			} else {
 				UISubmenu menuItemGroup = new UISubmenu();
 				menuItemGroup.setLabel(groupLabel);
 
@@ -363,61 +402,48 @@ public class WebKitMenuBean extends ABaseManagedBean {
 						List<Long> jobViews = this.getViewIdsForSub(sub);
 						final String onCompleteJS;
 						if (jobViews == null || jobViews.isEmpty()) {
-							onCompleteJS = String.format("javascript:rcOpenNoConfig([{name:'%s', value:\"%s\"}]);",
-									ReqParam.MISSING_CONFIG_MSG,
-									String.format("No Views configured to render for Group '%s' and Sub '%s'.",
-											groupLabel, sub.getLabel()));
+							onCompleteJS = null;
 						} else {
-							String combinedViewsAsList = jobViews.stream()
-									.map(itm -> String.valueOf(itm))
-									.collect(Collectors.joining(","));
-							onCompleteJS = String.format("javascript:rcOpenWorkspaceItem" +
-											"([{name:'%s', value:'%d'}, {name:'%s', value:'%s'}, {name:'%s', value:\"%s\"}, {name:'%s', value:'%d'}, {name:'%s', value:\"%s\"}]);",
-									ReqParam.CLICKED_GROUP,
-									groupId,
-									ReqParam.CLICKED_VIEWS,
-									combinedViewsAsList,
-									ReqParam.CLICKED_GROUP_ALIAS,
-									groupLabel,
-									ReqParam.CLICKED_SUB_ORDER,
-									sub.getSubOrder(),
-									ReqParam.CLICKED_SUB_ALIAS,
-									subLabel);
+							List<Long> viewWhenUserHasAccess = jobViews.stream()
+									.filter(itm -> viewIdsWhereUserHasAccess.contains(itm))
+									.collect(Collectors.toList());
+							if (viewWhenUserHasAccess.isEmpty()) {
+								onCompleteJS = null;
+							} else {
+								String combinedViewsAsList = jobViews.stream()
+										.map(itm -> String.valueOf(itm))
+										.collect(Collectors.joining(","));
+								onCompleteJS = String.format("javascript:rcOpenWorkspaceItem" +
+												"([{name:'%s', value:'%d'}, {name:'%s', value:'%s'}, {name:'%s', value:\"%s\"}, {name:'%s', value:'%d'}, {name:'%s', value:\"%s\"}]);",
+										ReqParam.CLICKED_GROUP,
+										groupId,
+										ReqParam.CLICKED_VIEWS,
+										combinedViewsAsList,
+										ReqParam.CLICKED_GROUP_ALIAS,
+										groupLabel,
+										ReqParam.CLICKED_SUB_ORDER,
+										sub.getSubOrder(),
+										ReqParam.CLICKED_SUB_ALIAS,
+										subLabel);
+							}
 						}
-						menuItemSub.setOncomplete(onCompleteJS);
-						menuItemGroup.getElements().add(menuItemSub);
+
+						if (onCompleteJS != null) {
+							menuItemSub.setOncomplete(onCompleteJS);
+							menuItemGroup.getElements().add(menuItemSub);
+						}
 					});
 				}
-				groupBaseToAdd = menuItemGroup;
-			} else {
-				UIMenuItem menuItemGroup = new UIMenuItem();
-				menuItemGroup.setIcon(this.iconSafe(groupIcon, ICON_DEFAULT_GROUP));
-				menuItemGroup.setValue(groupLabel);
-				menuItemGroup.setAjax(true);
-				List<Long> jobViews = this.getViewIdsForGroup(webKitGroupItm);
-				final String onCompleteJS;
-				if (jobViews == null || jobViews.isEmpty()) {
-					onCompleteJS = String.format("javascript:rcOpenNoConfig([{name:'%s', value:\"%s\"}]);",
-							ReqParam.MISSING_CONFIG_MSG,
-							String.format("No Views configured to render for Group '%s'.", groupLabel));
-				} else {
-					String combinedViewsAsList = jobViews.stream()
-							.map(itm -> String.valueOf(itm))
-							.collect(Collectors.joining(","));
-					onCompleteJS = String.format("javascript:rcOpenWorkspaceItem([{name:'%s', value:'%d'}, {name:'%s', value:'%s'}, {name:'%s', value:\"%s\"}]);",
-							ReqParam.CLICKED_GROUP,
-							groupId,
-							ReqParam.CLICKED_VIEWS,
-							combinedViewsAsList,
-							ReqParam.CLICKED_GROUP_ALIAS,
-							groupLabel);
-				}
-				menuItemGroup.setOncomplete(onCompleteJS);
-				groupBaseToAdd = menuItemGroup;
+				groupBaseToAdd = menuItemGroup.getElementsCount() > 0 ? menuItemGroup : null;
 			}
-			groupBaseToAdd.setId(String.format("menGroupId%d", groupCounter.getAndIncrement()));
-			this.submenuWorkspace.getElements().add(groupBaseToAdd);
+
+			if (groupBaseToAdd != null) {
+				groupBaseToAdd.setId(String.format("menGroupId%d", groupCounter.getAndIncrement()));
+				this.submenuWorkspace.getElements().add(groupBaseToAdd);
+			}
 		});
+
+		if (this.submenuWorkspace.getElementsCount() < 1) this.noAccess();
 	}
 
 	private void noAccess() {
