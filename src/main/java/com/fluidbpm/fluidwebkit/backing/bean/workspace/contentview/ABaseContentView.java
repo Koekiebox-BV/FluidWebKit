@@ -372,7 +372,7 @@ public abstract class ABaseContentView implements Serializable {
 									(field.getFieldValue().toString() == null ? null :
 											field.getFieldValue().toString().trim().toLowerCase());
 
-							if (fieldValueTextLower.contains(filterByTextLower)) {
+							if (fieldValueTextLower != null && fieldValueTextLower.contains(filterByTextLower)) {
 								itemsInSectionFiltered.add(item);
 								return;
 							}

@@ -36,10 +36,7 @@ import javax.inject.Named;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -144,7 +141,7 @@ public class ProfileBean extends ABaseManagedBean {
 
 			return DefaultStreamedContent.builder()
 					.stream(() -> inputStream)
-					.name("no_profile_logo.png")
+					.name(String.format("no_profile_logo_%s.png", UUID.randomUUID().toString()))
 					.contentType("image/svg+xml")
 					.build();
 		} catch (IOException ioExcept) {

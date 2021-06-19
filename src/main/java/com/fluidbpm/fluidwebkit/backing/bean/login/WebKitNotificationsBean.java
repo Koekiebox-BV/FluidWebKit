@@ -16,6 +16,7 @@
 package com.fluidbpm.fluidwebkit.backing.bean.login;
 
 import com.fluidbpm.fluidwebkit.backing.bean.ABaseManagedBean;
+import com.fluidbpm.fluidwebkit.ds.FluidClientDS;
 import com.fluidbpm.program.api.util.UtilGlobal;
 import com.fluidbpm.program.api.vo.user.UserNotification;
 import com.fluidbpm.ws.client.FluidClientException;
@@ -117,14 +118,14 @@ public class WebKitNotificationsBean extends ABaseManagedBean {
 	 * When notifications are to be retrieved.
 	 */
 	public void actionUpdateNotifications() {
-		if (this.getFluidClientDS() == null) {
+		FluidClientDS clientDs = this.getFluidClientDS();
+		if (clientDs == null) {
 			this.lastNotificationFetch = System.currentTimeMillis();
 			return;
 		}
 
 		//Fluid Clients...
-		UserNotificationClient userNotificationsClient =
-				this.getFluidClientDS().getUserNotificationClient();
+		UserNotificationClient userNotificationsClient = clientDs.getUserNotificationClient();
 		this.unreadUserNotifications = null;
 		this.readUserNotifications = null;
 
