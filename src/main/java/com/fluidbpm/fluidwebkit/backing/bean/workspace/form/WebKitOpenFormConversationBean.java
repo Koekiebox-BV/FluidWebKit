@@ -49,6 +49,7 @@ import javax.inject.Named;
 import java.io.ByteArrayInputStream;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import static com.fluidbpm.fluidwebkit.backing.bean.workspace.pi.PersonalInventoryItemVO.PLACEHOLDER_TITLE;
 
@@ -203,6 +204,8 @@ public class WebKitOpenFormConversationBean extends ABaseManagedBean {
 
 		if (wfiParam == null) return;
 		if (this.getFluidClientDS() == null) return;
+
+		wfiParam.resetFormFieldsEditMandatoryAndEmpty();
 
 		try {
 			String formType = wfiParam.getFluidItemFormType();
@@ -710,9 +713,7 @@ public class WebKitOpenFormConversationBean extends ABaseManagedBean {
 			if (wsFlItem.isFluidItemFormSet()) {
 				actionString = "Updated";
 				//Always lock the form first on a save...
-				if (wsFlItem.isFormLockedByLoggedInUser()) {
-					//Already locked by the logged in user...
-				} else {
+				if (!wsFlItem.isFormLockedByLoggedInUser()) {
 					//Lock then send it on...
 					fcClient.lockFormContainer(wsFlItem.getFluidItemForm(), wsFlItem.getJobView());
 					this.lockByLoggedInUser(wsFlItem.getFluidItemForm());
@@ -772,8 +773,9 @@ public class WebKitOpenFormConversationBean extends ABaseManagedBean {
 					"Success", String.format("'%s' %s.", this.wsFluidItem.getFluidItemTitle(), actionString));
 			FacesContext.getCurrentInstance().addMessage(null, fMsg);
 		} catch (Exception except) {
-			if (UtilGlobal.isNotBlank(varBtnToEnableFailedSave))
+			if (UtilGlobal.isNotBlank(varBtnToEnableFailedSave)) {
 				this.executeJavaScript(String.format("PF('%s').enable();", varBtnToEnableFailedSave));
+			}
 			this.raiseError(except);
 		}
 	}
@@ -862,6 +864,7 @@ public class WebKitOpenFormConversationBean extends ABaseManagedBean {
 		returnVal.setId(fluidItem.getFluidItemFormId());
 		returnVal.setFormType(fluidItem.getFluidItemFormType());
 
+		fluidItem.resetFormFieldsEditMandatoryAndEmpty();
 		List<Field> editFormFields = fluidItem.getFormFieldsEditAsFields();
 		returnVal.setFormFields(editFormFields);
 
@@ -870,6 +873,21 @@ public class WebKitOpenFormConversationBean extends ABaseManagedBean {
 		returnVal.setFormType(fluidItem.getFluidItemForm().getFormType());
 		returnVal.setTitle(this.generateNewFormTitle(wkForm == null ? null : wkForm.getNewFormTitleFormula(),
 				fluidItem.getFluidItemFormType(), fluidItem.getFormFieldsEditAsFields()));
+
+		AtomicBoolean anyEmpty = new AtomicBoolean(false);
+		if (wkForm.getMandatoryFields() != null && !wkForm.getMandatoryFields().isEmpty()) {
+			wkForm.getMandatoryFields().forEach(manField -> {
+				WebKitField wkField = fluidItem.getFormFieldsEditWithName(manField);
+
+				if (wkField.isFieldValueEmpty()) {
+					anyEmpty.set(true);
+					wkField.setMandatoryAndEmpty(true);
+				}
+			});
+		}
+		if (anyEmpty.get()) {
+			throw new ClientDashboardException("Please populate mandatory fields.", ClientDashboardException.ErrorCode.VALIDATION);
+		}
 
 		//Apply the Custom Action when applicable...
 		String customAction = this.getThirdPartyWebActionTaskIdForFormType(returnVal.getFormType());

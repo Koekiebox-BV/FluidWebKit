@@ -30,6 +30,7 @@ import com.fluidbpm.program.api.vo.webkit.form.WebKitForm;
 import lombok.Getter;
 import lombok.Setter;
 
+import javax.xml.bind.annotation.XmlTransient;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -206,6 +207,24 @@ public class WorkspaceFluidItem extends ABaseFluidVO {
 				.collect(Collectors.toList());
 	}
 
+	@XmlTransient
+	public WebKitField getFormFieldsEditWithName(String fieldName) {
+		if (fieldName == null || fieldName.trim().isEmpty()) return null;
+		if (this.formFieldsEdit == null) return null;
+
+		return this.formFieldsEdit.stream()
+				.filter(itm -> fieldName.equals(itm.getFieldName()))
+				.findFirst()
+				.orElse(null);
+	}
+
+	@XmlTransient
+	public void resetFormFieldsEditMandatoryAndEmpty() {
+		if (this.formFieldsEdit == null) return;
+
+		this.formFieldsEdit.forEach(itm -> itm.setMandatoryAndEmpty(false));
+	}
+	
 	public List<Field> getFormFieldsViewable() {
 		if (this.baseWeb == null || this.baseWeb.getFieldsViewable() == null) return null;
 		return this.baseWeb.getFieldsViewable();
@@ -235,6 +254,13 @@ public class WorkspaceFluidItem extends ABaseFluidVO {
 				.findFirst()
 				.orElse(null);
 		return fieldWithName != null;
+	}
+	
+	public boolean isFormFieldMandatory(String formField) {
+		if (formField == null || formField.trim().isEmpty()) return false;
+		if (this.webKitForm.getMandatoryFields() == null || this.webKitForm.getMandatoryFields().isEmpty()) return false;
+
+		return this.webKitForm.getMandatoryFields().contains(formField);
 	}
 
 	public boolean isFluidItemInWIPState() {

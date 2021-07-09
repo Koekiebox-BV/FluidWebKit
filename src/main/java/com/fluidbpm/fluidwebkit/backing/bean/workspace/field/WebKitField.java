@@ -4,16 +4,23 @@ import com.fluidbpm.program.api.util.GeoUtil;
 import com.fluidbpm.program.api.util.UtilGlobal;
 import com.fluidbpm.program.api.vo.field.Field;
 import com.fluidbpm.program.api.vo.field.MultiChoice;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import javax.faces.model.SelectItem;
 import javax.xml.bind.annotation.XmlTransient;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
 
 @NoArgsConstructor
 public class WebKitField extends Field {
+
+	@Getter
+	@Setter
+	private boolean mandatoryAndEmpty;
 
 	public WebKitField(
 		Long fieldIdParam,
@@ -149,5 +156,33 @@ public class WebKitField extends Field {
 			return;
 		}
 		this.setFieldValue(geo.toString());
+	}
+
+	@XmlTransient
+	public boolean isFieldValueEmpty() {
+		switch (this.getTypeAsEnum()) {
+			case Text:
+			case ParagraphText:
+			case TextEncrypted:
+				String textVal = this.getFieldValueAsString();
+				if (textVal == null || textVal.trim().isEmpty()) return true;
+				else return false;
+			case Decimal:
+				Double fieldVal = this.getFieldValueAsDouble();
+				if (fieldVal == null || fieldVal.doubleValue() == 0.0D) return true;
+				else return false;
+			case DateTime:
+				Date dateVal = this.getFieldValueAsDate();
+				if (dateVal == null) return true;
+				else return false;
+			case MultipleChoice:
+				MultiChoice mc = this.getFieldValueAsMultiChoice();
+				if ((mc.getSelectedMultiChoice() == null || mc.getSelectedMultiChoice().isEmpty()) &&
+				mc.getSelectedMultiChoices() == null || mc.getSelectedMultiChoices().isEmpty()) return true;
+				else return false;
+			default:
+				return false;
+		}
+
 	}
 }

@@ -122,6 +122,7 @@ public class WebKitWorkspaceLookAndFeelBean extends ABaseManagedBean {
 	private String inputNewRootMenuLabel;
 
 	private Map<String, List<SelectItem>> tableFieldsByFormDef;
+	private Map<String, List<SelectItem>> mandatoryFieldsByFormDef;
 
 	@Inject
 	private WebKitAccessBean accessBean;
@@ -766,6 +767,32 @@ public class WebKitWorkspaceLookAndFeelBean extends ABaseManagedBean {
 				.forEach(itm -> returnVal.add(new SelectItem(itm, itm)));
 
 		this.tableFieldsByFormDef.put(formDef, returnVal);
+		return returnVal;
+	}
+
+	public List<SelectItem> extractFieldsForMandatoryVerificationFrom(String formDef) {
+		if (this.mandatoryFieldsByFormDef == null) this.mandatoryFieldsByFormDef = new HashMap<>();
+
+		if (this.mandatoryFieldsByFormDef.containsKey(formDef)) return this.mandatoryFieldsByFormDef.get(formDef);
+
+		List<Field> fieldsForFormDef = this.accessBean.getFieldsEditableForFormDef(formDef);
+		List<SelectItem> returnVal = new ArrayList<>();
+		if (fieldsForFormDef == null) return returnVal;
+
+		fieldsForFormDef.stream()
+				.filter(itm -> {
+					switch (itm.getTypeAsEnum()) {
+						case Table:
+						case Label:
+						case TrueFalse:
+							return false;
+						default: return true;
+					}
+				})
+				.map(itm -> itm.getFieldName())
+				.forEach(itm -> returnVal.add(new SelectItem(itm, itm)));
+
+		this.mandatoryFieldsByFormDef.put(formDef, returnVal);
 		return returnVal;
 	}
 
