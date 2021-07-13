@@ -12,6 +12,7 @@ import com.fluidbpm.program.api.util.GeoUtil;
 import com.fluidbpm.program.api.util.UtilGlobal;
 import com.fluidbpm.program.api.vo.attachment.Attachment;
 import com.fluidbpm.program.api.vo.field.Field;
+import com.fluidbpm.program.api.vo.field.MultiChoice;
 import com.fluidbpm.program.api.vo.field.TableField;
 import com.fluidbpm.program.api.vo.flow.Flow;
 import com.fluidbpm.program.api.vo.form.Form;
@@ -671,11 +672,11 @@ public class WebKitOpenFormConversationBean extends ABaseManagedBean {
 			if (fieldBy != null) tableRecordToSave.setTableFieldParentId(fieldBy.getId());
 
 			//Apply the Custom Action when applicable...
-			String customAction = this.getThirdPartyWebActionTaskIdForFormType(tableRecordToSave.getFormType());
-			if (customAction != null) {
+			String customActionSave = this.getThirdPartyWebActionSaveForFormType(tableRecordToSave.getFormType());
+			if (customActionSave != null) {
 				FormContainerClient fcc = this.getFluidClientDS().getFormContainerClient();
 				CustomWebAction execActionResult = fcc.executeCustomWebAction(
-						customAction, true, fieldBy.getId(), tableRecordToSave);
+						customActionSave, true, fieldBy.getId(), tableRecordToSave);
 				this.mergeFormFieldsFromCustomAction(execActionResult, tableRecordToSave);
 			}
 
@@ -698,6 +699,26 @@ public class WebKitOpenFormConversationBean extends ABaseManagedBean {
 		FacesMessage msg = new FacesMessage("Cancelled",
 				String.format("%s", event.getObject().getFormType()));
 		FacesContext.getCurrentInstance().addMessage(null, msg);
+	}
+
+	public void actionPerformCustomWebActionOnForm(String customAction, String varBtnToEnableFailedSave, int buttonIndex) {
+		if (this.getFluidClientDS() == null) return;
+		
+		try {
+			FormContainerClient fcClient = this.getFluidClientDS().getFormContainerClient();
+			WorkspaceFluidItem wsFlItem = this.getWsFluidItem();
+			Form updatedForm = this.toFormToSave(wsFlItem, fcClient, customAction);
+
+			FacesMessage fMsg = new FacesMessage(FacesMessage.SEVERITY_INFO,
+					"Success", String.format("'%s' %s.", updatedForm.getTitle(), customAction));
+			FacesContext.getCurrentInstance().addMessage(null, fMsg);
+		} catch (Exception except) {
+			this.raiseError(except);
+		} finally {
+			if (UtilGlobal.isNotBlank(varBtnToEnableFailedSave)) {
+				this.executeJavaScript(String.format("PF('%s').enable();", String.format("%s%s", varBtnToEnableFailedSave, buttonIndex)));
+			}
+		}
 	}
 
 	public void actionSaveForm(String dialogToHideAfterSuccess, String varBtnToEnableFailedSave) {
@@ -857,8 +878,16 @@ public class WebKitOpenFormConversationBean extends ABaseManagedBean {
 	}
 
 	private Form toFormToSave(
+			WorkspaceFluidItem fluidItem,
+			FormContainerClient formContClient
+	) {
+		return this.toFormToSave(fluidItem, formContClient, null);
+	}
+
+	private Form toFormToSave(
 		WorkspaceFluidItem fluidItem,
-		FormContainerClient formContClient
+		FormContainerClient formContClient,
+		String customActionForceUsage
 	) {
 		Form returnVal = new Form(fluidItem.getFluidItemFormType());
 		returnVal.setId(fluidItem.getFluidItemFormId());
@@ -874,23 +903,32 @@ public class WebKitOpenFormConversationBean extends ABaseManagedBean {
 		returnVal.setTitle(this.generateNewFormTitle(wkForm == null ? null : wkForm.getNewFormTitleFormula(),
 				fluidItem.getFluidItemFormType(), fluidItem.getFormFieldsEditAsFields()));
 
-		AtomicBoolean anyEmpty = new AtomicBoolean(false);
-		if (wkForm.getMandatoryFields() != null && !wkForm.getMandatoryFields().isEmpty()) {
-			wkForm.getMandatoryFields().forEach(manField -> {
-				WebKitField wkField = fluidItem.getFormFieldsEditWithName(manField);
-
-				if (wkField.isFieldValueEmpty()) {
-					anyEmpty.set(true);
-					wkField.setMandatoryAndEmpty(true);
-				}
-			});
-		}
-		if (anyEmpty.get()) {
-			throw new ClientDashboardException("Please populate mandatory fields.", ClientDashboardException.ErrorCode.VALIDATION);
-		}
-
 		//Apply the Custom Action when applicable...
-		String customAction = this.getThirdPartyWebActionTaskIdForFormType(returnVal.getFormType());
+		String customAction = null;
+		if (UtilGlobal.isBlank(customActionForceUsage)) {
+			customAction = this.getThirdPartyWebActionSaveForFormType(returnVal.getFormType());
+			AtomicBoolean anyEmpty = new AtomicBoolean(false);
+			if (wkForm.getMandatoryFields() != null && !wkForm.getMandatoryFields().isEmpty()) {
+				wkForm.getMandatoryFields().forEach(manField -> {
+					WebKitField wkField = fluidItem.getFormFieldsEditWithName(manField);
+
+					if (wkField.isFieldValueEmpty()) {
+						anyEmpty.set(true);
+						wkField.setMandatoryAndEmpty(true);
+					}
+				});
+			}
+			if (anyEmpty.get()) {
+				throw new ClientDashboardException("Please populate mandatory fields.", ClientDashboardException.ErrorCode.VALIDATION);
+			}
+		} else {
+			List<String> allCustomActions = this.getThirdPartyWebActionTaskIdsForFormType(returnVal.getFormType());
+			customAction = allCustomActions.stream()
+					.filter(itm -> itm.equals(customActionForceUsage))
+					.findFirst()
+					.orElse(null);
+		}
+
 		if (customAction != null) {
 			CustomWebAction execActionResult = formContClient.executeCustomWebAction(customAction, returnVal);
 			this.mergeFormFieldsFromCustomAction(execActionResult, returnVal);
@@ -910,14 +948,23 @@ public class WebKitOpenFormConversationBean extends ABaseManagedBean {
 		execFields.stream()
 				.filter(itm -> itm.getTypeAsEnum() != Field.Type.Table)//We do not update table records...
 				.forEach(fieldItemFromExec -> {
-					if (fieldItemFromExec.getTypeAsEnum() == null ||
-							fieldItemFromExec.getTypeAsEnum() == Field.Type.Table) return;
+					if (fieldItemFromExec.getTypeAsEnum() == null || fieldItemFromExec.getTypeAsEnum() == Field.Type.Table) return;
 
-					formToUpdate.setFieldValue(
-							fieldItemFromExec.getFieldName(),
-							fieldItemFromExec.getFieldValue(),
-							fieldItemFromExec.getTypeAsEnum()
-			);
+					if (fieldItemFromExec.getFieldValue() instanceof MultiChoice) {
+						MultiChoice casted = (MultiChoice)fieldItemFromExec.getFieldValue();
+						MultiChoice multi = formToUpdate.getFieldValueAsMultiChoice(fieldItemFromExec.getFieldName());
+						casted.setAvailableMultiChoices(multi.getAvailableMultiChoices());
+						casted.setAvailableMultiChoicesCombined(multi.getAvailableMultiChoicesCombined());
+
+						formToUpdate.setFieldValue(
+								fieldItemFromExec.getFieldName(),
+								casted, fieldItemFromExec.getTypeAsEnum());
+					} else {
+						formToUpdate.setFieldValue(
+								fieldItemFromExec.getFieldName(),
+								fieldItemFromExec.getFieldValue(),
+								fieldItemFromExec.getTypeAsEnum());
+					};
 		});
 	}
 

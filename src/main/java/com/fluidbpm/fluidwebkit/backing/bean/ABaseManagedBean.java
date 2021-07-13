@@ -24,7 +24,6 @@ import com.fluidbpm.fluidwebkit.ds.FluidClientDS;
 import com.fluidbpm.fluidwebkit.ds.FluidClientPool;
 import com.fluidbpm.fluidwebkit.exception.ClientDashboardException;
 import com.fluidbpm.fluidwebkit.exception.WebSessionExpiredException;
-import com.fluidbpm.program.api.util.UtilGlobal;
 import com.fluidbpm.program.api.vo.field.Field;
 import com.fluidbpm.program.api.vo.form.Form;
 import com.fluidbpm.program.api.vo.role.Role;
@@ -52,6 +51,7 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.stream.Collectors;
 
 import static com.fluidbpm.program.api.vo.thirdpartylib.ThirdPartyLibraryTaskIdentifier.ThirdPartyLibraryTaskType.CustomWebAction;
 
@@ -652,15 +652,15 @@ public abstract class ABaseManagedBean implements Serializable {
 	}
 
 	protected boolean isThirdPartyWebActionEnabledFormType(String formType) {
-		String actionForFormType = this.getThirdPartyWebActionTaskIdForFormType(formType);
-		return UtilGlobal.isNotBlank(actionForFormType);
+		List<String> actionForFormTypes = this.getThirdPartyWebActionTaskIdsForFormType(formType);
+		return actionForFormTypes != null && !actionForFormTypes.isEmpty();
 	}
 
-	protected String getThirdPartyWebActionTaskIdForFormType(String formType) {
+	protected List<String> getThirdPartyWebActionTaskIdsForFormType(String formType) {
 		List<ThirdPartyLibraryTaskIdentifier> thirdPartyLibs = this.webKitConfigBean.getThirdPartyLibTaskIdentifiers();
 		if (thirdPartyLibs == null) return null;
 
-		ThirdPartyLibraryTaskIdentifier taskIdentifier = thirdPartyLibs.stream()
+		return thirdPartyLibs.stream()
 				.filter(itm -> itm.getThirdPartyLibraryTaskType() == CustomWebAction && itm.getFormDefinitions() != null)
 				.filter(itm -> {
 					List<Form> formDefs = itm.getFormDefinitions();
@@ -668,11 +668,20 @@ public abstract class ABaseManagedBean implements Serializable {
 							.filter(formDefItm -> formType.equals(formDefItm.getFormType()))
 							.findFirst()
 							.orElse(null);
-					return matchedForm != null;
+					return matchedForm != null && itm.getTaskIdentifier() != null;
 				})
-				.findFirst()
-				.orElse(null);
-		return (taskIdentifier == null) ? null : taskIdentifier.getTaskIdentifier();
+				.map(itm -> itm.getTaskIdentifier())
+				.collect(Collectors.toList());
 	}
 
+	protected String getThirdPartyWebActionSaveForFormType(String formType) {
+		List<String> allActions = this.getThirdPartyWebActionTaskIdsForFormType(formType);
+		if (allActions == null || allActions.isEmpty()) return null;
+
+		return allActions.stream()
+				.filter(val -> val.toLowerCase().trim().equals("save"))
+				.findFirst()
+				.orElse(null);
+	}
+	
 }

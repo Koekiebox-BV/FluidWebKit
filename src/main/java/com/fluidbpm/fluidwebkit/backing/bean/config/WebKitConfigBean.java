@@ -36,7 +36,9 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -62,6 +64,7 @@ public class WebKitConfigBean extends ABaseManagedBean {
 	private boolean configUserLoginSuccess = false;
 	
 	private List<ThirdPartyLibraryTaskIdentifier> thirdPartyLibTaskIdentifiers;
+	private Map<String, List<ThirdPartyLibraryTaskIdentifier>> thirdPartyLibMap;
 
 	private Boolean isGoogleMapsApiReachable = null;
 
@@ -110,14 +113,35 @@ public class WebKitConfigBean extends ABaseManagedBean {
 			try {
 				this.thirdPartyLibTaskIdentifiers = configClient.getAllThirdPartyTaskIdentifiers();
 			} catch (FluidClientException fce) {
-				if (FluidClientException.ErrorCode.NO_RESULT == fce.getErrorCode())
+				if (FluidClientException.ErrorCode.NO_RESULT == fce.getErrorCode()) {
 					this.thirdPartyLibTaskIdentifiers = new ArrayList<>();
-				else
-					throw fce;
+				} else throw fce;
 			}
 		} catch (Exception fce) {
 			this.raiseError(fce);
 		}
+	}
+
+	public Map<String, List<ThirdPartyLibraryTaskIdentifier>> getThirdPartyLibMapCustomWebActions() {
+		if (this.thirdPartyLibMap != null) return this.thirdPartyLibMap;
+
+		this.thirdPartyLibMap = new HashMap<>();
+
+		this.thirdPartyLibTaskIdentifiers.stream()
+				.filter(itm -> itm.getThirdPartyLibraryTaskType() == ThirdPartyLibraryTaskIdentifier.ThirdPartyLibraryTaskType.CustomWebAction)
+				.filter(itm -> !"save".equals(itm.getTaskIdentifier().toLowerCase().trim()))
+				.filter(itm -> itm.getFormDefinitions() != null && !itm.getFormDefinitions().isEmpty())
+				.forEach(thirdPartyLib -> {
+					thirdPartyLib.getFormDefinitions().stream()
+							.map(formDef -> formDef.getFormType())
+							.forEach(formDef -> {
+						List<ThirdPartyLibraryTaskIdentifier> listOfActionsForFormDef = this.thirdPartyLibMap.getOrDefault(formDef, new ArrayList<>());
+						listOfActionsForFormDef.add(thirdPartyLib);
+						this.thirdPartyLibMap.put(formDef, listOfActionsForFormDef);
+					});
+				});
+
+		return this.thirdPartyLibMap;
 	}
 
 	private void setPropertiesBasedOnListing(ConfigurationListing propertiesBasedOnListingParam) {
