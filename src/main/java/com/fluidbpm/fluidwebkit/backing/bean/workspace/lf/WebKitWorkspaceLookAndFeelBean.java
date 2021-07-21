@@ -25,6 +25,7 @@ import com.fluidbpm.program.api.vo.config.Configuration;
 import com.fluidbpm.program.api.vo.config.ConfigurationListing;
 import com.fluidbpm.program.api.vo.field.Field;
 import com.fluidbpm.program.api.vo.flow.JobView;
+import com.fluidbpm.program.api.vo.form.Form;
 import com.fluidbpm.program.api.vo.userquery.UserQuery;
 import com.fluidbpm.program.api.vo.webkit.form.WebKitForm;
 import com.fluidbpm.program.api.vo.webkit.form.WebKitFormListing;
@@ -126,6 +127,8 @@ public class WebKitWorkspaceLookAndFeelBean extends ABaseManagedBean {
 
 	@Inject
 	private WebKitAccessBean accessBean;
+
+	private Map<String, List<WebKitForm>> groupAndFormCreateInstanceOfMapping;
 
 	private List<TabId> tabsViewed;
 	private enum TabId {
@@ -805,5 +808,40 @@ public class WebKitWorkspaceLookAndFeelBean extends ABaseManagedBean {
 			default:
 				return WebKitForm.InputLayout.VERTICAL;
 		}
+	}
+
+	public Map<String, List<WebKitForm>> getFormDefinitionsCanCreateInstanceOfGrouped() {
+		if (this.groupAndFormCreateInstanceOfMapping != null) return this.groupAndFormCreateInstanceOfMapping;
+
+		Map<String, List<WebKitForm>> mapping = new HashMap<>();
+
+		List<Form> allowedForms = this.accessBean.getFormDefinitionsCanCreateInstanceOfSorted();
+		if (allowedForms == null || allowedForms.isEmpty()) return mapping;
+
+		this.webKitForms.stream().forEach(wkForm -> {
+			Form allowedForm = allowedForms.stream()
+					.filter(itm -> itm.getFormType().equals(wkForm.getForm().getFormType()))
+					.findFirst()
+					.orElse(null);
+			if (allowedForm != null) {
+				String createNewInstanceGroup = wkForm.getCreateNewInstanceGroup();
+
+				List<WebKitForm> formsForGroup = mapping.getOrDefault(createNewInstanceGroup, new ArrayList<>());
+				formsForGroup.add(wkForm);
+				mapping.put(createNewInstanceGroup, formsForGroup);
+			}
+		});
+
+		this.groupAndFormCreateInstanceOfMapping = mapping;
+		return mapping;
+	}
+
+	public List<String> getFormDefinitionsCanCreateInstanceOfGroups() {
+		Map<String, List<WebKitForm>> mapping = this.getFormDefinitionsCanCreateInstanceOfGrouped();
+
+		Set<String> groupNamesSet = mapping.keySet();
+		List<String> listing = new ArrayList<>(groupNamesSet);
+		Collections.sort(listing);
+		return listing;
 	}
 }
