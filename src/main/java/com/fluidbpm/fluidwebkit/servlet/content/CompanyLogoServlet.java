@@ -43,7 +43,7 @@ public class CompanyLogoServlet extends ImageServlet {
 	@Override
 	protected void doGet(HttpServletRequest reqParam, HttpServletResponse respParam) throws ServletException, IOException {
 		if (this.webKitConfigBean.getCompanyLogoSmallPathExists()) {
-
+			//TODO need to return a default logo if there is no Small logo selected.
 		}
 		
 		this.writeImageToResponseOutput(respParam, new ImageStreamedContent(

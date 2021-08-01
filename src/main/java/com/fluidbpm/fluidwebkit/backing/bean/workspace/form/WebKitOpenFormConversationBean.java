@@ -61,6 +61,9 @@ public class WebKitOpenFormConversationBean extends ABaseManagedBean {
 	@Getter
 	private Conversation conversation;
 
+	@Inject
+	private WebKitOpenFormFieldHistoryConversationBean fieldHistoryConvBean;
+
 	@Getter
 	@Setter
 	private WorkspaceFluidItem wsFluidItem;
@@ -430,6 +433,9 @@ public class WebKitOpenFormConversationBean extends ABaseManagedBean {
 				.url("#frmOpenForm:outPanelFormBdy")
 				.icon("fa fa-link")
 				.build();
+
+		//TODO need to look at all label fields, and add placeholders for them here...
+
 		DefaultMenuItem itemGotoAttachments = DefaultMenuItem.builder()
 				.value("Goto 'Attachments'")
 				.url("#attachmentsAsListingGridList")
@@ -820,6 +826,23 @@ public class WebKitOpenFormConversationBean extends ABaseManagedBean {
 				this.executeJavaScript(String.format("PF('%s').enable();", varBtnToEnableFailedSendOn));
 			this.raiseError(except);
 		}
+	}
+
+	public void actionLoadFormHistoricData(String btnToReEnable, String dialogToShowIfSuccess) {
+		String jsToExec = String.format("PF('%s').enable();", btnToReEnable);
+		try {
+			this.fieldHistoryConvBean.startConversation();
+			this.fieldHistoryConvBean.setHistoryFormId(this.getWsFluidItem().getFluidItemFormId());
+			this.fieldHistoryConvBean.actionLoadFormHistoricData();
+
+			jsToExec = String.format("%sPF('%s').show();", jsToExec, dialogToShowIfSuccess);
+		} finally {
+			this.executeJavaScript(jsToExec);
+		}
+	}
+
+	public void actionCloseFormHistoricData() {
+		if (!this.fieldHistoryConvBean.isConversationClosed()) this.fieldHistoryConvBean.endConversation();
 	}
 
 	private void handleAttachmentStorageForForm(Long formId) {
