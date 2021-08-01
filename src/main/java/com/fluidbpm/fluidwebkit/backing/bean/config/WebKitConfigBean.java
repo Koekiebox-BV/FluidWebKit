@@ -57,6 +57,7 @@ public class WebKitConfigBean extends ABaseManagedBean {
 	private String fluidServerURL;
 	private String whiteLabel;
 	private String companyLogoFilepath;
+	private String companyLogoSmallFilepath;
 	private String webKitGlobalJSON;
 	private String webKitPersonalInventoryJSON;
 	private String googleCloudPlatformAPIKey;
@@ -90,6 +91,7 @@ public class WebKitConfigBean extends ABaseManagedBean {
 		//Other
 		public static final String WhiteLabel = "WhiteLabel";
 		public static final String CompanyLogoFilePath = "CompanyLogoFilePath";
+		public static final String CompanyLogoFilePathSmall = "CompanyLogoFilePathSmall";
 		public static final String WebKit = "WebKit";
 		public static final String WebKitPersonalInventory = "WebKitPersonalInventory";
 		public static final String GoogleAPIKey = "GoogleAPIKey";
@@ -164,6 +166,8 @@ public class WebKitConfigBean extends ABaseManagedBean {
 						this.setWhiteLabel(configuration.getValue());
 					} else if (ConfigKey.CompanyLogoFilePath.equals(configName)) {
 						this.setCompanyLogoFilepath(configuration.getValue());
+					} else if (ConfigKey.CompanyLogoFilePathSmall.equals(configName)) {
+						this.setCompanyLogoSmallFilepath(configuration.getValue());
 					} else if (ConfigKey.WebKit.equals(configName)) {
 						this.setWebKitGlobalJSON(configuration.getValue());
 					} else if (ConfigKey.WebKitPersonalInventory.equals(configName)) {
@@ -188,6 +192,10 @@ public class WebKitConfigBean extends ABaseManagedBean {
 		return UtilGlobal.isBlank(this.companyLogoFilepath) ? false : new File(this.companyLogoFilepath).exists();
 	}
 
+	public boolean getCompanyLogoSmallPathExists() {
+		return UtilGlobal.isBlank(this.companyLogoSmallFilepath) ? false : new File(this.companyLogoSmallFilepath).exists();
+	}
+	
 	public String getGoogleMapsAPIJSURL() {
 		String prefix = String.format("%s/maps/api/js", GOOGLE_MAPS_API_SERVER);
 
@@ -240,5 +248,24 @@ public class WebKitConfigBean extends ABaseManagedBean {
 						return null;
 					}
 				}).build();
+	}
+
+	public StreamedContent getCustomCompanyLogoSmallStreamedContent() {
+		File logoFile = new File(this.companyLogoSmallFilepath);
+		return DefaultStreamedContent.builder()
+				.name(logoFile.getName())
+				.contentType("image/svg+xml")
+				.stream(() -> {
+					try {
+						return new FileInputStream(logoFile);
+					} catch (FileNotFoundException e) {
+						this.raiseError(e);
+						return null;
+					}
+				}).build();
+	}
+
+	public String getCustomCompanyLogoSmallURL() {
+		return "/get_company_logo_small";
 	}
 }

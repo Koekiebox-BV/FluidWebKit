@@ -197,9 +197,7 @@ public class ImageServlet extends ABaseFWKServlet {
 		byte[] imageBytes = UtilGlobal.decodeBase64(imageAttachmentById.getAttachmentDataBase64());
 		if (thumbnailScale > 0) imageBytes = this.scale(imageBytes, thumbnailScale, 0);
 		return new ImageStreamedContent(
-				imageBytes,
-				imageAttachmentById.getContentType(),
-				imageAttachmentById.getName());
+				imageBytes, imageAttachmentById.getContentType(), imageAttachmentById.getName());
 	}
 
 	private List<Attachment> getImageAttachmentByFormNoDataUseCache(

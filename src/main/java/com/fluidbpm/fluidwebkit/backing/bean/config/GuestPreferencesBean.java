@@ -218,9 +218,8 @@ public class GuestPreferencesBean extends ABaseManagedBean {
 
 	public String getFluidLogoFilename() {
 		String topbarTheme = this.getTopbarTheme();
-		if (topbarTheme == null) {
-			return null;
-		}
+		if (topbarTheme == null) return null;
+
 		switch (topbarTheme) {
 			case "light" :
 				return "fluid-black.svg";

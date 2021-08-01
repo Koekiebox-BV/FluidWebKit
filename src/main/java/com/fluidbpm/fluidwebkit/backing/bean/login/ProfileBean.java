@@ -141,7 +141,7 @@ public class ProfileBean extends ABaseManagedBean {
 
 			return DefaultStreamedContent.builder()
 					.stream(() -> inputStream)
-					.name(String.format("no_profile_logo_%s.png", UUID.randomUUID().toString()))
+					.name(String.format("no_profile_logo_%s.svg", UUID.randomUUID().toString()))
 					.contentType("image/svg+xml")
 					.build();
 		} catch (IOException ioExcept) {
