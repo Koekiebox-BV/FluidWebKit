@@ -90,6 +90,10 @@ public class ProfileBean extends ABaseManagedBean {
 		return this.getUserProfileImageForUser(this.getLoggedInUserSafe(), 250);
 	}
 
+	public StreamedContent getUserProfileImageForUsername(String username, int size) {
+		return this.getUserProfileImageForUser(new User(username), size);
+	}
+
 	/**
 	 * Return the {@code user} User Gravator as {@code StreamedContent}
 	 *
@@ -100,7 +104,7 @@ public class ProfileBean extends ABaseManagedBean {
 	 * @see User
 	 */
 	public StreamedContent getUserProfileImageForUser(User user, int size) {
-		if (user == null || (user.getId() == null || user.getId() < 1L)) return new DefaultStreamedContent();
+		if (user == null) return new DefaultStreamedContent();
 
 		FacesContext context = FacesContext.getCurrentInstance();
 		if (context.getCurrentPhaseId() == PhaseId.RENDER_RESPONSE) {
