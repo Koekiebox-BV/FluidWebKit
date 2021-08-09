@@ -2,6 +2,7 @@ package com.fluidbpm.fluidwebkit.backing.bean.workspace.form;
 
 import com.fluidbpm.fluidwebkit.backing.bean.ABaseManagedBean;
 import com.fluidbpm.fluidwebkit.backing.bean.config.WebKitAccessBean;
+import com.fluidbpm.program.api.util.UtilGlobal;
 import com.fluidbpm.program.api.vo.field.Field;
 import com.fluidbpm.program.api.vo.form.Form;
 import com.fluidbpm.program.api.vo.historic.FormHistoricData;
@@ -116,10 +117,10 @@ public class WebKitOpenFormFieldHistoryConversationBean extends ABaseManagedBean
 					takenInSeconds = (TimeUnit.MILLISECONDS.toSeconds(takenInMillis) % 60);
 			StringBuilder returnVal = new StringBuilder();
 
-			if (takenInDays > 0) returnVal.append(String.format("%s days, ", takenInDays));
-			if (takenInHours > 0) returnVal.append(String.format("%s hours, ", takenInHours));
-			if (takenInMinutes > 0) returnVal.append(String.format("%s minutes, ", takenInMinutes));
-			if (takenInSeconds > 0) returnVal.append(String.format("%s seconds, ", takenInSeconds));
+			if (takenInDays > 0) returnVal.append(String.format("%s day%s, ", takenInDays, takenInDays == 1 ? UtilGlobal.EMPTY: "s"));
+			if (takenInHours > 0) returnVal.append(String.format("%s hour%s, ", takenInHours, takenInHours == 1 ? UtilGlobal.EMPTY: "s"));
+			if (takenInMinutes > 0) returnVal.append(String.format("%s minute%s, ", takenInMinutes, takenInMinutes == 1 ? UtilGlobal.EMPTY: "s"));
+			if (takenInSeconds > 0) returnVal.append(String.format("%s second%s, ", takenInSeconds, takenInSeconds == 1 ? UtilGlobal.EMPTY: "s"));
 
 			String toString = returnVal.toString();
 			if (toString.isEmpty()) return String.format("%s millis", takenInMillis);
