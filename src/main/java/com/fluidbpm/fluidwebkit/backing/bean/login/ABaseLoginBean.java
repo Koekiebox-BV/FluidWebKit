@@ -19,6 +19,7 @@ import com.fluidbpm.fluidwebkit.backing.bean.ABaseManagedBean;
 import com.fluidbpm.fluidwebkit.backing.utility.Globals;
 import com.fluidbpm.fluidwebkit.ds.FluidClientDS;
 import com.fluidbpm.fluidwebkit.exception.ClientDashboardException;
+import com.fluidbpm.program.api.util.UtilGlobal;
 import com.fluidbpm.program.api.vo.role.Role;
 import com.fluidbpm.program.api.vo.user.User;
 import com.fluidbpm.program.api.vo.user.UserFieldListing;
@@ -30,6 +31,7 @@ import javax.faces.application.FacesMessage;
 import javax.faces.context.FacesContext;
 import javax.servlet.http.HttpSession;
 import java.util.Map;
+import java.util.Properties;
 
 /**
  * Bean to handle user authentication for JSF application.
@@ -49,7 +51,10 @@ public abstract class ABaseLoginBean extends ABaseManagedBean {
 	 * @return navigation {@code dashboard}.
 	 */
 	public String actionLogin() {
-		this.getLogger().debug("Login attempt ["+ this.getInputUsername()+":"+ Globals.getConfigURLFromSystemProperty()+"]");
+		Properties existingProps = null;
+
+		this.getLogger().debug("Login attempt ["+ this.getInputUsername()+":"+
+				UtilGlobal.getConfigURLFromSystemProperty(existingProps)+"]");
 
 		//Lets confirm username and password is set first...
 		if (this.getInputUsername() == null ||
@@ -64,7 +69,7 @@ public abstract class ABaseLoginBean extends ABaseManagedBean {
 
 		User user = new User();
 		user.setUsername(this.getInputUsername());
-		LoginClient loginClient = new LoginClient(Globals.getConfigURLFromSystemProperty());
+		LoginClient loginClient = new LoginClient(UtilGlobal.getConfigURLFromSystemProperty(existingProps));
 		try {
 			if (!this.isConfigUserLoginSuccess()) {
 				throw new ClientDashboardException(

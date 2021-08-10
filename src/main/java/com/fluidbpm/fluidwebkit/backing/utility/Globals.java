@@ -15,6 +15,7 @@
 
 package com.fluidbpm.fluidwebkit.backing.utility;
 
+import com.fluidbpm.program.api.util.UtilGlobal;
 import com.fluidbpm.program.api.vo.ws.auth.AppRequestToken;
 import com.fluidbpm.ws.client.v1.sqlutil.wrapper.SQLUtilWebSocketRESTWrapper;
 import com.fluidbpm.ws.client.v1.user.LoginClient;
@@ -22,6 +23,7 @@ import org.w3c.dom.Element;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 
 import static java.lang.Class.forName;
@@ -35,33 +37,11 @@ public class Globals {
 	
 	public static final String NOT_SET = "[Not Set]";
 
-	public static String FLUID_WS_URL = "http://localhost:80/fluid-ws/";
-	public static String FLUID_CONFIG_USER = "admin";
-	public static String FLUID_CONFIG_USER_PASSWORD = "12345";
-
 	private static String getTextContentOnlyFrom(Element elementParam) {
 		return elementParam.getTextContent();
 	}
 
 	public static String EXCEL_WARNING = "WARNING: ";
-
-	public static String getConfigURLFromSystemProperty() {
-		return System.getProperty(
-				"FLUID_WS_URL",
-				FLUID_WS_URL);
-	}
-
-	public static String getConfigUserProperty() {
-		return System.getProperty(
-				"CONFIG_USER",
-				FLUID_CONFIG_USER);
-	}
-
-	public static String getConfigUserPasswordProperty() {
-		return System.getProperty(
-				"CONFIG_USER_PASSWORD",
-				FLUID_CONFIG_USER_PASSWORD);
-	}
 
 	public static boolean isConfigBasicAuthFromSystemProperty() {
 		String useBasicAuth = System.getProperty(
@@ -98,14 +78,17 @@ public class Globals {
 
 	@Deprecated
 	public static SQLUtilWebSocketRESTWrapper getConfigWrapperInstance() {
-		LoginClient loginClient = new LoginClient(Globals.getConfigURLFromSystemProperty());
+		Properties existingProps = null;
+
+		LoginClient loginClient = new LoginClient(UtilGlobal.getConfigURLFromSystemProperty(existingProps));
 
 		try {
 			AppRequestToken requestToken = loginClient.login(
-					Globals.getConfigUserProperty(), Globals.getConfigUserPasswordProperty());
+					UtilGlobal.getConfigUserProperty(existingProps),
+					UtilGlobal.getConfigUserPasswordProperty(existingProps));
 
 			return new SQLUtilWebSocketRESTWrapper(
-					Globals.getConfigURLFromSystemProperty(),
+					UtilGlobal.getConfigURLFromSystemProperty(existingProps),
 					requestToken.getServiceTicket(),
 					TimeUnit.SECONDS.toMillis(60));
 		} finally {

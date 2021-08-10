@@ -18,12 +18,12 @@ package com.fluidbpm.fluidwebkit.backing.bean;
 import com.fluidbpm.GitDescribe;
 import com.fluidbpm.fluidwebkit.backing.bean.config.WebKitConfigBean;
 import com.fluidbpm.fluidwebkit.backing.bean.logger.ILogger;
-import com.fluidbpm.fluidwebkit.backing.utility.Globals;
 import com.fluidbpm.fluidwebkit.backing.utility.RaygunUtil;
 import com.fluidbpm.fluidwebkit.ds.FluidClientDS;
 import com.fluidbpm.fluidwebkit.ds.FluidClientPool;
 import com.fluidbpm.fluidwebkit.exception.ClientDashboardException;
 import com.fluidbpm.fluidwebkit.exception.WebSessionExpiredException;
+import com.fluidbpm.program.api.util.UtilGlobal;
 import com.fluidbpm.program.api.vo.field.Field;
 import com.fluidbpm.program.api.vo.form.Form;
 import com.fluidbpm.program.api.vo.role.Role;
@@ -45,10 +45,7 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import java.io.IOException;
 import java.io.Serializable;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
@@ -396,22 +393,23 @@ public abstract class ABaseManagedBean implements Serializable {
 	}
 
 	public void bindFluidClientDSToSession(String serviceTicket) {
-		this.fcp.init(this.getSessionId(), serviceTicket, Globals.getConfigURLFromSystemProperty());
+		this.fcp.init(this.getSessionId(), serviceTicket, UtilGlobal.getConfigURLFromSystemProperty(null));
 	}
 
 	public void bindConfigFluidClientDS() {
+		Properties existingProps = null;
 		long now = System.currentTimeMillis();
 		if ((LAST_TIME_CONF_LOGGED_IN + TimeUnit.HOURS.toMillis(LOGIN_DURATION_HOURS)) < now) {
 			synchronized (LAST_TIME_CONF_LOGGED_IN) {
-				LoginClient loginClient = new LoginClient(Globals.getConfigURLFromSystemProperty());
+				LoginClient loginClient = new LoginClient(UtilGlobal.getConfigURLFromSystemProperty(existingProps));
 				try {
 					String serviceTicket = loginClient.login(
-							Globals.getConfigUserProperty(),
-							Globals.getConfigUserPasswordProperty()).getServiceTicket();
+							UtilGlobal.getConfigUserProperty(existingProps),
+							UtilGlobal.getConfigUserPasswordProperty(existingProps)).getServiceTicket();
 					LAST_TIME_CONF_LOGGED_IN = System.currentTimeMillis();
 
 					this.fcp.invalidate(CONFIG_USER_GLOBAL_ID);
-					this.fcp.init(CONFIG_USER_GLOBAL_ID, serviceTicket, Globals.getConfigURLFromSystemProperty());
+					this.fcp.init(CONFIG_USER_GLOBAL_ID, serviceTicket, UtilGlobal.getConfigURLFromSystemProperty(existingProps));
 				} catch (Exception except) {
 					this.getLogger().error(except.getMessage(), except);
 					throw new IllegalStateException(except.getMessage(), except);
@@ -640,15 +638,15 @@ public abstract class ABaseManagedBean implements Serializable {
 	}
 
 	protected String getConfigURLFromSystemProperty() {
-		return Globals.getConfigURLFromSystemProperty();
+		return UtilGlobal.getConfigURLFromSystemProperty(null);
 	}
 
 	protected String getConfigUserProperty() {
-		return Globals.getConfigUserProperty();
+		return UtilGlobal.getConfigUserProperty(null);
 	}
 
 	protected String getConfigUserPasswordProperty() {
-		return Globals.getConfigUserPasswordProperty();
+		return UtilGlobal.getConfigUserPasswordProperty(null);
 	}
 
 	protected boolean isThirdPartyWebActionEnabledFormType(String formType) {
