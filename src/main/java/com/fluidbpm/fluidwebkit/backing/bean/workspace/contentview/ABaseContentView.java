@@ -35,6 +35,7 @@ import org.primefaces.model.Visibility;
 import javax.faces.model.SelectItem;
 import java.io.Serializable;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
 /**
@@ -82,7 +83,7 @@ public abstract class ABaseContentView implements Serializable {
 
 	@Getter
 	@Setter
-	private Map<String,Map<String,Double>> filterByDecimalValueMap = new HashMap<>();
+	private Map<String,Map<String, Double>> filterByDecimalValueMap = new HashMap<>();
 
 	@Getter
 	@Setter
@@ -330,17 +331,17 @@ public abstract class ABaseContentView implements Serializable {
 	public void actionSetFilteredList(String selectedSection) {
 		this.filterCurrentlyActive = true;
 		this.fluidItemsForSectionFiltered.clear();
-		if (this.getTextToFilterBy() == null || this.getTextToFilterBy().trim().isEmpty())
-			this.fluidItemsForSectionFiltered.putAll(this.fluidItemsForSection);
 
 		String filterByTextLower = this.getTextToFilterBy() == null ? null : this.getTextToFilterBy().trim().toLowerCase();
+		if (filterByTextLower == null || filterByTextLower.trim().isEmpty()) {
+			this.fluidItemsForSectionFiltered.putAll(this.fluidItemsForSection);
+		}
 
 		for (String section : this.getSections()) {
 			if (selectedSection != null && !selectedSection.equals(section)) continue;
 
 			List<WorkspaceFluidItem> itemsInSection = null;
-			if (!this.fluidItemsForSection.containsKey(section) || ((itemsInSection = this.fluidItemsForSection.get(section)) == null))
-				continue;
+			if (!this.fluidItemsForSection.containsKey(section) || ((itemsInSection = this.fluidItemsForSection.get(section)) == null)) continue;
 
 			List<WorkspaceFluidItem> itemsInSectionFiltered = new ArrayList<>();
 			for (WorkspaceFluidItem item : itemsInSection) {
@@ -365,19 +366,10 @@ public abstract class ABaseContentView implements Serializable {
 						item.getFluidItem().getForm().getFormType().trim().toLowerCase().contains(filterByTextLower))) {
 					itemsInSectionFiltered.add(item);
 				} else if (!combinedFields.isEmpty()) {
-					//Then Form and Route Fields...
-					if (filterByTextLower != null) combinedFields.forEach(field -> {
-						if (field.getFieldValue() != null) {
-							String fieldValueTextLower =
-									(field.getFieldValue().toString() == null ? null :
-											field.getFieldValue().toString().trim().toLowerCase());
-
-							if (fieldValueTextLower != null && fieldValueTextLower.contains(filterByTextLower)) {
-								itemsInSectionFiltered.add(item);
-								return;
-							}
-						}
-					});
+					if (this.isAllowedBasedOnCombinedFields(section, combinedFields)) {
+						itemsInSectionFiltered.add(item);
+						continue;
+					}
 				} else {
 					itemsInSectionFiltered.add(item);
 				}
@@ -400,6 +392,41 @@ public abstract class ABaseContentView implements Serializable {
 		}
 		
 		return allowedSysField;
+	}
+
+	private boolean isAllowedBasedOnCombinedFields(String selectedSection, List<Field> combinedFields) {
+		if (combinedFields == null) return false;
+
+		Map<String, String> mapTxt = this.getFilterByTextValueMap().get(selectedSection);
+		AtomicBoolean matches = new AtomicBoolean(true);
+		if (mapTxt != null) {
+			mapTxt.forEach((fieldName, value) -> {
+				if (UtilGlobal.isBlank(value)) return;
+				if (!matches.get()) return;
+
+				Field fieldByName = combinedFields.stream()
+						.filter(field -> field.getFieldName().equals(fieldName))
+						.findFirst()
+						.orElse(null);
+				if (fieldByName == null) {
+					matches.set(false);
+					return;
+				}
+
+				String fieldTxtVal = fieldByName.getFieldValueAsString();
+				if (UtilGlobal.isBlank(fieldTxtVal)) {
+					matches.set(false);
+					return;
+				};
+
+				matches.set(fieldTxtVal.trim().toLowerCase().contains(value.trim().toLowerCase()));
+			});
+		}
+
+		//TODO Map<String, Double> mapDecimal = this.getFilterByDecimalValueMap().get(selectedSection);
+
+
+		return matches.get();
 	}
 
 	/**
