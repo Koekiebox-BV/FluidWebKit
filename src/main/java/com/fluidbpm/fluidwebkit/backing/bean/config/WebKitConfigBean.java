@@ -61,6 +61,7 @@ public class WebKitConfigBean extends ABaseManagedBean {
 	private String webKitGlobalJSON;
 	private String webKitPersonalInventoryJSON;
 	private String googleCloudPlatformAPIKey;
+	private String titleLookupIncludedFormTypes;
 
 	private boolean configUserLoginSuccess = false;
 	
@@ -95,6 +96,7 @@ public class WebKitConfigBean extends ABaseManagedBean {
 		public static final String WebKit = "WebKit";
 		public static final String WebKitPersonalInventory = "WebKitPersonalInventory";
 		public static final String GoogleAPIKey = "GoogleAPIKey";
+		public static final String TitleLookupIncludedFormTypes = "TitleLookupIncludedFormTypes";
 	}
 
 	@PostConstruct
@@ -174,6 +176,8 @@ public class WebKitConfigBean extends ABaseManagedBean {
 						this.setWebKitPersonalInventoryJSON(configuration.getValue());
 					} else if (ConfigKey.GoogleAPIKey.equals(configName)) {
 						this.setGoogleCloudPlatformAPIKey(configuration.getValue());
+					} else if (ConfigKey.TitleLookupIncludedFormTypes.equals(configName)) {
+						this.setTitleLookupIncludedFormTypes(configuration.getValue());
 					}
 				}
 		);
@@ -267,5 +271,17 @@ public class WebKitConfigBean extends ABaseManagedBean {
 
 	public String getCustomCompanyLogoSmallURL() {
 		return "/get_company_logo_small";
+	}
+
+	public boolean isTitleLookupIncludedFormTypesAll() {
+		if (UtilGlobal.isBlank(this.titleLookupIncludedFormTypes)) return false;
+
+		return "[all]".equals(this.titleLookupIncludedFormTypes.trim().toLowerCase());
+	}
+
+	public boolean isTitleLookupIncludedFormTypesNone() {
+		if (UtilGlobal.isBlank(this.titleLookupIncludedFormTypes)) return false;
+
+		return "[none]".equals(this.titleLookupIncludedFormTypes.trim().toLowerCase());
 	}
 }

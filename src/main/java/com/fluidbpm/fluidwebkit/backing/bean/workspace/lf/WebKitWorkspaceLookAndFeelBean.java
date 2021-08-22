@@ -18,6 +18,7 @@ package com.fluidbpm.fluidwebkit.backing.bean.workspace.lf;
 import com.fluidbpm.fluidwebkit.backing.bean.ABaseManagedBean;
 import com.fluidbpm.fluidwebkit.backing.bean.config.WebKitAccessBean;
 import com.fluidbpm.fluidwebkit.backing.bean.config.WebKitConfigBean;
+import com.fluidbpm.fluidwebkit.backing.bean.workspace.field.WebKitField;
 import com.fluidbpm.fluidwebkit.ds.FluidClientDS;
 import com.fluidbpm.fluidwebkit.exception.ClientDashboardException;
 import com.fluidbpm.program.api.util.UtilGlobal;
@@ -28,6 +29,7 @@ import com.fluidbpm.program.api.vo.flow.JobView;
 import com.fluidbpm.program.api.vo.form.Form;
 import com.fluidbpm.program.api.vo.userquery.UserQuery;
 import com.fluidbpm.program.api.vo.webkit.form.WebKitForm;
+import com.fluidbpm.program.api.vo.webkit.form.WebKitFormLayoutAdvance;
 import com.fluidbpm.program.api.vo.webkit.form.WebKitFormListing;
 import com.fluidbpm.program.api.vo.webkit.global.WebKitGlobal;
 import com.fluidbpm.program.api.vo.webkit.global.WebKitPersonalInventory;
@@ -46,6 +48,9 @@ import org.primefaces.event.TabChangeEvent;
 import org.primefaces.event.data.PageEvent;
 import org.primefaces.model.DefaultTreeNode;
 import org.primefaces.model.TreeNode;
+import org.primefaces.model.menu.DefaultMenuItem;
+import org.primefaces.model.menu.DefaultMenuModel;
+import org.primefaces.model.menu.MenuModel;
 
 import javax.enterprise.context.SessionScoped;
 import javax.faces.application.FacesMessage;
@@ -130,6 +135,14 @@ public class WebKitWorkspaceLookAndFeelBean extends ABaseManagedBean {
 
 	private Map<String, List<WebKitForm>> groupAndFormCreateInstanceOfMapping;
 
+	@Getter
+	@Setter
+	private MenuModel contextMenuModelQuickToForm;
+
+	@Getter
+	@Setter
+	private WebKitForm webKitFormQuickEdit;
+
 	private List<TabId> tabsViewed;
 	private enum TabId {
 		tabForm,
@@ -178,6 +191,18 @@ public class WebKitWorkspaceLookAndFeelBean extends ABaseManagedBean {
 
 			try {
 				this.webKitForms = this.getFluidClientDSConfig().getFormDefinitionClient().getAllFormWebKits();
+				this.contextMenuModelQuickToForm = new DefaultMenuModel();
+
+				AtomicInteger ai = new AtomicInteger(0);
+				this.webKitForms.forEach(itm -> {
+					DefaultMenuItem itemGotoForm = DefaultMenuItem.builder()
+							.value(String.format("Goto '%s'", itm.getForm().getFormType()))
+							.url(String.format("#frmWebKitGroupConfig:tabViewLookAndFeel:dataTableFormDefinitions:%s:panelGridFormDefProps", ai.getAndIncrement()))
+							.icon("fa fa-link")
+							.build();
+					this.contextMenuModelQuickToForm.getElements().add(itemGotoForm);
+				});
+
 				this.formDefinitionLDM.addToInitialListing(this.webKitForms);
 			} catch (FluidClientException fce) {
 				if (fce.getErrorCode() != FluidClientException.ErrorCode.NO_RESULT) throw fce;
@@ -694,11 +719,13 @@ public class WebKitWorkspaceLookAndFeelBean extends ABaseManagedBean {
 		if (groupToUpdate.getWebKitViewSubs() != null) {
 			groupToUpdate.getWebKitViewSubs().forEach(subItm -> {
 				String key = this.generateGroupSubKey(groupToUpdate.getJobViewGroupName(), subItm.getLabel());
+				if (UtilGlobal.isBlank(key)) return;
 
 				subItm.setRouteFields(
-						this.inputSubToRouteFieldMapping.get(key).getDataListing().stream()
-						.filter(itm -> itm.isSelected())
-						.collect(Collectors.toList()));
+						this.inputSubToRouteFieldMapping.get(key) == null ? new ArrayList<>() :
+								this.inputSubToRouteFieldMapping.get(key).getDataListing().stream()
+										.filter(itm -> itm.isSelected())
+										.collect(Collectors.toList()));
 				subItm.setJobViews(
 						this.inputSubToViewMapping.get(key).getDataListing().stream()
 								.filter(itm -> itm.isSelected())
@@ -799,12 +826,53 @@ public class WebKitWorkspaceLookAndFeelBean extends ABaseManagedBean {
 		return returnVal;
 	}
 
-	public String calculateCSSClassBasedOnConfig(WebKitForm webKitForm) {
+	public List<WebKitFormLayoutAdvance> extractFieldsAdvancedFrom(WebKitForm webKitForm) {
+		if (webKitForm == null) return new ArrayList<>();
+		List<Field> fieldsForFormDef = this.accessBean.getFieldsEditableForFormDef(
+				webKitForm.getForm().getFormType());
+		if (fieldsForFormDef == null) return new ArrayList<>();
+
+		final List<WebKitFormLayoutAdvance> returnVal = new ArrayList<>();
+
+		List<WebKitFormLayoutAdvance> existingAdvances = (webKitForm.getLayoutAdvances() == null) ?
+				new ArrayList<>() : webKitForm.getLayoutAdvances();
+
+		fieldsForFormDef.stream().forEach(fieldItm -> {
+			WebKitFormLayoutAdvance advanceToAdd = existingAdvances.stream()
+					.filter(itm -> fieldItm.getFieldName().equalsIgnoreCase(itm.getField().getFieldName()))
+					.findFirst()
+					.orElse(new WebKitFormLayoutAdvance(fieldItm));
+			returnVal.add(advanceToAdd);
+		});
+		
+		return returnVal;
+	}
+
+	public String calculateCSSClassBasedOnConfig(WebKitForm form, WebKitField field) {
+		if (form == null) return WebKitForm.InputLayout.VERTICAL;
+		
+		switch (form.getInputLayout()) {
+			case WebKitForm.InputLayout.VERTICAL:
+				return "p-field";
+			case WebKitForm.InputLayout.ADVANCED:
+				WebKitFormLayoutAdvance advance = form.retrieveLayoutAdvanceForField(field);
+				int columnSpan = 6;
+				if (advance != null) columnSpan = advance.getColSpan();
+
+				return String.format("p-field p-col-12 p-md-%d", columnSpan);
+			default:
+				return WebKitForm.InputLayout.VERTICAL;
+		}
+	}
+
+	public String calculateCSSClassBasedOnConfigTopLevel(WebKitForm webKitForm) {
 		if (webKitForm == null) return WebKitForm.InputLayout.VERTICAL;
 
 		switch (webKitForm.getInputLayout()) {
 			case WebKitForm.InputLayout.VERTICAL:
-				return "p-field";
+				return "ui-fluid";
+			case WebKitForm.InputLayout.ADVANCED:
+				return "ui-fluid p-formgrid p-grid";
 			default:
 				return WebKitForm.InputLayout.VERTICAL;
 		}

@@ -358,11 +358,16 @@ public class WebKitOpenFormConversationBean extends ABaseManagedBean {
 		Separator sep = new DefaultSeparator();
 		//Save Button...
 		if (!this.getWsFluidItem().isFormLocked() || this.getWsFluidItem().isFormLockedByLoggedInUser()) {
+
+			final String areaToUpdate;
+			if (UtilGlobal.isBlank(this.getAreaToUpdateAfterSave())) areaToUpdate = UtilGlobal.EMPTY;
+			else areaToUpdate = String.format(" %s", this.getAreaToUpdateAfterSave());
+
 			DefaultMenuItem itemSave = DefaultMenuItem.builder()
 					.value("Save")
 					.icon("pi pi-save")
 					.command("#{webKitOpenFormConversationBean.actionSaveForm('varFormDialog', '')}")
-					.update("manage-product-content growl")
+					.update(String.format("manage-product-content growl%s", areaToUpdate))
 					.build();
 			this.contextMenuModel.getElements().add(itemSave);
 		}
@@ -452,7 +457,11 @@ public class WebKitOpenFormConversationBean extends ABaseManagedBean {
 				.build();
 
 		this.contextMenuModel.getElements().add(itemGotoFields);
-		this.contextMenuModel.getElements().add(itemGotoAttachments);
+
+		if (!webKitForm.isAttachmentDisplayLocationNone()) {
+			this.contextMenuModel.getElements().add(itemGotoAttachments);
+		}
+
 		if (this.doesUserHavePermission("print_forms")) {
 			this.contextMenuModel.getElements().add(sep);
 			this.contextMenuModel.getElements().add(itemPrint);

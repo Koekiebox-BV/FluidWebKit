@@ -366,7 +366,7 @@ public abstract class ABaseContentView implements Serializable {
 					itemsInSectionFiltered.add(item);
 				} else if (!combinedFields.isEmpty()) {
 					//Then Form and Route Fields...
-					combinedFields.forEach(field -> {
+					if (filterByTextLower != null) combinedFields.forEach(field -> {
 						if (field.getFieldValue() != null) {
 							String fieldValueTextLower =
 									(field.getFieldValue().toString() == null ? null :
