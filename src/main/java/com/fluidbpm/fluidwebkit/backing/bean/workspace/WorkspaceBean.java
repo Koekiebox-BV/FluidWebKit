@@ -55,13 +55,14 @@ public class WorkspaceBean extends ABaseWorkspaceBean<JobViewItemVO, ContentView
 
 	private static JobViewItemVO.ForegroundBackground[] PRE_CONFIGURED_COLORS = new JobViewItemVO.ForegroundBackground[] {
 			//new JobViewItemVO.ForegroundBackground(Color.decode("0x805B36"), Color.decode("0xFFD8B2")),//light-orange-brown
-			new JobViewItemVO.ForegroundBackground(new Color(215, 12, 1, 255), new Color(215, 166, 155, 255)),//red
-			new JobViewItemVO.ForegroundBackground(new Color(20, 91, 44), new Color(157, 250, 154)),//green
-			new JobViewItemVO.ForegroundBackground(new Color(96, 103, 28), new Color(250, 242, 154)),//yellow
-			new JobViewItemVO.ForegroundBackground(new Color(21, 82, 210), new Color(154, 173, 250)),//dark-blue
-			new JobViewItemVO.ForegroundBackground(new Color(43, 43, 43), new Color(164, 160, 160)),//black
-			new JobViewItemVO.ForegroundBackground(new Color(128, 91, 54), new Color(255, 216, 178)),//light-orange-brown
+			new JobViewItemVO.ForegroundBackground(new Color(106, 4, 15), new Color(252, 213, 206)),//red
+			new JobViewItemVO.ForegroundBackground(new Color(8, 28, 21), new Color(183, 228, 199)),//green
+			new JobViewItemVO.ForegroundBackground(new Color(50, 54, 15), new Color(255, 255, 63)),//yellow
+			new JobViewItemVO.ForegroundBackground(new Color(14, 49, 124), new Color(154, 173, 250)),//dark-blue
+			new JobViewItemVO.ForegroundBackground(new Color(43, 43, 43), new Color(162, 159, 159)),//black
+			new JobViewItemVO.ForegroundBackground(new Color(156, 102, 68), new Color(230, 204, 178)),//light-orange-brown
 			new JobViewItemVO.ForegroundBackground(new Color(18, 120, 164), new Color(155, 242, 247)),//blue
+			new JobViewItemVO.ForegroundBackground(new Color(131, 63, 145), new Color(239, 184, 229)),//purple
 			new JobViewItemVO.ForegroundBackground(new Color(131, 63, 145), new Color(239, 184, 229)),//purple
 	};
 
