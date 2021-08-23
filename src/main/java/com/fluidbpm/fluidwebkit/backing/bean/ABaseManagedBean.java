@@ -180,7 +180,7 @@ public abstract class ABaseManagedBean implements Serializable {
 			boolean visible,
 			boolean filterable
 		) {
-			this.header = (header);
+			this.header = header;
 			this.fluidFieldName = (fluidFieldName);
 			this.fluidFieldColumnType = (fluidFieldColumnType);
 			this.fluidFieldMetaData = (fluidFieldMetaData);

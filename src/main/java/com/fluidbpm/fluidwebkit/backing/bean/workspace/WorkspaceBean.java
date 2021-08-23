@@ -30,10 +30,10 @@ import com.fluidbpm.ws.client.FluidClientException;
 import javax.enterprise.context.SessionScoped;
 import javax.inject.Inject;
 import javax.inject.Named;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
+import java.awt.*;
 import java.util.List;
+import java.util.Queue;
+import java.util.*;
 
 /**
  * Bean storing personal inventory related items.
@@ -47,8 +47,16 @@ public class WorkspaceBean extends ABaseWorkspaceBean<JobViewItemVO, ContentView
 	public static final String TGM_TABLE_PER_VIEW_SECTION_DEL = " - ";
 	public static final int TGM_TABLE_PER_VIEW_SECTION_DEL_LEN = TGM_TABLE_PER_VIEW_SECTION_DEL.length();
 
+	private Map<String, Map<String, JobViewItemVO.ForegroundBackground>> groupColorMapping = new HashMap<>();
+	private Queue<JobViewItemVO.ForegroundBackground> colorQueue = new LinkedList<>();
+
 	@Inject
 	private WebKitViewContentModelBean webKitViewContentModelBean;
+
+	private static JobViewItemVO.ForegroundBackground[] PRE_CONFIGURED_COLORS = new JobViewItemVO.ForegroundBackground[] {
+			new JobViewItemVO.ForegroundBackground(Color.decode("0x805B36"), Color.decode("0xFFD8B2")),//light-orange-brown
+			new JobViewItemVO.ForegroundBackground(Color.decode("0x2B7AA4"), Color.decode("0x9BF2F7")),//blue
+	};
 
 	@Override
 	public void actionOpenForm(WorkspaceFluidItem workspaceFluidItem) {
@@ -57,13 +65,18 @@ public class WorkspaceBean extends ABaseWorkspaceBean<JobViewItemVO, ContentView
 
 	@Override
 	protected ContentViewJV actionOpenMainPage(WebKitViewGroup wkGroup, WebKitViewSub wkSub) {
+		this.groupColorMapping.clear();
+		this.colorQueue.clear();
+
 		try {
 			if (this.getFluidClientDS() == null) return null;
 
 			final String tgm = wkGroup.getTableGenerateMode();
 
-			if (tgm == null) throw new FluidClientException("Unable to determine outcome for TGM not being set.",
+			if (tgm == null) {
+				throw new FluidClientException("Unable to determine outcome for TGM not being set.",
 						FluidClientException.ErrorCode.FIELD_VALIDATE);
+			}
 
 			List<WebKitViewSub> subs = wkGroup.getWebKitViewSubs();
 			Collections.sort(subs, Comparator.comparing(WebKitViewSub::getSubOrder));
@@ -75,9 +88,7 @@ public class WorkspaceBean extends ABaseWorkspaceBean<JobViewItemVO, ContentView
 					subs.forEach(subItm -> {
 						sections.add(subItm.getLabel());
 					});
-				} else {
-					sections.add(wkSub.getLabel());
-				}
+				} else sections.add(wkSub.getLabel());
 			} else if (wkGroup.isTGMTablePerView()) {
 				subs.stream().filter(itm -> itm.getJobViews() != null)
 						.forEach(subItm -> {
@@ -120,10 +131,6 @@ public class WorkspaceBean extends ABaseWorkspaceBean<JobViewItemVO, ContentView
 		this.setAreaToUpdateForDialogAfterSubmit(null);
 		this.currentlyHaveItemOpen = false;
 
-//		Long formIdToUpdate = this.getLongRequestParam(RequestParam.TO_UPDATE);
-//		Long openedFromViewId = this.getLongRequestParam(RequestParam.OPENED_FROM_VIEW);
-//		JobView fromView = this.getJobViewFromListingWithId(this.viewsAll, openedFromViewId);
-
 		try {
 			this.openFormBean.startConversation();
 			this.openFormBean.setAreaToUpdateAfterSave(":dataListResults");
@@ -149,6 +156,7 @@ public class WorkspaceBean extends ABaseWorkspaceBean<JobViewItemVO, ContentView
 	) {
 		List<Field> mergedFields = new ArrayList<>();
 		final List<WebKitWorkspaceRouteField> fieldsForSub = sub.getRouteFields();
+		Map<String, JobViewItemVO.ForegroundBackground> groupingColors = new HashMap<>();
 		if (fieldsForSub != null) {
 			fieldsForSub.forEach(rteItm -> {
 				Field fieldToAdd = new Field(rteItm.getRouteField().getFieldName());
@@ -162,11 +170,37 @@ public class WorkspaceBean extends ABaseWorkspaceBean<JobViewItemVO, ContentView
 				}
 				fieldToAdd.setFieldValue(fieldValue);
 				mergedFields.add(fieldToAdd);
+
+				//Color Group of fields with the same value...
+				if (rteItm.isGrouped() && fieldValue != null) {
+					String fieldName = fieldToAdd.getFieldName();
+					Map<String, JobViewItemVO.ForegroundBackground> refAndColor =
+							this.groupColorMapping.getOrDefault(fieldName, new HashMap<>());
+					String valToString = fieldValue.toString();
+
+					JobViewItemVO.ForegroundBackground colorForValue =
+							refAndColor.getOrDefault(valToString, this.obtainNewColor());
+					groupingColors.put(fieldName, colorForValue);
+
+					refAndColor.put(valToString, colorForValue);
+					this.groupColorMapping.put(fieldName, refAndColor);
+				}
 			});
 		}
 
 		item.setRouteFields(mergedFields);
-		return new JobViewItemVO(item);
+		JobViewItemVO returnVal = new JobViewItemVO(item);
+		returnVal.setGroupingColors(groupingColors);
+
+		return returnVal;
+	}
+
+	private JobViewItemVO.ForegroundBackground obtainNewColor() {
+		if (this.colorQueue.isEmpty()) {
+			for (JobViewItemVO.ForegroundBackground color : PRE_CONFIGURED_COLORS) this.colorQueue.add(color);
+		}
+		
+		return this.colorQueue.poll();
 	}
 
 }

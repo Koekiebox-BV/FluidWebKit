@@ -425,7 +425,6 @@ public abstract class ABaseContentView implements Serializable {
 
 		//TODO Map<String, Double> mapDecimal = this.getFilterByDecimalValueMap().get(selectedSection);
 
-
 		return matches.get();
 	}
 
@@ -440,9 +439,8 @@ public abstract class ABaseContentView implements Serializable {
 	 * @return Map of sections and their {@code WorkspaceFluidItem}'s.
 	 */
 	public Map<String, List<WorkspaceFluidItem>> getActiveMapBasedOnFilterCriteria() {
-		if (this.filterCurrentlyActive) {
-			return this.getFluidItemsForSectionFiltered();
-		}
+		if (this.filterCurrentlyActive) return this.getFluidItemsForSectionFiltered();
+
 		return this.getFluidItemsForSection();
 	}
 
