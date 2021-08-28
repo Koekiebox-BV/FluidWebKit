@@ -680,6 +680,10 @@ public class WebKitWorkspaceLookAndFeelBean extends ABaseManagedBean {
 
 	}
 
+	public void actionDoNothing() {
+		//System.out.println("Did nothing..."+this.webKitFormQuickEdit);
+	}
+
 	private void updateGroupPropertyBasedOnSelected(
 		List<String> visibleButtons,
 		WebKitViewGroup groupToUpdate
@@ -844,6 +848,8 @@ public class WebKitWorkspaceLookAndFeelBean extends ABaseManagedBean {
 					.orElse(new WebKitFormLayoutAdvance(fieldItm));
 			returnVal.add(advanceToAdd);
 		});
+
+		webKitForm.setLayoutAdvances(returnVal);
 		
 		return returnVal;
 	}

@@ -141,12 +141,6 @@ public class PushServlet extends ABaseFWKServlet {
 		printWriter.close();
 	}
 
-	/**
-	 *
-	 * @param jsonCmdObject
-	 * @return
-	 * @throws JSONException
-	 */
 	private boolean processUserNotifications(
 		JSONObject jsonCmdObject
 	) throws JSONException {
@@ -155,7 +149,7 @@ public class PushServlet extends ABaseFWKServlet {
 				return false;
 			case UnreadNotificationsNowRead:
 				this.webKitNotificationsBean.actionUpdateNotifications();
-				this.addRefreshNotificationCommandObjectToArray(jsonCmdObject, TimeUnit.SECONDS.toMillis(20));
+				this.addRefreshNotificationCommandObjectToArray(jsonCmdObject, TimeUnit.MINUTES.toMillis(5));
 				return false;
 			default:
 				if ((this.webKitNotificationsBean.getLastNotificationFetch() + WAIT_TIME_NOTI_FETCH_MILLIS) < System.currentTimeMillis()) {

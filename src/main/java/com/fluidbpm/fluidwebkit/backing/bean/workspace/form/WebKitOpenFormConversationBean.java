@@ -213,7 +213,10 @@ public class WebKitOpenFormConversationBean extends ABaseManagedBean {
 
 		try {
 			String formType = wfiParam.getFluidItemFormType();
-			this.setDialogHeaderTitle(wfiParam.getFluidItemTitle());
+			String titleToUse = wfiParam.getFluidItemTitle();
+			if (!titleToUse.contains(formType)) titleToUse = String.format("%s - %s", formType, titleToUse);
+
+			this.setDialogHeaderTitle(titleToUse);
 
 			WebKitForm webKitForm = this.lookAndFeelBean.getWebKitFormWithFormDef(formType);
 			if (webKitForm == null && WebKitForm.EMAIL_FORM_TYPE.equals(formType)) webKitForm = WebKitForm.emailWebKitForm();
