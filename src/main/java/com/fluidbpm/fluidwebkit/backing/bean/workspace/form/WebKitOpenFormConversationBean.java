@@ -214,7 +214,9 @@ public class WebKitOpenFormConversationBean extends ABaseManagedBean {
 		try {
 			String formType = wfiParam.getFluidItemFormType();
 			String titleToUse = wfiParam.getFluidItemTitle();
-			if (!titleToUse.contains(formType)) titleToUse = String.format("%s - %s", formType, titleToUse);
+			if ((formType != null && titleToUse != null) && !titleToUse.contains(formType)) {
+				titleToUse = String.format("%s - %s", formType, titleToUse);
+			}
 
 			this.setDialogHeaderTitle(titleToUse);
 
