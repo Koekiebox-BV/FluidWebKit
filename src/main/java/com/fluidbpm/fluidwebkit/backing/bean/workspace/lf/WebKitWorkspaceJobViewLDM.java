@@ -25,6 +25,8 @@ public class WebKitWorkspaceJobViewLDM extends ABaseLDM<WebKitWorkspaceJobView> 
 	}
 
 	public void populateFromJobViews(List<JobView> allJobViews) {
+		if (allJobViews == null || allJobViews.isEmpty()) return;
+
 		this.addToInitialListing(allJobViews.stream().map(itm -> new WebKitWorkspaceJobView(itm)).collect(Collectors.toList()));
 	}
 }

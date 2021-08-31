@@ -254,9 +254,10 @@ public abstract class ABaseManagedBean implements Serializable {
 			@Override
 			public void error(String details, Exception exception) {
 				System.err.print(getPrefix());
-				System.err.printf("%s . %s", details, exception.getMessage());
+				System.err.printf("%s . %s", details,
+						exception == null ? "[Except-Not-Set]" : exception.getMessage());
 				System.err.println();
-				exception.printStackTrace();
+				if (exception != null) exception.printStackTrace();
 			}
 
 			private String getPrefix() {

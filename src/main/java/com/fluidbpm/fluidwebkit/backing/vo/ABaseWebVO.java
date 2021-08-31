@@ -15,6 +15,8 @@
 
 package com.fluidbpm.fluidwebkit.backing.vo;
 
+import com.fluidbpm.fluidwebkit.backing.bean.workspace.jv.JobViewItemVO;
+import com.fluidbpm.program.api.util.UtilGlobal;
 import com.fluidbpm.program.api.vo.field.Field;
 import com.fluidbpm.program.api.vo.form.Form;
 import com.fluidbpm.program.api.vo.item.FluidItem;
@@ -23,9 +25,11 @@ import lombok.Getter;
 import lombok.Setter;
 
 import javax.faces.model.SelectItem;
+import java.awt.*;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Base class for all web value objects.
@@ -60,6 +64,10 @@ public abstract class ABaseWebVO implements Serializable {
 	@Setter
 	private List<User> allUsers;
 
+	@Getter
+	@Setter
+	private transient Map<String, JobViewItemVO.ForegroundBackground> groupingColors;
+
 	public ABaseWebVO() {
 		super();
 		this.justReviewed = false;
@@ -68,6 +76,7 @@ public abstract class ABaseWebVO implements Serializable {
 	public ABaseWebVO(FluidItem fluidItmParam) {
 		super();
 		this.fluidItem = fluidItmParam;
+		this.groupingColors = this.getGroupingColors();
 	}
 
 	public ABaseWebVO(List<Field> fieldsViewableParam, List<Field> fieldsEditableParam) {
@@ -124,8 +133,9 @@ public abstract class ABaseWebVO implements Serializable {
 
 		if (listToCheckParam == null || listToCheckParam.isEmpty()) return null;
 
-		for (Field viewableField : listToCheckParam)
+		for (Field viewableField : listToCheckParam) {
 			if (fieldNameParam.equals(viewableField.getFieldName())) return viewableField;
+		}
 
 		return null;
 	}
@@ -134,7 +144,9 @@ public abstract class ABaseWebVO implements Serializable {
 		if (selectableItemParam == null) return null;
 
 		List<SelectItem> returnVal = new ArrayList<>();
-		for (String availChoice : selectableItemParam) returnVal.add(new SelectItem(availChoice, availChoice));
+		for (String availChoice : selectableItemParam) {
+			returnVal.add(new SelectItem(availChoice, availChoice));
+		}
 
 		return returnVal;
 	}
@@ -145,4 +157,37 @@ public abstract class ABaseWebVO implements Serializable {
 		List<Field> fieldsEditable,
 		List<User> allUsers
 	);
+
+	public boolean isGrouping() {
+		return (this.groupingColors != null && !this.groupingColors.isEmpty());
+	}
+
+	public boolean isGroupingPresentForField(String fieldName) {
+		return (this.groupingColors != null && !this.groupingColors.isEmpty());
+	}
+
+	public String getGroupingAdditionalClass(String fieldName) {
+		if (UtilGlobal.isBlank(fieldName)) return UtilGlobal.EMPTY;
+
+		if (this.groupingColors.containsKey(fieldName)) {
+			return "customer-badge status-renewal";
+		}
+
+		return UtilGlobal.EMPTY;
+	}
+
+	public String getGroupingAdditionalStyle(String fieldName) {
+		if (UtilGlobal.isBlank(fieldName)) return UtilGlobal.EMPTY;
+
+		JobViewItemVO.ForegroundBackground fb = this.groupingColors.get(fieldName);
+		if (fb == null) return UtilGlobal.EMPTY;
+
+		Color foreground = fb.getForeground();
+		Color background = fb.getBackground();
+
+		String hexForeground = String.format("#%s", Integer.toHexString(foreground.getRGB()).substring(2));
+		String hexBackground = String.format("#%s", Integer.toHexString(background.getRGB()).substring(2));
+
+		return String.format("color: %s; background: %s;", hexForeground, hexBackground);
+	}
 }

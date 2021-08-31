@@ -402,7 +402,12 @@ public class WebKitWorkspaceLookAndFeelBean extends ABaseManagedBean {
 			String subName = wkViewSubToAdd.getLabel();
 
 			WebKitWorkspaceJobViewLDM ldmJobViews = new WebKitWorkspaceJobViewLDM();
-			ldmJobViews.populateFromJobViews(this.groupToViewMapping.get(groupName));
+			List<JobView> viewsForGroup = this.groupToViewMapping.get(groupName);
+			if (viewsForGroup == null || viewsForGroup.isEmpty()) {
+				this.getLogger().error(String.format("No Views in Group '%s'. Please confirm API user has access to Views.", groupName), null);
+			}
+
+			ldmJobViews.populateFromJobViews(viewsForGroup);
 
 			WebKitWorkspaceRouteFieldLDM ldmRouteFields = new WebKitWorkspaceRouteFieldLDM();
 			ldmRouteFields.populateFromFields(this.groupToRouteFieldMapping.get(groupName));

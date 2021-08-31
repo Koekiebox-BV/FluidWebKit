@@ -1,7 +1,6 @@
 package com.fluidbpm.fluidwebkit.backing.bean.workspace.jv;
 
 import com.fluidbpm.fluidwebkit.backing.vo.ABaseWebVO;
-import com.fluidbpm.program.api.util.UtilGlobal;
 import com.fluidbpm.program.api.vo.field.Field;
 import com.fluidbpm.program.api.vo.form.Form;
 import com.fluidbpm.program.api.vo.item.FluidItem;
@@ -13,7 +12,6 @@ import lombok.Setter;
 import java.awt.*;
 import java.util.Date;
 import java.util.List;
-import java.util.Map;
 
 @Getter
 @Setter
@@ -28,8 +26,6 @@ public class JobViewItemVO extends ABaseWebVO {
 	private Date dateLastUpdated;
 	private Date stepEnteredTime;
 	private Date dateCreated;
-
-	private transient Map<String, ForegroundBackground> groupingColors;
 
 	public static final String COMPLETED_NOT_IN_FLOW_SENT = "[Completed / Not In Flow]";
 
@@ -46,7 +42,6 @@ public class JobViewItemVO extends ABaseWebVO {
 		Form form = this.getForm();
 		this.fluidItemId = fluidItm.getId();
 		this.title = form.getTitle();
-		this.groupingColors = this.getGroupingColors();
 		this.formContainerId = form.getId();
 		this.dateLastUpdated = form.getDateLastUpdated();
 		this.stepEnteredTime = fluidItm.getStepEnteredTime();
@@ -74,38 +69,5 @@ public class JobViewItemVO extends ABaseWebVO {
 		returnVal.setFieldsEditable(fieldsEditable);
 		returnVal.setAllUsers(allUsers);
 		return returnVal;
-	}
-
-	public boolean isGrouping() {
-		return (this.groupingColors != null && !this.groupingColors.isEmpty());
-	}
-
-	public boolean isGroupingPresentForField(String fieldName) {
-		return (this.groupingColors != null && !this.groupingColors.isEmpty());
-	}
-
-	public String getGroupingAdditionalClass(String fieldName) {
-		if (UtilGlobal.isBlank(fieldName)) return UtilGlobal.EMPTY;
-
-		if (this.groupingColors.containsKey(fieldName)) {
-			return "customer-badge status-renewal";
-		}
-
-		return UtilGlobal.EMPTY;
-	}
-
-	public String getGroupingAdditionalStyle(String fieldName) {
-		if (UtilGlobal.isBlank(fieldName)) return UtilGlobal.EMPTY;
-
-		ForegroundBackground fb = this.groupingColors.get(fieldName);
-		if (fb == null) return UtilGlobal.EMPTY;
-
-		Color foreground = fb.getForeground();
-		Color background = fb.getBackground();
-
-		String hexForeground = String.format("#%s", Integer.toHexString(foreground.getRGB()).substring(2));
-		String hexBackground = String.format("#%s", Integer.toHexString(background.getRGB()).substring(2));
-
-		return String.format("color: %s; background: %s;", hexForeground, hexBackground);
 	}
 }
