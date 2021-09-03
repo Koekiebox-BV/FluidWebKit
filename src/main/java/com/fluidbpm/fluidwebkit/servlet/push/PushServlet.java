@@ -49,7 +49,7 @@ public class PushServlet extends ABaseFWKServlet {
 	@Inject
 	private transient WebKitNotificationsBean webKitNotificationsBean;
 
-	private static final long WAIT_TIME_NOTI_FETCH_MILLIS = TimeUnit.SECONDS.toMillis(5);
+	private static final long WAIT_TIME_NOTI_FETCH_MILLIS = TimeUnit.MINUTES.toMillis(3);
 
 	public static final class ErrorCode {
 		public static final int USER_NOT_LOGGED_IN = 1;
@@ -171,11 +171,6 @@ public class PushServlet extends ABaseFWKServlet {
 		return false;
 	}
 
-	/**
-	 *
-	 * @param returnObjectParam
-	 * @throws JSONException
-	 */
 	private void addRefreshNotificationCommandObjectToArray(
 		JSONObject returnObjectParam,
 		long delayMillis

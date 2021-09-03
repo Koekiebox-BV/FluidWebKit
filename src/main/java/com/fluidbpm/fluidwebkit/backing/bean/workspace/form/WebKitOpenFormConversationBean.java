@@ -866,11 +866,12 @@ public class WebKitOpenFormConversationBean extends ABaseManagedBean {
 		});
 		this.getDeletedAttachments().forEach(attItm -> {
 			attItm.setFormId(formId);
+			this.attachmentBean.removeAttachmentFromRAWCache(attItm.getId());
 			this.getFluidClientDS().getAttachmentClient().deleteAttachment(attItm);
 		});
 		this.getUpdatedAttachments().forEach(attItm -> {
 			attItm.setFormId(formId);
-			this.attachmentBean.removeAttachmentFromRAWCache(formId);
+			this.attachmentBean.removeAttachmentFromRAWCache(attItm.getId());
 			this.getFluidClientDS().getAttachmentClient().createAttachment(attItm);
 		});
 		this.attachmentBean.clearAttachmentCacheFor(new Form(formId));
@@ -984,17 +985,26 @@ public class WebKitOpenFormConversationBean extends ABaseManagedBean {
 		execFields.stream()
 				.filter(itm -> itm.getTypeAsEnum() != Field.Type.Table)//We do not update table records...
 				.forEach(fieldItemFromExec -> {
+					//Ignore Table Records...
 					if (fieldItemFromExec.getTypeAsEnum() == null || fieldItemFromExec.getTypeAsEnum() == Field.Type.Table) return;
 
 					if (fieldItemFromExec.getFieldValue() instanceof MultiChoice) {
 						MultiChoice casted = (MultiChoice)fieldItemFromExec.getFieldValue();
 						MultiChoice multi = formToUpdate.getFieldValueAsMultiChoice(fieldItemFromExec.getFieldName());
-						casted.setAvailableMultiChoices(multi.getAvailableMultiChoices());
-						casted.setAvailableMultiChoicesCombined(multi.getAvailableMultiChoicesCombined());
+						
+						if (multi == null) {
+							this.getLogger().error(
+									String.format("No Multi Avail Choices for Field Name '%s'.",
+									fieldItemFromExec.getFieldName()), null);
+						} else {
+							casted.setAvailableMultiChoices(multi.getAvailableMultiChoices());
+							casted.setAvailableMultiChoicesCombined(multi.getAvailableMultiChoicesCombined());
+						}
 
 						formToUpdate.setFieldValue(
 								fieldItemFromExec.getFieldName(),
-								casted, fieldItemFromExec.getTypeAsEnum());
+								casted,
+								fieldItemFromExec.getTypeAsEnum());
 					} else {
 						formToUpdate.setFieldValue(
 								fieldItemFromExec.getFieldName(),

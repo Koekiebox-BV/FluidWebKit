@@ -126,6 +126,13 @@ public class WebKitAttachmentBean extends ABaseManagedBean {
 	public void clearAttachmentCacheFor(Form formToClearFor) {
 		if (formToClearFor == null || formToClearFor.getId() == null) return;
 
+		List<Attachment> currentInCache = this.formAttachmentCache.getIfPresent(formToClearFor);
+		if (currentInCache != null) {
+			currentInCache.stream().forEach(attItm -> {
+				this.removeAttachmentFromRAWCache(attItm.getId());
+			});
+		}
+
 		this.formImageStreamedCache.invalidateAll();
 
 		this.formAttachmentCache.invalidate(formToClearFor.getId());

@@ -74,9 +74,8 @@ public abstract class ABaseWebVO implements Serializable {
 	}
 
 	public ABaseWebVO(FluidItem fluidItmParam) {
-		super();
+		this();
 		this.fluidItem = fluidItmParam;
-		this.groupingColors = this.getGroupingColors();
 	}
 
 	public ABaseWebVO(List<Field> fieldsViewableParam, List<Field> fieldsEditableParam) {
@@ -168,6 +167,7 @@ public abstract class ABaseWebVO implements Serializable {
 
 	public String getGroupingAdditionalClass(String fieldName) {
 		if (UtilGlobal.isBlank(fieldName)) return UtilGlobal.EMPTY;
+		if (this.groupingColors == null) return UtilGlobal.EMPTY;
 
 		if (this.groupingColors.containsKey(fieldName)) {
 			return "customer-badge status-renewal";
@@ -178,6 +178,7 @@ public abstract class ABaseWebVO implements Serializable {
 
 	public String getGroupingAdditionalStyle(String fieldName) {
 		if (UtilGlobal.isBlank(fieldName)) return UtilGlobal.EMPTY;
+		if (this.groupingColors == null) return UtilGlobal.EMPTY; 
 
 		JobViewItemVO.ForegroundBackground fb = this.groupingColors.get(fieldName);
 		if (fb == null) return UtilGlobal.EMPTY;
