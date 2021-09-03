@@ -93,6 +93,7 @@ public class WebKitAttachmentBean extends ABaseManagedBean {
 			attachments.sort(Comparator.comparing(Attachment::getId));
 
 			this.formAttachmentCache.put(form.getId(), attachments);
+
 			List<Attachment> returnVal = attachments.stream()
 							.map(toMap -> {
 								Attachment returnValClone = toMap.clone();
@@ -126,7 +127,8 @@ public class WebKitAttachmentBean extends ABaseManagedBean {
 	public void clearAttachmentCacheFor(Form formToClearFor) {
 		if (formToClearFor == null || formToClearFor.getId() == null) return;
 
-		List<Attachment> currentInCache = this.formAttachmentCache.getIfPresent(formToClearFor);
+		List<Attachment> currentInCache =
+				this.formAttachmentCache.getIfPresent(formToClearFor.getId());
 		if (currentInCache != null) {
 			currentInCache.stream().forEach(attItm -> {
 				this.removeAttachmentFromRAWCache(attItm.getId());

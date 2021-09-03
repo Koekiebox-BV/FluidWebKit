@@ -863,6 +863,7 @@ public class WebKitOpenFormConversationBean extends ABaseManagedBean {
 			attItm.setFormId(formId);
 			Attachment created = this.getFluidClientDS().getAttachmentClient().createAttachment(attItm);
 			attItm.setId(created.getId());
+			this.attachmentBean.removeAttachmentFromRAWCache(attItm.getId());
 		});
 		this.getDeletedAttachments().forEach(attItm -> {
 			attItm.setFormId(formId);
@@ -992,11 +993,7 @@ public class WebKitOpenFormConversationBean extends ABaseManagedBean {
 						MultiChoice casted = (MultiChoice)fieldItemFromExec.getFieldValue();
 						MultiChoice multi = formToUpdate.getFieldValueAsMultiChoice(fieldItemFromExec.getFieldName());
 						
-						if (multi == null) {
-							this.getLogger().error(
-									String.format("No Multi Avail Choices for Field Name '%s'.",
-									fieldItemFromExec.getFieldName()), null);
-						} else {
+						if (multi != null) {
 							casted.setAvailableMultiChoices(multi.getAvailableMultiChoices());
 							casted.setAvailableMultiChoicesCombined(multi.getAvailableMultiChoicesCombined());
 						}

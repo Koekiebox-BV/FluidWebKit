@@ -105,10 +105,7 @@ public class RAWContentServlet extends ImageServlet {
 		}
 	}
 
-	private ImageStreamedContent getRAWAttachmentByIdNoDataUseCache(
-			AttachmentClient attachmentClientParam,
-			Long attId
-	) {
+	private ImageStreamedContent getRAWAttachmentByIdNoDataUseCache(AttachmentClient attachmentClientParam, Long attId) {
 		Attachment cacheAttachments = this.attachmentCache.getIfPresent(attId);
 		if (cacheAttachments != null) return new ImageStreamedContent(
 			cacheAttachments.getAttachmentDataRAW(),

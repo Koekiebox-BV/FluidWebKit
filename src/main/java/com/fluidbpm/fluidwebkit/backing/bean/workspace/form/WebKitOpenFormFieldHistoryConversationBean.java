@@ -8,6 +8,8 @@ import com.fluidbpm.program.api.vo.form.Form;
 import com.fluidbpm.program.api.vo.historic.FormHistoricData;
 import com.fluidbpm.ws.client.v1.form.FormContainerClient;
 import lombok.*;
+import org.json.JSONException;
+import org.json.JSONObject;
 import org.primefaces.event.ToggleEvent;
 import org.primefaces.model.Visibility;
 
@@ -126,6 +128,27 @@ public class WebKitOpenFormFieldHistoryConversationBean extends ABaseManagedBean
 			if (toString.isEmpty()) return String.format("%s millis", takenInMillis);
 
 			return toString.substring(1, toString.length() - 2);
+		}
+
+		public boolean isValueOfTypeSignature() {
+			if (this.field == null) return false;
+			if (UtilGlobal.isBlank(this.field.getFieldValueAsString())) return false;
+
+			switch (this.field.getTypeAsEnum()) {
+				case Text:
+				case ParagraphText:
+					String val = this.field.getFieldValueAsString();
+					if (val == null) return false;
+
+					try {
+						JSONObject sigJSON = new JSONObject(val);
+						return sigJSON.has("lines");
+					} catch (JSONException jsonErr) {
+						return false;
+					}
+			}
+
+			return false;
 		}
 	}
 

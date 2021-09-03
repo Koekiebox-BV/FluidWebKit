@@ -202,14 +202,14 @@ public class ImageServlet extends ABaseFWKServlet {
 
 	private List<Attachment> getImageAttachmentByFormNoDataUseCache(
 		AttachmentClient attachmentClientParam,
-		Form formToCheckForParam
+		Form form
 	) {
-		List<Attachment> cacheAttachments = this.attachmentCache.getIfPresent(formToCheckForParam.getId());
+		List<Attachment> cacheAttachments = this.attachmentCache.getIfPresent(form.getId());
 		if (cacheAttachments != null) return cacheAttachments;
 
 		List<Attachment> attachmentsForForm =
-				attachmentClientParam.getImageAttachmentsByForm(formToCheckForParam, false);
-		this.attachmentCache.put(formToCheckForParam.getId(), attachmentsForForm);
+				attachmentClientParam.getImageAttachmentsByForm(form, false);
+		this.attachmentCache.put(form.getId(), attachmentsForForm);
 		return attachmentsForForm;
 	}
 

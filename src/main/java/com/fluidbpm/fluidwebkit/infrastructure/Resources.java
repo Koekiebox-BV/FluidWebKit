@@ -35,18 +35,18 @@ import java.util.concurrent.TimeUnit;
  */
 public class Resources {
 	private static final Cache<String, FluidClientDS> cacheFluidDS = CacheBuilder.newBuilder()
-			.expireAfterAccess(2, TimeUnit.DAYS)
+			.expireAfterWrite(20, TimeUnit.HOURS)
 			.removalListener(new ExitEventForFluidAPI())
 			.build();
 
 	private static Cache<String, ImageStreamedContent> imageServletImageCache =
 			CacheBuilder.newBuilder().expireAfterWrite(60, TimeUnit.MINUTES).build();
 
-	public static Cache<Long, List<Attachment>> imageAttachmentsByFormCache =
-			CacheBuilder.newBuilder().expireAfterWrite(60, TimeUnit.MINUTES).build();
+	private static Cache<Long, List<Attachment>> imageAttachmentsByFormCache =
+			CacheBuilder.newBuilder().expireAfterAccess(7, TimeUnit.SECONDS).build();
 
-	public static Cache<Long, Attachment> rawAttachmentsByIdCache =
-			CacheBuilder.newBuilder().expireAfterWrite(20, TimeUnit.MINUTES).build();
+	private static Cache<Long, Attachment> rawAttachmentsByIdCache =
+			CacheBuilder.newBuilder().expireAfterAccess(30, TimeUnit.SECONDS).build();
 
 	@Produces
 	@WebKitResource
