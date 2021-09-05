@@ -533,20 +533,39 @@ public class WebKitOpenFormConversationBean extends ABaseManagedBean {
 	public void actionUploadNewAttachment(FileUploadEvent fileUploadEvent) {
 		UploadedFile uploaded = fileUploadEvent.getFile();
 
-		Attachment toAdd = new Attachment();
-		toAdd.setContentType(uploaded.getContentType());
-		toAdd.setAttachmentDataBase64(UtilGlobal.encodeBase64(uploaded.getContent()));
-		toAdd.setName(uploaded.getFileName());
+		String attName = uploaded.getFileName();
 
-		this.getFreshAttachments().add(toAdd);
-		this.attachmentBean.addAttachmentFreshToCache(toAdd, this.conversation.getId(), this.getFreshAttachments().size() - 1);
+		try {
+			if (this.getFreshAndExistingAttachments() != null) {
+				Attachment existingWithName = this.getFreshAndExistingAttachments().stream()
+						.filter(itm -> attName.equalsIgnoreCase(itm.getName()))
+						.findFirst()
+						.orElse(null);
+				if (existingWithName != null) {
+					throw new ClientDashboardException(String.format(
+						"Attachment with name '%s' already exists. Upload new version or delete existing.",
+							attName
+					), ClientDashboardException.ErrorCode.VALIDATION);
+				}
+			}
 
-		//Rebuild the context menu...
-		this.buildContextMenuForConversation();
-		
-		FacesMessage fMsg = new FacesMessage(FacesMessage.SEVERITY_INFO,
-				"Success", String.format("Uploaded '%s'. Remember to Save!", uploaded.getFileName()));
-		FacesContext.getCurrentInstance().addMessage(null, fMsg);
+			Attachment toAdd = new Attachment();
+			toAdd.setContentType(uploaded.getContentType());
+			toAdd.setAttachmentDataBase64(UtilGlobal.encodeBase64(uploaded.getContent()));
+			toAdd.setName(attName);
+
+			this.getFreshAttachments().add(toAdd);
+			this.attachmentBean.addAttachmentFreshToCache(toAdd, this.conversation.getId(), this.getFreshAttachments().size() - 1);
+
+			//Rebuild the context menu...
+			this.buildContextMenuForConversation();
+
+			FacesMessage fMsg = new FacesMessage(FacesMessage.SEVERITY_INFO,
+					"Success", String.format("Uploaded '%s'. Remember to Save!", uploaded.getFileName()));
+			FacesContext.getCurrentInstance().addMessage(null, fMsg);
+		} catch (Exception except) {
+			this.raiseError(except);
+		}
 	}
 
 	public void actionReplaceExistingAttachment(FileUploadEvent fileUploadEvent) {
