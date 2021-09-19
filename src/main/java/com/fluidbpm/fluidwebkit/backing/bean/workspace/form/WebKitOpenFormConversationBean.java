@@ -8,6 +8,7 @@ import com.fluidbpm.fluidwebkit.backing.bean.workspace.field.WebKitField;
 import com.fluidbpm.fluidwebkit.backing.bean.workspace.lf.WebKitWorkspaceLookAndFeelBean;
 import com.fluidbpm.fluidwebkit.backing.bean.workspace.pi.PersonalInventoryItemVO;
 import com.fluidbpm.fluidwebkit.exception.ClientDashboardException;
+import com.fluidbpm.fluidwebkit.exception.MandatoryFieldsException;
 import com.fluidbpm.program.api.util.GeoUtil;
 import com.fluidbpm.program.api.util.UtilGlobal;
 import com.fluidbpm.program.api.vo.attachment.Attachment;
@@ -700,6 +701,10 @@ public class WebKitOpenFormConversationBean extends ABaseManagedBean {
 
 	public void actionModifyTableRecord(Form tableRecordToSave, Field tableFieldToAddFor) {
 		try {
+			if (tableRecordToSave.isAllFormFieldsEmpty()) {
+				throw new MandatoryFieldsException("All table fields are empty. Not allowed.");
+			}
+			
 			String prevTitle = tableRecordToSave.getTitle();
 			WebKitForm wkForm = this.lookAndFeelBean.getWebKitFormWithFormDef(tableRecordToSave.getFormType());
 			tableRecordToSave.setTitle(this.generateNewFormTitle(
@@ -724,7 +729,10 @@ public class WebKitOpenFormConversationBean extends ABaseManagedBean {
 				this.actionAddPlaceholderRowOfType(tableFieldToAddFor);
 			}
 		} catch (Exception except) {
-			this.raiseError(except);
+			if (except instanceof MandatoryFieldsException) {
+				FacesMessage fMsg = new FacesMessage(FacesMessage.SEVERITY_WARN, "Mandatory.", except.getMessage());
+				FacesContext.getCurrentInstance().addMessage(null, fMsg);
+			} else this.raiseError(except);
 		}
 	}
 
@@ -836,7 +844,12 @@ public class WebKitOpenFormConversationBean extends ABaseManagedBean {
 			if (UtilGlobal.isNotBlank(varBtnToEnableFailedSave)) {
 				this.executeJavaScript(String.format("PF('%s').enable();", varBtnToEnableFailedSave));
 			}
-			this.raiseError(except);
+
+			if (except instanceof MandatoryFieldsException) {
+				FacesMessage fMsg = new FacesMessage(FacesMessage.SEVERITY_WARN,
+						"Mandatory.", String.format("'%s' %s.", this.wsFluidItem.getFluidItemTitle(), except.getMessage()));
+				FacesContext.getCurrentInstance().addMessage(null, fMsg);
+			} else this.raiseError(except);
 		}
 	}
 
@@ -964,6 +977,7 @@ public class WebKitOpenFormConversationBean extends ABaseManagedBean {
 		String customAction = null;
 		if (UtilGlobal.isBlank(customActionForceUsage)) {
 			customAction = this.getThirdPartyWebActionSaveForFormType(returnVal.getFormType());
+			//Ensure the mandatory fields are set...
 			AtomicBoolean anyEmpty = new AtomicBoolean(false);
 			if (wkForm.getMandatoryFields() != null && !wkForm.getMandatoryFields().isEmpty()) {
 				wkForm.getMandatoryFields().forEach(manField -> {
@@ -975,9 +989,7 @@ public class WebKitOpenFormConversationBean extends ABaseManagedBean {
 					}
 				});
 			}
-			if (anyEmpty.get()) {
-				throw new ClientDashboardException("Please populate mandatory fields.", ClientDashboardException.ErrorCode.VALIDATION);
-			}
+			if (anyEmpty.get()) throw new MandatoryFieldsException("Please populate mandatory fields.");
 		} else {
 			List<String> allCustomActions = this.getThirdPartyWebActionTaskIdsForFormType(returnVal.getFormType());
 			customAction = allCustomActions.stream()

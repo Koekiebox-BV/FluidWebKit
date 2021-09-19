@@ -15,14 +15,12 @@
 
 package com.fluidbpm.fluidwebkit.backing.bean.performance.user;
 
-import com.fluidbpm.fluidwebkit.backing.bean.ABaseManagedBean;
 import com.fluidbpm.fluidwebkit.backing.bean.performance.ABasePerformanceBean;
 import com.fluidbpm.fluidwebkit.backing.bean.performance.PerformanceBean;
 import com.fluidbpm.program.api.vo.report.userstats.PunchCardEntry;
 import lombok.Getter;
 import lombok.Setter;
 import org.primefaces.model.chart.AxisType;
-import org.primefaces.model.chart.ChartModel;
 import org.primefaces.model.chart.OhlcChartModel;
 import org.primefaces.model.chart.OhlcChartSeries;
 
@@ -75,8 +73,7 @@ public class PunchCardBean extends ABasePerformanceBean {
 				int highestValue = PerformanceBean.getDayAsInt(
 						Collections.max(punchCardEntriesFromMap, new PunchCardEntryComp()).getPunchCardDay());
 
-				OhlcChartModel modelToAdd = this.createPunchCard(
-						lowestValue, highestValue, yearAndMonth, isFirst);
+				OhlcChartModel modelToAdd = this.createPunchCard(lowestValue, highestValue, yearAndMonth, isFirst);
 
 				//Add all of the data to the Punchcard model...
 				for (PunchCardEntry entry: punchCardEntriesFromMap) {
@@ -99,43 +96,30 @@ public class PunchCardBean extends ABasePerformanceBean {
 				isFirst = false;
 			}
 
-			Collections.sort(
-					this.userPunchcardCharts,
-					new StringToDateComp(DATE_FORMAT_YEAR_MONTH));
+			Collections.sort(this.userPunchcardCharts, new StringToDateComp(DATE_FORMAT_YEAR_MONTH));
 
 			//Add the Summary data...
 			this.populateSummary(punchCardEntries);
 		}
 	}
 
-	/**
-	 *
-	 * @param punchCardEntriesParam
-	 */
 	private void populateSummary(
 		List<PunchCardEntry> punchCardEntriesParam
 	) {
-		if (punchCardEntriesParam == null || punchCardEntriesParam.isEmpty()) {
-			return;
-		}
+		if (punchCardEntriesParam == null || punchCardEntriesParam.isEmpty()) return;
 
 		Date defaultFirstLogin = null,defaultLastLogout = null;
 		for (PunchCardEntry entry:punchCardEntriesParam) {
-			if (defaultFirstLogin != null && defaultLastLogout != null) {
-				break;
-			}
+			if (defaultFirstLogin != null && defaultLastLogout != null) break;
+
 			defaultFirstLogin = (defaultFirstLogin == null) ?
-					entry.getFirstLoginForDay():
-					defaultFirstLogin;
+					entry.getFirstLoginForDay(): defaultFirstLogin;
 
 			defaultLastLogout = (defaultLastLogout == null) ?
-					entry.getLastLogout():
-					defaultLastLogout;
+					entry.getLastLogout(): defaultLastLogout;
 		}
 
-		if (defaultFirstLogin == null || defaultLastLogout == null) {
-			return;
-		}
+		if (defaultFirstLogin == null || defaultLastLogout == null) return;
 
 		//First Login...
 		Calendar calToWorkWithFirstLogin = Calendar.getInstance();
@@ -157,9 +141,7 @@ public class PunchCardBean extends ABasePerformanceBean {
 				//Logout
 		avgHourLogoutMinute = 0,avgHourLogoutHour = 0;
 		for (PunchCardEntry entry : punchCardEntriesParam) {
-			if (entry.isLogInsForDayEmpty()) {
-			   continue;
-			}
+			if (entry.isLogInsForDayEmpty()) continue;
 
 			daysLoggedIn++;
 
@@ -168,9 +150,7 @@ public class PunchCardBean extends ABasePerformanceBean {
 
 			int entryHour = entryCalFirstLogin.get(Calendar.HOUR_OF_DAY),
 			entryMinute = entryCalFirstLogin.get(Calendar.MINUTE);
-			if((entryHour < calHour) ||
-					(entryHour == calHour && entryMinute < calMinute))
-			{
+			if ((entryHour < calHour) || (entryHour == calHour && entryMinute < calMinute)) {
 				calHour = entryHour;
 				calMinute = entryMinute;
 			}
@@ -223,24 +203,11 @@ public class PunchCardBean extends ABasePerformanceBean {
 				this.formatForZeros(avgHourLogoutMinute));
 	}
 
-	/**
-	 *
-	 * @param intValueParam
-	 * @return
-	 */
 	private String formatForZeros(int intValueParam)
 	{
 		return String.format("%02d", intValueParam);
 	}
 
-	/**
-	 *
-	 * @param lowestValueParam
-	 * @param highestValueParam
-	 * @param yearAndMonthParam
-	 * @param isFirstParam
-	 * @return
-	 */
 	private OhlcChartModel createPunchCard(
 		int lowestValueParam,
 		int highestValueParam,
@@ -272,24 +239,18 @@ public class PunchCardBean extends ABasePerformanceBean {
 		return returnVal;
 	}
 
-	/**
-	 *
-	 * @param punchCardEntriesParam
-	 * @return
-	 */
 	private Map<String,List<PunchCardEntry>> breakPunchCardUpMonthly(
 		List<PunchCardEntry> punchCardEntriesParam
 	) {
 		Map<String,List<PunchCardEntry>> returnVal = new HashMap<String,List<PunchCardEntry>>();
-		if (punchCardEntriesParam == null || punchCardEntriesParam.isEmpty()) {
-			return returnVal;
-		}
+		if (punchCardEntriesParam == null || punchCardEntriesParam.isEmpty()) return returnVal;
+
 		int currentMonth = PerformanceBean.getMonthAsInt(
 				punchCardEntriesParam.get(0).getPunchCardDay());
 		String yearAndMonth = PerformanceBean.getYearMonthAsString(
 				punchCardEntriesParam.get(0).getPunchCardDay());
 
-		List<PunchCardEntry> keyValues = new ArrayList<PunchCardEntry>();
+		List<PunchCardEntry> keyValues = new ArrayList<>();
 		Date punchCardDayForEntry = null;
 		for (PunchCardEntry entry: punchCardEntriesParam) {
 			punchCardDayForEntry = entry.getPunchCardDay();
@@ -300,7 +261,7 @@ public class PunchCardBean extends ABasePerformanceBean {
 				//Refresh...
 				yearAndMonth = PerformanceBean.getYearMonthAsString(punchCardDayForEntry);
 				currentMonth = currentEntryDateMonth;
-				keyValues = new ArrayList<PunchCardEntry>();
+				keyValues = new ArrayList<>();
 			}
 
 			keyValues.add(entry);

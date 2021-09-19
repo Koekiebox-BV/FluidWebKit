@@ -96,8 +96,7 @@ public abstract class ABaseManagedBean implements Serializable {
 		}
 		if (FacesContext.getCurrentInstance() == null) return;
 
-		FacesMessage fMsg = new FacesMessage(
-				FacesMessage.SEVERITY_ERROR, "Failed.", exception.getMessage());
+		FacesMessage fMsg = new FacesMessage(FacesMessage.SEVERITY_ERROR, "Failed.", exception.getMessage());
 		FacesContext.getCurrentInstance().addMessage(null, fMsg);
 	}
 
@@ -673,12 +672,13 @@ public abstract class ABaseManagedBean implements Serializable {
 				.collect(Collectors.toList());
 	}
 
+	private static final String save = "save";
 	protected String getThirdPartyWebActionSaveForFormType(String formType) {
 		List<String> allActions = this.getThirdPartyWebActionTaskIdsForFormType(formType);
 		if (allActions == null || allActions.isEmpty()) return null;
 
 		return allActions.stream()
-				.filter(val -> val.toLowerCase().trim().equals("save"))
+				.filter(val -> val.toLowerCase().trim().equals(save))
 				.findFirst()
 				.orElse(null);
 	}

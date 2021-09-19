@@ -43,16 +43,16 @@ public class SystemUptimeBean extends ABaseManagedBean {
 		Map<String, Integer> returnVal = new HashMap<>();
 		if (sysUptimeReport.getUptimeEntries() != null) {
 			sysUptimeReport.getUptimeEntries().forEach(itmYearDay -> {
-				AtomicInteger downtimeForDay = new AtomicInteger(0);
+				AtomicInteger downtimeMinsForDay = new AtomicInteger(0);
 				if (itmYearDay.getSystemUpHourMins() != null && !itmYearDay.getSystemUpHourMins().isEmpty()) {
 					itmYearDay.getSystemUpHourMins().forEach(hourMinItm -> {
 						if (hourMinItm.getState() == SystemUpHourMin.State.Down) {
-							downtimeForDay.incrementAndGet();//Add 1 minute for downtime...
+							downtimeMinsForDay.incrementAndGet();//Add 1 minute for downtime...
 							return;
 						}
 					});
 				}
-				returnVal.put(itmYearDay.getYearDayKey(), downtimeForDay.get());
+				returnVal.put(itmYearDay.getYearDayKey(), downtimeMinsForDay.get());
 			});
 		}
 		return returnVal;

@@ -15,36 +15,19 @@
 
 package com.fluidbpm.fluidwebkit.exception;
 
-import lombok.Getter;
-
 /**
  * Base exception class for client specific Dashboard.
  *
  * @author jasonbruwer on 2018-05-30
  * @since v1.0
  */
-public class ClientDashboardException extends RuntimeException {
-	@Getter
-	private int errorCode;
+public class MandatoryFieldsException extends ClientDashboardException {
 
-	/**
-	 * Error code mappings for Client Dashboard errors.
-	 */
-	public static class ErrorCode {
-		public static final int SESSION_EXPIRED = 10001;
-		public static final int IO_ERROR = 10002;
-		public static final int VALIDATION = 10003;
-		public static final int ILLEGAL_STATE = 10004;
-		public static final int ACCESS_DENIED = 10005;
+	public MandatoryFieldsException(String message) {
+		super(message, ClientDashboardException.ErrorCode.VALIDATION);
 	}
 
-	public ClientDashboardException(String message, int errorCodeParam) {
-		super(message);
-		this.errorCode = errorCodeParam;
-	}
-
-	public ClientDashboardException(String message, Throwable cause, int errorCodeParam) {
-		super(message, cause);
-		this.errorCode = errorCodeParam;
+	public MandatoryFieldsException(String message, Throwable cause, int errorCodeParam) {
+		super(message, cause, ClientDashboardException.ErrorCode.VALIDATION);
 	}
 }
