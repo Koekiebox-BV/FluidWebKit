@@ -456,7 +456,7 @@ public class WebKitMenuBean extends ABaseManagedBean {
 
 	private void noGroups() {
 		UIMenuItem menuItem = new UIMenuItem();
-		menuItem.setValue("No Group Config");
+		menuItem.setValue("No Workspace Config");
 		menuItem.setIcon("pi pi-exclamation-triangle");
 		menuItem.setOutcome("noconfig");
 		this.submenuWorkspace.getElements().add(this.submenuWorkspace.getElementsCount(), menuItem);

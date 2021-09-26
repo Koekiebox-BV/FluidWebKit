@@ -129,6 +129,7 @@ public class WebKitWorkspaceLookAndFeelBean extends ABaseManagedBean {
 
 	private Map<String, List<SelectItem>> tableFieldsByFormDef;
 	private Map<String, List<SelectItem>> mandatoryFieldsByFormDef;
+	private Map<String, List<SelectItem>> userToFormFieldLimitOnMultiChoiceByFormDef;
 
 	@Inject
 	private WebKitAccessBean accessBean;
@@ -832,6 +833,30 @@ public class WebKitWorkspaceLookAndFeelBean extends ABaseManagedBean {
 				.forEach(itm -> returnVal.add(new SelectItem(itm, itm)));
 
 		this.mandatoryFieldsByFormDef.put(formDef, returnVal);
+		return returnVal;
+	}
+
+	public List<SelectItem> extractFieldsForUserToFormFieldMCFrom(String formDef) {
+		if (this.userToFormFieldLimitOnMultiChoiceByFormDef == null) this.userToFormFieldLimitOnMultiChoiceByFormDef = new HashMap<>();
+
+		if (this.userToFormFieldLimitOnMultiChoiceByFormDef.containsKey(formDef)) return this.userToFormFieldLimitOnMultiChoiceByFormDef.get(formDef);
+
+		List<Field> fieldsForFormDef = this.accessBean.getFieldsEditableForFormDef(formDef);
+		List<SelectItem> returnVal = new ArrayList<>();
+		if (fieldsForFormDef == null) return returnVal;
+
+		fieldsForFormDef.stream()
+				.filter(itm -> {
+					switch (itm.getTypeAsEnum()) {
+						case MultipleChoice:
+							return true;
+						default: return false;
+					}
+				})
+				.map(itm -> itm.getFieldName())
+				.forEach(itm -> returnVal.add(new SelectItem(itm, itm)));
+
+		this.userToFormFieldLimitOnMultiChoiceByFormDef.put(formDef, returnVal);
 		return returnVal;
 	}
 

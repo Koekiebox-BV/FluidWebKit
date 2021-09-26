@@ -22,6 +22,8 @@ public class WebKitField extends Field {
 	@Setter
 	private boolean mandatoryAndEmpty;
 
+	private List<String> allowedAvailMultiChoiceForUser;
+
 	public WebKitField(
 		Long fieldIdParam,
 		String fieldNameParam,
@@ -32,6 +34,18 @@ public class WebKitField extends Field {
 		this.setFieldName(fieldNameParam);
 		this.setTypeAsEnum(fieldTypeParam);
 		this.setFieldValue(fieldValueParam);
+		this.allowedAvailMultiChoiceForUser = null;
+	}
+
+	public WebKitField(
+		Long fieldIdParam,
+		String fieldNameParam,
+		Object fieldValueParam,
+		Type fieldTypeParam,
+		List<String> allowedAvailMultiChoiceForUser
+	) {
+		this(fieldIdParam, fieldNameParam, fieldValueParam, fieldTypeParam);
+		this.allowedAvailMultiChoiceForUser = allowedAvailMultiChoiceForUser;
 	}
 
 	@XmlTransient
@@ -61,6 +75,16 @@ public class WebKitField extends Field {
 		return new ArrayList<>(availSelectItems.stream()
 				.map(itm -> new SelectItem(itm, itm))
 				.collect(Collectors.toList()));
+	}
+
+	@XmlTransient
+	public List<SelectItem> getActionFetchAllAvailMultiChoiceWithUserFilter() {
+		List<SelectItem> returnVal = this.getActionFetchAllAvailMultiChoice();
+		if (this.allowedAvailMultiChoiceForUser == null || this.allowedAvailMultiChoiceForUser.isEmpty()) return returnVal;
+
+		return returnVal.stream()
+				.filter(itm -> this.allowedAvailMultiChoiceForUser.contains(itm.getLabel()))
+				.collect(Collectors.toList());
 	}
 	
 	@XmlTransient

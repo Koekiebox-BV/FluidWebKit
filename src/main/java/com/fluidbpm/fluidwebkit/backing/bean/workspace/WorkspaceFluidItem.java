@@ -181,23 +181,53 @@ public class WorkspaceFluidItem extends ABaseFluidVO {
 							.findFirst()
 							.map(itm -> itm.getFieldValue())
 							.orElse(visibleField.getFieldValue());
+			final List<String> userFilteredAvailableOptions;
 			if (fieldValueToSet instanceof MultiChoice) {
 				MultiChoice casted = (MultiChoice)fieldValueToSet;
 				fieldValueToSet = casted.cloneMultiChoice();
+				userFilteredAvailableOptions = this.applyUserToFormFieldFilterForLoggedInUser(
+						visibleField.getFieldName(), casted.getAvailableMultiChoices());
 			} else if (fieldValueToSet instanceof TableField) {
 				fieldValueToSet = null;//Clear the records...
-			}
+				userFilteredAvailableOptions = null;//Clear the records...
+			} else userFilteredAvailableOptions = null;
 
 			WebKitField fieldToAdd = new WebKitField(
-					null,
-					visibleField.getFieldName(),
-					fieldValueToSet,
-					visibleField.getTypeAsEnum());
+				null,
+				visibleField.getFieldName(),
+				fieldValueToSet,
+				visibleField.getTypeAsEnum(),
+				userFilteredAvailableOptions
+			);
 			fieldToAdd.setTypeMetaData(visibleField.getTypeMetaData());
 			fieldToAdd.setFieldDescription(visibleField.getFieldDescription());
 			editFieldsList.add(fieldToAdd);
 		});
 		this.formFieldsEdit = editFieldsList;
+	}
+
+	private List<String> applyUserToFormFieldFilterForLoggedInUser(
+		String fieldName,
+		List<String> allAvailableMultiChoices
+	) {
+		List<String> multiChoicesMarkedForFilter = this.webKitForm.getUserToFormFieldLimitOnMultiChoice();
+		if (multiChoicesMarkedForFilter == null || multiChoicesMarkedForFilter.isEmpty()) return allAvailableMultiChoices;
+
+		//Not marked for the filtering, display all...
+		if (!multiChoicesMarkedForFilter.contains(fieldName)) return allAvailableMultiChoices;
+
+		if (this.loggedInUser == null) return allAvailableMultiChoices;
+
+		MultiChoice choiceFieldFromUser = this.loggedInUser.getFieldValueAsMultiChoice(fieldName);
+		if (choiceFieldFromUser == null) return multiChoicesMarkedForFilter;
+
+		//We need to match the form against the currently logged-in user selected choices.
+		List<String> userFieldSelectChoices = choiceFieldFromUser.getSelectedMultiChoices();
+		if (userFieldSelectChoices == null || userFieldSelectChoices.isEmpty()) return multiChoicesMarkedForFilter;
+
+		return allAvailableMultiChoices.stream()
+				.filter(itm -> userFieldSelectChoices.contains(itm))
+				.collect(Collectors.toList());
 	}
 
 	public List<Field> getFormFieldsEditAsFields() {
