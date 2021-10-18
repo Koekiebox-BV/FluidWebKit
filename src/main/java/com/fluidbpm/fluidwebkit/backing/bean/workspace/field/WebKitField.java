@@ -13,6 +13,7 @@ import javax.xml.bind.annotation.XmlTransient;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @NoArgsConstructor
@@ -207,6 +208,16 @@ public class WebKitField extends Field {
 			default:
 				return false;
 		}
+	}
 
+	@XmlTransient
+	public String getFieldIdHTMLSafe() {
+		Long id = this.getId();
+		if (id != null && id.longValue() > 0) return Long.toString(id);
+
+		String fieldName = this.getFieldNameAsUpperCamel();
+		if (UtilGlobal.isNotBlank(fieldName)) return fieldName;
+
+		return UUID.randomUUID().toString();
 	}
 }

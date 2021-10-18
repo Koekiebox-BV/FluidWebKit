@@ -210,6 +210,8 @@ public class WorkspaceFluidItem extends ABaseFluidVO {
 		String fieldName,
 		List<String> allAvailableMultiChoices
 	) {
+		if (this.webKitForm == null) return allAvailableMultiChoices;
+
 		List<String> multiChoicesMarkedForFilter = this.webKitForm.getUserToFormFieldLimitOnMultiChoice();
 		if (multiChoicesMarkedForFilter == null || multiChoicesMarkedForFilter.isEmpty()) return allAvailableMultiChoices;
 
@@ -287,7 +289,8 @@ public class WorkspaceFluidItem extends ABaseFluidVO {
 	}
 	
 	public boolean isFormFieldMandatory(String formField) {
-		if (formField == null || formField.trim().isEmpty()) return false;
+		if ((formField == null || formField.trim().isEmpty()) || this.webKitForm == null) return false;
+
 		if (this.webKitForm.getMandatoryFields() == null || this.webKitForm.getMandatoryFields().isEmpty()) return false;
 
 		return this.webKitForm.getMandatoryFields().contains(formField);

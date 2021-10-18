@@ -15,10 +15,13 @@
 
 package com.fluidbpm.fluidwebkit.backing.utility.field;
 
+import com.fluidbpm.program.api.util.UtilGlobal;
 import com.fluidbpm.program.api.vo.field.Field;
 import com.fluidbpm.program.api.vo.field.MultiChoice;
 import com.fluidbpm.program.api.vo.sqlutil.sqlnative.SQLColumn;
 
+import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -30,6 +33,64 @@ import java.util.stream.Collectors;
  * @since 1.0
  */
 public class FieldMappingUtil {
+
+	public static String maskData(String data, int frontLength, int endLength) {
+		if (data == null) return null;
+
+		final int unmaskedLength = frontLength + endLength;
+
+		int totalLength = data.length();
+		if (totalLength <= unmaskedLength) return data;
+
+		String returnVal = String.format("%s%s%s",
+				data.substring(0, frontLength),
+				padLeft("", totalLength - unmaskedLength, '*'),
+				data.substring((totalLength - endLength), totalLength)
+		);
+
+		return returnVal;
+	}
+
+	private static String padLeft(String data, int length, char padChar) {
+		int remaining = length - data.length();
+		String newData = data;
+		for (int index = 0; index < remaining; index++) newData = padChar + newData;
+		return newData;
+	}
+
+	public static String generateNewFormTitle(
+		String formula,
+		String formType,
+		List<Field> formFields
+	) {
+		if (UtilGlobal.isBlank(formula)) return String.format("%s - %s", formType, new Date().toString());
+
+		int lastIndexOfPipe = formula.lastIndexOf("|");
+		String formFieldsString = formula.substring(lastIndexOfPipe);
+		if (UtilGlobal.isBlank(formFieldsString)) return formula.substring(lastIndexOfPipe - 1);
+
+		String[] formFieldNames = formFieldsString.substring(1).split("\\,");
+		if (formFieldNames == null || formFieldNames.length < 1) return formFieldsString;
+
+		return String.format(formula.substring(0, lastIndexOfPipe), toObjs(formFieldNames, formFields));
+	}
+
+	private static Object[] toObjs(String[] formFieldNames, List<Field> formFields) {
+		if (formFieldNames == null || formFieldNames.length == 0) return null;
+
+		List<Object> returnVal = new ArrayList<>();
+		for (String fieldName : formFieldNames) {
+			String fieldNameLower = fieldName.trim().toLowerCase();
+			Field fieldWithName = formFields.stream()
+					.filter(itm -> itm.getFieldName() != null && fieldNameLower.equals(itm.getFieldName().toLowerCase()))
+					.findFirst()
+					.orElse(null);
+			if (fieldWithName == null) returnVal.add(UtilGlobal.EMPTY);
+			else
+				returnVal.add(fieldWithName.getFieldValue());
+		}
+		return returnVal.toArray(new Object[]{});
+	}
 	
 	public static List<Field> convertToFields(
 			IConvertMapping[] mappingParam,

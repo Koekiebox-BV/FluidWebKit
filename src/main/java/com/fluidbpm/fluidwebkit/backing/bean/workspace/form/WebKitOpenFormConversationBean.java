@@ -7,6 +7,7 @@ import com.fluidbpm.fluidwebkit.backing.bean.workspace.WorkspaceFluidItem;
 import com.fluidbpm.fluidwebkit.backing.bean.workspace.field.WebKitField;
 import com.fluidbpm.fluidwebkit.backing.bean.workspace.lf.WebKitWorkspaceLookAndFeelBean;
 import com.fluidbpm.fluidwebkit.backing.bean.workspace.pi.PersonalInventoryItemVO;
+import com.fluidbpm.fluidwebkit.backing.utility.field.FieldMappingUtil;
 import com.fluidbpm.fluidwebkit.exception.ClientDashboardException;
 import com.fluidbpm.fluidwebkit.exception.MandatoryFieldsException;
 import com.fluidbpm.program.api.util.GeoUtil;
@@ -707,7 +708,7 @@ public class WebKitOpenFormConversationBean extends ABaseManagedBean {
 			
 			String prevTitle = tableRecordToSave.getTitle();
 			WebKitForm wkForm = this.lookAndFeelBean.getWebKitFormWithFormDef(tableRecordToSave.getFormType());
-			tableRecordToSave.setTitle(this.generateNewFormTitle(
+			tableRecordToSave.setTitle(FieldMappingUtil.generateNewFormTitle(
 					wkForm == null ? null : wkForm.getNewFormTitleFormula(),
 					tableRecordToSave.getFormType(), tableRecordToSave.getFormFields()));
 			tableRecordToSave.setCurrentUser(this.getLoggedInUser());
@@ -970,7 +971,7 @@ public class WebKitOpenFormConversationBean extends ABaseManagedBean {
 		WebKitForm wkForm = this.lookAndFeelBean.getWebKitFormWithFormDef(returnVal.getFormType());
 		returnVal.setFormTypeId(fluidItem.getFluidItemForm().getFormTypeId());
 		returnVal.setFormType(fluidItem.getFluidItemForm().getFormType());
-		returnVal.setTitle(this.generateNewFormTitle(wkForm == null ? null : wkForm.getNewFormTitleFormula(),
+		returnVal.setTitle(FieldMappingUtil.generateNewFormTitle(wkForm == null ? null : wkForm.getNewFormTitleFormula(),
 				fluidItem.getFluidItemFormType(), fluidItem.getFormFieldsEditAsFields()));
 
 		//Apply the Custom Action when applicable...
@@ -983,7 +984,7 @@ public class WebKitOpenFormConversationBean extends ABaseManagedBean {
 				wkForm.getMandatoryFields().forEach(manField -> {
 					WebKitField wkField = fluidItem.getFormFieldsEditWithName(manField);
 
-					if (wkField.isFieldValueEmpty()) {
+					if (wkField != null && wkField.isFieldValueEmpty()) {
 						anyEmpty.set(true);
 						wkField.setMandatoryAndEmpty(true);
 					}
@@ -1040,40 +1041,6 @@ public class WebKitOpenFormConversationBean extends ABaseManagedBean {
 								fieldItemFromExec.getTypeAsEnum());
 					};
 		});
-	}
-
-	protected String generateNewFormTitle(
-		String formula,
-		String formType,
-		List<Field> formFields
-	) {
-		if (UtilGlobal.isBlank(formula)) return String.format("%s - %s", formType, new Date().toString());
-
-		int lastIndexOfPipe = formula.lastIndexOf("|");
-		String formFieldsString = formula.substring(lastIndexOfPipe);
-		if (UtilGlobal.isBlank(formFieldsString)) return formula.substring(lastIndexOfPipe - 1);
-
-		String[] formFieldNames = formFieldsString.substring(1).split("\\,");
-		if (formFieldNames == null || formFieldNames.length < 1) return formFieldsString;
-
-		return String.format(formula.substring(0, lastIndexOfPipe), this.toObjs(formFieldNames, formFields));
-	}
-
-	private Object[] toObjs(String[] formFieldNames, List<Field> formFields) {
-		if (formFieldNames == null || formFieldNames.length == 0) return null;
-
-		List<Object> returnVal = new ArrayList<>();
-		for (String fieldName : formFieldNames) {
-			String fieldNameLower = fieldName.trim().toLowerCase();
-			Field fieldWithName = formFields.stream()
-					.filter(itm -> itm.getFieldName() != null && fieldNameLower.equals(itm.getFieldName().toLowerCase()))
-					.findFirst()
-					.orElse(null);
-			if (fieldWithName == null) returnVal.add(UtilGlobal.EMPTY);
-			else
-				returnVal.add(fieldWithName.getFieldValue());
-		}
-		return returnVal.toArray(new Object[]{});
 	}
 
 	private void lockByLoggedInUser(Form form) {

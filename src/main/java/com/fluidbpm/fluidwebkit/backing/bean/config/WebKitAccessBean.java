@@ -463,4 +463,10 @@ public class WebKitAccessBean extends ABaseManagedBean {
 				.findFirst()
 				.isPresent();
 	}
+
+	public String getDisplayFieldNameFrom(String fieldName) {
+		Field fieldByName = this.getFieldBy(fieldName);
+		if (fieldByName == null) return fieldName;
+		return fieldByName.getFieldNameDisplayValue();
+	}
 }

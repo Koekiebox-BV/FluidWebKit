@@ -56,7 +56,7 @@ public abstract class ABaseLoginBean extends ABaseManagedBean {
 		this.getLogger().debug("Login attempt ["+ this.getInputUsername()+":"+
 				UtilGlobal.getConfigURLFromSystemProperty(existingProps)+"]");
 
-		//Lets confirm username and password is set first...
+		//Let's confirm username and password is set first...
 		if (this.getInputUsername() == null ||
 				this.getInputUsername().trim().isEmpty() ||
 				this.getInputPassword() == null || this.getInputPassword().trim().isEmpty()){
@@ -116,7 +116,7 @@ public abstract class ABaseLoginBean extends ABaseManagedBean {
 
 			this.getLogger().debug("Retrieving user field listing.");
 			try {
-				UserFieldListing fieldListing = fcDSConfig.getUserClient().getAllUserFieldValuesByUser(loggedInUserInfo);
+				UserFieldListing fieldListing = fcDSConfig.getUserClient().getAllUserFieldValuesByUser(user);
 				if (!fieldListing.isListingEmpty()) {
 					user.setUserFields(fieldListing.getListing());
 				}

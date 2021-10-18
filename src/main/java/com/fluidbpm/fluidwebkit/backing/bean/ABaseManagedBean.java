@@ -466,19 +466,16 @@ public abstract class ABaseManagedBean implements Serializable {
 		if (roles == null || roles.isEmpty()) return false;
 
 		Map<String, Boolean> accessMap = new HashMap<>();
-		for (String param : permissionParam) {
-			accessMap.put(param, Boolean.FALSE);
-		}
+		for (String param : permissionParam) accessMap.put(param, Boolean.FALSE);
 
 		for (Role role : roles) {
 			if (role.getAdminPermissions() == null) {
+				//TODO lookup here...
 				continue;
 			}
 
 			for (String param : permissionParam) {
-				if (role.getAdminPermissions().contains(param)) {
-					accessMap.put(param, Boolean.TRUE);
-				}
+				if (role.getAdminPermissions().contains(param)) accessMap.put(param, Boolean.TRUE);
 			}
 		}
 
