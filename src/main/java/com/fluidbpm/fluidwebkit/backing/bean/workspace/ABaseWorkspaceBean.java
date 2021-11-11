@@ -333,7 +333,7 @@ public abstract class ABaseWorkspaceBean<T extends ABaseWebVO, J extends ABaseCo
 				CompletableFuture toAdd = CompletableFuture.runAsync(() -> {
 					FluidItemListing listOfItems = null;
 					try {
-						int fetchLimit = (jobViewWK.getFetchLimit() == null) ? 100 : jobViewWK.getFetchLimit();
+						int fetchLimit = (jobViewWK.getFetchLimit() == null) ? 300 : jobViewWK.getFetchLimit();
 
 						listOfItems = flowItemClient.getFluidItemsForView(
 								jobViewWK.getJobView(),

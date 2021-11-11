@@ -29,6 +29,7 @@ import com.fluidbpm.program.api.vo.form.Form;
 import com.fluidbpm.program.api.vo.role.Role;
 import com.fluidbpm.program.api.vo.thirdpartylib.ThirdPartyLibraryTaskIdentifier;
 import com.fluidbpm.program.api.vo.user.User;
+import com.fluidbpm.ws.client.v1.role.RoleClient;
 import com.fluidbpm.ws.client.v1.user.LoginClient;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -468,10 +469,13 @@ public abstract class ABaseManagedBean implements Serializable {
 		Map<String, Boolean> accessMap = new HashMap<>();
 		for (String param : permissionParam) accessMap.put(param, Boolean.FALSE);
 
+		List<Role> updatedRolesForReCache = new ArrayList<>();
 		for (Role role : roles) {
 			if (role.getAdminPermissions() == null) {
-				//TODO lookup here...
-				continue;
+				RoleClient roleClient = this.getFluidClientDSConfig().getRoleClient();
+				Role roleById = roleClient.getRoleByName(role.getName());
+				role.setAdminPermissions(roleById.getAdminPermissions());
+				updatedRolesForReCache.add(roleById);
 			}
 
 			for (String param : permissionParam) {
@@ -486,6 +490,14 @@ public abstract class ABaseManagedBean implements Serializable {
 				return;
 			}
 		});
+
+		if (!updatedRolesForReCache.isEmpty()) {
+			FacesContext facCont = FacesContext.getCurrentInstance();
+			ExternalContext externalContext = facCont.getExternalContext();
+			Map<String, Object> sessionMap = externalContext.getSessionMap();
+			loggedInUser.setRoles(updatedRolesForReCache);
+			sessionMap.put(SessionVariable.USER, loggedInUser);
+		}
 
 		return returnVal.get();
 	}

@@ -22,7 +22,6 @@ import com.google.common.cache.RemovalNotification;
 /**
  * SQL util event when removing an entry from the cache util.
  *
- * @author jasonbruwer on 6/25/17.
  * @since 1.1
  */
 public class ExitEventForFluidAPI implements RemovalListener {

@@ -173,23 +173,23 @@ public class ContentViewJV extends ABaseContentView {
 				true,
 				false));
 
-		//Index - 02 - Title
-		returnVal.add(new ABaseManagedBean.ColumnModel(
-				SystemField.TITLE,
-				SystemField.TITLE,
-				Field.Type.Text,
-				META_DATA_PLAIN,
-				this.wkSub.isShowColumnTitle(),
-				true,
-				true));
-
-		//Index - 03 - ID
+		//Index - 02 - ID
 		returnVal.add(new ABaseManagedBean.ColumnModel(
 				SystemField.ID,
 				SystemField.ID,
 				Field.Type.Text,
 				META_DATA_PLAIN,
 				this.wkSub.isShowColumnID(),
+				true,
+				true));
+
+		//Index - 03 - Title
+		returnVal.add(new ABaseManagedBean.ColumnModel(
+				SystemField.TITLE,
+				SystemField.TITLE,
+				Field.Type.Text,
+				META_DATA_PLAIN,
+				this.wkSub.isShowColumnTitle(),
 				true,
 				true));
 

@@ -46,6 +46,7 @@ public class WebKitOpenFormFieldHistoryConversationBean extends ABaseManagedBean
 
 	private static final String EMPTY_FLAG = "-";
 	private static final boolean IGNORE_FIELDS_WHERE_VAL_SAME = true;
+	private static final boolean IGNORE_TABLE_LABEL = true;
 
 	@EqualsAndHashCode
 	@Data
@@ -127,7 +128,7 @@ public class WebKitOpenFormFieldHistoryConversationBean extends ABaseManagedBean
 			String toString = returnVal.toString();
 			if (toString.isEmpty()) return String.format("%s millis", takenInMillis);
 
-			return toString.substring(1, toString.length() - 2);
+			return toString.substring(0, toString.length() - 2);
 		}
 
 		public boolean isValueOfTypeSignature() {
@@ -149,6 +150,32 @@ public class WebKitOpenFormFieldHistoryConversationBean extends ABaseManagedBean
 			}
 
 			return false;
+		}
+
+		public boolean isValueOfTypeTextDisplay() {
+			if (this.field == null) return false;
+			if (UtilGlobal.isBlank(this.field.getFieldValueAsString())) return false;
+
+			switch (this.field.getTypeAsEnum()) {
+				case Text:
+				case ParagraphText:
+				case TextEncrypted:
+				case Decimal:
+				case Label:
+				case MultipleChoice:
+				case Table:
+				case TrueFalse:
+					return true;
+				default:
+					return false;
+			}
+		}
+
+		public boolean isValueOfTypeTextDateTime() {
+			if (this.field == null) return false;
+			if (UtilGlobal.isBlank(this.field.getFieldValueAsString())) return false;
+
+			return (this.field.getTypeAsEnum() == Field.Type.DateTime);
 		}
 	}
 
@@ -197,7 +224,7 @@ public class WebKitOpenFormFieldHistoryConversationBean extends ABaseManagedBean
 
 				String user = dateAndUserMapping.get(timestamp);
 				List<Field> fields = dateAndFieldValuesMapping.get(timestamp);
-				this.filterOnlyFieldsWhereUserHasAccess(fields);
+				this.removeFieldsWhereUserHasAccess(fields);
 
 				WebKitFormFieldHistory toAdd = new WebKitFormFieldHistory(user, new Date(timestamp), fields);
 				toAdd.setPriorFields(this.obtainPriorFields(
@@ -209,7 +236,8 @@ public class WebKitOpenFormFieldHistoryConversationBean extends ABaseManagedBean
 				);
 
 				if (IGNORE_FIELDS_WHERE_VAL_SAME) this.removeFieldsWhereValuesMatch(toAdd);
-				
+				if (IGNORE_TABLE_LABEL) this.removeUnwantedFieldTypes(toAdd);
+
 				this.formFieldHistories.add(toAdd);
 			}
 
@@ -223,7 +251,7 @@ public class WebKitOpenFormFieldHistoryConversationBean extends ABaseManagedBean
 		}
 	}
 
-	private void filterOnlyFieldsWhereUserHasAccess(List<Field> fields) {
+	private void removeFieldsWhereUserHasAccess(List<Field> fields) {
 		if (fields == null || fields.isEmpty()) return;
 
 		List<Field> fieldsUserCanView = this.accessBean.getFieldsViewableForFormDef(this.historyForm.getFormType());
@@ -250,6 +278,21 @@ public class WebKitOpenFormFieldHistoryConversationBean extends ABaseManagedBean
 			if (priorField == null) return;
 
 			if (field.valueEquals(priorField)) history.getFields().remove(field);
+		});
+	}
+
+	private void removeUnwantedFieldTypes(WebKitFormFieldHistory history) {
+		if (history.getFields() == null || history.getPriorFields() == null) return;
+
+		List<Field> fieldListingNew = new ArrayList<>(history.getFields());
+		fieldListingNew.forEach(field -> {
+			if (field.getTypeAsEnum() != null) {
+				switch (field.getTypeAsEnum()) {
+					case Table:
+					case Label:
+						history.getFields().remove(field);
+				}
+			}
 		});
 	}
 
@@ -327,5 +370,10 @@ public class WebKitOpenFormFieldHistoryConversationBean extends ABaseManagedBean
 			Object data = event.getData();
 		}
 	}
-	
+
+	public int getFormFieldHistoriesFlatSize() {
+		if (this.getFormFieldHistoriesFlat() == null) return 0;
+
+		return this.getFormFieldHistoriesFlat().size();
+	}
 }

@@ -20,6 +20,7 @@ import com.fluidbpm.program.api.util.cache.exception.FluidCacheException;
 import com.fluidbpm.ws.client.v1.ABaseClientWS;
 import com.fluidbpm.ws.client.v1.attachment.AttachmentClient;
 import com.fluidbpm.ws.client.v1.config.ConfigurationClient;
+import com.fluidbpm.ws.client.v1.config.GlobalFieldClient;
 import com.fluidbpm.ws.client.v1.flow.FlowClient;
 import com.fluidbpm.ws.client.v1.flow.FlowStepClient;
 import com.fluidbpm.ws.client.v1.flow.RouteFieldClient;
@@ -30,6 +31,7 @@ import com.fluidbpm.ws.client.v1.form.FormFieldClient;
 import com.fluidbpm.ws.client.v1.payment.PaymentClient;
 import com.fluidbpm.ws.client.v1.report.ReportSystemClient;
 import com.fluidbpm.ws.client.v1.report.ReportUserClient;
+import com.fluidbpm.ws.client.v1.role.RoleClient;
 import com.fluidbpm.ws.client.v1.sqlutil.wrapper.SQLUtilWebSocketRESTWrapper;
 import com.fluidbpm.ws.client.v1.user.PersonalInventoryClient;
 import com.fluidbpm.ws.client.v1.user.UserClient;
@@ -76,6 +78,10 @@ public class FluidClientDS implements Closeable {
 		return this.getClientFor(FlowItemClient.class);
 	}
 
+	public RoleClient getRoleClient() {
+		return this.getClientFor(RoleClient.class);
+	}
+
 	public PaymentClient getPaymentClient() {
 		return this.getClientFor(PaymentClient.class);
 	}
@@ -118,6 +124,10 @@ public class FluidClientDS implements Closeable {
 
 	public FormContainerClient getFormContainerClient() {
 		return this.getClientFor(FormContainerClient.class);
+	}
+
+	public GlobalFieldClient getGlobalFieldClient() {
+		return this.getClientFor(GlobalFieldClient.class);
 	}
 
 	public ConfigurationClient getConfigurationClient() {
@@ -183,6 +193,10 @@ public class FluidClientDS implements Closeable {
 			return new FlowStepClient(this.endpoint, this.serviceTicket);
 		} else if (clazz.isAssignableFrom(FlowItemClient.class)) {
 			return new FlowItemClient(this.endpoint, this.serviceTicket);
+		} else if (clazz.isAssignableFrom(GlobalFieldClient.class)) {
+			return new GlobalFieldClient(this.endpoint, this.serviceTicket);
+		} else if (clazz.isAssignableFrom(RoleClient.class)) {
+			return new RoleClient(this.endpoint, this.serviceTicket);
 		} else if (clazz.isAssignableFrom(PaymentClient.class)) {
 			return new PaymentClient(this.endpoint, this.serviceTicket);
 		} else if (clazz.isAssignableFrom(SQLUtilWebSocketRESTWrapper.class)) {

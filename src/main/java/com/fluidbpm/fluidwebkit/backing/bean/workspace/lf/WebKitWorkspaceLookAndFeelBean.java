@@ -736,10 +736,12 @@ public class WebKitWorkspaceLookAndFeelBean extends ABaseManagedBean {
 								this.inputSubToRouteFieldMapping.get(key).getDataListing().stream()
 										.filter(itm -> itm.isSelected())
 										.collect(Collectors.toList()));
+
 				subItm.setJobViews(
-						this.inputSubToViewMapping.get(key).getDataListing().stream()
-								.filter(itm -> itm.isSelected())
-								.collect(Collectors.toList()));
+						this.inputSubToViewMapping.get(key) == null ? new ArrayList<>() :
+								this.inputSubToViewMapping.get(key).getDataListing().stream()
+										.filter(itm -> itm.isSelected())
+										.collect(Collectors.toList()));
 			});
 		}
 	}

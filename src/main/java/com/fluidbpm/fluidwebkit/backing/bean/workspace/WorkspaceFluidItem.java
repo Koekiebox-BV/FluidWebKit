@@ -212,6 +212,8 @@ public class WorkspaceFluidItem extends ABaseFluidVO {
 	) {
 		if (this.webKitForm == null) return allAvailableMultiChoices;
 
+		if (allAvailableMultiChoices == null) return allAvailableMultiChoices;
+
 		List<String> multiChoicesMarkedForFilter = this.webKitForm.getUserToFormFieldLimitOnMultiChoice();
 		if (multiChoicesMarkedForFilter == null || multiChoicesMarkedForFilter.isEmpty()) return allAvailableMultiChoices;
 
