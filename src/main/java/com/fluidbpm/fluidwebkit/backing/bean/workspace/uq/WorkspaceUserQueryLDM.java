@@ -9,7 +9,7 @@ import com.fluidbpm.program.api.vo.userquery.UserQuery;
 import com.fluidbpm.program.api.vo.webkit.userquery.WebKitUserQuery;
 import com.fluidbpm.ws.client.v1.userquery.UserQueryClient;
 import org.primefaces.model.FilterMeta;
-import org.primefaces.model.SortOrder;
+import org.primefaces.model.SortMeta;
 
 import javax.faces.application.FacesMessage;
 import javax.faces.context.FacesContext;
@@ -40,8 +40,7 @@ public class WorkspaceUserQueryLDM extends ABaseLDM<WorkspaceFluidItem> {
 	public List<WorkspaceFluidItem> load(
 		int first,
 		int pageSize,
-		String sortField,
-		SortOrder sortOrder,
+		Map<String, SortMeta> sortMeta,
 		Map<String, FilterMeta> filters
 	) {
 		long now = System.currentTimeMillis();

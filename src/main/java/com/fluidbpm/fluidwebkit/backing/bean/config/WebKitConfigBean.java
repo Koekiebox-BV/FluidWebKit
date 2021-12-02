@@ -62,6 +62,7 @@ public class WebKitConfigBean extends ABaseManagedBean {
 	private String webKitPersonalInventoryJSON;
 	private String googleCloudPlatformAPIKey;
 	private String titleLookupIncludedFormTypes;
+	private String raygunAPIKey;
 
 	private boolean configUserLoginSuccess = false;
 	
@@ -97,6 +98,9 @@ public class WebKitConfigBean extends ABaseManagedBean {
 		public static final String WebKitPersonalInventory = "WebKitPersonalInventory";
 		public static final String GoogleAPIKey = "GoogleAPIKey";
 		public static final String TitleLookupIncludedFormTypes = "TitleLookupIncludedFormTypes";
+
+		//RayGun API Key
+		public static final String RaygunAPIKey = "Raygun_APIKey";
 	}
 
 	@PostConstruct
@@ -178,6 +182,8 @@ public class WebKitConfigBean extends ABaseManagedBean {
 						this.setGoogleCloudPlatformAPIKey(configuration.getValue());
 					} else if (ConfigKey.TitleLookupIncludedFormTypes.equals(configName)) {
 						this.setTitleLookupIncludedFormTypes(configuration.getValue());
+					} else if (ConfigKey.RaygunAPIKey.equals(configName)) {
+						this.setRaygunAPIKey(configuration.getValue());
 					}
 				}
 		);
@@ -283,5 +289,13 @@ public class WebKitConfigBean extends ABaseManagedBean {
 		if (UtilGlobal.isBlank(this.titleLookupIncludedFormTypes)) return false;
 
 		return "[none]".equals(this.titleLookupIncludedFormTypes.trim().toLowerCase());
+	}
+
+	public boolean isRaygunEnabled() {
+		return UtilGlobal.isNotBlank(this.raygunAPIKey);
+	}
+
+	public String getRaygunAPIKey() {
+		return this.raygunAPIKey;
 	}
 }

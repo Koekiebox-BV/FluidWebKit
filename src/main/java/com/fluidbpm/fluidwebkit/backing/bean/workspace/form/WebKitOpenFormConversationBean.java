@@ -7,6 +7,7 @@ import com.fluidbpm.fluidwebkit.backing.bean.workspace.WorkspaceFluidItem;
 import com.fluidbpm.fluidwebkit.backing.bean.workspace.field.WebKitField;
 import com.fluidbpm.fluidwebkit.backing.bean.workspace.lf.WebKitWorkspaceLookAndFeelBean;
 import com.fluidbpm.fluidwebkit.backing.bean.workspace.pi.PersonalInventoryItemVO;
+import com.fluidbpm.fluidwebkit.backing.utility.WebUtil;
 import com.fluidbpm.fluidwebkit.backing.utility.field.FieldMappingUtil;
 import com.fluidbpm.fluidwebkit.exception.ClientDashboardException;
 import com.fluidbpm.fluidwebkit.exception.MandatoryFieldsException;
@@ -494,11 +495,10 @@ public class WebKitOpenFormConversationBean extends ABaseManagedBean {
 				this.inputIncludeProperties
 			);
 
-			return DefaultStreamedContent.builder()
-					.name(pdfPrint.getName())
-					.contentType(pdfPrint.getContentType())
-					.stream(() -> new ByteArrayInputStream(pdfPrint.getAttachmentDataRAW()))
-					.build();
+			return WebUtil.pfStreamContentFrom(
+					new ByteArrayInputStream(pdfPrint.getAttachmentDataRAW()),
+					"image/svg+xml",
+					pdfPrint.getName());
 		} catch (Exception except) {
 			this.raiseError(except);
 			return null;

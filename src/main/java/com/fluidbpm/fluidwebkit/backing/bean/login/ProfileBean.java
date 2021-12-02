@@ -18,6 +18,7 @@ package com.fluidbpm.fluidwebkit.backing.bean.login;
 import com.fluidbpm.fluidwebkit.backing.bean.ABaseManagedBean;
 import com.fluidbpm.fluidwebkit.backing.utility.DateTimeUtil;
 import com.fluidbpm.fluidwebkit.backing.utility.TimeZoneUtil;
+import com.fluidbpm.fluidwebkit.backing.utility.WebUtil;
 import com.fluidbpm.program.api.vo.field.Field;
 import com.fluidbpm.program.api.vo.user.User;
 import com.fluidbpm.program.api.vo.user.UserFieldListing;
@@ -143,11 +144,11 @@ public class ProfileBean extends ABaseManagedBean {
 			InputStream inputStream = getClass().getClassLoader().getResourceAsStream(path);
 			if (inputStream == null) throw new IOException("Unable to find '"+ path+"'.");
 
-			return DefaultStreamedContent.builder()
-					.stream(() -> inputStream)
-					.name(String.format("no_profile_logo_%s.svg", UUID.randomUUID().toString()))
-					.contentType("image/svg+xml")
-					.build();
+			return WebUtil.pfStreamContentFrom(
+					inputStream,
+					"image/svg+xml",
+					String.format("no_profile_logo_%s.svg", UUID.randomUUID().toString())
+			);
 		} catch (IOException ioExcept) {
 			this.raiseError(ioExcept);
 			return null;

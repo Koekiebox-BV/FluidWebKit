@@ -5,7 +5,7 @@ import lombok.Getter;
 import lombok.Setter;
 import org.primefaces.model.FilterMeta;
 import org.primefaces.model.LazyDataModel;
-import org.primefaces.model.SortOrder;
+import org.primefaces.model.SortMeta;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -42,8 +42,9 @@ public abstract class ABaseLDM<T extends ABaseFluidVO> extends LazyDataModel<T> 
 	}
 
 	@Override
-	public Object getRowKey(T object) {
-		return object.getId();
+	public String getRowKey(T object) {
+		if (object.getId() == null) return null;
+		return object.getId().toString();
 	}
 
 	public void addToInitialListing(List<T> listingToAdd) {
@@ -65,8 +66,7 @@ public abstract class ABaseLDM<T extends ABaseFluidVO> extends LazyDataModel<T> 
 	public List<T> load(
 		int first,
 		int pageSize,
-		String sortField,
-		SortOrder sortOrder,
+		Map<String, SortMeta> sortMeta,
 		Map<String, FilterMeta> filters
 	) {
 		this.setRowCount(0);
