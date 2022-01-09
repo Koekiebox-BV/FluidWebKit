@@ -16,6 +16,7 @@
 package com.fluidbpm.fluidwebkit.servlet.content;
 
 import com.fluidbpm.fluidwebkit.backing.utility.WebUtil;
+import lombok.Getter;
 import org.primefaces.model.DefaultStreamedContent;
 
 import java.io.ByteArrayInputStream;
@@ -28,8 +29,10 @@ import java.io.ByteArrayInputStream;
  */
 public class ImageStreamedContent extends DefaultStreamedContent {
 	private byte[] imageBytes = null;
-	private String contentType = null;
-	private String name = null;
+	@Getter
+	private String contentTypeLocal = null;
+	@Getter
+	private String nameLocal = null;
 
 	public ImageStreamedContent(
 		byte[] imageBytes,
@@ -38,15 +41,19 @@ public class ImageStreamedContent extends DefaultStreamedContent {
 	) {
 		super();
 		this.imageBytes = imageBytes;
-		this.contentType = contentType;
-		this.name = name;
+		this.contentTypeLocal = contentType;
+		this.nameLocal = name;
 	}
 	
 	public DefaultStreamedContent cloneAsDefaultStreamedContent() {
+		String contentType = this.getContentType();
+		if (contentType == null) contentType = this.getContentTypeLocal();
+
+		String name = this.getName();
+		if (name == null) name = this.getNameLocal();
+		
 		return WebUtil.pfStreamContentFrom(
-			new ByteArrayInputStream(this.imageBytes),
-			this.getContentType(),
-			this.getName()
+			new ByteArrayInputStream(this.imageBytes), contentType, name
 		);
 	}
 }

@@ -35,6 +35,7 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.URL;
+import java.net.URLConnection;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -225,15 +226,20 @@ public class WebKitConfigBean extends ABaseManagedBean {
 	}
 	
 	private boolean performCallToSeeIfGoogleReachable() {
-		HttpsURLConnection con = null;
+		URLConnection con = null;
 		try {
 			URL url = new URL(GOOGLE_MAPS_API_SERVER);
-			con = (HttpsURLConnection)url.openConnection();
+			con = url.openConnection();
+			if (con instanceof HttpsURLConnection) {
+				HttpsURLConnection casted = (HttpsURLConnection)con;
+				casted.setRequestMethod("GET");
+			} else {
+				System.err.printf("Connection is of type [%s]\n. Please confirm supported.", con.getClass().getName());
+			}
 
 			int timeout = (int) TimeUnit.SECONDS.toMillis(5);
 			con.setConnectTimeout(timeout);
 			con.setReadTimeout(timeout);
-			con.setRequestMethod("GET");
 			con.setRequestProperty("User-Agent","FluidWebKit Connect Tester");
 			con.connect();
 			return true;
@@ -242,7 +248,10 @@ public class WebKitConfigBean extends ABaseManagedBean {
 			System.err.println("Error Checking connection (Unavailable). Link is ["+ GOOGLE_MAPS_API_SERVER+"]. "+except.getMessage());
 			return false;
 		} finally {
-			if (con != null) con.disconnect();
+			if (con != null && con instanceof HttpsURLConnection) {
+				HttpsURLConnection casted = (HttpsURLConnection)con;
+				casted.disconnect();
+			}
 		}
 	}
 
