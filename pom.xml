@@ -74,8 +74,8 @@
 		<dependency>
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
-			<scope>test</scope>
 			<version>4.13.1</version>
+			<scope>test</scope>
 		</dependency>
 
 		<!--Fluid API Dependencies-->
@@ -116,7 +116,7 @@
 			<groupId>com.opencsv</groupId>
 			<artifactId>opencsv</artifactId>
 			<version>4.1</version>
-			<scope>compile</scope>
+			<scope>provided</scope>
 		</dependency>
 
 		<!--POI for Word exports-->
@@ -125,28 +125,28 @@
 			<groupId>org.apache.poi</groupId>
 			<artifactId>poi</artifactId>
 			<version>3.17</version>
-			<scope>compile</scope>
+			<scope>provided</scope>
 		</dependency>
 
 		<dependency>
 			<groupId>org.apache.poi</groupId>
 			<artifactId>poi-ooxml</artifactId>
 			<version>3.17</version>
-			<scope>compile</scope>
+			<scope>provided</scope>
 		</dependency>
 
 		<dependency>
 			<groupId>org.apache.poi</groupId>
 			<artifactId>poi-ooxml-schemas</artifactId>
 			<version>3.17</version>
-			<scope>compile</scope>
+			<scope>provided</scope>
 		</dependency>
 
 		<dependency>
 			<groupId>org.apache.poi</groupId>
 			<artifactId>poi-scratchpad</artifactId>
 			<version>3.17</version>
-			<scope>compile</scope>
+			<scope>provided</scope>
 		</dependency>
 
 		<!--Google Guava - https://mvnrepository.com/artifact/com.google.guava/guava -->

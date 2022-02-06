@@ -27,7 +27,7 @@ import org.primefaces.model.DefaultStreamedContent;
 import org.primefaces.model.StreamedContent;
 
 import javax.annotation.PostConstruct;
-import javax.enterprise.context.ApplicationScoped;
+import javax.enterprise.context.SessionScoped;
 import javax.inject.Named;
 import javax.net.ssl.HttpsURLConnection;
 import java.io.File;
@@ -45,7 +45,7 @@ import java.util.concurrent.TimeUnit;
 /**
  * Bean to take care of the config login.
  */
-@ApplicationScoped
+@SessionScoped
 @Named("webKitConfigBean")
 @Getter
 @Setter

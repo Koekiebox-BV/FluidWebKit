@@ -950,4 +950,13 @@ public class WebKitWorkspaceLookAndFeelBean extends ABaseManagedBean {
 		Collections.sort(listing);
 		return listing;
 	}
+
+	public String trimFormDescription(String originalDesc, int max) {
+		if (UtilGlobal.isBlank(originalDesc)) return originalDesc;
+		if (originalDesc.length() > max) {
+			return String.format("%s " +
+					"...", originalDesc.substring(0, max));
+		}
+		return originalDesc;
+	}
 }

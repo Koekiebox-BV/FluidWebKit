@@ -26,6 +26,7 @@ import com.fluidbpm.program.api.vo.item.FluidItem;
 import com.fluidbpm.program.api.vo.payment.PaymentLinkAdyen;
 import com.fluidbpm.program.api.vo.user.User;
 import com.fluidbpm.program.api.vo.webkit.form.WebKitForm;
+import com.fluidbpm.ws.client.FluidClientException;
 import com.fluidbpm.ws.client.v1.flowitem.FlowItemClient;
 import com.fluidbpm.ws.client.v1.form.FormContainerClient;
 import com.fluidbpm.ws.client.v1.payment.PaymentClient;
@@ -237,7 +238,13 @@ public class WebKitOpenFormConversationBean extends ABaseManagedBean {
 			FluidItem fluidItem = new FluidItem();
 			if (wfiParam.isFluidItemInWIPState()) {
 				FlowItemClient flowItemClient = this.getFluidClientDS().getFlowItemClient();
-				fluidItem = flowItemClient.getFluidItemByFormId(wfiParam.getFluidItemFormId());
+				try {
+					fluidItem = flowItemClient.getFluidItemByFormId(wfiParam.getFluidItemFormId());
+				} catch (FluidClientException fce) {
+					if (FluidClientException.ErrorCode.NO_RESULT != fce.getErrorCode()) {
+						throw fce;
+					}
+				}
 			}
 
 			boolean tableFormsEnabled = webKitForm.isAnyTableFormsEnabled();
@@ -362,6 +369,8 @@ public class WebKitOpenFormConversationBean extends ABaseManagedBean {
 
 	private void buildContextMenuForConversation() {
 		this.contextMenuModel = new DefaultMenuModel();
+
+		if (this.getWsFluidItem() == null) return;
 
 		Separator sep = new DefaultSeparator();
 		//Save Button...
