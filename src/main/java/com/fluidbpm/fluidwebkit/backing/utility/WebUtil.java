@@ -15,16 +15,18 @@
 
 package com.fluidbpm.fluidwebkit.backing.utility;
 
+import org.primefaces.model.DefaultStreamedContent;
+
 import javax.faces.context.ExternalContext;
 import javax.faces.context.FacesContext;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
+import java.io.InputStream;
 
 /**
  * Created by jasonbruwer on 2015/11/08.
  */
 public class WebUtil {
-
 	public static final String HTTPS = "https";
 
 	// Converts a relative path into a full path
@@ -94,7 +96,6 @@ public class WebUtil {
 	 * @see HttpSession
 	 */
 	public HttpSession getExistingHttpSession() {
-
 		FacesContext facCont = FacesContext.getCurrentInstance();
 		ExternalContext externalContext = (facCont == null) ? null : facCont.getExternalContext();
 		Object sessObj = (externalContext == null) ? null :externalContext.getSession(false);
@@ -105,5 +106,17 @@ public class WebUtil {
 		}
 
 		return null;
+	}
+
+	public static DefaultStreamedContent pfStreamContentFrom(
+		InputStream is,
+		String contentType,
+		String name
+	) {
+		return DefaultStreamedContent.builder()
+				.stream(() -> is)
+				.contentType(contentType)
+				.name(name)
+				.build();
 	}
 }

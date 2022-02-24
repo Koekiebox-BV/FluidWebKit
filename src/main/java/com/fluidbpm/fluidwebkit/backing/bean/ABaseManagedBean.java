@@ -95,9 +95,11 @@ public abstract class ABaseManagedBean implements Serializable {
 		if (RaygunUtil.isRaygunEnabled()) {
 			new RaygunUtil(this.getRaygunUITag()).raiseErrorToRaygun(exception, this.getLoggedInUserSafe());
 		}
+
 		if (FacesContext.getCurrentInstance() == null) return;
 
-		FacesMessage fMsg = new FacesMessage(FacesMessage.SEVERITY_ERROR, "Failed.", exception.getMessage());
+		FacesMessage fMsg = new FacesMessage(FacesMessage.SEVERITY_ERROR,
+				"Failed.", "Please contact administrator.");
 		FacesContext.getCurrentInstance().addMessage(null, fMsg);
 	}
 
@@ -107,9 +109,7 @@ public abstract class ABaseManagedBean implements Serializable {
 		HttpServletResponse httpServletResponse
 	) {
 		this.getLogger().error(exception.getMessage(), exception);
-		if (!RaygunUtil.isRaygunEnabled()) {
-			return;
-		}
+		if (!RaygunUtil.isRaygunEnabled()) return;
 
 		new RaygunUtil(this.getRaygunUITag()).raiseErrorToRaygun(
 				exception,

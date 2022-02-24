@@ -19,6 +19,7 @@ import com.fluidbpm.fluidwebkit.backing.bean.ABaseManagedBean;
 import com.fluidbpm.fluidwebkit.backing.bean.attachment.sheet.FluidWorkspaceUtil;
 import com.fluidbpm.fluidwebkit.backing.bean.attachment.sheet.Worksheet;
 import com.fluidbpm.fluidwebkit.backing.bean.workspace.WorkspaceFluidItem;
+import com.fluidbpm.fluidwebkit.backing.utility.WebUtil;
 import com.fluidbpm.fluidwebkit.qualifier.cache.FormAttachmentsCache;
 import com.fluidbpm.fluidwebkit.qualifier.cache.FormImageCache;
 import com.fluidbpm.fluidwebkit.qualifier.cache.RAWAttachmentsCache;
@@ -255,16 +256,11 @@ public class WebKitAttachmentBean extends ABaseManagedBean {
 					attachment.getId(), true);
 			byte[] rawData = BaseEncoding.base64().decode(attForData.getAttachmentDataBase64());
 
-			return new DefaultStreamedContent(
-					new ByteArrayInputStream(rawData),
-					attachment.getContentType(),
-					attachment.getName());
-			    /*
-			return DefaultStreamedContent.builder()
-					.name(attachment.getName())
-					.contentEncoding(attachment.getContentType())
-					.stream(() -> new ByteArrayInputStream(rawData))
-					.build();       */
+			return WebUtil.pfStreamContentFrom(
+				new ByteArrayInputStream(rawData),
+				attachment.getContentType(),
+				attachment.getName()
+			);
 		}
 	}
 

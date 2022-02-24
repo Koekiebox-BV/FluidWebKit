@@ -7,6 +7,7 @@ import com.fluidbpm.fluidwebkit.backing.bean.workspace.WorkspaceFluidItem;
 import com.fluidbpm.fluidwebkit.backing.bean.workspace.field.WebKitField;
 import com.fluidbpm.fluidwebkit.backing.bean.workspace.lf.WebKitWorkspaceLookAndFeelBean;
 import com.fluidbpm.fluidwebkit.backing.bean.workspace.pi.PersonalInventoryItemVO;
+import com.fluidbpm.fluidwebkit.backing.utility.WebUtil;
 import com.fluidbpm.fluidwebkit.backing.utility.field.FieldMappingUtil;
 import com.fluidbpm.fluidwebkit.exception.ClientDashboardException;
 import com.fluidbpm.fluidwebkit.exception.MandatoryFieldsException;
@@ -25,6 +26,7 @@ import com.fluidbpm.program.api.vo.item.FluidItem;
 import com.fluidbpm.program.api.vo.payment.PaymentLinkAdyen;
 import com.fluidbpm.program.api.vo.user.User;
 import com.fluidbpm.program.api.vo.webkit.form.WebKitForm;
+import com.fluidbpm.ws.client.FluidClientException;
 import com.fluidbpm.ws.client.v1.flowitem.FlowItemClient;
 import com.fluidbpm.ws.client.v1.form.FormContainerClient;
 import com.fluidbpm.ws.client.v1.payment.PaymentClient;
@@ -236,7 +238,13 @@ public class WebKitOpenFormConversationBean extends ABaseManagedBean {
 			FluidItem fluidItem = new FluidItem();
 			if (wfiParam.isFluidItemInWIPState()) {
 				FlowItemClient flowItemClient = this.getFluidClientDS().getFlowItemClient();
-				fluidItem = flowItemClient.getFluidItemByFormId(wfiParam.getFluidItemFormId());
+				try {
+					fluidItem = flowItemClient.getFluidItemByFormId(wfiParam.getFluidItemFormId());
+				} catch (FluidClientException fce) {
+					if (FluidClientException.ErrorCode.NO_RESULT != fce.getErrorCode()) {
+						throw fce;
+					}
+				}
 			}
 
 			boolean tableFormsEnabled = webKitForm.isAnyTableFormsEnabled();
@@ -361,6 +369,8 @@ public class WebKitOpenFormConversationBean extends ABaseManagedBean {
 
 	private void buildContextMenuForConversation() {
 		this.contextMenuModel = new DefaultMenuModel();
+
+		if (this.getWsFluidItem() == null) return;
 
 		Separator sep = new DefaultSeparator();
 		//Save Button...
@@ -494,11 +504,10 @@ public class WebKitOpenFormConversationBean extends ABaseManagedBean {
 				this.inputIncludeProperties
 			);
 
-			return DefaultStreamedContent.builder()
-					.name(pdfPrint.getName())
-					.contentType(pdfPrint.getContentType())
-					.stream(() -> new ByteArrayInputStream(pdfPrint.getAttachmentDataRAW()))
-					.build();
+			return WebUtil.pfStreamContentFrom(
+					new ByteArrayInputStream(pdfPrint.getAttachmentDataRAW()),
+					"image/svg+xml",
+					pdfPrint.getName());
 		} catch (Exception except) {
 			this.raiseError(except);
 			return null;
@@ -802,11 +811,12 @@ public class WebKitOpenFormConversationBean extends ABaseManagedBean {
 					if (webKitForm.isSendOnAfterSave() && wsFlItem.isFluidItemInWIPState()) {
 						//Send on in the workflow...
 						fiClient.sendFlowItemOn(wsFlItem.getFluidItem(), true);
-						actionString = String.format("%s and Sent On", actionString);
+						actionString = String.format("%s and placed successfully. Please verify processed results for final status.", actionString);
 					} else if (!wsFlItem.isFluidItemInWIPState() && UtilGlobal.isNotBlank(this.inputSelectedWorkflow)) {
 						//Not in workflow and a workflow route has been selected...
 						fiClient.sendFormToFlow(wsFlItem.getFluidItemForm(), this.inputSelectedWorkflow);
-						actionString = String.format("%s and Sent to '%s'", actionString, this.inputSelectedWorkflow);
+						actionString = String.format("%s and placed on '%s' successfully. Please verify processed results for final status.",
+								actionString, this.inputSelectedWorkflow);
 					} else if (webKitForm.isUnlockFormOnSave()) {
 						//Unlock form on save...
 						fcClient.unLockFormContainer(wsFlItem.getFluidItemForm());

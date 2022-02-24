@@ -27,7 +27,7 @@ import org.primefaces.model.DefaultStreamedContent;
 import org.primefaces.model.StreamedContent;
 
 import javax.annotation.PostConstruct;
-import javax.enterprise.context.ApplicationScoped;
+import javax.enterprise.context.SessionScoped;
 import javax.inject.Named;
 import javax.net.ssl.HttpsURLConnection;
 import java.io.File;
@@ -35,6 +35,7 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.URL;
+import java.net.URLConnection;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -44,7 +45,7 @@ import java.util.concurrent.TimeUnit;
 /**
  * Bean to take care of the config login.
  */
-@ApplicationScoped
+@SessionScoped
 @Named("webKitConfigBean")
 @Getter
 @Setter
@@ -62,6 +63,7 @@ public class WebKitConfigBean extends ABaseManagedBean {
 	private String webKitPersonalInventoryJSON;
 	private String googleCloudPlatformAPIKey;
 	private String titleLookupIncludedFormTypes;
+	private String raygunAPIKey;
 
 	private boolean configUserLoginSuccess = false;
 	
@@ -97,6 +99,9 @@ public class WebKitConfigBean extends ABaseManagedBean {
 		public static final String WebKitPersonalInventory = "WebKitPersonalInventory";
 		public static final String GoogleAPIKey = "GoogleAPIKey";
 		public static final String TitleLookupIncludedFormTypes = "TitleLookupIncludedFormTypes";
+
+		//RayGun API Key
+		public static final String RaygunAPIKey = "Raygun_APIKey";
 	}
 
 	@PostConstruct
@@ -178,6 +183,8 @@ public class WebKitConfigBean extends ABaseManagedBean {
 						this.setGoogleCloudPlatformAPIKey(configuration.getValue());
 					} else if (ConfigKey.TitleLookupIncludedFormTypes.equals(configName)) {
 						this.setTitleLookupIncludedFormTypes(configuration.getValue());
+					} else if (ConfigKey.RaygunAPIKey.equals(configName)) {
+						this.setRaygunAPIKey(configuration.getValue());
 					}
 				}
 		);
@@ -219,15 +226,20 @@ public class WebKitConfigBean extends ABaseManagedBean {
 	}
 	
 	private boolean performCallToSeeIfGoogleReachable() {
-		HttpsURLConnection con = null;
+		URLConnection con = null;
 		try {
 			URL url = new URL(GOOGLE_MAPS_API_SERVER);
-			con = (HttpsURLConnection)url.openConnection();
+			con = url.openConnection();
+			if (con instanceof HttpsURLConnection) {
+				HttpsURLConnection casted = (HttpsURLConnection)con;
+				casted.setRequestMethod("GET");
+			} else {
+				System.err.printf("Connection is of type [%s]\n. Please confirm supported.", con.getClass().getName());
+			}
 
 			int timeout = (int) TimeUnit.SECONDS.toMillis(5);
 			con.setConnectTimeout(timeout);
 			con.setReadTimeout(timeout);
-			con.setRequestMethod("GET");
 			con.setRequestProperty("User-Agent","FluidWebKit Connect Tester");
 			con.connect();
 			return true;
@@ -236,7 +248,10 @@ public class WebKitConfigBean extends ABaseManagedBean {
 			System.err.println("Error Checking connection (Unavailable). Link is ["+ GOOGLE_MAPS_API_SERVER+"]. "+except.getMessage());
 			return false;
 		} finally {
-			if (con != null) con.disconnect();
+			if (con != null && con instanceof HttpsURLConnection) {
+				HttpsURLConnection casted = (HttpsURLConnection)con;
+				casted.disconnect();
+			}
 		}
 	}
 
@@ -283,5 +298,13 @@ public class WebKitConfigBean extends ABaseManagedBean {
 		if (UtilGlobal.isBlank(this.titleLookupIncludedFormTypes)) return false;
 
 		return "[none]".equals(this.titleLookupIncludedFormTypes.trim().toLowerCase());
+	}
+
+	public boolean isRaygunEnabled() {
+		return UtilGlobal.isNotBlank(this.raygunAPIKey);
+	}
+
+	public String getRaygunAPIKey() {
+		return this.raygunAPIKey;
 	}
 }

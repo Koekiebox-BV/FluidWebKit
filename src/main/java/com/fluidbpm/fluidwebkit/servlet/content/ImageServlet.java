@@ -131,14 +131,22 @@ public class ImageServlet extends ABaseFWKServlet {
 	}
 
 	protected void writeImageToResponseOutput(
-		HttpServletResponse respParam,
-		StreamedContent streamedContentParam
+		HttpServletResponse resp,
+		StreamedContent streamedContent
 	) throws IOException {
-		respParam.setHeader("Content-Disposition", String.format("attachment; filename=\"%s\"", streamedContentParam.getName()));
-		respParam.setContentType(streamedContentParam.getContentType());
-		InputStream is = streamedContentParam.getStream();
+		String filename = streamedContent.getName(), contentType = streamedContent.getContentType();
+		InputStream is = streamedContent.getStream();
+		if (is == null && streamedContent instanceof ImageStreamedContent) {
+			ImageStreamedContent casted = (ImageStreamedContent)streamedContent;
+			is = casted.cloneAsDefaultStreamedContent().getStream();
+			if (filename == null) filename = casted.getNameLocal();
+			if (contentType == null) contentType = casted.getContentTypeLocal();
+		}
 
-		OutputStream os = respParam.getOutputStream();
+		resp.setHeader("Content-Disposition", String.format("attachment; filename=\"%s\"", filename));
+		resp.setContentType(contentType);
+
+		OutputStream os = resp.getOutputStream();
 		int readVal = -1;
 		while ((readVal = is.read()) != -1) os.write(readVal);
 

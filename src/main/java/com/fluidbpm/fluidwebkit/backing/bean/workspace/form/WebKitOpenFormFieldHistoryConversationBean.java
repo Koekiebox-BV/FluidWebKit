@@ -188,7 +188,7 @@ public class WebKitOpenFormFieldHistoryConversationBean extends ABaseManagedBean
 		FormContainerClient fcc = this.getFluidClientDS().getFormContainerClient();
 
 		try {
-			this.setFormHistoricData(fcc.getFormAndFieldHistoricData(this.historyForm, false));
+			this.setFormHistoricData(fcc.getFormAndFieldHistoricData(this.historyForm, false, true));
 
 			AtomicLong al = new AtomicLong();
 			this.getFormHistoricData().forEach(historyItem -> {

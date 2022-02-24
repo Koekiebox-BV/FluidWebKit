@@ -255,7 +255,6 @@ public class WorkspaceFluidItem extends ABaseFluidVO {
 	@XmlTransient
 	public void resetFormFieldsEditMandatoryAndEmpty() {
 		if (this.formFieldsEdit == null) return;
-
 		this.formFieldsEdit.forEach(itm -> itm.setMandatoryAndEmpty(false));
 	}
 	
