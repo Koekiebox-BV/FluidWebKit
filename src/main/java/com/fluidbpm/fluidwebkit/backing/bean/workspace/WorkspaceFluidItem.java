@@ -255,8 +255,6 @@ public class WorkspaceFluidItem extends ABaseFluidVO {
 	@XmlTransient
 	public void resetFormFieldsEditMandatoryAndEmpty() {
 		if (this.formFieldsEdit == null) return;
-		                 sdfsd
-								 Do the fix now to cleaar the selected fields for WL
 		this.formFieldsEdit.forEach(itm -> itm.setMandatoryAndEmpty(false));
 	}
 	

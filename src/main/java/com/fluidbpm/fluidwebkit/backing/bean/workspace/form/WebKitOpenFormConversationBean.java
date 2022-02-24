@@ -811,11 +811,12 @@ public class WebKitOpenFormConversationBean extends ABaseManagedBean {
 					if (webKitForm.isSendOnAfterSave() && wsFlItem.isFluidItemInWIPState()) {
 						//Send on in the workflow...
 						fiClient.sendFlowItemOn(wsFlItem.getFluidItem(), true);
-						actionString = String.format("%s and Sent On", actionString);
+						actionString = String.format("%s and placed successfully. Please verify processed results for final status.", actionString);
 					} else if (!wsFlItem.isFluidItemInWIPState() && UtilGlobal.isNotBlank(this.inputSelectedWorkflow)) {
 						//Not in workflow and a workflow route has been selected...
 						fiClient.sendFormToFlow(wsFlItem.getFluidItemForm(), this.inputSelectedWorkflow);
-						actionString = String.format("%s and Sent to '%s'", actionString, this.inputSelectedWorkflow);
+						actionString = String.format("%s and placed on '%s' successfully. Please verify processed results for final status.",
+								actionString, this.inputSelectedWorkflow);
 					} else if (webKitForm.isUnlockFormOnSave()) {
 						//Unlock form on save...
 						fcClient.unLockFormContainer(wsFlItem.getFluidItemForm());
