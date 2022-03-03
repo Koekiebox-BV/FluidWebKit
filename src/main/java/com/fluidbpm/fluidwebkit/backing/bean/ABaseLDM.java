@@ -30,9 +30,7 @@ public abstract class ABaseLDM<T extends ABaseFluidVO> extends LazyDataModel<T> 
 
 	@Override
 	public T getRowData(String rowKey) {
-		if (this.dataListing == null) {
-			return null;
-		}
+		if (this.dataListing == null) return null;
 
 		Long idAsLong = Long.parseLong(rowKey.trim());
 		return this.dataListing.stream()
@@ -44,21 +42,25 @@ public abstract class ABaseLDM<T extends ABaseFluidVO> extends LazyDataModel<T> 
 	@Override
 	public String getRowKey(T object) {
 		if (object.getId() == null) return null;
+
 		return object.getId().toString();
 	}
 
 	public void addToInitialListing(List<T> listingToAdd) {
 		if (listingToAdd == null || listingToAdd.isEmpty()) return;
+
 		this.dataListing.addAll(listingToAdd);
 	}
 
 	public void addToInitialListing(T toAdd) {
 		if (toAdd == null) return;
+
 		this.dataListing.add(toAdd);
 	}
 
 	public void clearInitialListing() {
 		if (dataListing == null) return;
+
 		this.dataListing.clear();
 	}
 

@@ -28,6 +28,7 @@ import org.primefaces.model.StreamedContent;
 
 import javax.annotation.PostConstruct;
 import javax.enterprise.context.SessionScoped;
+import javax.inject.Inject;
 import javax.inject.Named;
 import javax.net.ssl.HttpsURLConnection;
 import java.io.File;
@@ -72,6 +73,9 @@ public class WebKitConfigBean extends ABaseManagedBean {
 
 	private Boolean isGoogleMapsApiReachable = null;
 
+	@Inject
+	private PeriodicUpdateBean periodicUpdateBean;
+
 	public static final String GOOGLE_MAPS_API_SERVER = "https://maps.google.com:443";
 
 	/**
@@ -113,14 +117,23 @@ public class WebKitConfigBean extends ABaseManagedBean {
 			//CONFIGS...
 			ConfigurationClient configClient = this.getFluidClientDSConfig().getConfigurationClient();
 
-			ConfigurationListing configurationListing = configClient.getAllConfigurations();
+			ConfigurationListing configurationListing = this.periodicUpdateBean.getConfigurationListing();
+			if (configurationListing == null || configurationListing.isListingEmpty()) {
+				configurationListing = configClient.getAllConfigurations();
+				this.periodicUpdateBean.setConfigurationListing(configurationListing);
+			}
+
 			//Populate...
 			this.setPropertiesBasedOnListing(configurationListing);
 			this.configUserLoginSuccess = true;
 			
 			//Third Party Libs...
 			try {
-				this.thirdPartyLibTaskIdentifiers = configClient.getAllThirdPartyTaskIdentifiers();
+				this.thirdPartyLibTaskIdentifiers = this.periodicUpdateBean.getThirdPartyLibTaskIdentifiers();
+				if (this.thirdPartyLibTaskIdentifiers == null) {
+					this.thirdPartyLibTaskIdentifiers = configClient.getAllThirdPartyTaskIdentifiers();
+					this.periodicUpdateBean.setThirdPartyLibTaskIdentifiers(this.thirdPartyLibTaskIdentifiers);
+				}
 			} catch (FluidClientException fce) {
 				if (FluidClientException.ErrorCode.NO_RESULT == fce.getErrorCode()) {
 					this.thirdPartyLibTaskIdentifiers = new ArrayList<>();

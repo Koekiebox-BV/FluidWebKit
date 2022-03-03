@@ -17,6 +17,7 @@ package com.fluidbpm.fluidwebkit.backing.bean.workspace.menu;
 
 import com.fluidbpm.fluidwebkit.backing.bean.ABaseManagedBean;
 import com.fluidbpm.fluidwebkit.backing.bean.config.GuestPreferencesBean;
+import com.fluidbpm.fluidwebkit.backing.bean.config.PeriodicUpdateBean;
 import com.fluidbpm.fluidwebkit.backing.bean.config.WebKitAccessBean;
 import com.fluidbpm.fluidwebkit.backing.bean.workspace.lf.WebKitWorkspaceLookAndFeelBean;
 import com.fluidbpm.program.api.util.UtilGlobal;
@@ -28,7 +29,6 @@ import com.fluidbpm.program.api.vo.webkit.userquery.WebKitUserQuery;
 import com.fluidbpm.program.api.vo.webkit.viewgroup.WebKitViewGroup;
 import com.fluidbpm.program.api.vo.webkit.viewgroup.WebKitViewSub;
 import com.fluidbpm.program.api.vo.webkit.viewgroup.WebKitWorkspaceJobView;
-import com.fluidbpm.ws.client.FluidClientException;
 import lombok.Getter;
 import lombok.Setter;
 import org.primefaces.component.menuitem.UIMenuItem;
@@ -64,11 +64,10 @@ public class WebKitMenuBean extends ABaseManagedBean {
 	@Setter
 	private UISubmenu submenuWorkspace;
 
-	@Getter
-	@Setter
-	private List<UISubmenu> submenusUserQuery;
+	@Inject
+	private PeriodicUpdateBean periodicUpdateBean;
 
-	private List<WebKitUserQuery> configWebKitUserQueries;
+	private List<UISubmenu> submenusUserQuery;
 
 	public static final String ICON_DEFAULT_GROUP = "pi pi-list";
 	public static final String ICON_DEFAULT_SUB = "pi pi-table";
@@ -93,7 +92,6 @@ public class WebKitMenuBean extends ABaseManagedBean {
 	public void actionPopulateInit() {
 		if (this.getFluidClientDS() == null) return;
 
-		this.populateWebKitUserQueries();
 		this.buildLeftMenuUserQueries();
 
 		//TODO need to fetch these from listing / config...
@@ -108,18 +106,6 @@ public class WebKitMenuBean extends ABaseManagedBean {
 
 	public String actionOpenMissingConfig() {
 		return "noconfig";
-	}
-
-	private void populateWebKitUserQueries() {
-		this.configWebKitUserQueries = new ArrayList<>();
-		try {
-			this.configWebKitUserQueries =
-					this.getFluidClientDSConfig().getUserQueryClient().getUserQueryWebKit().getListing();
-		} catch (FluidClientException fce) {
-			if (fce.getErrorCode() != FluidClientException.ErrorCode.NO_RESULT) {
-				throw fce;
-			}
-		}
 	}
 
 	private void buildLeftMenuUserQueries() {
@@ -272,7 +258,7 @@ public class WebKitMenuBean extends ABaseManagedBean {
 	}
 
 	private boolean createMenuItem(UISubmenu submenu, WebKitMenuItem menuItmWhereParent) {
-		WebKitUserQuery wkUserQryByMenu = this.configWebKitUserQueries.stream()
+		WebKitUserQuery wkUserQryByMenu = this.periodicUpdateBean.getConfigWebKitUserQueries().stream()
 				.filter(itm -> menuItmWhereParent.getId() != null &&
 						menuItmWhereParent.getId().equals(itm.getUserQuery().getId()))
 				.findFirst()

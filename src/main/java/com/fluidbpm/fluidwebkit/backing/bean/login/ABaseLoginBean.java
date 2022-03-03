@@ -164,10 +164,9 @@ public abstract class ABaseLoginBean extends ABaseManagedBean {
 	 */
 	public String actionLogout() {
 		FacesContext facesContext = FacesContext.getCurrentInstance();
+
 		HttpSession session = (HttpSession) facesContext.getExternalContext().getSession(false);
-		if (session != null) {
-			session.invalidate();
-		}
+		if (session != null) session.invalidate();
 
 		return this.getLogoutOutcomePage();
 	}

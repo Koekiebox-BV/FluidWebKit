@@ -16,6 +16,7 @@
 package com.fluidbpm.fluidwebkit.backing.bean.workspace.lf;
 
 import com.fluidbpm.fluidwebkit.backing.bean.ABaseManagedBean;
+import com.fluidbpm.fluidwebkit.backing.bean.config.PeriodicUpdateBean;
 import com.fluidbpm.fluidwebkit.backing.bean.config.WebKitAccessBean;
 import com.fluidbpm.fluidwebkit.backing.bean.config.WebKitConfigBean;
 import com.fluidbpm.fluidwebkit.backing.bean.workspace.field.WebKitField;
@@ -144,6 +145,9 @@ public class WebKitWorkspaceLookAndFeelBean extends ABaseManagedBean {
 	@Setter
 	private WebKitForm webKitFormQuickEdit;
 
+	@Inject
+	private PeriodicUpdateBean periodicUpdateBean;
+
 	private List<TabId> tabsViewed;
 	private enum TabId {
 		tabForm,
@@ -170,28 +174,46 @@ public class WebKitWorkspaceLookAndFeelBean extends ABaseManagedBean {
 		this.tabsViewed.add(TabId.tabForm);//Form is always added since its visible...
 
 		this.setDialogHeaderTitle("Workspace - Look & Feel");
+
+		FluidClientDS configDS = this.getFluidClientDSConfig();
+
 		try {
 			try {
-				this.webKitViewGroups = this.getFluidClientDSConfig().getFlowClient().getViewGroupWebKit().getListing();
+				this.webKitViewGroups = this.periodicUpdateBean.getWebKitViewGroups();
+				if (this.webKitViewGroups == null) {
+					this.webKitViewGroups = configDS.getFlowClient().getViewGroupWebKit().getListing();
+					this.periodicUpdateBean.setWebKitViewGroups(this.webKitViewGroups);
+				}
 			} catch (FluidClientException fce) {
 				if (fce.getErrorCode() != FluidClientException.ErrorCode.NO_RESULT) throw fce;
 			}
 
 			//Populate the menu items...
-			ConfigurationListing configurationListing =
-					this.getFluidClientDSConfig().getConfigurationClient().getAllConfigurations();
+			ConfigurationListing configurationListing = this.periodicUpdateBean.getConfigurationListing();
+			if (configurationListing == null || configurationListing.isListingEmpty()) {
+				configurationListing = configDS.getConfigurationClient().getAllConfigurations();
+				this.periodicUpdateBean.setConfigurationListing(configurationListing);
+			}
 			this.populateUserQueryMenu(configurationListing);
 			this.populatePersonalInventory(configurationListing);
 
 			try {
-				this.webKitUserQueries = this.getFluidClientDSConfig().getUserQueryClient().getUserQueryWebKit().getListing();
+				this.webKitUserQueries = this.periodicUpdateBean.getWebKitUserQueries();
+				if (this.webKitUserQueries == null) {
+					this.webKitUserQueries = configDS.getUserQueryClient().getUserQueryWebKit().getListing();
+					this.periodicUpdateBean.setWebKitUserQueries(this.webKitUserQueries);
+				}
 				this.userQueryLDM.addToInitialListing(this.webKitUserQueries);
 			} catch (FluidClientException fce) {
 				if (fce.getErrorCode() != FluidClientException.ErrorCode.NO_RESULT) throw fce;
 			}
 
 			try {
-				this.webKitForms = this.getFluidClientDSConfig().getFormDefinitionClient().getAllFormWebKits();
+				this.webKitForms = this.periodicUpdateBean.getWebKitForms();
+				if (this.webKitForms == null) {
+					this.webKitForms = configDS.getFormDefinitionClient().getAllFormWebKits();
+					this.periodicUpdateBean.setWebKitForms(this.webKitForms);
+				}
 				this.contextMenuModelQuickToForm = new DefaultMenuModel();
 
 				AtomicInteger ai = new AtomicInteger(0);
@@ -209,8 +231,13 @@ public class WebKitWorkspaceLookAndFeelBean extends ABaseManagedBean {
 				if (fce.getErrorCode() != FluidClientException.ErrorCode.NO_RESULT) throw fce;
 			}
 
-			this.allJobViews = this.getFluidClientDSConfig().getFlowStepClient().getJobViewsByLoggedInUser().getListing();
-			RouteFieldClient routeFieldClient = this.getFluidClientDSConfig().getRouteFieldClient();
+			this.allJobViews = this.periodicUpdateBean.getAllJobViews();
+			if (this.allJobViews == null) {
+				this.allJobViews = configDS.getFlowStepClient().getJobViewsByLoggedInUser().getListing();
+				this.periodicUpdateBean.setAllJobViews(this.allJobViews);
+			}
+
+			RouteFieldClient routeFieldClient = configDS.getRouteFieldClient();
 
 			//Set the Views available for the Groups...
 			if (this.allJobViews != null) {

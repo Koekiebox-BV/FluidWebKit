@@ -177,6 +177,10 @@ public class WebKitOpenFormFieldHistoryConversationBean extends ABaseManagedBean
 
 			return (this.field.getTypeAsEnum() == Field.Type.DateTime);
 		}
+
+		public String getUsernameNoWhitespace() {
+			return UtilGlobal.removeWhitespace(this.getUsername());
+		}
 	}
 
 	public void actionLoadFormHistoricData() {

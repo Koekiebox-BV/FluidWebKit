@@ -315,6 +315,12 @@ public abstract class ABaseManagedBean implements Serializable {
 		return this.getLoggedInUserSafe().getUsername();
 	}
 
+	public String getLoggedInUserUsernameNoSpaces() {
+		String username = this.getLoggedInUserUsername();
+		if (UtilGlobal.isBlank(username)) return username;
+		return UtilGlobal.removeWhitespace(username);
+	}
+
 	public User getLoggedInUserSafe() {
 		try {
 			return this.getLoggedInUser();
