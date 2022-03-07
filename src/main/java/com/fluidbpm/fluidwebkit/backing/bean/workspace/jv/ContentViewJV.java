@@ -270,6 +270,7 @@ public class ContentViewJV extends ABaseContentView {
 
 		routeFieldsForKit.sort(Comparator.comparing(WebKitWorkspaceRouteField::getFieldOrder));
 		List<ABaseManagedBean.ColumnModel> returnValCustomRouteFields = routeFieldsForKit.stream()
+				.filter(itm -> itm.getRouteField() != null)
 				.map(wkField -> {
 					Field field = wkField.getRouteField();
 					boolean canFilter = false;

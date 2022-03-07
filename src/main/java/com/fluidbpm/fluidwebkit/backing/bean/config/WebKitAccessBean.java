@@ -35,6 +35,7 @@ import javax.enterprise.context.SessionScoped;
 import javax.inject.Named;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
 /**
@@ -108,7 +109,7 @@ public class WebKitAccessBean extends ABaseManagedBean {
 	}
 
 	private void cacheFormAndDefs() {
-		realtimeCounter = 0;
+		realtimeCounter = System.currentTimeMillis();
 		FormDefinitionClient formDefinitionClient = this.getFluidClientDS().getFormDefinitionClient();
 
 		this.fieldsForViewing = new Hashtable<>();
@@ -120,11 +121,17 @@ public class WebKitAccessBean extends ABaseManagedBean {
 		this.allFormDefinitionsForLoggedIn = new ArrayList<>();
 
 		//Retrieve Forms and their Workflows...
-		long nowCanCreateInstance = System.currentTimeMillis();
+		AtomicLong nowCanCreateInstance = new AtomicLong(),
+				nowCanCreateInstanceTbl = new AtomicLong(),
+				canViewAtt = new AtomicLong(),
+				canEditAtt = new AtomicLong(),
+				loggedInUserFormDefs = new AtomicLong()
+						;
 
 		List<CompletableFuture> allAsyncs = new ArrayList<>();
 
 		allAsyncs.add(CompletableFuture.runAsync(() -> {
+			long tick = System.currentTimeMillis();
 			this.formDefinitionsCanCreateInstanceOf = formDefinitionClient.getAllByLoggedInUserWhereCanCreateInstanceOf(
 					false, true);
 			if (this.formDefinitionsCanCreateInstanceOf != null) {
@@ -135,8 +142,10 @@ public class WebKitAccessBean extends ABaseManagedBean {
 				}
 				Collections.sort(this.formDefinitionsCanCreateInstanceOf, Comparator.comparing(Form::getFormType));
 			}
+			nowCanCreateInstance.set(System.currentTimeMillis() - tick);
 		}));
 		allAsyncs.add(CompletableFuture.runAsync(() -> {
+			long tick = System.currentTimeMillis();
 			this.formDefinitionsCanCreateInstanceOfIncTableFields = formDefinitionClient.getAllByLoggedInUserWhereCanCreateInstanceOf(
 					true, false);
 			if (this.formDefinitionsCanCreateInstanceOfIncTableFields != null) {
@@ -147,34 +156,35 @@ public class WebKitAccessBean extends ABaseManagedBean {
 				}
 				Collections.sort(this.formDefinitionsCanCreateInstanceOfIncTableFields, Comparator.comparing(Form::getFormType));
 			}
+			nowCanCreateInstanceTbl.set(System.currentTimeMillis() - tick);
 		}));
 
 		allAsyncs.add(CompletableFuture.runAsync(() -> {
+			long tick = System.currentTimeMillis();
 			this.formDefinitionsAttachmentCanView = formDefinitionClient.getAllByLoggedInUserWhereCanViewAttachments();
+			canViewAtt.set(System.currentTimeMillis() - tick);
 		}));
 
 		allAsyncs.add(CompletableFuture.runAsync(() -> {
+			long tick = System.currentTimeMillis();
 			this.formDefinitionsAttachmentCanEdit = formDefinitionClient.getAllByLoggedInUserWhereCanEditAttachments();
+			canEditAtt.set(System.currentTimeMillis() - tick);
 		}));
 
+		allAsyncs.add(CompletableFuture.runAsync(() -> {
+			long tick = System.currentTimeMillis();
+			this.allFormDefinitionsForLoggedIn = formDefinitionClient.getAllByLoggedInUser(true);
+			loggedInUserFormDefs.set(System.currentTimeMillis() - tick);
+		}));
 		CompletableFuture.allOf(allAsyncs.toArray(new CompletableFuture[]{})).join();
-		
-		long doneCanCreateInstance = (System.currentTimeMillis() - nowCanCreateInstance);
 
-		//Attachments...
-		long nowAttachmentPerms = System.currentTimeMillis();
-
-		this.getLogger().info("FFC-Bean: PART-1-COMPLETE (CanCreateInstanceOf[%d],AttachmentsViewEdit[%d]).",
-				doneCanCreateInstance,
-				(System.currentTimeMillis() - nowAttachmentPerms));
-
-		long formDefs = System.currentTimeMillis();
-		this.allFormDefinitionsForLoggedIn = formDefinitionClient.getAllByLoggedInUser(true);
+		this.getLogger().info("FFC-Bean: PART-1-COMPLETE (CanCreateInstanceOf[%d],CanCreateInstanceOfTable[%d],AttachmentsView[%d],AttachmentsEdit[%d],LoggedInFormDefs[%d]).",
+			nowCanCreateInstance.get(),
+			nowCanCreateInstanceTbl.get(),
+			canViewAtt.get(),
+			canEditAtt.get(),
+			loggedInUserFormDefs.get());
 		if (allFormDefinitionsForLoggedIn == null) return;
-
-		this.getLogger().info("FFC-Bean: PART-2-COMPLETE (FormDefs[%d]).",
-				(System.currentTimeMillis() - formDefs));
-		long nowFields = System.currentTimeMillis();
 
 		//Set all the field definitions...
 		List<String> formDefsToFetchFor = new ArrayList<>();
@@ -185,9 +195,9 @@ public class WebKitAccessBean extends ABaseManagedBean {
 			formDefsToFetchFor.add(formDefTitle);
 		}
 
-		CompletableFuture.allOf(allAsyncs.toArray(new CompletableFuture[]{})).join();
-
 		allAsyncs.clear();
+
+		long tick = System.currentTimeMillis();
 		try (FormFieldClient formFieldClient = new FormFieldClient(
 			this.getFluidClientDS().getEndpoint(), this.getFluidClientDS().getServiceTicket())
 		) {
@@ -208,8 +218,10 @@ public class WebKitAccessBean extends ABaseManagedBean {
 			CompletableFuture.allOf(allAsyncs.toArray(new CompletableFuture[]{})).join();
 		}
 
-		this.getLogger().info(String.format("FFC-Bean: PART-3-COMPLETE: [%d] millis. Total of [%d] items. Should have taken [%d].",
-				(System.currentTimeMillis() - nowFields), this.fieldsForViewing.size(), realtimeCounter));
+		this.getLogger().info(String.format("FFC-Bean: PART-2-COMPLETE: [%d] millis for fields. Total of [%d] items. RealtimeTaken [%d].",
+				(System.currentTimeMillis() - tick),
+				this.fieldsForViewing.size(),
+				(System.currentTimeMillis() - realtimeCounter)));
 	}
 
 	private void cacheUserQueries() {
