@@ -22,6 +22,8 @@ import com.fluidbpm.ws.client.v1.user.LoginClient;
 import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 
+import static com.fluidbpm.program.api.util.UtilGlobal.sysOut;
+
 /**
  * Utility class for logging in 
  *
@@ -50,12 +52,12 @@ public class ConfigLogin {
 		if ((LAST_TIME_CONF_LOGGED_IN + TimeUnit.HOURS.toMillis(LOGIN_DURATION_HOURS)) < now) {
 			synchronized (LAST_TIME_CONF_LOGGED_IN) {
 				LoginClient loginClient = new LoginClient(UtilGlobal.getConfigURLFromSystemProperty(existingProps));
-				try{
+				try {
 					CONFIG_USER_APP_REQ_TOKEN = loginClient.login(
 							UtilGlobal.getConfigUserProperty(existingProps),
 							UtilGlobal.getConfigUserPasswordProperty(existingProps));
 					LAST_TIME_CONF_LOGGED_IN = System.currentTimeMillis();
-					System.out.println("\n\nConfig User Logged in!!!\n\n");
+					sysOut("\n\nConfig User Logged in!!!\n\n");
 				} catch (Exception except){
 					CONFIG_USER_APP_REQ_TOKEN = null;
 					System.err.println(except.getMessage());
@@ -69,8 +71,11 @@ public class ConfigLogin {
 
 		if (CONFIG_USER_APP_REQ_TOKEN == null) {
 			throw new IllegalStateException(
-					"User '"+UtilGlobal.getConfigUserProperty(existingProps)+"' was never logged in to '"+
-							UtilGlobal.getConfigURLFromSystemProperty(existingProps)+"'.");
+					String.format(
+						"User '%s' was never logged in to '%s'.",
+						UtilGlobal.getConfigUserProperty(existingProps),
+						UtilGlobal.getConfigURLFromSystemProperty(existingProps)
+					));
 		}
 
 		return CONFIG_USER_APP_REQ_TOKEN;

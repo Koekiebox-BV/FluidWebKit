@@ -51,11 +51,8 @@ public class WebUtil {
 
 			if (forceHTTPSParam) {
 				scheme = HTTPS;
-				if (serverPort == 80) {
-					serverPort = 443;
-				} else if(serverPort == 8080) {
-					serverPort = 8443;
-				}
+				if (serverPort == 80) serverPort = 443;
+				else if (serverPort == 8080) serverPort = 8443;
 			}
 
 			// Reconstruct original requesting URL
@@ -63,15 +60,12 @@ public class WebUtil {
 			url.append(scheme).append("://").append(serverName);
 			
 			//Add the port if not configured...
-			if ((serverPort != 80) && (serverPort != 443)) {
-				url.append(":").append(serverPort);
-			}
+			if ((serverPort != 80) && (serverPort != 443)) url.append(":").append(serverPort);
 
 			url.append(contextPath).append("/");
 
 			return url.toString();
 		}
-
 		return null;
 	}
 
@@ -82,7 +76,6 @@ public class WebUtil {
 	 * @return Redirect URL.
 	 */
 	public String getConstructCompleteCallbackURL() {
-
 		return this.getConstructCompleteCallbackURL(true);
 	}
 
@@ -100,10 +93,7 @@ public class WebUtil {
 		ExternalContext externalContext = (facCont == null) ? null : facCont.getExternalContext();
 		Object sessObj = (externalContext == null) ? null :externalContext.getSession(false);
 
-		if(sessObj instanceof HttpSession)
-		{
-			return (HttpSession)sessObj;
-		}
+		if (sessObj instanceof HttpSession) return (HttpSession)sessObj;
 
 		return null;
 	}

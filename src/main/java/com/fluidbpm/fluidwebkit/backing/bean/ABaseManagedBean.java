@@ -238,17 +238,13 @@ public abstract class ABaseManagedBean implements Serializable {
 	public ILogger getLogger() {
 		return new ILogger() {
 			@Override
-			public void info(String details, Object... args) {
-				System.out.print(getPrefix());
-				System.out.printf(details, args);
-				System.out.println();
+			public void info(String template, Object... args) {
+				UtilGlobal.sysOut(template, args);
 			}
 
 			@Override
-			public void debug(String details, Object... args) {
-				System.out.print(getPrefix());
-				System.out.printf(details, args);
-				System.out.println();
+			public void debug(String template, Object... args) {
+				UtilGlobal.sysOut(template, args);
 			}
 
 			@Override
