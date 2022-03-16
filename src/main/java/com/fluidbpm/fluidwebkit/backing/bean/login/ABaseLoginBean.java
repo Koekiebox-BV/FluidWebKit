@@ -82,13 +82,13 @@ public abstract class ABaseLoginBean extends ABaseManagedBean {
 
 			final String serviceTicket;
 			if (Globals.isConfigBasicAuthFromSystemProperty()) {
-				this.getLogger().debug("Login using BASIC authentication.");
+				this.getLogger().debug("Login using [BASIC] authentication.");
 				User loginBasicUser = loginClient.loginBasic(
 						this.getInputUsername(), this.getInputPassword());
 				serviceTicket = loginBasicUser.getServiceTicket();
 				user.setRoles(loginBasicUser.getRoles());
 			} else {
-				this.getLogger().debug("Login using TOKEN authentication.");
+				this.getLogger().debug("Login using [TOKEN] authentication.");
 				AppRequestToken appReqToken = loginClient.login(
 						this.getInputUsername(), this.getInputPassword());
 				serviceTicket = appReqToken.getServiceTicket();
