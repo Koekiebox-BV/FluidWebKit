@@ -43,6 +43,8 @@ public abstract class ABaseLoginBean extends ABaseManagedBean {
 	private String inputUsername = null;
 	private String inputPassword = null;
 
+	private static final int MAX_LOGIN_MSG = 50;
+
 	/**
 	 * action="#{loginBean.actionLogin}"
 	 *
@@ -134,14 +136,14 @@ public abstract class ABaseLoginBean extends ABaseManagedBean {
 			}
 
 			FacesMessage fMsg = new FacesMessage(FacesMessage.SEVERITY_ERROR,
-					"Failed to Login. ", fce.getMessage());
+					"Failed to Login. ", this.shortenMessage(fce.getMessage(), MAX_LOGIN_MSG));
 			FacesContext.getCurrentInstance().addMessage(null, fMsg);
 			return null;
 		} catch (ClientDashboardException dashExcept) {
 			this.getLogger().error(dashExcept.getMessage(), dashExcept);
 
 			FacesMessage fMsg = new FacesMessage(FacesMessage.SEVERITY_ERROR,
-					"Failed to Login. ", dashExcept.getMessage());
+					"Failed to Login. ", this.shortenMessage(dashExcept.getMessage(), MAX_LOGIN_MSG));
 			FacesContext.getCurrentInstance().addMessage(null, fMsg);
 
 			return null;
@@ -155,6 +157,12 @@ public abstract class ABaseLoginBean extends ABaseManagedBean {
 		sessionMap.put(SessionVariable.USER, user);
 
 		return Outcome.DASHBOARD;
+	}
+
+	private String shortenMessage(String message, int maxLength) {
+		if (message == null) return message;
+		if (message.length() > maxLength) return String.format("%s ...", message.substring(0, maxLength));
+		return message;
 	}
 
 	/**

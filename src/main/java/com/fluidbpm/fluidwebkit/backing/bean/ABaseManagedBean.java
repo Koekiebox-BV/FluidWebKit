@@ -98,7 +98,7 @@ public abstract class ABaseManagedBean implements Serializable {
 
 		if (FacesContext.getCurrentInstance() == null) return;
 
-		String adminErrorMessage = UtilGlobal.getProperty(System.getProperties(), "", "false");
+		String adminErrorMessage = UtilGlobal.getProperty(System.getProperties(), "ENABLE_ADMIN_MESSAGE", "false");
 		FacesMessage fMsg = new FacesMessage(FacesMessage.SEVERITY_ERROR, "Failed.", exception.getMessage());
 		if (adminErrorMessage.trim().toLowerCase().equals("true")) {
 			fMsg = new FacesMessage(FacesMessage.SEVERITY_ERROR, "Failed.", "Please contact administrator.");
