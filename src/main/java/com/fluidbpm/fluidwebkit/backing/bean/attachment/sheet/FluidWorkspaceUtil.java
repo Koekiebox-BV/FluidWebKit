@@ -17,6 +17,7 @@ package com.fluidbpm.fluidwebkit.backing.bean.attachment.sheet;
 import com.fluidbpm.fluidwebkit.exception.ClientDashboardException;
 import com.fluidbpm.program.api.util.UtilGlobal;
 import com.opencsv.CSVReader;
+import org.apache.poi.ss.util.CellReference;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -100,8 +101,7 @@ public class FluidWorkspaceUtil {
 					for (short cellIndex = 0;cellIndex < cellCounter;cellIndex++) {
 						org.apache.poi.ss.usermodel.Cell cellAtIndex = rowAtIndex.getCell(cellIndex);
 
-						String upperCaseLetter =
-								org.apache.poi.hssf.util.CellReference.convertNumToColString(cellIndex).toUpperCase();
+						String upperCaseLetter = CellReference.convertNumToColString(cellIndex).toUpperCase();
 						String headerText =
 								(""+ (cellIndex + 1) + " - " + upperCaseLetter);
 						cells.add(new Cell(this.getCellValueAsString(workbook,cellAtIndex), headerText));
@@ -124,7 +124,7 @@ public class FluidWorkspaceUtil {
 
 		if (cellParam == null) return UtilGlobal.EMPTY;
 
-		if (cellParam.getCellTypeEnum() == org.apache.poi.ss.usermodel.CellType.FORMULA) {
+		if (cellParam.getCellType() == org.apache.poi.ss.usermodel.CellType.FORMULA) {
 			boolean its = false;
 			if (its) return cellParam.getCellFormula();
 
@@ -161,7 +161,7 @@ public class FluidWorkspaceUtil {
 				return cellParam.getCellFormula();
 			}
 
-			final org.apache.poi.ss.usermodel.CellType cellType = cellValue.getCellTypeEnum();
+			final org.apache.poi.ss.usermodel.CellType cellType = cellValue.getCellType();
 
 			if (cellType == org.apache.poi.ss.usermodel.CellType.BLANK) {
 				return cellValue.getStringValue();
@@ -177,9 +177,9 @@ public class FluidWorkspaceUtil {
 		}
 
 		//Set to String value if not String.
-		if (cellParam.getCellTypeEnum() == org.apache.poi.ss.usermodel.CellType.NUMERIC) {
+		if (cellParam.getCellType() == org.apache.poi.ss.usermodel.CellType.NUMERIC) {
 			return Double.valueOf(cellParam.getNumericCellValue()).toString();
-		} else if (cellParam.getCellTypeEnum() != org.apache.poi.ss.usermodel.CellType.STRING) {
+		} else if (cellParam.getCellType() != org.apache.poi.ss.usermodel.CellType.STRING) {
 			cellParam.setCellType(org.apache.poi.ss.usermodel.CellType.STRING);
 		}
 
