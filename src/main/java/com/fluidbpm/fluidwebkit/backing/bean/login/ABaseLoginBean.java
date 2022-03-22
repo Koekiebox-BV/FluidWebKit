@@ -64,7 +64,7 @@ public abstract class ABaseLoginBean extends ABaseManagedBean {
 				this.getInputPassword() == null || this.getInputPassword().trim().isEmpty()){
 
 			FacesMessage fMsg = new FacesMessage(FacesMessage.SEVERITY_ERROR,
-					"Invalid", "Username and Password required.");
+					"Invalid.", "Username and Password required.");
 			FacesContext.getCurrentInstance().addMessage(null, fMsg);
 			return null;
 		}
