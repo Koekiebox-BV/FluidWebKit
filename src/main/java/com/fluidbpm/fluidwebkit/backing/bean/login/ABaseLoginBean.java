@@ -17,7 +17,6 @@ package com.fluidbpm.fluidwebkit.backing.bean.login;
 
 import com.fluidbpm.fluidwebkit.backing.bean.ABaseManagedBean;
 import com.fluidbpm.fluidwebkit.backing.utility.Globals;
-import com.fluidbpm.fluidwebkit.ds.FluidClientDS;
 import com.fluidbpm.fluidwebkit.exception.ClientDashboardException;
 import com.fluidbpm.program.api.util.UtilGlobal;
 import com.fluidbpm.program.api.vo.role.Role;
@@ -106,10 +105,8 @@ public abstract class ABaseLoginBean extends ABaseManagedBean {
 
 			this.getLogger().debug("User logged in. Retrieving logged in user info.");
 
-			FluidClientDS fcDSConfig = this.getFluidClientDSConfig();
-
 			//Get logged in user info...
-			User loggedInUserInfo = fcDSConfig.getUserClient().getLoggedInUserInformation();
+			User loggedInUserInfo = this.getFluidClientDS().getUserClient().getLoggedInUserInformation();
 
 			//Set the User Id...
 			user.setDateFormat(loggedInUserInfo.getDateFormat());
@@ -118,13 +115,12 @@ public abstract class ABaseLoginBean extends ABaseManagedBean {
 
 			this.getLogger().debug("Retrieving user field listing.");
 			try {
-				UserFieldListing fieldListing = fcDSConfig.getUserClient().getAllUserFieldValuesByUser(user);
+				UserFieldListing fieldListing = this.getFluidClientDSConfig().getUserClient().getAllUserFieldValuesByUser(user);
 				if (!fieldListing.isListingEmpty()) {
 					user.setUserFields(fieldListing.getListing());
 				}
 			} catch (FluidClientException fle) {
-				this.getLogger().error("Unable to get user fields for "+
-						loggedInUserInfo.getUsername()+". "+fle.getMessage(),fle);
+				this.getLogger().error("Unable to get user fields for "+ loggedInUserInfo.getUsername()+". "+fle.getMessage(),fle);
 			}
 		} catch (FluidClientException fce) {
 			this.getLogger().error(fce.getMessage(), fce);

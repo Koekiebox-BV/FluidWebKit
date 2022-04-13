@@ -4,16 +4,16 @@
 
 	<groupId>com.fluidbpm</groupId>
 	<artifactId>fluidwebkit</artifactId>
-	<version>1.2</version>
+	<version>1.3</version>
 	<packaging>jar</packaging>
 
 	<name>Fluid Webkit</name>
 	<description>The Fluid WebKit for JSP PrimeFaces applications.</description>
-	<url>https://github.com/Koekiebox-PTY-LTD/FluidWebKit</url>
+	<url>https://github.com/Koekiebox-BV/FluidWebKit</url>
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<version.fluid.api>1.12</version.fluid.api>
+		<version.fluid.api>1.13</version.fluid.api>
 		<version.j2ee>8.0</version.j2ee>
 
 		<!--Plugins-->
@@ -27,7 +27,7 @@
 	<licenses>
 		<license>
 			<name>GNU GENERAL PUBLIC LICENSE, Version 3</name>
-			<url>https://github.com/Koekiebox-PTY-LTD/FluidWebKit/blob/develop/LICENSE</url>
+			<url>https://github.com/Koekiebox-BV/FluidWebKit/blob/develop/LICENSE</url>
 			<distribution>repo</distribution>
 		</license>
 	</licenses>
@@ -41,9 +41,9 @@
 	</developers>
 
 	<scm>
-		<connection>scm:git:git@github.com:Koekiebox-PTY-LTD/FluidWebKit.git</connection>
-		<developerConnection>scm:git:git@github.com:Koekiebox-PTY-LTD/FluidWebKit.git</developerConnection>
-		<url>git@github.com:Koekiebox-PTY-LTD/FluidWebKit.git</url>
+		<connection>scm:git:git@github.com:Koekiebox-BV/FluidWebKit.git</connection>
+		<developerConnection>scm:git:git@github.com:Koekiebox-BV/FluidWebKit.git</developerConnection>
+		<url>git@github.com:Koekiebox-BV/FluidWebKit.git</url>
 	</scm>
 
 	<dependencies>
