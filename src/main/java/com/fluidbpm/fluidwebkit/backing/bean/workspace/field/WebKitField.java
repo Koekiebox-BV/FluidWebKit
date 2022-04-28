@@ -1,5 +1,6 @@
 package com.fluidbpm.fluidwebkit.backing.bean.workspace.field;
 
+import com.fluidbpm.fluidwebkit.backing.bean.config.WebKitConfigHelperBean;
 import com.fluidbpm.program.api.util.GeoUtil;
 import com.fluidbpm.program.api.util.UtilGlobal;
 import com.fluidbpm.program.api.vo.field.Field;
@@ -8,6 +9,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import javax.faces.component.UIComponent;
+import javax.faces.context.FacesContext;
 import javax.faces.model.SelectItem;
 import javax.xml.bind.annotation.XmlTransient;
 import java.util.ArrayList;
@@ -22,6 +25,10 @@ public class WebKitField extends Field {
 	@Getter
 	@Setter
 	private boolean mandatoryAndEmpty;
+
+	@Getter
+	@Setter
+	private boolean maskedFieldAndRevealed;
 
 	private List<String> allowedAvailMultiChoiceForUser;
 
@@ -47,6 +54,15 @@ public class WebKitField extends Field {
 	) {
 		this(fieldIdParam, fieldNameParam, fieldValueParam, fieldTypeParam);
 		this.allowedAvailMultiChoiceForUser = allowedAvailMultiChoiceForUser;
+	}
+
+	@XmlTransient
+	public void actionMarkTextEncryptedAsRevealed() {
+		FacesContext context = FacesContext.getCurrentInstance();
+		WebKitField wkF = (WebKitField)
+				UIComponent.getCurrentComponent(context).getAttributes().get("fieldModelItem");
+		wkF.setMaskedFieldAndRevealed(true);
+		this.maskedFieldAndRevealed = true;
 	}
 
 	@XmlTransient
@@ -219,5 +235,11 @@ public class WebKitField extends Field {
 		if (UtilGlobal.isNotBlank(fieldName)) return fieldName;
 
 		return UUID.randomUUID().toString();
+	}
+
+	@XmlTransient
+	public String fieldValueMasked(String metaData) {
+		return WebKitConfigHelperBean.Masked.getInputValueAsEncryptedMasked(
+				metaData, this.getFieldValueAsString());
 	}
 }

@@ -32,6 +32,7 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.servlet.http.HttpSession;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -43,7 +44,6 @@ import java.util.stream.Collectors;
 @RequestScoped
 @Named("webKitConfHelpBean")
 public class WebKitConfigHelperBean extends ABaseManagedBean {
-
 	@Inject
 	private WebKitConfigBean webKitConfigBean;
 
@@ -54,6 +54,86 @@ public class WebKitConfigHelperBean extends ABaseManagedBean {
 		private static final String ErrorMessage = "errorMessage";
 		private static final String InfoMessageHeader = "infoMessageHeader";
 		private static final String InfoMessage = "infoMessage";
+	}
+
+	public static final class Masked {
+		public static final String MASKED = "Masked";//0,1,2,3,4,5,6,7
+
+		public static String getMaskedValue(String storedMaskedValue) {
+			if (UtilGlobal.isBlank(storedMaskedValue)) return null;
+
+			int maskedLength = Masked.MASKED.length();
+			if (storedMaskedValue.length() >= maskedLength) {
+				String prefix = storedMaskedValue.substring(0, maskedLength);
+				if (!Masked.MASKED.equals(prefix)) return null;
+
+				String maskedValue = storedMaskedValue.substring(maskedLength);
+				if (maskedValue == null) return null;
+
+				return maskedValue;
+			}
+			return null;
+		}
+
+		public static int[] getMaskedIndexesFromValue(String storedMaskedValue) {
+			String maskedValue = getMaskedValue(storedMaskedValue);
+			if (maskedValue == null) return null;
+
+			String[] splitted = maskedValue.split(UtilGlobal.REG_EX_COMMA);
+			if (splitted == null || splitted.length == 0) return null;
+
+			List<Integer> listOfIndexes = new ArrayList();
+			for (String val : splitted) {
+				int index = UtilGlobal.toIntSafe(val);
+				if (index == -1) continue;
+
+				listOfIndexes.add(Integer.valueOf(index));
+			}
+
+			int[] returnVal = new int[listOfIndexes.size()];
+			for (int index = 0;index < returnVal.length;index++) {
+				returnVal[index] = listOfIndexes.get(index).intValue();
+			}
+
+			return returnVal;
+		}
+
+		public static List<String> getMaskedIndexesFromValueAsStringList(String storedMaskedValue) {
+			int[] indexesAsIntArray = getMaskedIndexesFromValue(storedMaskedValue);
+			if (indexesAsIntArray == null) return null;
+
+			List<String> returnVal = new ArrayList();
+			for (int toAdd : indexesAsIntArray) returnVal.add(Integer.toString(toAdd));
+
+			return returnVal;
+		}
+
+		public static boolean isMasked(String storedMaskedValue) {
+			String theVal = Masked.getMaskedValue(storedMaskedValue);
+
+			if (theVal == null) return false;
+
+			return true;
+		}
+
+		public static String getInputValueAsEncryptedMasked(String metaData, String inputValueParam) {
+			int[] maskedIndexes = Masked.getMaskedIndexesFromValue(metaData);
+
+			String inputValue = inputValueParam;
+			if (maskedIndexes == null || maskedIndexes.length == 0) return inputValue;
+
+			if (UtilGlobal.isBlank(inputValue)) return UtilGlobal.EMPTY;
+
+			int inputLength = inputValue.length();
+			StringBuilder builder = new StringBuilder(inputValue);
+			for (int maskedIndex :maskedIndexes) {
+				int realIndex = (maskedIndex - 1);
+				if (realIndex < 0) realIndex = 0;
+				if (realIndex < inputLength) builder.setCharAt(realIndex, '*');
+			}
+
+			return builder.toString();
+		}
 	}
 
 	/**
@@ -217,6 +297,10 @@ public class WebKitConfigHelperBean extends ABaseManagedBean {
 		return metaDataTxt.startsWith("Plain");
 	}
 
+	public boolean isFieldTypeEncryptedMasked(String metaDataTxt) {
+		return Masked.isMasked(metaDataTxt);
+	}
+
 	public String getJavascriptValueFromMetaData(String metaDataTxt) {
 		return metaDataTxt.substring(11);
 	}
@@ -224,7 +308,6 @@ public class WebKitConfigHelperBean extends ABaseManagedBean {
 	public String getAnchorValueFromMetaData(String metaDataTxt) {
 		return metaDataTxt.substring(7);
 	}
-
 
 	public String extractDateTimeFormatFromMetaData(String metaDataTxt) {
 		if ("Date".equals(metaDataTxt)) {
