@@ -788,6 +788,8 @@ public class WebKitWorkspaceLookAndFeelBean extends ABaseManagedBean {
 
 	public WebKitUserQuery getUserQueryWithName(String userQueryName) {
 		if (userQueryName == null) return null;
+		if (this.webKitUserQueries == null) return null;
+
 		return this.webKitUserQueries.stream()
 				.filter(itm -> userQueryName.equals(itm.getUserQuery().getName()))
 				.findFirst()

@@ -399,7 +399,8 @@ public abstract class ABaseManagedBean implements Serializable {
 	}
 
 	public void bindFluidClientDSToSession(String serviceTicket) {
-		this.fcp.init(this.getSessionId(), serviceTicket, UtilGlobal.getConfigURLFromSystemProperty(null));
+		String sessionId = this.getSessionId();
+		this.fcp.init(sessionId, serviceTicket, UtilGlobal.getConfigURLFromSystemProperty(null));
 	}
 
 	public void bindConfigFluidClientDS() {
