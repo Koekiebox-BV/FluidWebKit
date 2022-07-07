@@ -31,7 +31,7 @@ public class GuestPreferencesBean extends ABaseManagedBean {
 	private WebKitGlobal webKitGlobal;
 
 	@Getter
-	private List<ComponentTheme> componentThemes = new ArrayList<ComponentTheme>();
+	private List<ComponentTheme> componentThemes = new ArrayList();
 	{
 		componentThemes.add(new ComponentTheme("Blue", "blue", "#2c84d8"));
 		componentThemes.add(new ComponentTheme("Wisteria", "wisteria", "#A864AE"));
@@ -92,6 +92,17 @@ public class GuestPreferencesBean extends ABaseManagedBean {
 			FacesContext.getCurrentInstance().addMessage(null, fMsg);
 		} catch (Exception except) {
 			this.raiseError(except);
+		}
+	}
+
+	public void populateWebKitGlobalFromConfigs(ConfigurationListing configurationListing) {
+		Configuration webKitGlobal = configurationListing.getListing().stream()
+				.filter(itm -> WebKitConfigBean.ConfigKey.WebKit.equals(itm.getKey()))
+				.findFirst()
+				.orElse(null);
+		if (webKitGlobal != null) {
+			String jsonVal = webKitGlobal.getValue();
+			this.webKitGlobal = this.populateWebKitGlobal(jsonVal);
 		}
 	}
 

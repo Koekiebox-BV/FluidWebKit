@@ -16,6 +16,7 @@
 package com.fluidbpm.fluidwebkit.backing.bean.workspace.lf;
 
 import com.fluidbpm.fluidwebkit.backing.bean.ABaseManagedBean;
+import com.fluidbpm.fluidwebkit.backing.bean.config.GuestPreferencesBean;
 import com.fluidbpm.fluidwebkit.backing.bean.config.PeriodicUpdateBean;
 import com.fluidbpm.fluidwebkit.backing.bean.config.WebKitAccessBean;
 import com.fluidbpm.fluidwebkit.backing.bean.config.WebKitConfigBean;
@@ -71,6 +72,9 @@ public class WebKitWorkspaceLookAndFeelBean extends ABaseManagedBean {
 	private Map<String, List<JobView>> groupToViewMapping;
 	private Map<String, List<Field>> groupToRouteFieldMapping;
 	private List<JobView> allJobViews;
+
+	@Inject
+	private GuestPreferencesBean guestPreferencesBean;
 
 	@Getter
 	@Setter
@@ -176,7 +180,6 @@ public class WebKitWorkspaceLookAndFeelBean extends ABaseManagedBean {
 		this.setDialogHeaderTitle("Workspace - Look & Feel");
 
 		FluidClientDS configDS = this.getFluidClientDSConfig();
-
 		try {
 			try {
 				this.webKitViewGroups = this.periodicUpdateBean.getWebKitViewGroups();
@@ -599,6 +602,16 @@ public class WebKitWorkspaceLookAndFeelBean extends ABaseManagedBean {
 				configDs.getFormDefinitionClient().upsertFormWebKit(listingFrm);
 			}
 
+			// Populate the menu items:
+			FluidClientDS configDS = this.getFluidClientDSConfig();
+			ConfigurationListing configurationListing = configDS.getConfigurationClient().getAllConfigurations();
+			this.periodicUpdateBean.setConfigurationListing(configurationListing);
+			this.populateUserQueryMenu(configurationListing);
+			this.populatePersonalInventory(configurationListing);
+
+			// Update the menus:
+			this.guestPreferencesBean.populateWebKitGlobalFromConfigs(configurationListing);
+
 			this.executeJavaScript(String.format("PF('%s').hide();", dialogToHideAfterSuccess));
 			FacesMessage fMsg = new FacesMessage(FacesMessage.SEVERITY_INFO,
 					"Success", "Workspace Look and Feel Updated.");
@@ -982,10 +995,9 @@ public class WebKitWorkspaceLookAndFeelBean extends ABaseManagedBean {
 
 	public String trimFormDescription(String originalDesc, int max) {
 		if (UtilGlobal.isBlank(originalDesc)) return originalDesc;
-		if (originalDesc.length() > max) {
-			return String.format("%s " +
-					"...", originalDesc.substring(0, max));
-		}
+
+		if (originalDesc.length() > max) return String.format("%s ...", originalDesc.substring(0, max));
+
 		return originalDesc;
 	}
 }

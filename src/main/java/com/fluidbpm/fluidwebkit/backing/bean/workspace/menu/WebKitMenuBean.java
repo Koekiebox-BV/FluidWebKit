@@ -228,7 +228,6 @@ public class WebKitMenuBean extends ABaseManagedBean {
 				.filter(itm -> idNoPrefix.equals(itm.getParentMenuId()))
 				.collect(Collectors.toList());
 		if (menusWithNodeAsParent.isEmpty()) {//No parent...
-
 			WebKitMenuItem menuWithId = menuItems.stream()
 					.filter(itm -> idNoPrefix.equals(itm.getMenuId()))
 					.findFirst()
