@@ -343,6 +343,10 @@ public class WebKitOpenFormConversationBean extends ABaseManagedBean {
 			this.getWsFluidItem().setLoggedInUser(this.getLoggedInUserSafe());
 			this.getWsFluidItem().setJobView(wfiParam.getJobView());
 			this.getWsFluidItem().refreshFormFieldsEdit();
+			//  Set the Default Field Values:
+			if (!wfiParam.isFluidItemFormSet()) {
+				this.setDefaultFieldValues(this.getWsFluidItem().getFormFieldsEdit(), webKitForm);
+			}
 
 			//Add Placeholders...
 			tableFieldsToAddPlaceholdersFor.forEach(tableFieldName -> {

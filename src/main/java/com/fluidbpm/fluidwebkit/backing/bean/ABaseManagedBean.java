@@ -18,6 +18,7 @@ package com.fluidbpm.fluidwebkit.backing.bean;
 import com.fluidbpm.GitDescribe;
 import com.fluidbpm.fluidwebkit.backing.bean.config.WebKitConfigBean;
 import com.fluidbpm.fluidwebkit.backing.bean.logger.ILogger;
+import com.fluidbpm.fluidwebkit.backing.bean.workspace.field.WebKitField;
 import com.fluidbpm.fluidwebkit.backing.utility.RaygunUtil;
 import com.fluidbpm.fluidwebkit.ds.FluidClientDS;
 import com.fluidbpm.fluidwebkit.ds.FluidClientPool;
@@ -25,10 +26,13 @@ import com.fluidbpm.fluidwebkit.exception.ClientDashboardException;
 import com.fluidbpm.fluidwebkit.exception.WebSessionExpiredException;
 import com.fluidbpm.program.api.util.UtilGlobal;
 import com.fluidbpm.program.api.vo.field.Field;
+import com.fluidbpm.program.api.vo.field.MultiChoice;
 import com.fluidbpm.program.api.vo.form.Form;
 import com.fluidbpm.program.api.vo.role.Role;
 import com.fluidbpm.program.api.vo.thirdpartylib.ThirdPartyLibraryTaskIdentifier;
 import com.fluidbpm.program.api.vo.user.User;
+import com.fluidbpm.program.api.vo.webkit.form.NewInstanceDefault;
+import com.fluidbpm.program.api.vo.webkit.form.WebKitForm;
 import com.fluidbpm.ws.client.v1.role.RoleClient;
 import com.fluidbpm.ws.client.v1.user.LoginClient;
 import lombok.EqualsAndHashCode;
@@ -697,5 +701,49 @@ public abstract class ABaseManagedBean implements Serializable {
 				.findFirst()
 				.orElse(null);
 	}
-	
+
+	public void setDefaultFieldValues(List<WebKitField> fields, WebKitForm webKitForm) {
+		if (fields == null || webKitForm == null) return;
+		if (webKitForm.getNewInstanceDefaults() == null || webKitForm.getNewInstanceDefaults().isEmpty()) return;
+
+		fields.stream().forEach(wkField -> {
+			NewInstanceDefault defaultForWkField = webKitForm.getNewInstanceDefaults().stream()
+					.filter(itm -> itm.getField().equals(wkField.getFieldName()))
+					.findFirst()
+					.orElse(null);
+
+			if (defaultForWkField == null || UtilGlobal.isBlank(defaultForWkField.getDefaultVal())) return;
+
+			String fieldType = wkField.getFieldType();
+			String defaultVal = defaultForWkField.getDefaultVal();
+			if (UtilGlobal.isAnyTrue(
+				Field.Type.Text.toString().equals(fieldType),
+				Field.Type.ParagraphText.toString().equals(fieldType),
+				Field.Type.TextEncrypted.toString().equals(fieldType)
+			)) {
+				wkField.setFieldValue(defaultVal);
+			} else if (Field.Type.TrueFalse.toString().equals(fieldType)) {
+				if (UtilGlobal.isNotBlank(defaultVal)) wkField.setFieldValue(Boolean.TRUE);
+			} else if (Field.Type.MultipleChoice.toString().equals(fieldType)) {
+				MultiChoice mc = wkField.getFieldValueAsMultiChoice();
+				if (mc != null) {
+					mc.setSelectedMultiChoice(defaultVal);
+					List<String> al = new ArrayList<>();
+					al.add(defaultVal);
+					mc.setSelectedMultiChoices(al);
+				}
+			} else if (Field.Type.Decimal.toString().equals(fieldType)) {
+				int intVal = UtilGlobal.toIntSafe(defaultVal.trim());
+				if (intVal > 0) wkField.setFieldValue(Integer.valueOf(intVal));
+				double dblVal = UtilGlobal.toIntSafe(defaultVal.trim());
+				if (dblVal > 0) wkField.setFieldValue(Double.valueOf(dblVal));
+			} else if (Field.Type.DateTime.toString().equals(fieldType)) {
+				int intVal = UtilGlobal.toIntSafe(defaultVal.trim());
+				long now = System.currentTimeMillis();
+				if (intVal == 0) wkField.setFieldValue(new Date(now));
+				else if (intVal > 0) wkField.setFieldValue(new Date(now + TimeUnit.HOURS.toMillis(intVal)));
+				else wkField.setFieldValue(new Date(now - TimeUnit.HOURS.toMillis(intVal * (-1))));
+			}
+		});
+	}
 }

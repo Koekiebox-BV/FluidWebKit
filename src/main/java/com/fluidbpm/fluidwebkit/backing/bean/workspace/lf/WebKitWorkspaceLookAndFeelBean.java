@@ -30,6 +30,7 @@ import com.fluidbpm.program.api.vo.field.Field;
 import com.fluidbpm.program.api.vo.flow.JobView;
 import com.fluidbpm.program.api.vo.form.Form;
 import com.fluidbpm.program.api.vo.userquery.UserQuery;
+import com.fluidbpm.program.api.vo.webkit.form.NewInstanceDefault;
 import com.fluidbpm.program.api.vo.webkit.form.WebKitForm;
 import com.fluidbpm.program.api.vo.webkit.form.WebKitFormLayoutAdvance;
 import com.fluidbpm.program.api.vo.webkit.form.WebKitFormListing;
@@ -134,6 +135,7 @@ public class WebKitWorkspaceLookAndFeelBean extends ABaseManagedBean {
 
 	private Map<String, List<SelectItem>> tableFieldsByFormDef;
 	private Map<String, List<SelectItem>> mandatoryFieldsByFormDef;
+	private Map<String, Map<String, NewInstanceDefault>> newInstanceDefaults;
 	private Map<String, List<SelectItem>> userToFormFieldLimitOnMultiChoiceByFormDef;
 
 	@Inject
@@ -597,6 +599,13 @@ public class WebKitWorkspaceLookAndFeelBean extends ABaseManagedBean {
 			//Form...
 			if (this.formDefinitionLDM != null && this.tabsViewed.contains(TabId.tabForm)) {
 				WebKitFormListing listingFrm = new WebKitFormListing();
+
+				//Update the Default field values:
+				this.formDefinitionLDM.getDataListing().stream().forEach(webKitForm -> {
+					List<NewInstanceDefault> listing =
+							this.extractDefaultFieldValuesAsListFor(webKitForm);
+					webKitForm.setNewInstanceDefaults(listing);
+				});
 				listingFrm.setListing(this.formDefinitionLDM.getDataListing());
 				listingFrm.setListingCount(this.formDefinitionLDM.getDataListing().size());
 				configDs.getFormDefinitionClient().upsertFormWebKit(listingFrm);
@@ -852,6 +861,53 @@ public class WebKitWorkspaceLookAndFeelBean extends ABaseManagedBean {
 
 		this.tableFieldsByFormDef.put(formDef, returnVal);
 		return returnVal;
+	}
+
+	public String extractDefaultFieldValuesFor(WebKitForm form, String fieldName) {
+		Map<String, NewInstanceDefault> map = this.extractDefaultFieldValuesFor(form);
+		NewInstanceDefault returnVal = map.get(fieldName);
+		if (returnVal == null) return null;
+		return returnVal.getDefaultVal();
+	}
+
+	public Map<String, NewInstanceDefault> extractDefaultFieldValuesFor(WebKitForm form) {
+		if (this.newInstanceDefaults == null) this.newInstanceDefaults = new HashMap<>();
+		if (form == null || form.getForm() == null) return new HashMap<>();
+
+		String formDef = form.getForm().getFormType();
+		if (formDef == null) return new HashMap<>();
+		if (this.newInstanceDefaults.containsKey(formDef)) return this.newInstanceDefaults.get(formDef);
+
+		List<Field> fieldsForFormDef = this.accessBean.getFieldsEditableForFormDef(formDef);
+		Map<String, NewInstanceDefault> returnVal = new HashMap();
+		if (fieldsForFormDef == null) return returnVal;
+		final List<NewInstanceDefault> newInstanceDefaults = form.getNewInstanceDefaults();
+
+		fieldsForFormDef.stream()
+				.filter(itm -> {
+					switch (itm.getTypeAsEnum()) {
+						case Table:
+						case Label:
+							return false;
+						default: return true;
+					}
+				})
+				.forEach(itm -> {
+					NewInstanceDefault defaultVal = newInstanceDefaults.stream()
+							.filter(newInstDef -> newInstDef.getField().equals(itm.getFieldName()))
+							.findFirst()
+							.orElse(new NewInstanceDefault(itm.getFieldName(), UtilGlobal.EMPTY));
+					returnVal.put(itm.getFieldName(), defaultVal);
+				});
+
+		this.newInstanceDefaults.put(formDef, returnVal);
+		return returnVal;
+	}
+
+	public List<NewInstanceDefault> extractDefaultFieldValuesAsListFor(WebKitForm form) {
+		return this.extractDefaultFieldValuesFor(form).values()
+				.stream()
+				.collect(Collectors.toList());
 	}
 
 	public List<SelectItem> extractFieldsForMandatoryVerificationFrom(String formDef) {
