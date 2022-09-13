@@ -19,7 +19,7 @@
 		<!--Plugins-->
 		<version.plugin.gpg>1.6</version.plugin.gpg>
 		<version.plugin.java.source>3.2.1</version.plugin.java.source>
-		<version.plugin.java.doc>3.2.0</version.plugin.java.doc>
+		<version.plugin.java.doc>3.4.1</version.plugin.java.doc>
 		<version.plugin.compiler>3.6.0</version.plugin.compiler>
 		<version.jdk.compile>1.8</version.jdk.compile>
 	</properties>
@@ -230,6 +230,7 @@
 				<version>${version.plugin.java.doc}</version>
 				<configuration>
 					<source>8</source>
+					<javadocExecutable>${java.home}/bin/javadoc</javadocExecutable>
 				</configuration>
 				<executions>
 					<execution>

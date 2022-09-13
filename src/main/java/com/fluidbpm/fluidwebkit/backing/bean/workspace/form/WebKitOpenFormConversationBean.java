@@ -1335,4 +1335,9 @@ public class WebKitOpenFormConversationBean extends ABaseManagedBean {
 			this.raiseError(except);
 		}
 	}
+
+	public boolean customDateFormatWithNoDay(String format) {
+		if (UtilGlobal.isBlank(format)) return false;
+		return (!format.contains("d"));
+	}
 }
