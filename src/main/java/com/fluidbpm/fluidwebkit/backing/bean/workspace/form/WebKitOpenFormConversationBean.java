@@ -395,6 +395,11 @@ public class WebKitOpenFormConversationBean extends ABaseManagedBean {
 
 		String formDef = this.getWsFluidItem().getFluidItemFormType();
 		WebKitForm webKitForm = this.lookAndFeelBean.getWebKitFormWithFormDef(formDef);
+		if (webKitForm == null) {
+			getLogger().error(String.format("WebKitForm is not set for Def [%s].", formDef),
+					new IllegalStateException());
+			return;
+		}
 
 		//Enable attachment upload components....
 		String attDisplayType = webKitForm.getAttachmentDisplayType();
