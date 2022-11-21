@@ -31,6 +31,7 @@ import javax.faces.model.SelectItem;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.servlet.http.HttpSession;
+import java.math.BigDecimal;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -251,6 +252,11 @@ public class WebKitConfigHelperBean extends ABaseManagedBean {
 		return metaDataTxt.startsWith("Slider");
 	}
 
+	public boolean parseDecimalFormatIsStepFactorNoPrecision(String metaDataToParse) {
+		DecimalMetaFormat parsed = DecimalMetaFormat.parse(metaDataToParse);
+		return parsed.isPrecisionZeroForStepFactor();
+	}
+
 	public DecimalMetaFormat parseDecimalFormat(String metaDataToParse) {
 		return DecimalMetaFormat.parse(metaDataToParse);
 	}
@@ -351,9 +357,9 @@ public class WebKitConfigHelperBean extends ABaseManagedBean {
 	public static class DecimalMetaFormat {
 		private String type;
 		private String prefix;
-		private double min;
-		private double max;
-		private double stepFactor;
+		private Number min;
+		private Number max;
+		private Number stepFactor;
 
 		private static final String MIN = "Min";
 		private static final String MAX = "Max";
@@ -375,20 +381,23 @@ public class WebKitConfigHelperBean extends ABaseManagedBean {
 
 			//Min...
 			String minString = getValueFrom(MIN, initialSplit[1]);
-			double min = ug.toDoubleSafe(minString);
+			Number min = ug.toDoubleSafe(minString);
+			if (isPrecisionZero(min)) min = Long.valueOf(min.longValue());
 
 			//Max...
 			String maxString = getValueFrom(MAX, initialSplit[2]);
-			double max = ug.toDoubleSafe(maxString);
+			Number max = ug.toDoubleSafe(maxString);
+			if (isPrecisionZero(max)) max = Long.valueOf(max.longValue());
 
 			//Step Factor...
 			String stepFactorString = getValueFrom(STEP_FACTOR,initialSplit[3]);
-			double stepFactor = ug.toDoubleSafe(stepFactorString);
+			Number stepFactor = ug.toDoubleSafe(stepFactorString);
+			if (isPrecisionZero(stepFactor)) stepFactor = Long.valueOf(stepFactor.longValue());
 
 			//Prefix...
 			String prefix = getValueFrom(PREFIX, initialSplit[4]);
 
-			return new DecimalMetaFormat(type,prefix,min,max,stepFactor);
+			return new DecimalMetaFormat(type, prefix, min, max, stepFactor);
 		}
 
 		private static String getValueFrom(String variableNameParam, String toRetrieveFromParam) {
@@ -396,6 +405,15 @@ public class WebKitConfigHelperBean extends ABaseManagedBean {
 
 			int startIndex = variableNameParam.length();
 			return toRetrieveFromParam.substring(startIndex + 1, toRetrieveFromParam.length() - 1);
+		}
+
+		public boolean isPrecisionZeroForStepFactor() {
+			return DecimalMetaFormat.isPrecisionZero(this.getStepFactor());
+		}
+
+		private static boolean isPrecisionZero(Number value) {
+			BigDecimal bd = new BigDecimal(value.doubleValue());
+			return bd.precision() == 1;
 		}
 	}
 
