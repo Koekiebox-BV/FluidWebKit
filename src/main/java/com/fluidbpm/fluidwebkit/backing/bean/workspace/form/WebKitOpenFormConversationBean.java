@@ -3,6 +3,8 @@ package com.fluidbpm.fluidwebkit.backing.bean.workspace.form;
 import com.fluidbpm.fluidwebkit.backing.bean.ABaseManagedBean;
 import com.fluidbpm.fluidwebkit.backing.bean.attachment.WebKitAttachmentBean;
 import com.fluidbpm.fluidwebkit.backing.bean.config.WebKitAccessBean;
+import com.fluidbpm.fluidwebkit.backing.bean.config.WebKitConfigBean;
+import com.fluidbpm.fluidwebkit.backing.bean.som.GlobalIssuerBean;
 import com.fluidbpm.fluidwebkit.backing.bean.workspace.WorkspaceFluidItem;
 import com.fluidbpm.fluidwebkit.backing.bean.workspace.field.WebKitField;
 import com.fluidbpm.fluidwebkit.backing.bean.workspace.lf.WebKitWorkspaceLookAndFeelBean;
@@ -14,6 +16,7 @@ import com.fluidbpm.fluidwebkit.exception.MandatoryFieldsException;
 import com.fluidbpm.program.api.util.GeoUtil;
 import com.fluidbpm.program.api.util.UtilGlobal;
 import com.fluidbpm.program.api.vo.attachment.Attachment;
+import com.fluidbpm.program.api.vo.field.DecimalMetaFormat;
 import com.fluidbpm.program.api.vo.field.Field;
 import com.fluidbpm.program.api.vo.field.MultiChoice;
 import com.fluidbpm.program.api.vo.field.TableField;
@@ -52,6 +55,7 @@ import javax.faces.event.AjaxBehaviorEvent;
 import javax.inject.Inject;
 import javax.inject.Named;
 import java.io.ByteArrayInputStream;
+import java.math.BigDecimal;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -67,6 +71,12 @@ public class WebKitOpenFormConversationBean extends ABaseManagedBean {
 
 	@Inject
 	private WebKitOpenFormFieldHistoryConversationBean fieldHistoryConvBean;
+
+	@Inject
+	private WebKitConfigBean webKitConfigBean;
+
+	@Inject
+	private GlobalIssuerBean globalIssuerBean;
 
 	@Getter
 	@Setter
@@ -234,7 +244,6 @@ public class WebKitOpenFormConversationBean extends ABaseManagedBean {
 			List<Field> viewable = this.accessBean.getFieldsViewableForFormDef(formType);
 
 			FormContainerClient fcClient = this.getFluidClientDS().getFormContainerClient();
-
 			FluidItem fluidItem = new FluidItem();
 			if (wfiParam.isFluidItemInWIPState()) {
 				FlowItemClient flowItemClient = this.getFluidClientDS().getFlowItemClient();
@@ -363,12 +372,30 @@ public class WebKitOpenFormConversationBean extends ABaseManagedBean {
 						.ifPresent(fieldWithName -> this.addTableRecordsForField(fieldWithName, val));
 
 			});
+			this.applyCurrencyFormatting();
 		} catch (Exception except) {
 			this.raiseError(except);
 		}
 
 		//The Context Menu...
 		this.buildContextMenuForConversation();
+	}
+
+	private void applyCurrencyFormatting() {
+		if (!this.webKitConfigBean.getEnableSOMPostCardFeatures()) return;
+
+		Currency currencyOverride = this.webKitConfigBean.getIssuerVelocityCurrency(
+			this.getFluidClientDSConfig().getSQLUtilWrapper(),
+			this.globalIssuerBean.getActiveIssuer()
+		);
+		if (currencyOverride == null) return;
+
+		this.getWsFluidItem().getFormFieldsEdit().stream()
+				.filter(this::filterCurrencyField)
+				.forEach(field -> {
+					String currForOverride = DecimalMetaFormat.format(field.getDecimalMetaFormat(), currencyOverride);
+					field.setTypeMetaData(currForOverride);
+				});
 	}
 
 	private void buildContextMenuForConversation() {
@@ -985,6 +1012,22 @@ public class WebKitOpenFormConversationBean extends ABaseManagedBean {
 
 		fluidItem.resetFormFieldsEditMandatoryAndEmpty();
 		List<Field> editFormFields = fluidItem.getFormFieldsEditAsFields();
+		if (editFormFields != null) {
+			editFormFields.stream()
+					.filter(this::filterCurrencyField)
+					.forEach(decimalFieldCurrMinor -> {
+						Currency currency = decimalFieldCurrMinor.getDecimalMetaFormat().getAmountCurrency();
+						decimalFieldCurrMinor.getDecimalMetaFormat().setAmountCurrency(null);
+						Double oldVal = decimalFieldCurrMinor.getFieldValueAsDouble();
+						decimalFieldCurrMinor.getDecimalMetaFormat().setAmountCurrency(currency);
+
+						Double newVal = new BigDecimal(oldVal).movePointRight(
+							currency.getDefaultFractionDigits()
+						).doubleValue();
+						decimalFieldCurrMinor.setFieldValueAsDouble(newVal);
+					});
+		}
+
 		returnVal.setFormFields(editFormFields);
 
 		WebKitForm wkForm = this.lookAndFeelBean.getWebKitFormWithFormDef(returnVal.getFormType());
@@ -1024,6 +1067,12 @@ public class WebKitOpenFormConversationBean extends ABaseManagedBean {
 		}
 
 		return returnVal;
+	}
+
+	private boolean filterCurrencyField(Field field) {
+		if (field == null) return false;
+		return (field.getTypeAsEnum() == Field.Type.Decimal && field.getFieldValueAsLong() != null) &&
+				(field.getDecimalMetaFormat() != null && field.getDecimalMetaFormat().isAmountMinorWithCurrency());
 	}
 
 	private void mergeFormFieldsFromCustomAction(CustomWebAction execActionResult, Form formToUpdate) {

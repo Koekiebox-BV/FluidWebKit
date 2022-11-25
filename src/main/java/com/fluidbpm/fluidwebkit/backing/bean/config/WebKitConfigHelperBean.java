@@ -19,9 +19,7 @@ import com.fluidbpm.fluidwebkit.backing.bean.ABaseManagedBean;
 import com.fluidbpm.fluidwebkit.backing.utility.Globals;
 import com.fluidbpm.fluidwebkit.backing.utility.WebUtil;
 import com.fluidbpm.program.api.util.UtilGlobal;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import com.fluidbpm.program.api.vo.field.DecimalMetaFormat;
 
 import javax.enterprise.context.RequestScoped;
 import javax.faces.application.FacesMessage;
@@ -31,7 +29,6 @@ import javax.faces.model.SelectItem;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.servlet.http.HttpSession;
-import java.math.BigDecimal;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -351,72 +348,6 @@ public class WebKitConfigHelperBean extends ABaseManagedBean {
 		return null;
 	}
 
-	@AllArgsConstructor
-	@NoArgsConstructor
-	@Getter
-	public static class DecimalMetaFormat {
-		private String type;
-		private String prefix;
-		private Number min;
-		private Number max;
-		private Number stepFactor;
-
-		private static final String MIN = "Min";
-		private static final String MAX = "Max";
-		private static final String STEP_FACTOR = "StepFactor";
-		private static final String PREFIX = "Prefix";
-
-		public static final DecimalMetaFormat parse(String theStringToProcessParam) {
-			if (theStringToProcessParam == null || theStringToProcessParam.isEmpty()) return null;
-
-			UtilGlobal ug = new UtilGlobal();
-
-			String[] initialSplit = theStringToProcessParam.split("\\_");
-			if (initialSplit == null || initialSplit.length == 0) return null;
-
-			if (initialSplit.length != 5) return null;
-
-			//Type...
-			String type = initialSplit[0];
-
-			//Min...
-			String minString = getValueFrom(MIN, initialSplit[1]);
-			Number min = ug.toDoubleSafe(minString);
-			if (isPrecisionZero(min)) min = Long.valueOf(min.longValue());
-
-			//Max...
-			String maxString = getValueFrom(MAX, initialSplit[2]);
-			Number max = ug.toDoubleSafe(maxString);
-			if (isPrecisionZero(max)) max = Long.valueOf(max.longValue());
-
-			//Step Factor...
-			String stepFactorString = getValueFrom(STEP_FACTOR,initialSplit[3]);
-			Number stepFactor = ug.toDoubleSafe(stepFactorString);
-			if (isPrecisionZero(stepFactor)) stepFactor = Long.valueOf(stepFactor.longValue());
-
-			//Prefix...
-			String prefix = getValueFrom(PREFIX, initialSplit[4]);
-
-			return new DecimalMetaFormat(type, prefix, min, max, stepFactor);
-		}
-
-		private static String getValueFrom(String variableNameParam, String toRetrieveFromParam) {
-			if (variableNameParam == null || toRetrieveFromParam == null) return null;
-
-			int startIndex = variableNameParam.length();
-			return toRetrieveFromParam.substring(startIndex + 1, toRetrieveFromParam.length() - 1);
-		}
-
-		public boolean isPrecisionZeroForStepFactor() {
-			return DecimalMetaFormat.isPrecisionZero(this.getStepFactor());
-		}
-
-		private static boolean isPrecisionZero(Number value) {
-			BigDecimal bd = new BigDecimal(value.doubleValue());
-			return bd.precision() == 1;
-		}
-	}
-
 	public String createLabelFor(Object forLabel) {
 		if (forLabel == null) return "";
 
@@ -429,9 +360,5 @@ public class WebKitConfigHelperBean extends ABaseManagedBean {
 		}
 		
 		return forLabel.toString();
-	}
-
-	public String getDecimalFormat() {
-		return "###,###,###,###.00";
 	}
 }

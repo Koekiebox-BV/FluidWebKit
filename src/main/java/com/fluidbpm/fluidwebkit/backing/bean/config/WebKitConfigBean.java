@@ -16,11 +16,19 @@
 package com.fluidbpm.fluidwebkit.backing.bean.config;
 
 import com.fluidbpm.fluidwebkit.backing.bean.ABaseManagedBean;
+import com.fluidbpm.fluidwebkit.exception.WebSessionExpiredException;
 import com.fluidbpm.program.api.util.UtilGlobal;
 import com.fluidbpm.program.api.vo.config.ConfigurationListing;
+import com.fluidbpm.program.api.vo.role.Role;
+import com.fluidbpm.program.api.vo.sqlutil.sqlnative.NativeSQLQuery;
+import com.fluidbpm.program.api.vo.sqlutil.sqlnative.SQLColumn;
+import com.fluidbpm.program.api.vo.sqlutil.sqlnative.SQLResultSet;
+import com.fluidbpm.program.api.vo.sqlutil.sqlnative.SQLRow;
 import com.fluidbpm.program.api.vo.thirdpartylib.ThirdPartyLibraryTaskIdentifier;
+import com.fluidbpm.program.api.vo.user.User;
 import com.fluidbpm.ws.client.FluidClientException;
 import com.fluidbpm.ws.client.v1.config.ConfigurationClient;
+import com.fluidbpm.ws.client.v1.sqlutil.wrapper.SQLUtilWebSocketRESTWrapper;
 import lombok.Getter;
 import lombok.Setter;
 import org.primefaces.model.DefaultStreamedContent;
@@ -37,11 +45,10 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.URL;
 import java.net.URLConnection;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.sql.Types;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Bean to take care of the config login.
@@ -295,6 +302,60 @@ public class WebKitConfigBean extends ABaseManagedBean {
 						return null;
 					}
 				}).build();
+	}
+
+	public boolean getEnableSOMPostCardFeatures() {
+		try {
+			String label = this.getWhiteLabel();
+			if (label == null || !(label.trim().toLowerCase().contains("som"))) return false;
+
+			User loggedInUsr = this.getLoggedInUserSafe();
+			if (User.ADMIN_USERNAME.equals(loggedInUsr.getUsername())) return true;
+
+			List<Role> loggedInUsrRoles = loggedInUsr.getRoles();
+			if (loggedInUsrRoles == null || loggedInUsrRoles.isEmpty()) return false;
+
+			return true;
+		} catch (WebSessionExpiredException err) {
+			return false;
+		}
+	}
+
+	public Currency getIssuerVelocityCurrency(SQLUtilWebSocketRESTWrapper wrapper, String issuer) {
+		String ds = UtilGlobal.getProperty(new Properties(), "PostCardDSName", "postcard");
+		NativeSQLQuery getSettlementRules = new NativeSQLQuery();
+		getSettlementRules.setDatasourceName(ds);
+		getSettlementRules.setQuery("SELECT i.velocity_currency_code FROM pc_issuers i WITH(NOLOCK) WHERE i.issuer_name = ?");
+
+		List<SQLColumn> inputs = new ArrayList<>();
+		inputs.add(new SQLColumn(null, 1, Types.VARCHAR, issuer));
+		getSettlementRules.setSqlInputs(inputs);
+
+		List<SQLResultSet> settlementRulesResultSet = wrapper.executeNativeSQL(getSettlementRules);
+		for (SQLResultSet resultSet : settlementRulesResultSet) {
+			if (resultSet.isListingEmpty()) continue;
+
+			for (SQLRow row : resultSet.getListing()) {
+				SQLColumn col_1 = row.getSqlColumns().get(0);
+				Object objSqlVal = col_1.getSqlValue();
+				if (objSqlVal == null) return null;
+
+				final AtomicInteger code = new AtomicInteger(-1);
+				String velocityCurrency = objSqlVal.toString().toUpperCase();
+				try {
+					code.set(Integer.parseInt(velocityCurrency.trim()));
+				} catch (NumberFormatException nfe) {
+					code.set(-1);
+				}
+
+				return Currency.getAvailableCurrencies().stream()
+						.filter(itm -> code.get() == itm.getNumericCode() ||
+								velocityCurrency.equalsIgnoreCase(itm.getCurrencyCode()))
+						.findFirst()
+						.orElse(null);
+			}
+		}
+		return null;
 	}
 
 	public String getCustomCompanyLogoSmallURL() {
