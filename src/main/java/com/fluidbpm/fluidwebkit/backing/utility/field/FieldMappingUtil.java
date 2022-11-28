@@ -20,6 +20,7 @@ import com.fluidbpm.program.api.vo.field.Field;
 import com.fluidbpm.program.api.vo.field.MultiChoice;
 import com.fluidbpm.program.api.vo.sqlutil.sqlnative.SQLColumn;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -59,11 +60,19 @@ public class FieldMappingUtil {
 	}
 
 	public static String generateNewFormTitle(
+		String dateFormat,
 		String formula,
 		String formType,
 		List<Field> formFields
 	) {
-		if (UtilGlobal.isBlank(formula)) return String.format("%s - %s", formType, new Date().toString());
+		if (UtilGlobal.isBlank(formula)) {
+			Date now = new Date();
+			String dateAsTxt = now.toString();
+			if (UtilGlobal.isNotBlank(dateFormat)) {
+				dateAsTxt = new SimpleDateFormat(dateFormat).format(now);
+			}
+			return String.format("%s - %s", formType, dateAsTxt);
+		};
 
 		int lastIndexOfPipe = formula.lastIndexOf("|");
 		String formFieldsString = formula.substring(lastIndexOfPipe);

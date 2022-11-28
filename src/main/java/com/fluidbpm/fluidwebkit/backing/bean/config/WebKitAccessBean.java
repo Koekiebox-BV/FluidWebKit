@@ -340,6 +340,20 @@ public class WebKitAccessBean extends ABaseManagedBean {
 		return this.cloneFields(this.fieldsForEditing.get(formDefinitionParam));
 	}
 
+	public boolean isFieldEditable(String formDef, String fieldName) {
+		if (UtilGlobal.isBlank(formDef, fieldName)) return false;
+
+		List<Field> fieldsForFormDef = this.getFieldsEditableForFormDef(formDef);
+		if (fieldsForFormDef == null) return false;
+		Field fieldAtIndex = fieldsForFormDef.stream()
+				.filter(itm -> fieldName.equals(itm.getFieldName()))
+				.findAny()
+				.orElse(null);
+		if (fieldAtIndex == null) return false;
+
+		return true;
+	}
+
 	public List<Form> getFormDefinitionsCanCreateInstanceOfSorted() {
 		return this.formDefinitionsCanCreateInstanceOf;
 	}

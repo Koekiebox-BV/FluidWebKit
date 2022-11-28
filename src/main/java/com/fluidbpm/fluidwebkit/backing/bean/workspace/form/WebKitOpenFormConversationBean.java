@@ -754,8 +754,11 @@ public class WebKitOpenFormConversationBean extends ABaseManagedBean {
 			String prevTitle = tableRecordToSave.getTitle();
 			WebKitForm wkForm = this.lookAndFeelBean.getWebKitFormWithFormDef(tableRecordToSave.getFormType());
 			tableRecordToSave.setTitle(FieldMappingUtil.generateNewFormTitle(
-					wkForm == null ? null : wkForm.getNewFormTitleFormula(),
-					tableRecordToSave.getFormType(), tableRecordToSave.getFormFields()));
+				this.getDateFormat(),
+				wkForm == null ? null : wkForm.getNewFormTitleFormula(),
+				tableRecordToSave.getFormType(),
+				tableRecordToSave.getFormFields())
+			);
 			tableRecordToSave.setCurrentUser(this.getLoggedInUser());
 
 			Field fieldBy = this.accessBean.getFieldBy(this.getWsFluidItem().getFluidItemFormType(), tableFieldToAddFor.getFieldName());
@@ -1015,6 +1018,7 @@ public class WebKitOpenFormConversationBean extends ABaseManagedBean {
 		if (editFormFields != null) {
 			editFormFields.stream()
 					.filter(this::filterCurrencyField)
+					.filter(field -> this.accessBean.isFieldEditable(returnVal.getFormType(), field.getFieldName()))
 					.forEach(decimalFieldCurrMinor -> {
 						Currency currency = decimalFieldCurrMinor.getDecimalMetaFormat().getAmountCurrency();
 						decimalFieldCurrMinor.getDecimalMetaFormat().setAmountCurrency(null);
@@ -1033,8 +1037,12 @@ public class WebKitOpenFormConversationBean extends ABaseManagedBean {
 		WebKitForm wkForm = this.lookAndFeelBean.getWebKitFormWithFormDef(returnVal.getFormType());
 		returnVal.setFormTypeId(fluidItem.getFluidItemForm().getFormTypeId());
 		returnVal.setFormType(fluidItem.getFluidItemForm().getFormType());
-		returnVal.setTitle(FieldMappingUtil.generateNewFormTitle(wkForm == null ? null : wkForm.getNewFormTitleFormula(),
-				fluidItem.getFluidItemFormType(), fluidItem.getFormFieldsEditAsFields()));
+		returnVal.setTitle(FieldMappingUtil.generateNewFormTitle(
+			this.getDateFormat(),
+			wkForm == null ? null : wkForm.getNewFormTitleFormula(),
+			fluidItem.getFluidItemFormType(),
+			fluidItem.getFormFieldsEditAsFields())
+		);
 
 		//Apply the Custom Action when applicable...
 		String customAction = null;
