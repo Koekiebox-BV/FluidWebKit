@@ -21,6 +21,7 @@ import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.stream.Collectors;
 
 @SessionScoped
 @Named("webKitOpenFormFieldHistoryConversationBean")
@@ -379,5 +380,20 @@ public class WebKitOpenFormFieldHistoryConversationBean extends ABaseManagedBean
 		if (this.getFormFieldHistoriesFlat() == null) return 0;
 
 		return this.getFormFieldHistoriesFlat().size();
+	}
+
+	public List<FlatFieldHistory> getFormFieldHistoriesFlatModifyOnly() {
+		List<FlatFieldHistory> org = this.getFormFieldHistoriesFlat();
+		if (org == null || org.isEmpty()) return org;
+
+		return org.stream()
+				.filter(itm -> {
+					PriorField priorField = itm.getPriorField();
+					if (priorField == null || priorField.getFieldValue() == null) return false;
+					if (itm.getField() == null || itm.getField().getFieldValue() == null) return false;
+					
+					return !itm.getField().getFieldValue().equals(priorField.getFieldValue());
+				})
+				.collect(Collectors.toList());
 	}
 }
