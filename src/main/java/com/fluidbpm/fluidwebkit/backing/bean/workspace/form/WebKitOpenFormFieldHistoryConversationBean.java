@@ -229,7 +229,7 @@ public class WebKitOpenFormFieldHistoryConversationBean extends ABaseManagedBean
 
 				String user = dateAndUserMapping.get(timestamp);
 				List<Field> fields = dateAndFieldValuesMapping.get(timestamp);
-				this.removeFieldsWhereUserHasAccess(fields);
+				this.removeFieldsWhereUserHasNoAccess(fields);
 
 				WebKitFormFieldHistory toAdd = new WebKitFormFieldHistory(user, new Date(timestamp), fields);
 				toAdd.setPriorFields(this.obtainPriorFields(
@@ -256,7 +256,7 @@ public class WebKitOpenFormFieldHistoryConversationBean extends ABaseManagedBean
 		}
 	}
 
-	private void removeFieldsWhereUserHasAccess(List<Field> fields) {
+	private void removeFieldsWhereUserHasNoAccess(List<Field> fields) {
 		if (fields == null || fields.isEmpty()) return;
 
 		List<Field> fieldsUserCanView = this.accessBean.getFieldsViewableForFormDef(this.historyForm.getFormType());
@@ -267,7 +267,14 @@ public class WebKitOpenFormFieldHistoryConversationBean extends ABaseManagedBean
 
 		new ArrayList<>(fields).stream().forEach(param -> {
 			Field fieldWithName = fieldsUserCanView.stream()
-					.filter(itm -> itm.getFieldName().equals(param.getFieldName()))
+					.filter(itm -> {
+						boolean canView = itm.getFieldName().equals(param.getFieldName());
+						String displayVal = null;
+						if (!canView && UtilGlobal.isNotBlank(displayVal = itm.getFieldNameDisplayValue())) {
+							return displayVal.equals(param.getFieldName());
+						}
+						return canView;
+					})
 					.findFirst()
 					.orElse(null);
 			if (fieldWithName == null) fields.remove(param);
