@@ -68,9 +68,19 @@ public class FieldMappingUtil {
 		if (UtilGlobal.isBlank(formula)) {
 			Date now = new Date();
 			String dateAsTxt = now.toString();
-			if (UtilGlobal.isNotBlank(dateFormat)) {
-				dateAsTxt = new SimpleDateFormat(dateFormat).format(now);
+			if (UtilGlobal.isNotBlank(dateFormat)) dateAsTxt = new SimpleDateFormat(dateFormat).format(now);
+
+			if (formFields != null) {
+				String modifyType = formFields.stream()
+						.filter(itm ->
+								itm.getFieldName().equalsIgnoreCase("Modify Type") &&
+								itm.getFieldValue() != null)
+						.map(itm -> itm.getFieldValueAsString())
+						.findFirst()
+						.orElse(null);
+				if (UtilGlobal.isNotBlank(modifyType)) formType = modifyType;
 			}
+
 			return String.format("%s - %s", formType, dateAsTxt);
 		};
 
