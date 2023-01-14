@@ -46,7 +46,9 @@ public class WebKitOpenFormFieldHistoryConversationBean extends ABaseManagedBean
 	private List<FlatFieldHistory> formFieldHistoriesFlat;
 
 	private static final String EMPTY_FLAG = "-";
+	public static final String SYSTEM_ROUTE = "_SYSTEM_ROUTE_";
 	private static final boolean IGNORE_FIELDS_WHERE_VAL_SAME = true;
+	private static final boolean IGNORE_SYSTEM_ROUTE = true;
 	private static final boolean IGNORE_TABLE_LABEL = true;
 
 	@EqualsAndHashCode
@@ -242,6 +244,7 @@ public class WebKitOpenFormFieldHistoryConversationBean extends ABaseManagedBean
 
 				if (IGNORE_FIELDS_WHERE_VAL_SAME) this.removeFieldsWhereValuesMatch(toAdd);
 				if (IGNORE_TABLE_LABEL) this.removeUnwantedFieldTypes(toAdd);
+				if (IGNORE_SYSTEM_ROUTE && this.isSystemRoute(toAdd)) continue;
 
 				this.formFieldHistories.add(toAdd);
 			}
@@ -306,6 +309,10 @@ public class WebKitOpenFormFieldHistoryConversationBean extends ABaseManagedBean
 				}
 			}
 		});
+	}
+
+	private boolean isSystemRoute(WebKitFormFieldHistory history) {
+		return SYSTEM_ROUTE.equalsIgnoreCase(history.getUsername());
 	}
 
 	private List<PriorField> obtainPriorFields(
