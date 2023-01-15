@@ -785,6 +785,26 @@ public class WebKitOpenFormConversationBean extends ABaseManagedBean {
 		}
 	}
 
+	public void actionDeleteTableRecord(Form tableRecordToDel, Field tableFieldToDelFor, int tblRecordIndex) {
+		try {
+			FormContainerClient fcc = this.getFluidClientDS().getFormContainerClient();
+
+			if (tableRecordToDel.getId() != null && tableRecordToDel.getId().longValue() > 0) {
+				fcc.deleteFormContainer(tableRecordToDel);
+			}
+			TableField tblField = tableFieldToDelFor.getFieldValueAsTableField();
+			List<Form> tbRecords = tblField == null ? null : tblField.getTableRecords();
+			if (tbRecords != null && tblRecordIndex > -1) tbRecords.remove(tblRecordIndex);
+
+			String prevTitle = tableRecordToDel.getTitle();
+			FacesMessage fMsg = new FacesMessage(FacesMessage.SEVERITY_INFO,
+					"Success", String.format("Deleted '%s'.", prevTitle));
+			FacesContext.getCurrentInstance().addMessage(null, fMsg);
+		} catch (Exception except) {
+			this.raiseError(except);
+		}
+	}
+
 	public void actionOnRowEdit(RowEditEvent<Form> event) {
 		FacesMessage msg = new FacesMessage("Edited", String.format("%s - %s",
 				event.getObject().getFormType(), event.getObject().getTitle()));
