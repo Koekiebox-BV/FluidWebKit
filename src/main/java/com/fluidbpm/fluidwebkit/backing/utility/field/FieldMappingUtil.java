@@ -15,6 +15,7 @@
 
 package com.fluidbpm.fluidwebkit.backing.utility.field;
 
+import com.fluidbpm.fluidwebkit.backing.utility.RaygunUtil;
 import com.fluidbpm.program.api.util.UtilGlobal;
 import com.fluidbpm.program.api.vo.field.Field;
 import com.fluidbpm.program.api.vo.field.MultiChoice;
@@ -91,7 +92,13 @@ public class FieldMappingUtil {
 		String[] formFieldNames = formFieldsString.substring(1).split("\\,");
 		if (formFieldNames == null || formFieldNames.length < 1) return formFieldsString;
 
-		return String.format(formula.substring(0, lastIndexOfPipe), toObjs(formFieldNames, formFields));
+		try {
+			return String.format(formula.substring(0, lastIndexOfPipe), toObjs(formFieldNames, formFields));
+		} catch (Exception err) {
+			err.printStackTrace();
+			if (RaygunUtil.isRaygunEnabled()) new RaygunUtil().raiseErrorToRaygun(err, null);
+			return formula;
+		}
 	}
 
 	private static Object[] toObjs(String[] formFieldNames, List<Field> formFields) {
