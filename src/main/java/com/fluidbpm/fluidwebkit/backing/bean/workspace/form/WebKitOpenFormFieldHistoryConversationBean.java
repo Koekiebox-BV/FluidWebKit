@@ -17,6 +17,7 @@ import javax.enterprise.context.SessionScoped;
 import javax.inject.Inject;
 import javax.inject.Named;
 import java.io.Serializable;
+import java.math.BigDecimal;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
@@ -181,6 +182,13 @@ public class WebKitOpenFormFieldHistoryConversationBean extends ABaseManagedBean
 			return (this.field.getTypeAsEnum() == Field.Type.DateTime);
 		}
 
+		public boolean isValueOfTypeDecimal() {
+			if (this.field == null) return false;
+			if (this.field.getFieldValueAsNumber() == null) return false;
+
+			return (this.field.getTypeAsEnum() == Field.Type.Decimal);
+		}
+
 		public String getUsernameNoWhitespace() {
 			return UtilGlobal.removeWhitespace(this.getUsername());
 		}
@@ -212,6 +220,10 @@ public class WebKitOpenFormFieldHistoryConversationBean extends ABaseManagedBean
 				Long key = al.get();
 				if (historyType.equals(FormHistoricData.HistoricEntryType.FIELD_AND_VALUE)) {
 					List<Field> fieldsForDateChange = dateAndFieldValuesMapping.getOrDefault(key, new ArrayList<>());
+
+					// Remap Decimal Values for All Fields to be the same Format:
+					this.sanitiseDecimalFieldsAllLong(fieldsForDateChange);
+
 					fieldsForDateChange.add(historyItem.getField());
 					Collections.sort(fieldsForDateChange, Comparator.comparing(Field::getFieldName));
 					dateAndFieldValuesMapping.put(key, fieldsForDateChange);
@@ -231,6 +243,8 @@ public class WebKitOpenFormFieldHistoryConversationBean extends ABaseManagedBean
 
 				String user = dateAndUserMapping.get(timestamp);
 				List<Field> fields = dateAndFieldValuesMapping.get(timestamp);
+
+				// Remove Fields where user has no Access:
 				this.removeFieldsWhereUserHasNoAccess(fields);
 
 				WebKitFormFieldHistory toAdd = new WebKitFormFieldHistory(user, new Date(timestamp), fields);
@@ -257,6 +271,42 @@ public class WebKitOpenFormFieldHistoryConversationBean extends ABaseManagedBean
 		} catch (Exception except) {
 			this.raiseError(except);
 		}
+	}
+
+	private void sanitiseDecimalFieldsAllLong(List<Field> fields) {
+		fields.stream()
+				.filter(field ->
+						(field.getTypeAsEnum() != null && field.getTypeAsEnum() == Field.Type.Decimal) &&
+								field.getFieldValueAsNumber() != null)
+				.forEach(field -> {
+					int currencyFraction = 0;
+					if (field.getDecimalMetaFormat() != null &&
+							field.getDecimalMetaFormat().getAmountCurrency() != null) {
+						currencyFraction = field.getDecimalMetaFormat().getAmountCurrency().getDefaultFractionDigits();
+					}
+
+					field.setFieldValueAsLong(this.reformatFieldAsLong(
+							field.getFieldValueAsDouble(), currencyFraction));
+				});
+	}
+
+	private Long reformatFieldAsLong(Double fieldDblVal, int currencyFraction) {
+		if (fieldDblVal == null) return null;
+
+		BigDecimal bd = new BigDecimal(fieldDblVal);
+		if (bd.doubleValue() == 0.0d) return 0L;
+
+		long returnVal = 0;
+		if (bd.scale() > 0) {
+			String dblSting = Double.toString(fieldDblVal);
+			if (currencyFraction > 0) {
+				int indexOfScale = dblSting.indexOf(".");
+				int fractions = dblSting.substring(indexOfScale + 1).length();
+				for (;fractions < currencyFraction; fractions++) dblSting += "0";
+				returnVal = new Long(dblSting.replace(".", ""));
+			} else returnVal = new Long(dblSting.replace(".", ""));
+		} else returnVal = bd.longValue();
+		return returnVal;
 	}
 
 	private void removeFieldsWhereUserHasNoAccess(List<Field> fields) {
