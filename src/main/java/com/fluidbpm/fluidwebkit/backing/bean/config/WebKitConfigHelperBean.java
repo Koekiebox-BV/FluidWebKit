@@ -312,7 +312,9 @@ public class WebKitConfigHelperBean extends ABaseManagedBean {
 		return metaDataTxt.substring(7);
 	}
 
-	public String extractDateTimeFormatFromMetaData(String metaDataTxt) {
+	public String extractDateTimeFormatFromMetaData(String fieldName, String metaDataTxt) {
+		if ("Expiry Date Date".equals(fieldName)) return "yyyy-MM";
+
 		if ("Date".equals(metaDataTxt)) {
 			return this.getDateFormat();
 		} else if ("Date and Time".equals(metaDataTxt)) {
@@ -321,10 +323,10 @@ public class WebKitConfigHelperBean extends ABaseManagedBean {
 		return "yyyy-MM-dd hh:mm";
 	}
 
-	public String extractDateAsTxt(Object dateValue, String fieldMetaTxt) {
+	public String extractDateAsTxt(String fieldName, Object dateValue, String fieldMetaTxt) {
 		if (dateValue == null) return null;
 
-		String format = this.extractDateTimeFormatFromMetaData(fieldMetaTxt);
+		String format = this.extractDateTimeFormatFromMetaData(fieldName, fieldMetaTxt);
 		if (dateValue instanceof Date) {
 			return new SimpleDateFormat(format).format((Date)dateValue);
 		} else {

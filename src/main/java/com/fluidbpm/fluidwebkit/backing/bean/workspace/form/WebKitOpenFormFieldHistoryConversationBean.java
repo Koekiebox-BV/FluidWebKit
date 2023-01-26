@@ -2,7 +2,10 @@ package com.fluidbpm.fluidwebkit.backing.bean.workspace.form;
 
 import com.fluidbpm.fluidwebkit.backing.bean.ABaseManagedBean;
 import com.fluidbpm.fluidwebkit.backing.bean.config.WebKitAccessBean;
+import com.fluidbpm.fluidwebkit.backing.bean.config.WebKitConfigBean;
+import com.fluidbpm.fluidwebkit.backing.bean.som.GlobalIssuerBean;
 import com.fluidbpm.program.api.util.UtilGlobal;
+import com.fluidbpm.program.api.vo.field.DecimalMetaFormat;
 import com.fluidbpm.program.api.vo.field.Field;
 import com.fluidbpm.program.api.vo.form.Form;
 import com.fluidbpm.program.api.vo.historic.FormHistoricData;
@@ -29,6 +32,12 @@ import java.util.stream.Collectors;
 public class WebKitOpenFormFieldHistoryConversationBean extends ABaseManagedBean {
 	@Inject
 	private WebKitAccessBean accessBean;
+
+	@Inject
+	private WebKitConfigBean webKitConfigBean;
+
+	@Inject
+	private GlobalIssuerBean globalIssuerBean;
 
 	@Getter
 	@Setter
@@ -202,6 +211,13 @@ public class WebKitOpenFormFieldHistoryConversationBean extends ABaseManagedBean
 
 		FormContainerClient fcc = this.getFluidClientDS().getFormContainerClient();
 
+		if (!this.webKitConfigBean.getEnableSOMPostCardFeatures()) return;
+
+		Currency currencyOverride = this.webKitConfigBean.getIssuerVelocityCurrency(
+				this.getFluidClientDSConfig().getSQLUtilWrapper(),
+				this.globalIssuerBean.getActiveIssuer()
+		);
+
 		try {
 			this.setFormHistoricData(fcc.getFormAndFieldHistoricData(this.historyForm, false, true));
 
@@ -222,6 +238,13 @@ public class WebKitOpenFormFieldHistoryConversationBean extends ABaseManagedBean
 					List<Field> fieldsForDateChange = dateAndFieldValuesMapping.getOrDefault(key, new ArrayList<>());
 
 					// Remap Decimal Values for All Fields to be the same Format:
+					if (currencyOverride != null) {
+						fieldsForDateChange.stream()
+								.forEach(field -> {
+									String currForOverride = DecimalMetaFormat.format(field.getDecimalMetaFormat(), currencyOverride);
+									field.setTypeMetaData(currForOverride);
+								});
+					}
 					this.sanitiseDecimalFieldsAllLong(fieldsForDateChange);
 
 					fieldsForDateChange.add(historyItem.getField());
@@ -294,7 +317,7 @@ public class WebKitOpenFormFieldHistoryConversationBean extends ABaseManagedBean
 		if (fieldDblVal == null) return null;
 
 		BigDecimal bd = new BigDecimal(fieldDblVal);
-		if (bd.doubleValue() == 0.0d) return 0L;
+		if (bd.doubleValue() <= 0.0d) return 0L;// We treat negatives as not set.
 
 		long returnVal = 0;
 		if (bd.scale() > 0) {
@@ -305,6 +328,10 @@ public class WebKitOpenFormFieldHistoryConversationBean extends ABaseManagedBean
 				for (;fractions < currencyFraction; fractions++) dblSting += "0";
 				returnVal = new Long(dblSting.replace(".", ""));
 			} else returnVal = new Long(dblSting.replace(".", ""));
+		} else if (currencyFraction > 0) {
+			String lngSting = Long.toString(bd.longValue());
+			for (int index = 0;index < currencyFraction; index++) lngSting += "0";
+			return new Long(lngSting);
 		} else returnVal = bd.longValue();
 		return returnVal;
 	}
