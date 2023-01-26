@@ -240,6 +240,7 @@ public class WebKitOpenFormFieldHistoryConversationBean extends ABaseManagedBean
 					// Remap Decimal Values for All Fields to be the same Format:
 					if (currencyOverride != null) {
 						fieldsForDateChange.stream()
+								.filter(field -> field.getDecimalMetaFormat() != null)
 								.forEach(field -> {
 									String currForOverride = DecimalMetaFormat.format(field.getDecimalMetaFormat(), currencyOverride);
 									field.setTypeMetaData(currForOverride);
