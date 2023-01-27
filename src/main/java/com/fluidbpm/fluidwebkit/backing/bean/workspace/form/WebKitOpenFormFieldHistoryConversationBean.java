@@ -21,11 +21,14 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import java.io.Serializable;
 import java.math.BigDecimal;
+import java.math.MathContext;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
+
+import static java.math.MathContext.DECIMAL64;
 
 @SessionScoped
 @Named("webKitOpenFormFieldHistoryConversationBean")
@@ -246,7 +249,7 @@ public class WebKitOpenFormFieldHistoryConversationBean extends ABaseManagedBean
 									field.setTypeMetaData(currForOverride);
 								});
 					}
-					this.sanitiseDecimalFieldsAllLong(fieldsForDateChange);
+					this.sanitiseDecimalFieldsAllDoubleFormattedCurrency(fieldsForDateChange);
 
 					fieldsForDateChange.add(historyItem.getField());
 					Collections.sort(fieldsForDateChange, Comparator.comparing(Field::getFieldName));
@@ -297,7 +300,7 @@ public class WebKitOpenFormFieldHistoryConversationBean extends ABaseManagedBean
 		}
 	}
 
-	private void sanitiseDecimalFieldsAllLong(List<Field> fields) {
+	private void sanitiseDecimalFieldsAllDoubleFormattedCurrency(List<Field> fields) {
 		fields.stream()
 				.filter(field ->
 						(field.getTypeAsEnum() != null && field.getTypeAsEnum() == Field.Type.Decimal) &&
@@ -309,31 +312,54 @@ public class WebKitOpenFormFieldHistoryConversationBean extends ABaseManagedBean
 						currencyFraction = field.getDecimalMetaFormat().getAmountCurrency().getDefaultFractionDigits();
 					}
 
-					field.setFieldValueAsLong(this.reformatFieldAsLong(
+					field.setFieldValueAsDouble(this.reformatFieldAsDbl(
 							field.getFieldValueAsDouble(), currencyFraction));
 				});
 	}
 
-	private Long reformatFieldAsLong(Double fieldDblVal, int currencyFraction) {
-		if (fieldDblVal == null) return null;
+	private static MathContext MC = DECIMAL64;
+	private double reformatFieldAsDbl(Double fieldDblVal, int currencyFraction) {
+		if (fieldDblVal == null) return 0.0;
 
-		BigDecimal bd = new BigDecimal(fieldDblVal);
-		if (bd.doubleValue() <= 0.0d) return 0L;// We treat negatives as not set.
+		BigDecimal bd = new BigDecimal(fieldDblVal, MC);
+		if (bd.doubleValue() <= 0.0d) return 0.0;// We treat negatives as not set.
 
 		long returnVal = 0;
 		if (bd.scale() > 0) {
 			String dblSting = Double.toString(fieldDblVal);
+			if (dblSting.toUpperCase().contains("E")) {
+				dblSting = Double.toString(new BigDecimal(returnVal, MC)
+						.round(MathContext.DECIMAL32)
+						.setScale(currencyFraction > 0 ? currencyFraction : 2)
+						.doubleValue());
+			}
 			if (currencyFraction > 0) {
 				int indexOfScale = dblSting.indexOf(".");
 				int fractions = dblSting.substring(indexOfScale + 1).length();
 				for (;fractions < currencyFraction; fractions++) dblSting += "0";
-				returnVal = new Long(dblSting.replace(".", ""));
+				String txtValToParse = dblSting.replace(".", "");
+				try {
+					returnVal = new Long(txtValToParse);
+				} catch (NumberFormatException nde) {
+					this.getLogger().error(String.format("Unable to parse '%s'. %s",
+							txtValToParse, nde.getMessage()), nde);
+					return fieldDblVal;
+				}
 			} else returnVal = new Long(dblSting.replace(".", ""));
 		} else if (currencyFraction > 0) {
 			String lngSting = Long.toString(bd.longValue());
 			for (int index = 0;index < currencyFraction; index++) lngSting += "0";
 			return new Long(lngSting);
 		} else returnVal = bd.longValue();
+
+		if (currencyFraction > 0) {
+			return new BigDecimal(returnVal, MC)
+					.movePointLeft(currencyFraction)
+					.round(MC)
+					.setScale(currencyFraction)
+					.doubleValue();
+		}
+
 		return returnVal;
 	}
 

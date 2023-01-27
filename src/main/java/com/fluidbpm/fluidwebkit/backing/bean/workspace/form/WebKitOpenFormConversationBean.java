@@ -390,11 +390,28 @@ public class WebKitOpenFormConversationBean extends ABaseManagedBean {
 		);
 		if (currencyOverride == null) return;
 
+		// Main Form fields:
 		this.getWsFluidItem().getFormFieldsEdit().stream()
 				.filter(this::filterCurrencyField)
 				.forEach(field -> {
 					String currForOverride = DecimalMetaFormat.format(field.getDecimalMetaFormat(), currencyOverride);
 					field.setTypeMetaData(currForOverride);
+				});
+
+		// Only Table fields:
+		this.getWsFluidItem().getFormFieldsEdit().stream()
+				.filter(itm -> itm.getTypeAsEnum() == Field.Type.Table)
+				.map(itm -> itm.getFieldValueAsTableField())
+				//Only where there is table records...
+				.filter(tblField -> tblField != null && (tblField.getTableRecords() != null && !tblField.getTableRecords().isEmpty()))
+				.map(tblRecords -> tblRecords.getTableRecords())
+				.flatMap(Collection::stream)
+				.forEach(tableRecord -> {tableRecord.getFormFields().stream()
+						.filter(this::filterCurrencyField)
+						.forEach(field -> {
+							String currForOverride = DecimalMetaFormat.format(field.getDecimalMetaFormat(), currencyOverride);
+							field.setTypeMetaData(currForOverride);
+						});
 				});
 	}
 
@@ -989,18 +1006,36 @@ public class WebKitOpenFormConversationBean extends ABaseManagedBean {
 		if (loggedInUser == null) return;
 
 		formToUpdateForm.getFormFields().stream()
-				//Only table fields
+				// Only table fields:
 				.filter(itm -> itm.getTypeAsEnum() == Field.Type.Table)
 				.map(itm -> itm.getFieldValueAsTableField())
-				//Only where there is table records...
+				// Only where there is table records:
 				.filter(tblField -> tblField != null && (tblField.getTableRecords() != null && !tblField.getTableRecords().isEmpty()))
 				.map(tblRecords -> tblRecords.getTableRecords())
 				.flatMap(Collection::stream)
-				//Only where modified by currently logged in user and not a placeholder...
+				// Only where modified by currently logged in user and not a placeholder:
 				.filter(tblRecordItm -> loggedInUser.equals(tblRecordItm.getCurrentUser()) &&
 						!PLACEHOLDER_TITLE.equals(tblRecordItm.getTitle()))
 				.forEach(tableRecord -> {
 					try {
+						// Remap the Currency Fields to store as minor denomination:
+						if (tableRecord.getFormFields() != null) {
+							tableRecord.getFormFields().stream()
+									.filter(this::filterCurrencyField)
+									.filter(field -> this.accessBean.isFieldEditable(tableRecord.getFormType(), field.getFieldName()))
+									.forEach(decimalFieldCurrMinor -> {
+										Currency currency = decimalFieldCurrMinor.getDecimalMetaFormat().getAmountCurrency();
+										decimalFieldCurrMinor.getDecimalMetaFormat().setAmountCurrency(null);
+										Double oldVal = decimalFieldCurrMinor.getFieldValueAsDouble();
+										decimalFieldCurrMinor.getDecimalMetaFormat().setAmountCurrency(currency);
+
+										Double newVal = new BigDecimal(oldVal).movePointRight(
+												currency.getDefaultFractionDigits()
+										).doubleValue();
+										decimalFieldCurrMinor.setFieldValueAsDouble(newVal);
+									});
+						}
+
 						Form upsertForm = null;
 						if (tableRecord.getId() == null || tableRecord.getId() < 1) {
 							Field parentField = new Field(tableRecord.getTableFieldParentId());
@@ -1035,6 +1070,7 @@ public class WebKitOpenFormConversationBean extends ABaseManagedBean {
 
 		fluidItem.resetFormFieldsEditMandatoryAndEmpty();
 		List<Field> editFormFields = fluidItem.getFormFieldsEditAsFields();
+		// Remap the Currency Fields to store as minor denomination:
 		if (editFormFields != null) {
 			editFormFields.stream()
 					.filter(this::filterCurrencyField)
