@@ -328,15 +328,6 @@ public class WebKitOpenFormFieldHistoryConversationBean extends ABaseManagedBean
 		BigDecimal bd = new BigDecimal(fieldDblVal, MC);
 		if (bd.doubleValue() <= 0.0d) return 0.0;// We treat negatives as not set.
 
-		if (true && currencyFraction > 0) {
-			// TODO @jason, test this:
-			return new BigDecimal(fieldDblVal, MC)
-					.movePointLeft(currencyFraction)
-					//.round(MC)
-					//.setScale(currencyFraction)
-					.doubleValue();
-		}
-
 		long returnVal = 0;
 		if (bd.scale() > 0) {
 			String dblSting = Double.toString(fieldDblVal);
