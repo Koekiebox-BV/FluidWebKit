@@ -22,6 +22,7 @@ import javax.inject.Named;
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.math.MathContext;
+import java.text.DecimalFormat;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
@@ -529,7 +530,7 @@ public class WebKitOpenFormFieldHistoryConversationBean extends ABaseManagedBean
 			"Weekly Payment Number of Transactions Limit",
 	};
 
-	private static String RETURN_FORMAT = "###,###,###,###.000";
+	private static String RETURN_FORMAT = "###,###,###,##0.000";
 
 	public String historyDecimalFormat(String fieldName) {
 		if (UtilGlobal.isBlank(fieldName)) return RETURN_FORMAT;
@@ -537,10 +538,17 @@ public class WebKitOpenFormFieldHistoryConversationBean extends ABaseManagedBean
 		String returnFormat = RETURN_FORMAT;
 		for (String frm : WHOLE_NR_FIELDS) {
 			if (frm.equalsIgnoreCase(fieldName)) {
-				returnFormat = "###,###,###,###";
+				returnFormat = "###,###,###,##0";
 				break;
 			}
 		}
 		return returnFormat;
+	}
+
+	public String formatFieldOfTypeDecimalFormat(Field field) {
+		if (field == null || field.getFieldValue() == null) return "-";
+
+		DecimalFormat df = new DecimalFormat(this.historyDecimalFormat(field.getFieldName()));
+		return df.format(field.getFieldValueAsDouble());
 	}
 }
