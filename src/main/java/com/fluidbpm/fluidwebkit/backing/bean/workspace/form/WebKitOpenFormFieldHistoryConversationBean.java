@@ -514,4 +514,33 @@ public class WebKitOpenFormFieldHistoryConversationBean extends ABaseManagedBean
 				})
 				.collect(Collectors.toList());
 	}
+
+	private static String[] WHOLE_NR_FIELDS = {
+			"Goods Number of Transactions Limit",
+			"Cash Number of Transactions Limit",
+			"Payment Number Transactions Limit",
+			// Monthly:
+			"Monthly Cash Number of Transactions Limit",
+			"Monthly Goods Number of Transactions Limit",
+			"Monthly Payment Number of Transactions Limit",
+			// Weekly:
+			"Weekly Cash Number of Transactions Limit",
+			"Weekly Goods Number of Transactions Limit",
+			"Weekly Payment Number of Transactions Limit",
+	};
+
+	private static String RETURN_FORMAT = "###,###,###,###.000";
+
+	public String historyDecimalFormat(String fieldName) {
+		if (UtilGlobal.isBlank(fieldName)) return RETURN_FORMAT;
+
+		String returnFormat = RETURN_FORMAT;
+		for (String frm : WHOLE_NR_FIELDS) {
+			if (frm.equalsIgnoreCase(fieldName)) {
+				returnFormat = "###,###,###,###";
+				break;
+			}
+		}
+		return returnFormat;
+	}
 }
