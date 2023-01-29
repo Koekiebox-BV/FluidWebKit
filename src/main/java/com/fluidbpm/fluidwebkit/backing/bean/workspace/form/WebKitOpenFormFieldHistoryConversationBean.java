@@ -313,17 +313,29 @@ public class WebKitOpenFormFieldHistoryConversationBean extends ABaseManagedBean
 						currencyFraction = field.getDecimalMetaFormat().getAmountCurrency().getDefaultFractionDigits();
 					}
 
-					field.setFieldValueAsDouble(this.reformatFieldAsDbl(
-							field.getFieldValueAsDouble(), currencyFraction));
+					// Only Reformat Currency Fields:
+					if (currencyFraction > 0) {
+						field.setFieldValueAsDouble(this.reformatFieldAsDblCurrency(
+								field.getFieldValueAsDouble(), currencyFraction));
+					}
 				});
 	}
 
 	private static MathContext MC = DECIMAL64;
-	private double reformatFieldAsDbl(Double fieldDblVal, int currencyFraction) {
+	private double reformatFieldAsDblCurrency(Double fieldDblVal, int currencyFraction) {
 		if (fieldDblVal == null) return 0.0;
 
 		BigDecimal bd = new BigDecimal(fieldDblVal, MC);
 		if (bd.doubleValue() <= 0.0d) return 0.0;// We treat negatives as not set.
+
+		if (true && currencyFraction > 0) {
+			// TODO @jason, test this:
+			return new BigDecimal(fieldDblVal, MC)
+					.movePointLeft(currencyFraction)
+					//.round(MC)
+					//.setScale(currencyFraction)
+					.doubleValue();
+		}
 
 		long returnVal = 0;
 		if (bd.scale() > 0) {
