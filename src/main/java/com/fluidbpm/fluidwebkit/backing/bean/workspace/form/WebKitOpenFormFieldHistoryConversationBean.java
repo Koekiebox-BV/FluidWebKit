@@ -340,28 +340,27 @@ public class WebKitOpenFormFieldHistoryConversationBean extends ABaseManagedBean
 			if (currencyFraction > 0) {
 				int indexOfScale = dblSting.indexOf(".");
 				int fractions = dblSting.substring(indexOfScale + 1).length();
-				for (;fractions < currencyFraction; fractions++) dblSting += "0";
+				for (; fractions < currencyFraction; fractions++) dblSting += "0";
 				String txtValToParse = dblSting.replace(".", "");
 				try {
 					returnVal = new Long(txtValToParse);
 				} catch (NumberFormatException nde) {
-					this.getLogger().error(String.format("Unable to parse '%s'. %s",
-							txtValToParse, nde.getMessage()), nde);
+					nde.printStackTrace();
 					return fieldDblVal;
 				}
 			} else returnVal = new Long(dblSting.replace(".", ""));
 		} else if (currencyFraction > 0) {
 			String lngSting = Long.toString(bd.longValue());
 			for (int index = 0;index < currencyFraction; index++) lngSting += "0";
-			return new Long(lngSting);
+			returnVal = new Long(lngSting);
 		} else returnVal = bd.longValue();
 
 		if (currencyFraction > 0) {
-			return new BigDecimal(returnVal, MC)
-					.movePointLeft(currencyFraction)
-					.round(MC)
-					.setScale(currencyFraction)
-					.doubleValue();
+			String returnValTxt = Long.toString(returnVal);
+			String leading = returnValTxt.substring(0, returnValTxt.length() - currencyFraction);
+			String trailing = returnValTxt.substring(returnValTxt.length() - currencyFraction);
+
+			return Double.valueOf(String.format("%s.%s", leading, trailing));
 		}
 
 		return returnVal;
