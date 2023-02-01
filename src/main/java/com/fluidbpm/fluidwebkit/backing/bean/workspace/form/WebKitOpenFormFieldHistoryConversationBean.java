@@ -244,7 +244,7 @@ public class WebKitOpenFormFieldHistoryConversationBean extends ABaseManagedBean
 					// Remap Decimal Values for All Fields to be the same Format:
 					if (currencyOverride != null) {
 						fieldsForDateChange.stream()
-								.filter(field -> field.getDecimalMetaFormat() != null)
+								.filter(field -> field.isAmountMinorWithCurrency())
 								.forEach(field -> {
 									String currForOverride = DecimalMetaFormat.format(field.getDecimalMetaFormat(), currencyOverride);
 									field.setTypeMetaData(currForOverride);
@@ -315,15 +315,18 @@ public class WebKitOpenFormFieldHistoryConversationBean extends ABaseManagedBean
 
 					// Only Reformat Currency Fields:
 					if (currencyFraction > 0) {
-
 						field.setFieldValueAsDouble(this.reformatFieldAsDblCurrency(
-								field.getFieldValue(), currencyFraction));
+								field.getFieldName(), field.getFieldValue(), currencyFraction));
 					}
 				});
 	}
 
 	private static MathContext MC = DECIMAL64;
-	private double reformatFieldAsDblCurrency(Object fieldVal, int currencyFraction) {
+	private double reformatFieldAsDblCurrency(
+		String fieldName,
+		Object fieldVal,
+		int currencyFraction
+	) {
 		if (fieldVal == null) return 0.0;
 
 		final Double fieldDblVal;
@@ -340,6 +343,7 @@ public class WebKitOpenFormFieldHistoryConversationBean extends ABaseManagedBean
 					.round(MathContext.UNLIMITED)
 					.movePointLeft(currencyFraction)
 					.doubleValue();
+			System.out.println("JasonTest: CurFraction("+fieldName+")[" + fieldVal + " : "+ fieldDblVal + " : "+returnVal+"]");
 			return returnVal;
 		}
 
