@@ -315,18 +315,33 @@ public class WebKitOpenFormFieldHistoryConversationBean extends ABaseManagedBean
 
 					// Only Reformat Currency Fields:
 					if (currencyFraction > 0) {
+
 						field.setFieldValueAsDouble(this.reformatFieldAsDblCurrency(
-								field.getFieldValueAsDouble(), currencyFraction));
+								field.getFieldValue(), currencyFraction));
 					}
 				});
 	}
 
 	private static MathContext MC = DECIMAL64;
-	private double reformatFieldAsDblCurrency(Double fieldDblVal, int currencyFraction) {
-		if (fieldDblVal == null) return 0.0;
+	private double reformatFieldAsDblCurrency(Object fieldVal, int currencyFraction) {
+		if (fieldVal == null) return 0.0;
+
+		final Double fieldDblVal;
+		if (fieldVal instanceof Number) {
+			fieldDblVal = Double.valueOf(fieldVal.toString());
+		} else return 0.0;
 
 		BigDecimal bd = new BigDecimal(fieldDblVal, MC);
 		if (bd.doubleValue() <= 0.0d) return 0.0;// We treat negatives as not set.
+
+		if (currencyFraction > 0) {
+			//TODO testing for history view:
+			double returnVal = new BigDecimal(fieldDblVal)
+					.round(MathContext.UNLIMITED)
+					.movePointLeft(currencyFraction)
+					.doubleValue();
+			return returnVal;
+		}
 
 		long returnVal = 0;
 		if (bd.scale() > 0) {
@@ -357,10 +372,18 @@ public class WebKitOpenFormFieldHistoryConversationBean extends ABaseManagedBean
 
 		if (currencyFraction > 0) {
 			String returnValTxt = Long.toString(returnVal);
-			String leading = returnValTxt.substring(0, returnValTxt.length() - currencyFraction);
-			String trailing = returnValTxt.substring(returnValTxt.length() - currencyFraction);
+			System.out.println("JasonTest: Converting[" + returnVal + ":"+ returnValTxt + "]");
 
-			return Double.valueOf(String.format("%s.%s", leading, trailing));
+			int splitIndex = (returnValTxt.length() - currencyFraction);
+			if (splitIndex > 0) {
+				String leading = returnValTxt.substring(0, splitIndex);
+				String trailing = returnValTxt.substring(splitIndex);
+				returnValTxt = String.format("%s.%s", leading, trailing);
+			}
+
+			double returnValDbl = Double.valueOf(returnValTxt);
+			System.out.println("JasonTest: Result[" + returnValDbl + ":"+ returnValTxt + "]");
+			return returnValDbl;
 		}
 
 		return returnVal;
@@ -399,7 +422,8 @@ public class WebKitOpenFormFieldHistoryConversationBean extends ABaseManagedBean
 			PriorField priorField = history.getPriorFieldForField(field);
 			if (priorField == null) return;
 
-			if (field.valueEquals(priorField)) history.getFields().remove(field);
+			if (field.valueEquals(priorField) ||
+					(field.isFieldValueEmpty() && priorField.isFieldValueEmpty())) history.getFields().remove(field);
 		});
 	}
 

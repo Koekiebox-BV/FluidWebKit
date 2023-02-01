@@ -973,6 +973,25 @@ public class WebKitOpenFormConversationBean extends ABaseManagedBean {
 		}
 	}
 
+	public void actionLoadFormHistoricDataTableRecord(
+		String btnToReEnable,
+		String dialogToShowIfSuccess,
+		Long recordFormId,
+		String formType
+	) {
+		String jsToExec = UtilGlobal.EMPTY;
+		try {
+			Form frm = new Form(recordFormId);
+			frm.setFormType(formType);
+			this.fieldHistoryConvBean.setHistoryForm(frm);
+			this.fieldHistoryConvBean.actionLoadFormHistoricData();
+
+			jsToExec = String.format("%sPF('%s').show();", jsToExec, dialogToShowIfSuccess);
+		} finally {
+			this.executeJavaScript(jsToExec);
+		}
+	}
+
 	public void actionCloseFormHistoricData() {
 		
 	}

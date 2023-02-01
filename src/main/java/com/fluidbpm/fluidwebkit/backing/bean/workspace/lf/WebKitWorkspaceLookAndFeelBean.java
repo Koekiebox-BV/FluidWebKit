@@ -375,8 +375,9 @@ public class WebKitWorkspaceLookAndFeelBean extends ABaseManagedBean {
 		}
 	}
 
-	private void placeMenuForParent(TreeNode node) {
-		if (node == null) return;
+	private void placeMenuForParent(Object object) {
+		if (object == null || !(object instanceof TreeNode)) return;
+		TreeNode node = (TreeNode)object;
 
 		WebKitMenuItem data = (WebKitMenuItem)node.getData();
 		//Find all where parent is...
