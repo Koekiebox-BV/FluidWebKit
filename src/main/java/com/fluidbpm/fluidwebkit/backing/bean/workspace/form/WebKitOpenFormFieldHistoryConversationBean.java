@@ -315,8 +315,7 @@ public class WebKitOpenFormFieldHistoryConversationBean extends ABaseManagedBean
 
 					// Only Reformat Currency Fields:
 					if (currencyFraction > 0) {
-						field.setFieldValueAsDouble(this.reformatFieldAsDblCurrency(
-								field.getFieldName(), field.getFieldValue(), currencyFraction));
+						//TODO field.setFieldValueAsDouble(this.reformatFieldAsDblCurrency(field.getFieldName(), field.getFieldValue(), currencyFraction));
 					}
 				});
 	}
@@ -478,6 +477,7 @@ public class WebKitOpenFormFieldHistoryConversationBean extends ABaseManagedBean
 								.orElse(null);
 						if (priorField != null) {
 							priorFieldFound.set(new PriorField(priorField, new Date(timestampItm), usersAtDate.get(timestampItm)));
+							priorFieldFound.get().setTypeMetaData(field.getTypeMetaData());
 						}
 					});
 			if (priorFieldFound.get() != null) returnVal.add(priorFieldFound.get());
@@ -578,7 +578,13 @@ public class WebKitOpenFormFieldHistoryConversationBean extends ABaseManagedBean
 	public String formatFieldOfTypeDecimalFormat(Field field) {
 		if (field == null || field.getFieldValue() == null) return "-";
 
-		DecimalFormat df = new DecimalFormat(this.historyDecimalFormat(field.getFieldName()));
-		return df.format(field.getFieldValueAsDouble());
+		if (field.isAmountMinorWithCurrency()) {
+			String fieldName = field.getFieldName();
+			DecimalFormat df = new DecimalFormat(this.historyDecimalFormat(fieldName));
+			String formatted = df.format(field.getFieldValueAsDouble());
+			return formatted;
+		}
+		DecimalFormat df = new DecimalFormat("0");
+		return df.format(field.getFieldValueAsLong());
 	}
 }
