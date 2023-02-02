@@ -560,27 +560,17 @@ public class WebKitOpenFormFieldHistoryConversationBean extends ABaseManagedBean
 			"Weekly Payment Number of Transactions Limit",
 	};
 
-	private static String RETURN_FORMAT = "###,###,###,##0.000";
-
-	public String historyDecimalFormat(String fieldName) {
-		if (UtilGlobal.isBlank(fieldName)) return RETURN_FORMAT;
-
-		String returnFormat = RETURN_FORMAT;
-		for (String frm : WHOLE_NR_FIELDS) {
-			if (frm.equalsIgnoreCase(fieldName)) {
-				returnFormat = "###,###,###,##0";
-				break;
-			}
-		}
-		return returnFormat;
-	}
+	private static String RETURN_FORMAT_000 = "###,###,###,##0.000";
+	private static String RETURN_FORMAT_00 = "###,###,###,##0.00";
 
 	public String formatFieldOfTypeDecimalFormat(Field field) {
 		if (field == null || field.getFieldValue() == null) return "-";
 
 		if (field.isAmountMinorWithCurrency()) {
 			String fieldName = field.getFieldName();
-			DecimalFormat df = new DecimalFormat(this.historyDecimalFormat(fieldName));
+			DecimalFormat df = new DecimalFormat(
+					field.getDecimalMetaFormat().getCurrencyDecimalPlaces() > 2 ?
+							RETURN_FORMAT_000 : RETURN_FORMAT_00);
 			String formatted = df.format(field.getFieldValueAsDouble());
 			return formatted;
 		}
