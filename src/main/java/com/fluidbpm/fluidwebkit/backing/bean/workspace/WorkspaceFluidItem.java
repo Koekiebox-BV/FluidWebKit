@@ -360,4 +360,16 @@ public class WorkspaceFluidItem extends ABaseFluidVO {
 					});
 		}
 	}
+
+	public List<WebKitField> getFormFieldsEditExcludeLookup() {
+		if (this.formFieldsEdit == null) return null;
+		return this.formFieldsEdit.stream()
+				.filter(itm -> {
+					if (itm == null) return false;
+
+					String fieldName = itm.getFieldName();
+					return !(fieldName.contains("Lookup"));
+				})
+				.collect(Collectors.toList());
+	}
 }
