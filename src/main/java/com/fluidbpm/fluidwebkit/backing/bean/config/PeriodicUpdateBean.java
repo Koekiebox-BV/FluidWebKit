@@ -54,6 +54,7 @@ public class PeriodicUpdateBean extends ABaseManagedBean {
 		this.webKitViewGroups = null;
 		this.webKitUserQueries = null;
 		this.webKitForms = null;
+		this.allJobViews = null;
 	}
 
 	public void actionClearAllAppCaches() {
