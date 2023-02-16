@@ -59,6 +59,7 @@ import java.math.BigDecimal;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.stream.Collectors;
 
 import static com.fluidbpm.fluidwebkit.backing.bean.workspace.pi.PersonalInventoryItemVO.PLACEHOLDER_TITLE;
 
@@ -1476,5 +1477,25 @@ public class WebKitOpenFormConversationBean extends ABaseManagedBean {
 	public boolean customDateFormatWithNoDay(String format) {
 		if (UtilGlobal.isBlank(format)) return false;
 		return (!format.contains("d"));
+	}
+
+	public static final String VISIBLE_FOR_CHECKER = "Visible For Checker";
+	public List<Form> filterOutRowsWhereCheckerCannotView(List<Form> records) {
+		if (records == null) return null;
+
+		boolean enableFilterFeature = records.stream()
+				.filter(itm -> itm.getFieldValueAsBoolean(VISIBLE_FOR_CHECKER) != null &&
+						itm.getFieldValueAsBoolean(VISIBLE_FOR_CHECKER).booleanValue())
+				.findFirst()
+				.isPresent();
+		if (enableFilterFeature) {
+			return records.stream()
+					.filter(itm -> {
+						Boolean visForChecker = itm.getFieldValueAsBoolean(VISIBLE_FOR_CHECKER);
+						return (visForChecker != null && visForChecker.booleanValue());
+					})
+					.collect(Collectors.toList());
+		}
+		return records;
 	}
 }
