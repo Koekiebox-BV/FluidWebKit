@@ -85,6 +85,8 @@ public abstract class ABaseManagedBean implements Serializable {
 	@Inject
 	private WebKitConfigBean webKitConfigBean;
 
+	private List<Field> allGlobalFields;
+
 	/**
 	 * Get the standard Raygun error tag.
 	 *
@@ -745,5 +747,23 @@ public abstract class ABaseManagedBean implements Serializable {
 				else wkField.setFieldValue(new Date(now - TimeUnit.HOURS.toMillis(intVal * (-1))));
 			}
 		});
+	}
+
+	public String getGlobalConfigOrPropValue(String fieldPropName, String defaultValue) {
+		if (UtilGlobal.isBlank(fieldPropName)) return UtilGlobal.EMPTY;
+
+		if (this.allGlobalFields == null) this.allGlobalFields =
+				this.getFluidClientDSConfig().getGlobalFieldClient().getAllGlobalFieldValues();
+
+		String val = this.allGlobalFields.stream()
+				.filter(field -> fieldPropName.equalsIgnoreCase(field.getFieldName()))
+				.map(regExExtField -> regExExtField.getFieldValueAsString())
+				.findFirst()
+				.orElse(null);
+		if (UtilGlobal.isNotBlank(val)) return val;
+
+		// Fallback to a Property:
+		String valTxt = UtilGlobal.getProperty(new Properties(), fieldPropName, defaultValue);
+		return valTxt;
 	}
 }
