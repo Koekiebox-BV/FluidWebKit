@@ -215,9 +215,15 @@ public class WebKitUserQueryBean extends ABaseWorkspaceBean<UserQueryItemVO, Con
 							inputFields.add(new Field(fluidFieldName, val, Field.Type.Decimal));
 						}
 					} else if (this.getContentView().getFilterBySelectItemMap().get(sectionName).containsKey(fluidFieldName)) {
-						String[] value = this.getContentView().getFilterBySelectItemMap().get(sectionName).get(fluidFieldName);
-						if (value != null && value.length > 0) {
-							inputFields.add(new Field(fluidFieldName, new MultiChoice(value), Field.Type.MultipleChoice));
+						Object valueForSelItm = this.getContentView().getFilterBySelectItemMap().get(sectionName).get(fluidFieldName);
+						if (valueForSelItm instanceof String) {
+							inputFields.add(
+									new Field(fluidFieldName, new MultiChoice((String)valueForSelItm), Field.Type.MultipleChoice));
+						} else {
+							String[] value = (String[])valueForSelItm;
+							if (value != null && value.length > 0) {
+								inputFields.add(new Field(fluidFieldName, new MultiChoice(value), Field.Type.MultipleChoice));
+							}
 						}
 					} else {
 						this.getLogger().warn("Input with name [%s] is not mapped for capture.", fluidFieldName);
