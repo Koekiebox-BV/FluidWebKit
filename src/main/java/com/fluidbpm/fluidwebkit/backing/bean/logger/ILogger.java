@@ -31,7 +31,7 @@ public interface ILogger extends Serializable {
 	 * @param details Message to log.
 	 * @param args Additional arguments in case of template.
 	 */
-	public abstract void info(String details, Object ... args);
+	void info(String details, Object ... args);
 
 	/**
 	 * Log data with debug log level.
@@ -39,7 +39,15 @@ public interface ILogger extends Serializable {
 	 * @param details Message to log.
 	 * @param args Additional arguments in case of template.
 	 */
-	public abstract void debug(String details, Object ... args);
+	void debug(String details, Object ... args);
+
+	/**
+	 * Log data with warn log level.
+	 *
+	 * @param details Message to log.
+	 * @param args Additional arguments in case of template.
+	 */
+	void warn(String details, Object ... args);
 
 	/**
 	 * Log data with error log level.
@@ -47,5 +55,7 @@ public interface ILogger extends Serializable {
 	 * @param details Message to log.
 	 * @param exception Error to log.
 	 */
-	public abstract void error(String details, Exception exception);
+	void error(String details, Exception exception);
+
+	
 }

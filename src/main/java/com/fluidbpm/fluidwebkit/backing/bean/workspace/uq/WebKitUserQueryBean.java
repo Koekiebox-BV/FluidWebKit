@@ -201,13 +201,26 @@ public class WebKitUserQueryBean extends ABaseWorkspaceBean<UserQueryItemVO, Con
 					String fluidFieldName = clmItm.getFluidFieldName();
 					if (this.getContentView().getFilterByTextValueMap().get(sectionName).containsKey(fluidFieldName)) {
 						String value = this.getContentView().getFilterByTextValueMap().get(sectionName).get(fluidFieldName);
-						if (!UtilGlobal.isBlank(value)) inputFields.add(new Field(fluidFieldName, value, Field.Type.Text));
+						if (!UtilGlobal.isBlank(value)) {
+							inputFields.add(new Field(fluidFieldName, value, Field.Type.Text));
+						}
+					} else if (this.getContentView().getFilterByTextEncryptedValueMap().get(sectionName).containsKey(fluidFieldName)) {
+						String value = this.getContentView().getFilterByTextEncryptedValueMap().get(sectionName).get(fluidFieldName);
+						if (!UtilGlobal.isBlank(value)) {
+							inputFields.add(new Field(fluidFieldName, value, Field.Type.TextEncrypted));
+						}
 					} else if (this.getContentView().getFilterByDecimalValueMap().containsKey(fluidFieldName)) {
 						Double val =  this.getContentView().getFilterByDecimalValueMap().get(sectionName).get(fluidFieldName);
-						if (val != null && val.doubleValue() > 0) inputFields.add(new Field(fluidFieldName, val, Field.Type.Decimal));
+						if (val != null && val.doubleValue() > 0) {
+							inputFields.add(new Field(fluidFieldName, val, Field.Type.Decimal));
+						}
 					} else if (this.getContentView().getFilterBySelectItemMap().get(sectionName).containsKey(fluidFieldName)) {
 						String[] value = this.getContentView().getFilterBySelectItemMap().get(sectionName).get(fluidFieldName);
-						if (value != null && value.length > 0) inputFields.add(new Field(fluidFieldName, new MultiChoice(value), Field.Type.MultipleChoice));
+						if (value != null && value.length > 0) {
+							inputFields.add(new Field(fluidFieldName, new MultiChoice(value), Field.Type.MultipleChoice));
+						}
+					} else {
+						this.getLogger().warn("Input with name [%s] is not mapped for capture.", fluidFieldName);
 					}
 				});
 			}

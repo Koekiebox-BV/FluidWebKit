@@ -83,6 +83,10 @@ public abstract class ABaseContentView implements Serializable {
 
 	@Getter
 	@Setter
+	private Map<String, Map<String, String>> filterByTextEncryptedValueMap = new HashMap<>();
+
+	@Getter
+	@Setter
 	private Map<String,Map<String, Double>> filterByDecimalValueMap = new HashMap<>();
 
 	@Getter
@@ -112,7 +116,7 @@ public abstract class ABaseContentView implements Serializable {
 	}
 
 	/**
-	 * Base to set logged in user and applicable sections.
+	 * Base to set logged-in user and applicable sections.
 	 * 
 	 * @param loggedInUserParam The currently logged in user.
 	 * @param sectionsParam The list of sections applicable to the view.
@@ -266,15 +270,13 @@ public abstract class ABaseContentView implements Serializable {
 			return;//TODO @jason, remove this.... To the select items properly...
 		}
 
-		Map<String,String[]> selectedValuesForField = this.filterBySelectItemMap.get(sectionParam);
+		Map<String, String[]> selectedValuesForField = this.filterBySelectItemMap.get(sectionParam);
 		Set<String> fieldNames = selectedValuesForField.keySet();
 
 		Map<String, String[]> newMapWithNoDups = new HashMap<>();
 		for (String fieldName : fieldNames) {
 			String[] fieldValues = selectedValuesForField.get(fieldName);;
-			if (fieldValues == null) {
-				continue;
-			}
+			if (fieldValues == null) continue;
 
 			Set<String> returnValUniq = new HashSet<>();
 			returnValUniq.addAll(Arrays.asList(fieldValues));
@@ -298,7 +300,7 @@ public abstract class ABaseContentView implements Serializable {
 	 * Update the filter column configs.
 	 */
 	public void actionUpdateFilterColumn() {
-
+		
 	}
 
 	public String getRemoveButtonMessage() {
@@ -817,9 +819,8 @@ public abstract class ABaseContentView implements Serializable {
 		String sectionParam,
 		List<ABaseManagedBean.ColumnModel> columnModelForSection
 	) {
-		if (columnModelForSection == null || columnModelForSection.isEmpty()) {
-			return;
-		}
+		if (columnModelForSection == null || columnModelForSection.isEmpty()) return;
+
 		if (sectionParam == null || sectionParam.trim().isEmpty()) {
 			new RaygunUtil().raiseErrorToRaygun(
 					new ClientDashboardException("Section name is empty. Not allowed. Returning new Hashmap. ",
@@ -834,6 +835,10 @@ public abstract class ABaseContentView implements Serializable {
 						Map<String, String> fields = this.filterByTextValueMap.getOrDefault(sectionParam, new HashMap<>());
 						fields.put(fieldName, UtilGlobal.EMPTY);
 						this.filterByTextValueMap.put(sectionParam, fields);
+					} else if (itm.getFluidFieldColumnType() == Field.Type.TextEncrypted) {//TextEncrypted
+						Map<String, String> fields = this.filterByTextEncryptedValueMap.getOrDefault(sectionParam, new HashMap<>());
+						fields.put(fieldName, UtilGlobal.EMPTY);
+						this.filterByTextEncryptedValueMap.put(sectionParam, fields);
 					} else if (itm.getFluidFieldColumnType() == Field.Type.Decimal) {//Decimal
 						Map<String, Double> fields = this.filterByDecimalValueMap.getOrDefault(sectionParam, new HashMap<>());
 						fields.put(fieldName, null);

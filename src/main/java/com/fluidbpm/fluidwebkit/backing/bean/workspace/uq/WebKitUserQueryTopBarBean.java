@@ -107,12 +107,15 @@ public class WebKitUserQueryTopBarBean extends WebKitUserQueryBean implements IC
 		try {
 			Map<String, List<ColumnModel>> completeColMap = this.getContentView() == null ?
 					null : this.getContentView().getSectionFilterableColumns();
+
 			Map<String, Map<String, Date>> filterMapDate = this.getContentView() == null ?
 					null : this.getContentView().getFilterByDateValueMap();
 			Map<String, Map<String, Double>> filterMapDouble = this.getContentView() == null ?
 					null : this.getContentView().getFilterByDecimalValueMap();
 			Map<String, Map<String, String>> filterMapText = this.getContentView() == null ?
 					null : this.getContentView().getFilterByTextValueMap();
+			Map<String, Map<String, String>> filterMapTextEncrypted = this.getContentView() == null ?
+					null : this.getContentView().getFilterByTextEncryptedValueMap();
 			Map<String, Map<String,String[]>> filterMapSelectItm = this.getContentView() == null ?
 					null : this.getContentView().getFilterBySelectItemMap();
 
@@ -120,20 +123,24 @@ public class WebKitUserQueryTopBarBean extends WebKitUserQueryBean implements IC
 			//String sectionName = String.format("User Query - %s", userQueryLabel);
 
 			ContentViewUQ contentViewUserQuery = new ContentViewUQ(
-					this.getLoggedInUser(),
-					this.getSectionName(),
-					this.getExecutingUserQueryWebKit(),
-					this.getWebKitViewContentModelBean(),
-					this.accessBean);
+				this.getLoggedInUser(),
+				this.getSectionName(),
+				this.getExecutingUserQueryWebKit(),
+				this.getWebKitViewContentModelBean(),
+				this.accessBean
+			);
+			//View set to a new Content View for User Query...
+			this.contentView = contentViewUserQuery;
 
 			contentViewUserQuery.setSectionFilterableColumns(completeColMap);
 
 			contentViewUserQuery.setFilterByDateValueMap(filterMapDate);
 			contentViewUserQuery.setFilterByDecimalValueMap(filterMapDouble);
 			contentViewUserQuery.setFilterByTextValueMap(filterMapText);
+			contentViewUserQuery.setFilterByTextEncryptedValueMap(filterMapTextEncrypted);
 			contentViewUserQuery.setFilterBySelectItemMap(filterMapSelectItm);
 			
-			contentViewUserQuery.mapColumnModel();
+			//TODO contentViewUserQuery.mapColumnModel();
 			contentViewUserQuery.refreshData(null);
 
 			contentViewUserQuery.setFluidItemsLazyModel(new WorkspaceUserQueryLDM(
@@ -142,15 +149,15 @@ public class WebKitUserQueryTopBarBean extends WebKitUserQueryBean implements IC
 					userQueryLabel,
 					this)
 			);
-
-			//Set the filter columns to what it was before...
-			this.contentView = contentViewUserQuery;
 			
 			//Map the input criteria...
 			List<Field> inputFields = this.getInputFieldValues();
 
-			if (UtilGlobal.isNotBlank(toHideIfAnyResults, toDisplayIfAnyResults))
-				this.executeJavaScript(String.format("PF('%s').hide();PF('%s').show();", toHideIfAnyResults, toDisplayIfAnyResults));
+			if (UtilGlobal.isNotBlank(toHideIfAnyResults, toDisplayIfAnyResults)) {
+				this.executeJavaScript(
+						String.format("PF('%s').hide();PF('%s').show();",
+								toHideIfAnyResults, toDisplayIfAnyResults));
+			}
 		} catch (Exception except) {
 			this.raiseError(except);
 		}

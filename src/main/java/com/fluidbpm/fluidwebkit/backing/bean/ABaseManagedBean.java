@@ -257,6 +257,11 @@ public abstract class ABaseManagedBean implements Serializable {
 			}
 
 			@Override
+			public void warn(String template, Object... args) {
+				UtilGlobal.sysOut(template, args);
+			}
+
+			@Override
 			public void error(String details, Exception exception) {
 				System.err.print(getPrefix());
 				System.err.printf("%s . %s", details,

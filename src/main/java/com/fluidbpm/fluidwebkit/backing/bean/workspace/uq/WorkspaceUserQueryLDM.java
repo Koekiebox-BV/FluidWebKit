@@ -61,7 +61,14 @@ public class WorkspaceUserQueryLDM extends ABaseLDM<WorkspaceFluidItem> {
 			userQueryToExec.setInputs(inputFields);
 
 			FluidItemListing result = userQueryClient.executeUserQuery(
-					userQueryToExec, false, executeCustomProgramLabels, pageSize, first, false);
+				userQueryToExec,
+				false,
+				executeCustomProgramLabels,
+				pageSize,
+				first,
+				false
+			);
+			long end = System.currentTimeMillis();
 
 			List<WorkspaceFluidItem> wfiList = new ArrayList<>();
 			this.setRowCount(result.getListingCount());
@@ -76,12 +83,11 @@ public class WorkspaceUserQueryLDM extends ABaseLDM<WorkspaceFluidItem> {
 			if (result.getListingCount() > 0) {
 				FacesMessage fMsg = new FacesMessage(FacesMessage.SEVERITY_INFO,
 						"Success.", String.format("Total of %d results took %d millis.",
-						result.getListingCount(), System.currentTimeMillis() - now));
+						result.getListingCount(), end - now));
 				FacesContext.getCurrentInstance().addMessage(null, fMsg);
 			} else {
 				FacesMessage fMsg = new FacesMessage(FacesMessage.SEVERITY_WARN,
-						"No Result.", String.format("Took %d millis.",
-						result.getListingCount(), System.currentTimeMillis() - now));
+						"No Result.", String.format("Took %d millis to return No Results.", end - now));
 				FacesContext.getCurrentInstance().addMessage(null, fMsg);
 			}
 			return wfiList;
