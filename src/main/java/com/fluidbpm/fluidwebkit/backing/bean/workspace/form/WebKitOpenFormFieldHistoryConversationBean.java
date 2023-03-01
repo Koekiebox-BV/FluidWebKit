@@ -61,6 +61,7 @@ public class WebKitOpenFormFieldHistoryConversationBean extends ABaseManagedBean
 
 	private static final String EMPTY_FLAG = "-";
 	public static final String SYSTEM_ROUTE = "_SYSTEM_ROUTE_";
+	private static final boolean AFS_MECHANISM = true;
 	private static final boolean IGNORE_FIELDS_WHERE_VAL_SAME = true;
 	private static final boolean IGNORE_SYSTEM_ROUTE = true;
 	private static final boolean IGNORE_TABLE_LABEL = true;
@@ -101,6 +102,7 @@ public class WebKitOpenFormFieldHistoryConversationBean extends ABaseManagedBean
 	
 	@Data
 	@NoArgsConstructor
+	@ToString
 	public static class PriorField extends Field {
 		private Date modifiedDate;
 		private String modifiedUser;
@@ -115,15 +117,17 @@ public class WebKitOpenFormFieldHistoryConversationBean extends ABaseManagedBean
 	@EqualsAndHashCode
 	@Data
 	@RequiredArgsConstructor
+	@AllArgsConstructor
+	@ToString
 	public static class FlatFieldHistory implements Serializable {
 		private final String username;
 		private final Long timestampTime;
 		private final Date timestamp;
 		private final Field field;
 
-		private final PriorField priorField;
-		private final Date priorFieldModifiedDate;
-		private final boolean isCurrent;
+		private PriorField priorField;
+		private Date priorFieldModifiedDate;
+		private boolean isCurrent;
 		private final int numberOfChanges;
 
 		public String getDisplayValueForTimeDiff() {
@@ -223,17 +227,19 @@ public class WebKitOpenFormFieldHistoryConversationBean extends ABaseManagedBean
 		);
 
 		try {
-			this.setFormHistoricData(fcc.getFormAndFieldHistoricData(this.historyForm, false, true));
+			this.setFormHistoricData(fcc.getFormAndFieldHistoricData(this.historyForm, true, true));
 
 			AtomicLong al = new AtomicLong();
+			AtomicReference<String> arUser = new AtomicReference<>();
 			this.getFormHistoricData().forEach(historyItem -> {
 				String historyType = historyItem.getHistoricEntryType();
+				String user = historyItem.getUser() == null ? EMPTY_FLAG : historyItem.getUser().getUsername();
+				Long timeOfChange = historyItem.getDate() == null ? System.currentTimeMillis() : historyItem.getDate().getTime();
 
 				if (historyType.equals(FormHistoricData.HistoricEntryType.FORM_CONTAINER_LOG_ENTRY) ||
 						historyType.equals(FormHistoricData.HistoricEntryType.FORM_CONTAINER)) {
-					Long timeOfChange = historyItem.getDate() == null ? System.currentTimeMillis() : historyItem.getDate().getTime();
-					String user = historyItem.getUser() == null ? EMPTY_FLAG : historyItem.getUser().getUsername();
 					al.set(timeOfChange);
+					arUser.set(user);
 					dateAndUserMapping.put(timeOfChange, user);
 				}
 
@@ -260,6 +266,11 @@ public class WebKitOpenFormFieldHistoryConversationBean extends ABaseManagedBean
 
 			this.formFieldHistories = new ArrayList<>();
 			this.formFieldHistoriesFlat = new ArrayList<>();
+
+			if (AFS_MECHANISM) {
+				this.processWithAFSMechanism(dateAndFieldValuesMapping, dateAndUserMapping);
+				return;
+			}
 
 			//Map the data in order to display...
 			List<Long> timestampDesc = new ArrayList<>(dateAndUserMapping.keySet());
@@ -298,6 +309,77 @@ public class WebKitOpenFormFieldHistoryConversationBean extends ABaseManagedBean
 			}
 		} catch (Exception except) {
 			this.raiseError(except);
+		}
+	}
+
+	private void processWithAFSMechanism(
+		Map<Long, List<Field>> dateAndFieldValuesMapping,
+		Map<Long, String> dateAndUserMapping
+	) {
+		if (dateAndFieldValuesMapping.isEmpty()) return;
+
+		List<Long> timestampDesc = new ArrayList<>(dateAndFieldValuesMapping.keySet());
+		Collections.sort(timestampDesc);
+		Collections.reverse(timestampDesc);
+
+		dateAndFieldValuesMapping.forEach((timestamp, fields) -> {
+			final String user = dateAndUserMapping.containsKey(timestamp) ? dateAndUserMapping.get(timestamp) : "-";
+			// Remove Fields where user has no Access:
+			this.removeFieldsWhereUserHasNoAccess(fields);
+
+			Date timestampDate = new Date(timestamp);
+			// Add Each Of the Fields:
+			fields.stream()
+					.filter(fieldItm -> fieldItm.getFieldValue() != null)
+					.forEach(fieldItm -> {
+						FlatFieldHistory toAddMod = this.formFieldHistoriesFlat.stream()
+								.filter(itm -> itm.getField().getFieldName().equals(fieldItm.getFieldName()))
+								.findFirst()
+								.orElse(null);
+						if (toAddMod == null) {
+							toAddMod = new FlatFieldHistory(user, timestamp, timestampDate, fieldItm, 0);
+							this.formFieldHistoriesFlat.add(toAddMod);
+						} else this.modifyExisting(
+							timestampDesc,
+							dateAndFieldValuesMapping,
+							dateAndUserMapping,
+							toAddMod
+						);
+			});
+		});
+	}
+
+	private void modifyExisting(
+		List<Long> timestampDesc,
+		Map<Long, List<Field>> dateAndFieldValuesMapping,
+		Map<Long, String> dateAndUserMapping,
+		FlatFieldHistory toModify
+	) {
+		String fieldName = toModify.getField().getFieldName();
+		Object existingFieldVal = toModify.getField().getFieldValue();
+
+		for (Long atIndex : timestampDesc) {
+			List<Field> listOfFields = dateAndFieldValuesMapping.get(atIndex);
+			if (listOfFields == null) continue;
+
+			Field matchingField = listOfFields.stream()
+					.filter(itm -> itm.getFieldName().equals(fieldName))
+					.findFirst()
+					.orElse(null);
+			if (matchingField == null || matchingField.getFieldValue() == null) continue;
+
+			// Field Matches, now let's ensure the values are not matching.
+			if (!existingFieldVal.equals(matchingField.getFieldValue())) {
+				PriorField priorFieldExisting = toModify.getPriorField();
+				if (priorFieldExisting == null) {
+					// No previous value...
+					Date modifiedAt = new Date(atIndex);
+					String userForMod = dateAndUserMapping.containsKey(atIndex) ? dateAndUserMapping.get(atIndex) : "-";
+
+					toModify.priorFieldModifiedDate = modifiedAt;
+					toModify.priorField = new PriorField(matchingField, modifiedAt, userForMod);
+				}
+			}
 		}
 	}
 
@@ -470,6 +552,23 @@ public class WebKitOpenFormFieldHistoryConversationBean extends ABaseManagedBean
 
 						List<Field> fieldsAtDate = fieldValuesAtDate.get(timestampItm);
 						if (fieldsAtDate == null) return;
+
+						Field priorFieldDiffVal = fieldsAtDate.stream()
+								.filter(fieldItm -> {
+									boolean fieldMatch = field.getFieldName().equals(fieldItm.getFieldName());
+									if (fieldMatch && field.getFieldValueAsString() != null &&
+											fieldItm.getFieldValue() != null) {
+										return !field.getFieldValueAsString().equalsIgnoreCase(fieldItm.getFieldValueAsString());
+									}
+									return fieldMatch;
+								})
+								.findFirst()
+								.orElse(null);
+						if (priorFieldDiffVal != null) {
+							priorFieldFound.set(new PriorField(priorFieldDiffVal, new Date(timestampItm), usersAtDate.get(timestampItm)));
+							priorFieldFound.get().setTypeMetaData(field.getTypeMetaData());
+							return;
+						}
 						
 						Field priorField = fieldsAtDate.stream()
 								.filter(fieldItm -> field.getFieldName().equals(fieldItm.getFieldName()))
@@ -575,6 +674,9 @@ public class WebKitOpenFormFieldHistoryConversationBean extends ABaseManagedBean
 			return formatted;
 		}
 		DecimalFormat df = new DecimalFormat("0");
-		return df.format(field.getFieldValueAsLong());
+		Long valLong = field.getFieldValueAsLong();
+		if (valLong == null) return "-";
+
+		return df.format(valLong);
 	}
 }
