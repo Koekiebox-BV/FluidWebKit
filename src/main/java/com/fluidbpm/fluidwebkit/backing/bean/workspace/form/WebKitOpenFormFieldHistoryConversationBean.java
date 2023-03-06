@@ -509,6 +509,8 @@ public class WebKitOpenFormFieldHistoryConversationBean extends ABaseManagedBean
 			switch (param.getFieldName()) {
 				case "Date Activated":
 				case "Date Issued":
+				case "Card Number":
+				case "Primary Account Number":
 					fields.remove(param);
 			}
 		});
