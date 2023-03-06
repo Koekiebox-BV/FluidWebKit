@@ -327,6 +327,9 @@ public class WebKitOpenFormFieldHistoryConversationBean extends ABaseManagedBean
 			// Remove Fields where user has no Access:
 			this.removeFieldsWhereUserHasNoAccess(fields);
 
+			// Remove AFS Fields no wanted at all:
+			this.removeUnwantedFields(fields);
+
 			Date timestampDate = new Date(timestamp);
 			// Add Each Of the Fields:
 			fields.stream()
@@ -496,6 +499,18 @@ public class WebKitOpenFormFieldHistoryConversationBean extends ABaseManagedBean
 					.findFirst()
 					.orElse(null);
 			if (fieldWithName == null) fields.remove(param);
+		});
+	}
+
+	private void removeUnwantedFields(List<Field> fields) {
+		if (fields == null || fields.isEmpty()) return;
+
+		new ArrayList<>(fields).stream().forEach(param -> {
+			switch (param.getFieldName()) {
+				case "Date Activated":
+				case "Date Issued":
+					fields.remove(param);
+			}
 		});
 	}
 
