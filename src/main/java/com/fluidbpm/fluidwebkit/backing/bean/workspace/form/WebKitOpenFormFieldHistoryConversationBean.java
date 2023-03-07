@@ -227,7 +227,7 @@ public class WebKitOpenFormFieldHistoryConversationBean extends ABaseManagedBean
 		);
 
 		try {
-			this.setFormHistoricData(fcc.getFormAndFieldHistoricData(this.historyForm, true, true));
+			this.setFormHistoricData(fcc.getFormAndFieldHistoricData(this.historyForm, false, true));
 
 			AtomicLong al = new AtomicLong();
 			AtomicReference<String> arUser = new AtomicReference<>();
