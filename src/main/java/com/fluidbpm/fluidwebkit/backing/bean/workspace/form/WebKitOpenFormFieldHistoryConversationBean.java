@@ -61,7 +61,7 @@ public class WebKitOpenFormFieldHistoryConversationBean extends ABaseManagedBean
 
 	private static final String EMPTY_FLAG = "-";
 	public static final String SYSTEM_ROUTE = "_SYSTEM_ROUTE_";
-	private static final boolean AFS_MECHANISM = true;
+	private static final boolean AFS_MECHANISM = false;
 	private static final boolean IGNORE_FIELDS_WHERE_VAL_SAME = true;
 	private static final boolean IGNORE_SYSTEM_ROUTE = true;
 	private static final boolean IGNORE_TABLE_LABEL = true;
@@ -295,6 +295,8 @@ public class WebKitOpenFormFieldHistoryConversationBean extends ABaseManagedBean
 					dateAndUserMapping)
 				);
 
+				// Remove AFS Fields no wanted at all:
+				this.removeUnwantedFields(toAdd);
 				if (IGNORE_FIELDS_WHERE_VAL_SAME) this.removeFieldsWhereValuesMatch(toAdd);
 				if (IGNORE_TABLE_LABEL) this.removeUnwantedFieldTypes(toAdd);
 				if (IGNORE_SYSTEM_ROUTE && this.isSystemRoute(toAdd)) continue;
@@ -359,7 +361,7 @@ public class WebKitOpenFormFieldHistoryConversationBean extends ABaseManagedBean
 		FlatFieldHistory toModify
 	) {
 		String fieldName = toModify.getField().getFieldName();
-		Object existingFieldVal = toModify.getField().getFieldValue();
+		//Object existingFieldVal = toModify.getField().getFieldValue();
 
 		for (Long atIndex : timestampDesc) {
 			List<Field> listOfFields = dateAndFieldValuesMapping.get(atIndex);
@@ -372,16 +374,16 @@ public class WebKitOpenFormFieldHistoryConversationBean extends ABaseManagedBean
 			if (matchingField == null || matchingField.getFieldValue() == null) continue;
 
 			// Field Matches, now let's ensure the values are not matching.
-			if (!existingFieldVal.equals(matchingField.getFieldValue())) {
+			if (!toModify.getField().valueEquals(matchingField)) {
 				PriorField priorFieldExisting = toModify.getPriorField();
-				if (priorFieldExisting == null) {
+				//if (priorFieldExisting == null) {
 					// No previous value...
 					Date modifiedAt = new Date(atIndex);
 					String userForMod = dateAndUserMapping.containsKey(atIndex) ? dateAndUserMapping.get(atIndex) : "-";
 
 					toModify.priorFieldModifiedDate = modifiedAt;
 					toModify.priorField = new PriorField(matchingField, modifiedAt, userForMod);
-				}
+				//}
 			}
 		}
 	}
@@ -514,6 +516,12 @@ public class WebKitOpenFormFieldHistoryConversationBean extends ABaseManagedBean
 					fields.remove(param);
 			}
 		});
+	}
+
+	private void removeUnwantedFields(WebKitFormFieldHistory history) {
+		if (history.getFields() == null || history.getPriorFields() == null) return;
+
+		this.removeUnwantedFields(history.getFields());
 	}
 
 	private void removeFieldsWhereValuesMatch(WebKitFormFieldHistory history) {
@@ -687,7 +695,9 @@ public class WebKitOpenFormFieldHistoryConversationBean extends ABaseManagedBean
 			DecimalFormat df = new DecimalFormat(
 					field.getDecimalMetaFormat().getCurrencyDecimalPlaces() > 2 ?
 							RETURN_FORMAT_000 : RETURN_FORMAT_00);
-			String formatted = df.format(field.getFieldValueAsDouble());
+			Double dbl = field.getFieldValueAsDouble();
+			if (dbl == null) return "-";
+			String formatted = df.format(dbl);
 			return formatted;
 		}
 		DecimalFormat df = new DecimalFormat("0");
