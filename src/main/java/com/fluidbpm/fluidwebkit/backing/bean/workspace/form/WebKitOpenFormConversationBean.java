@@ -966,7 +966,7 @@ public class WebKitOpenFormConversationBean extends ABaseManagedBean {
 		String jsToExec = String.format("PF('%s').enable();", btnToReEnable);
 		try {
 			this.fieldHistoryConvBean.setHistoryForm(this.getWsFluidItem().getFluidItemForm());
-			this.fieldHistoryConvBean.actionLoadFormHistoricData();
+			this.fieldHistoryConvBean.actionLoadFormHistoricData(true);
 
 			jsToExec = String.format("%sPF('%s').show();", jsToExec, dialogToShowIfSuccess);
 		} finally {
@@ -985,7 +985,7 @@ public class WebKitOpenFormConversationBean extends ABaseManagedBean {
 			Form frm = new Form(recordFormId);
 			frm.setFormType(formType);
 			this.fieldHistoryConvBean.setHistoryForm(frm);
-			this.fieldHistoryConvBean.actionLoadFormHistoricData();
+			this.fieldHistoryConvBean.actionLoadFormHistoricData(false);
 
 			jsToExec = String.format("%sPF('%s').show();", jsToExec, dialogToShowIfSuccess);
 		} finally {

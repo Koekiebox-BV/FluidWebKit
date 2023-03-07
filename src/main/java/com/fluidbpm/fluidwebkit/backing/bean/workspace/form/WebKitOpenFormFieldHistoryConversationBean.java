@@ -61,7 +61,6 @@ public class WebKitOpenFormFieldHistoryConversationBean extends ABaseManagedBean
 
 	private static final String EMPTY_FLAG = "-";
 	public static final String SYSTEM_ROUTE = "_SYSTEM_ROUTE_";
-	private static final boolean AFS_MECHANISM = false;
 	private static final boolean IGNORE_FIELDS_WHERE_VAL_SAME = true;
 	private static final boolean IGNORE_SYSTEM_ROUTE = true;
 	private static final boolean IGNORE_TABLE_LABEL = true;
@@ -211,7 +210,7 @@ public class WebKitOpenFormFieldHistoryConversationBean extends ABaseManagedBean
 		}
 	}
 
-	public void actionLoadFormHistoricData() {
+	public void actionLoadFormHistoricData(boolean useAfsMechanism) {
 		if (this.getFluidClientDS() == null) return;
 
 		final Map<Long, List<Field>> dateAndFieldValuesMapping = new HashMap<>();
@@ -227,7 +226,7 @@ public class WebKitOpenFormFieldHistoryConversationBean extends ABaseManagedBean
 		);
 
 		try {
-			this.setFormHistoricData(fcc.getFormAndFieldHistoricData(this.historyForm, false, true));
+			this.setFormHistoricData(fcc.getFormAndFieldHistoricData(this.historyForm, useAfsMechanism, true));
 
 			AtomicLong al = new AtomicLong();
 			AtomicReference<String> arUser = new AtomicReference<>();
@@ -267,7 +266,7 @@ public class WebKitOpenFormFieldHistoryConversationBean extends ABaseManagedBean
 			this.formFieldHistories = new ArrayList<>();
 			this.formFieldHistoriesFlat = new ArrayList<>();
 
-			if (AFS_MECHANISM) {
+			if (useAfsMechanism) {
 				this.processWithAFSMechanism(dateAndFieldValuesMapping, dateAndUserMapping);
 				return;
 			}
