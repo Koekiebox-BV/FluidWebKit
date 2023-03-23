@@ -199,12 +199,19 @@ public class WebKitUserQueryBean extends ABaseWorkspaceBean<UserQueryItemVO, Con
 			if (columnModels != null) {
 				columnModels.forEach(clmItm -> {
 					String fluidFieldName = clmItm.getFluidFieldName();
-					if (this.getContentView().getFilterByTextValueMap().get(sectionName).containsKey(fluidFieldName)) {
+					if (UtilGlobal.isBlank(fluidFieldName)) {
+						this.getLogger().warn(String.format("Section [%s] has an empty field name! ", sectionName));
+						return;
+					}
+
+					if (this.getContentView().getFilterByTextValueMap().get(sectionName) != null &&
+							this.getContentView().getFilterByTextValueMap().get(sectionName).containsKey(fluidFieldName)) {
 						String value = this.getContentView().getFilterByTextValueMap().get(sectionName).get(fluidFieldName);
 						if (!UtilGlobal.isBlank(value)) {
 							inputFields.add(new Field(fluidFieldName, value, Field.Type.Text));
 						}
-					} else if (this.getContentView().getFilterByTextEncryptedValueMap().get(sectionName).containsKey(fluidFieldName)) {
+					} else if (this.getContentView().getFilterByTextEncryptedValueMap().get(sectionName) != null &&
+							this.getContentView().getFilterByTextEncryptedValueMap().get(sectionName).containsKey(fluidFieldName)) {
 						String value = this.getContentView().getFilterByTextEncryptedValueMap().get(sectionName).get(fluidFieldName);
 						if (!UtilGlobal.isBlank(value)) {
 							inputFields.add(new Field(fluidFieldName, value, Field.Type.TextEncrypted));
@@ -214,7 +221,8 @@ public class WebKitUserQueryBean extends ABaseWorkspaceBean<UserQueryItemVO, Con
 						if (val != null && val.doubleValue() > 0) {
 							inputFields.add(new Field(fluidFieldName, val, Field.Type.Decimal));
 						}
-					} else if (this.getContentView().getFilterBySelectItemMap().get(sectionName).containsKey(fluidFieldName)) {
+					} else if (this.getContentView().getFilterBySelectItemMap().get(sectionName) != null &&
+							this.getContentView().getFilterBySelectItemMap().get(sectionName).containsKey(fluidFieldName)) {
 						Object valueForSelItm = this.getContentView().getFilterBySelectItemMap().get(sectionName).get(fluidFieldName);
 						if (valueForSelItm instanceof String) {
 							inputFields.add(
@@ -226,7 +234,8 @@ public class WebKitUserQueryBean extends ABaseWorkspaceBean<UserQueryItemVO, Con
 							}
 						}
 					} else {
-						this.getLogger().warn("Input with name [%s] is not mapped for capture.", fluidFieldName);
+						this.getLogger().warn("Input with name [%s] is not mapped for capture on section [%s].",
+								fluidFieldName, sectionName);
 					}
 				});
 			}
