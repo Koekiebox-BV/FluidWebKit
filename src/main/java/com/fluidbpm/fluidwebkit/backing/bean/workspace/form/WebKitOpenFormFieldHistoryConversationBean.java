@@ -226,7 +226,7 @@ public class WebKitOpenFormFieldHistoryConversationBean extends ABaseManagedBean
 		);
 
 		try {
-			this.setFormHistoricData(fcc.getFormAndFieldHistoricData(this.historyForm, useAfsMechanism, true));
+			this.setFormHistoricData(fcc.getFormAndFieldHistoricData(this.historyForm, false, true));
 
 			AtomicLong al = new AtomicLong();
 			AtomicReference<String> arUser = new AtomicReference<>();
@@ -323,7 +323,26 @@ public class WebKitOpenFormFieldHistoryConversationBean extends ABaseManagedBean
 		Collections.sort(timestampDesc);
 		Collections.reverse(timestampDesc);
 
+		// The most recent values:
+		Long mostRecent = timestampDesc.isEmpty() ? 0l : timestampDesc.get(0);
+		String mostRecentUser = dateAndUserMapping.get(mostRecent);
+		List<Field> recentFields = dateAndFieldValuesMapping.get(mostRecent);
+
+		// Earliest:
+		Long oldest = timestampDesc.isEmpty() ? 0l : timestampDesc.get(timestampDesc.size() - 1);
+		String oldestUser = dateAndUserMapping.get(oldest);
+
+		if (mostRecent == null || oldest == null) return;
+
+		this.getLogger().debug(
+				String.format("Audit: Comparing oldest [%s:%s] with latest [%s:%s].",
+						new Date(oldest), oldestUser, new Date(mostRecent), mostRecentUser));
+
+		// Iterate each
 		dateAndFieldValuesMapping.forEach((timestamp, fields) -> {
+			// No match for oldest or earliest:
+			if (timestamp != oldest && timestamp != mostRecent) return;
+
 			final String user = dateAndUserMapping.containsKey(timestamp) ? dateAndUserMapping.get(timestamp) : "-";
 			// Remove Fields where user has no Access:
 			this.removeFieldsWhereUserHasNoAccess(fields);
@@ -657,6 +676,9 @@ public class WebKitOpenFormFieldHistoryConversationBean extends ABaseManagedBean
 	public List<FlatFieldHistory> getFormFieldHistoriesFlatModifyOnly() {
 		List<FlatFieldHistory> org = this.getFormFieldHistoriesFlat();
 		if (org == null || org.isEmpty()) return org;
+
+		Collections.sort(org, Comparator.comparing(FlatFieldHistory::getTimestampTime));
+		Collections.reverse(org);
 
 		return org.stream()
 				.filter(itm -> {
