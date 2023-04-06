@@ -132,7 +132,9 @@ public class WebKitOpenFormFieldHistoryConversationBean extends ABaseManagedBean
 		public String getDisplayValueForTimeDiff() {
 			if (this.priorFieldModifiedDate == null || this.priorFieldModifiedDate.getTime() < 1) return "N/A";
 
-			long takenInMillis = (this.timestampTime - this.priorFieldModifiedDate.getTime());
+			long takenInMillis = (this.timestampTime > this.priorFieldModifiedDate.getTime()) ?
+					(this.timestampTime - this.priorFieldModifiedDate.getTime()) :
+					(this.priorFieldModifiedDate.getTime() - this.timestampTime);
 
 			long takenInDays = TimeUnit.MILLISECONDS.toDays(takenInMillis),
 					takenInHours = (TimeUnit.MILLISECONDS.toHours(takenInMillis) % 24),
@@ -339,9 +341,16 @@ public class WebKitOpenFormFieldHistoryConversationBean extends ABaseManagedBean
 						new Date(oldest), oldestUser, new Date(mostRecent), mostRecentUser));
 
 		// Iterate each
-		dateAndFieldValuesMapping.forEach((timestamp, fields) -> {
+		List<Long> timestampAsc = new ArrayList<>(dateAndFieldValuesMapping.keySet());
+		Collections.sort(timestampAsc);
+
+		timestampAsc.forEach(timestamp -> {
 			// No match for oldest or earliest:
 			if (timestamp != oldest && timestamp != mostRecent) return;
+
+			this.getLogger().debug(String.format("Audit: Processing [%s].", timestamp));
+
+			List<Field> fields = dateAndFieldValuesMapping.get(timestamp);
 
 			final String user = dateAndUserMapping.containsKey(timestamp) ? dateAndUserMapping.get(timestamp) : "-";
 			// Remove Fields where user has no Access:
@@ -678,7 +687,6 @@ public class WebKitOpenFormFieldHistoryConversationBean extends ABaseManagedBean
 		if (org == null || org.isEmpty()) return org;
 
 		Collections.sort(org, Comparator.comparing(FlatFieldHistory::getTimestampTime));
-		Collections.reverse(org);
 
 		return org.stream()
 				.filter(itm -> {
