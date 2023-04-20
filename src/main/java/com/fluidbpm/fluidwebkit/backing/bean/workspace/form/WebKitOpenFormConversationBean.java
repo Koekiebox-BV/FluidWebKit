@@ -246,15 +246,12 @@ public class WebKitOpenFormConversationBean extends ABaseManagedBean {
 
 			FormContainerClient fcClient = this.getFluidClientDS().getFormContainerClient();
 			FluidItem fluidItem = new FluidItem();
-			if (wfiParam.isFluidItemInWIPState()) {
-				FlowItemClient flowItemClient = this.getFluidClientDS().getFlowItemClient();
-				try {
-					fluidItem = flowItemClient.getFluidItemByFormId(wfiParam.getFluidItemFormId());
-				} catch (FluidClientException fce) {
-					if (FluidClientException.ErrorCode.NO_RESULT != fce.getErrorCode()) {
-						throw fce;
-					}
-				}
+			FlowItemClient flowItemClient = this.getFluidClientDS().getFlowItemClient();
+			try {
+				fluidItem = flowItemClient.getFluidItemByFormId(
+						wfiParam.getFluidItemFormId(), true, webKitForm.isEnableCalculatedLabels());
+			} catch (FluidClientException fce) {
+				if (FluidClientException.ErrorCode.NO_RESULT != fce.getErrorCode()) throw fce;
 			}
 
 			boolean tableFormsEnabled = webKitForm.isAnyTableFormsEnabled();
@@ -294,7 +291,6 @@ public class WebKitOpenFormConversationBean extends ABaseManagedBean {
 				});
 			}
 
-			Form freshFetchForm = new Form();
 			Map<String, List<Form>> existingTableRecords = new HashMap<>();
 
 			//Set the associated workflows...
@@ -307,10 +303,10 @@ public class WebKitOpenFormConversationBean extends ABaseManagedBean {
 					.orElse(new ArrayList<>());
 			if (associatedFlowsForFormDef == null) associatedFlowsForFormDef = new ArrayList<>();
 			associatedFlowsForFormDef.forEach(flowItm -> this.getInputWorkflowsForFormDef().add(flowItm.getName()));
-			
+
+			Form freshFetchForm = new Form();
 			if (wfiParam.isFluidItemFormSet()) {
-				freshFetchForm = fcClient.getFormContainerById(
-						wfiParam.getFluidItemFormId(), webKitForm.isEnableCalculatedLabels());
+				freshFetchForm = fluidItem.getForm();
 				//Lock the Form as it is being opened...
 				if (webKitForm.isLockFormOnOpen() && Form.State.OPEN.equals(freshFetchForm.getState())) {
 					fcClient.lockFormContainer(freshFetchForm, wfiParam.getJobView());
