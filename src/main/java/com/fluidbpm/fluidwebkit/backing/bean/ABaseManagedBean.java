@@ -771,4 +771,15 @@ public abstract class ABaseManagedBean implements Serializable {
 		String valTxt = UtilGlobal.getProperty(new Properties(), fieldPropName, defaultValue);
 		return valTxt;
 	}
+
+	public Integer getGlobalConfigOrPropValueAsInt(String fieldPropName, String defaultValue) {
+		String asTxt = this.getGlobalConfigOrPropValue(fieldPropName, defaultValue);
+		if (UtilGlobal.isBlank(fieldPropName)) return null;
+
+		try {
+			return Integer.parseInt(asTxt.trim());
+		} catch (NumberFormatException nfe) {
+			return null;
+		}
+	}
 }
