@@ -419,20 +419,19 @@ public abstract class ABaseManagedBean implements Serializable {
 		long now = System.currentTimeMillis();
 		if ((LAST_TIME_CONF_LOGGED_IN + TimeUnit.HOURS.toMillis(LOGIN_DURATION_HOURS)) < now) {
 			synchronized (LAST_TIME_CONF_LOGGED_IN) {
-				LoginClient loginClient = new LoginClient(UtilGlobal.getConfigURLFromSystemProperty(existingProps));
-				try {
-					String serviceTicket = loginClient.login(
-							UtilGlobal.getConfigUserProperty(existingProps),
-							UtilGlobal.getConfigUserPasswordProperty(existingProps)).getServiceTicket();
-					LAST_TIME_CONF_LOGGED_IN = System.currentTimeMillis();
+				if ((LAST_TIME_CONF_LOGGED_IN + TimeUnit.HOURS.toMillis(LOGIN_DURATION_HOURS)) < now) {
+					try (LoginClient loginClient = new LoginClient(UtilGlobal.getConfigURLFromSystemProperty(existingProps));) {
+						String serviceTicket = loginClient.login(
+								UtilGlobal.getConfigUserProperty(existingProps),
+								UtilGlobal.getConfigUserPasswordProperty(existingProps)).getServiceTicket();
+						LAST_TIME_CONF_LOGGED_IN = System.currentTimeMillis();
 
-					this.fcp.invalidate(CONFIG_USER_GLOBAL_ID);
-					this.fcp.init(CONFIG_USER_GLOBAL_ID, serviceTicket, UtilGlobal.getConfigURLFromSystemProperty(existingProps));
-				} catch (Exception except) {
-					this.getLogger().error(except.getMessage(), except);
-					throw new IllegalStateException(except.getMessage(), except);
-				} finally {
-					loginClient.closeAndClean();
+						this.fcp.invalidate(CONFIG_USER_GLOBAL_ID);
+						this.fcp.init(CONFIG_USER_GLOBAL_ID, serviceTicket, UtilGlobal.getConfigURLFromSystemProperty(existingProps));
+					} catch (Exception except) {
+						this.getLogger().error(except.getMessage(), except);
+						throw new IllegalStateException(except.getMessage(), except);
+					}
 				}
 			}
 		}
