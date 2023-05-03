@@ -781,4 +781,17 @@ public abstract class ABaseManagedBean implements Serializable {
 			return null;
 		}
 	}
+
+	public boolean getGlobalConfigOrPropValueAsBoolean(String fieldPropName, String defaultValue) {
+		String asTxt = this.getGlobalConfigOrPropValue(fieldPropName, defaultValue);
+		if (UtilGlobal.isBlank(fieldPropName)) return false;
+
+		asTxt = asTxt.trim().toLowerCase();
+
+		return (UtilGlobal.isAnyTrue(
+				"true".equals(asTxt),
+				"1".equals(asTxt),
+				"yes".equals(asTxt)
+		));
+	}
 }
