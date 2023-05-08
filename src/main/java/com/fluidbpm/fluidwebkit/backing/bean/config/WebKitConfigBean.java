@@ -72,6 +72,7 @@ public class WebKitConfigBean extends ABaseManagedBean {
 	private String googleCloudPlatformAPIKey;
 	private String titleLookupIncludedFormTypes;
 	private String raygunAPIKey;
+	private String googleAPIKey;
 
 	private boolean configUserLoginSuccess = false;
 	
@@ -205,6 +206,8 @@ public class WebKitConfigBean extends ABaseManagedBean {
 						this.setTitleLookupIncludedFormTypes(configuration.getValue());
 					} else if (ConfigKey.RaygunAPIKey.equals(configName)) {
 						this.setRaygunAPIKey(configuration.getValue());
+					} else if (ConfigKey.GoogleAPIKey.equals(configName)) {
+						this.setGoogleAPIKey(configuration.getValue());
 					}
 				}
 		);
@@ -246,6 +249,8 @@ public class WebKitConfigBean extends ABaseManagedBean {
 	}
 	
 	private boolean performCallToSeeIfGoogleReachable() {
+		if (UtilGlobal.isBlank(this.googleAPIKey)) return false;
+
 		URLConnection con = null;
 		try {
 			URL url = new URL(GOOGLE_MAPS_API_SERVER);

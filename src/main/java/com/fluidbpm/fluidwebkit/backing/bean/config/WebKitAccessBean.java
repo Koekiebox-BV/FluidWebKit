@@ -125,8 +125,7 @@ public class WebKitAccessBean extends ABaseManagedBean {
 				nowCanCreateInstanceTbl = new AtomicLong(),
 				canViewAtt = new AtomicLong(),
 				canEditAtt = new AtomicLong(),
-				loggedInUserFormDefs = new AtomicLong()
-						;
+				loggedInUserFormDefs = new AtomicLong();
 
 		List<CompletableFuture> allAsyncs = new ArrayList<>();
 
