@@ -4,6 +4,7 @@ import com.fluidbpm.fluidwebkit.backing.bean.ABaseManagedBean;
 import com.fluidbpm.fluidwebkit.backing.bean.config.WebKitAccessBean;
 import com.fluidbpm.fluidwebkit.backing.bean.config.WebKitConfigBean;
 import com.fluidbpm.fluidwebkit.backing.bean.som.GlobalIssuerBean;
+import com.fluidbpm.fluidwebkit.backing.utility.Globals;
 import com.fluidbpm.program.api.util.UtilGlobal;
 import com.fluidbpm.program.api.vo.field.DecimalMetaFormat;
 import com.fluidbpm.program.api.vo.field.Field;
@@ -328,57 +329,66 @@ public class WebKitOpenFormFieldHistoryConversationBean extends ABaseManagedBean
 		// The most recent values:
 		Long mostRecent = timestampDesc.isEmpty() ? 0l : timestampDesc.get(0);
 		String mostRecentUser = dateAndUserMapping.get(mostRecent);
-		List<Field> recentFields = dateAndFieldValuesMapping.get(mostRecent);
 
 		// Earliest:
 		Long oldest = timestampDesc.isEmpty() ? 0l : timestampDesc.get(timestampDesc.size() - 1);
 		String oldestUser = dateAndUserMapping.get(oldest);
 
-		if (mostRecent == null || oldest == null) return;
+		if (mostRecent == null || oldest == null ||
+				(!dateAndFieldValuesMapping.containsKey(mostRecent) ||
+						!dateAndFieldValuesMapping.containsKey(oldest))) {
+			this.getLogger().warn(String.format("We do not have the MostRecent(%s:%s) or Oldest(%s:%s) on map [%s] field values!",
+					mostRecent == null ? Globals.NOT_SET : new Date(mostRecent),
+					oldest == null ? Globals.NOT_SET : new Date(oldest),
+					oldest,
+					mostRecent,
+					dateAndFieldValuesMapping)
+			);
+			return;
+		}
 
 		this.getLogger().debug(
 				String.format("Audit: Comparing oldest [%s:%s] with latest [%s:%s].",
 						new Date(oldest), oldestUser, new Date(mostRecent), mostRecentUser));
 
-		// Iterate each
-		List<Long> timestampAsc = new ArrayList<>(dateAndFieldValuesMapping.keySet());
-		Collections.sort(timestampAsc);
+		this.mapForAuditDisplay(oldest, dateAndUserMapping, dateAndFieldValuesMapping, timestampDesc);
+		this.mapForAuditDisplay(mostRecent, dateAndUserMapping, dateAndFieldValuesMapping, timestampDesc);
+	}
 
-		timestampAsc.forEach(timestamp -> {
-			// No match for oldest or earliest:
-			if (timestamp != oldest && timestamp != mostRecent) return;
+	private void mapForAuditDisplay(
+		long timestamp,
+		Map<Long, String> dateAndUserMapping,
+		Map<Long, List<Field>> dateAndFieldValuesMapping,
+		List<Long> timestampDesc
+	) {
+		this.getLogger().debug(String.format("Audit: Processing [%s].", timestamp));
+		List<Field> fields = dateAndFieldValuesMapping.get(timestamp);
+		final String user = dateAndUserMapping.containsKey(timestamp) ? dateAndUserMapping.get(timestamp) : "-";
+		// Remove Fields where user has no Access:
+		this.removeFieldsWhereUserHasNoAccess(fields);
 
-			this.getLogger().debug(String.format("Audit: Processing [%s].", timestamp));
+		// Remove AFS Fields no wanted at all:
+		this.removeUnwantedFields(fields);
 
-			List<Field> fields = dateAndFieldValuesMapping.get(timestamp);
-
-			final String user = dateAndUserMapping.containsKey(timestamp) ? dateAndUserMapping.get(timestamp) : "-";
-			// Remove Fields where user has no Access:
-			this.removeFieldsWhereUserHasNoAccess(fields);
-
-			// Remove AFS Fields no wanted at all:
-			this.removeUnwantedFields(fields);
-
-			Date timestampDate = new Date(timestamp);
-			// Add Each Of the Fields:
-			fields.stream()
-					.filter(fieldItm -> fieldItm.getFieldValue() != null)
-					.forEach(fieldItm -> {
-						FlatFieldHistory toAddMod = this.formFieldHistoriesFlat.stream()
-								.filter(itm -> itm.getField().getFieldName().equals(fieldItm.getFieldName()))
-								.findFirst()
-								.orElse(null);
-						if (toAddMod == null) {
-							toAddMod = new FlatFieldHistory(user, timestamp, timestampDate, fieldItm, 0);
-							this.formFieldHistoriesFlat.add(toAddMod);
-						} else this.modifyExisting(
+		Date timestampDate = new Date(timestamp);
+		// Add Each Of the Fields:
+		fields.stream()
+				.filter(fieldItm -> fieldItm.getFieldValue() != null)
+				.forEach(fieldItm -> {
+					FlatFieldHistory toAddMod = this.formFieldHistoriesFlat.stream()
+							.filter(itm -> itm.getField().getFieldName().equals(fieldItm.getFieldName()))
+							.findFirst()
+							.orElse(null);
+					if (toAddMod == null) {
+						toAddMod = new FlatFieldHistory(user, timestamp, timestampDate, fieldItm, 0);
+						this.formFieldHistoriesFlat.add(toAddMod);
+					} else this.modifyExisting(
 							timestampDesc,
 							dateAndFieldValuesMapping,
 							dateAndUserMapping,
 							toAddMod
-						);
-			});
-		});
+					);
+				});
 	}
 
 	private void modifyExisting(
