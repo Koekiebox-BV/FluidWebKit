@@ -390,13 +390,24 @@ public class WebKitOpenFormConversationBean extends ABaseManagedBean {
 		);
 		if (currencyOverride == null) return;
 
-		// Main Form fields:
+		// Main Form fields (edit and view fields):
 		this.getWsFluidItem().getFormFieldsEdit().stream()
-				.filter(this::filterCurrencyField)
-				.forEach(field -> {
-					String currForOverride = DecimalMetaFormat.format(field.getDecimalMetaFormat(), currencyOverride);
-					field.setTypeMetaData(currForOverride);
-				});
+				.filter(this::filterCurrencyFieldCanBeNullValue)
+				.forEach(field -> this.processCurrencyOverride(field, currencyOverride));
+		this.getWsFluidItem().getFormFieldsViewable().stream()
+				.filter(this::filterCurrencyFieldCanBeNullValue)
+				.forEach(field -> this.processCurrencyOverride(field, currencyOverride));
+
+		// Update the table field viewable map:
+		if (this.tableRecordViewableFields != null) {
+			this.tableRecordViewableFields.forEach((key, val) -> {
+				val.stream()
+						.filter(this::filterCurrencyFieldCanBeNullValue)
+						.forEach(field -> {
+							this.processCurrencyOverride(field, currencyOverride);
+						});
+			});
+		}
 
 		// Only Table fields:
 		this.getWsFluidItem().getFormFieldsEdit().stream()
@@ -407,12 +418,25 @@ public class WebKitOpenFormConversationBean extends ABaseManagedBean {
 				.map(tblRecords -> tblRecords.getTableRecords())
 				.flatMap(Collection::stream)
 				.forEach(tableRecord -> {tableRecord.getFormFields().stream()
-						.filter(this::filterCurrencyField)
-						.forEach(field -> {
-							String currForOverride = DecimalMetaFormat.format(field.getDecimalMetaFormat(), currencyOverride);
-							field.setTypeMetaData(currForOverride);
-						});
+						.filter(this::filterCurrencyFieldCanBeNullValue)
+						.forEach(field -> this.processCurrencyOverride(field, currencyOverride));
 				});
+		this.getWsFluidItem().getFormFieldsViewable().stream()
+				.filter(itm -> itm.getTypeAsEnum() == Field.Type.Table)
+				.map(itm -> itm.getFieldValueAsTableField())
+				//Only where there is table records...
+				.filter(tblField -> tblField != null && (tblField.getTableRecords() != null && !tblField.getTableRecords().isEmpty()))
+				.map(tblRecords -> tblRecords.getTableRecords())
+				.flatMap(Collection::stream)
+				.forEach(tableRecord -> {tableRecord.getFormFields().stream()
+						.filter(this::filterCurrencyFieldCanBeNullValue)
+						.forEach(field -> this.processCurrencyOverride(field, currencyOverride));
+				});
+	}
+
+	private void processCurrencyOverride(Field field, Currency currencyOverride) {
+		String currForOverride = DecimalMetaFormat.format(field.getDecimalMetaFormat(), currencyOverride);
+		field.setTypeMetaData(currForOverride);
 	}
 
 	private void buildContextMenuForConversation() {
@@ -1150,6 +1174,12 @@ public class WebKitOpenFormConversationBean extends ABaseManagedBean {
 		}
 
 		return returnVal;
+	}
+
+	private boolean filterCurrencyFieldCanBeNullValue(Field field) {
+		if (field == null) return false;
+		return field.getTypeAsEnum() == Field.Type.Decimal &&
+				(field.getDecimalMetaFormat() != null && field.getDecimalMetaFormat().isAmountMinorWithCurrency());
 	}
 
 	private boolean filterCurrencyField(Field field) {
