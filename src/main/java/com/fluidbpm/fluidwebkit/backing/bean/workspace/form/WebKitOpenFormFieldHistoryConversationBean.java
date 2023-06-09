@@ -10,6 +10,7 @@ import com.fluidbpm.program.api.vo.field.DecimalMetaFormat;
 import com.fluidbpm.program.api.vo.field.Field;
 import com.fluidbpm.program.api.vo.form.Form;
 import com.fluidbpm.program.api.vo.historic.FormHistoricData;
+import com.fluidbpm.program.api.vo.user.User;
 import com.fluidbpm.ws.client.v1.form.FormContainerClient;
 import lombok.*;
 import org.json.JSONException;
@@ -363,7 +364,19 @@ public class WebKitOpenFormFieldHistoryConversationBean extends ABaseManagedBean
 	) {
 		this.getLogger().debug(String.format("Audit: Processing [%s].", timestamp));
 		List<Field> fields = dateAndFieldValuesMapping.get(timestamp);
-		final String user = dateAndUserMapping.containsKey(timestamp) ? dateAndUserMapping.get(timestamp) : "-";
+		final String maker = dateAndUserMapping.values().stream()
+				.filter(itm -> {
+					if (UtilGlobal.isBlank(itm)) return false;
+					switch (itm) {
+						case EMPTY_FLAG:
+						case User.ADMIN_USERNAME:
+						case SYSTEM_ROUTE:
+							return false;
+						default: return true;
+					}
+				}).findFirst()
+				.orElse("-");
+
 		// Remove Fields where user has no Access:
 		this.removeFieldsWhereUserHasNoAccess(fields);
 
@@ -380,12 +393,12 @@ public class WebKitOpenFormFieldHistoryConversationBean extends ABaseManagedBean
 							.findFirst()
 							.orElse(null);
 					if (toAddMod == null) {
-						toAddMod = new FlatFieldHistory(user, timestamp, timestampDate, fieldItm, 0);
+						toAddMod = new FlatFieldHistory(maker, timestamp, timestampDate, fieldItm, 0);
 						this.formFieldHistoriesFlat.add(toAddMod);
 					} else this.modifyExisting(
 							timestampDesc,
 							dateAndFieldValuesMapping,
-							dateAndUserMapping,
+							maker,
 							toAddMod
 					);
 				});
@@ -394,11 +407,10 @@ public class WebKitOpenFormFieldHistoryConversationBean extends ABaseManagedBean
 	private void modifyExisting(
 		List<Long> timestampDesc,
 		Map<Long, List<Field>> dateAndFieldValuesMapping,
-		Map<Long, String> dateAndUserMapping,
+		String maker,
 		FlatFieldHistory toModify
 	) {
 		String fieldName = toModify.getField().getFieldName();
-		//Object existingFieldVal = toModify.getField().getFieldValue();
 
 		for (Long atIndex : timestampDesc) {
 			List<Field> listOfFields = dateAndFieldValuesMapping.get(atIndex);
@@ -412,15 +424,10 @@ public class WebKitOpenFormFieldHistoryConversationBean extends ABaseManagedBean
 
 			// Field Matches, now let's ensure the values are not matching.
 			if (!toModify.getField().valueEquals(matchingField)) {
-				PriorField priorFieldExisting = toModify.getPriorField();
-				//if (priorFieldExisting == null) {
-					// No previous value...
-					Date modifiedAt = new Date(atIndex);
-					String userForMod = dateAndUserMapping.containsKey(atIndex) ? dateAndUserMapping.get(atIndex) : "-";
+				Date modifiedAt = new Date(atIndex);
 
-					toModify.priorFieldModifiedDate = modifiedAt;
-					toModify.priorField = new PriorField(matchingField, modifiedAt, userForMod);
-				//}
+				toModify.priorFieldModifiedDate = modifiedAt;
+				toModify.priorField = new PriorField(matchingField, modifiedAt, maker);
 			}
 		}
 	}
