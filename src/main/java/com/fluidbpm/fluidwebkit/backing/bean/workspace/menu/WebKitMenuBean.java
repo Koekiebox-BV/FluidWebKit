@@ -36,7 +36,7 @@ import org.primefaces.component.submenu.UISubmenu;
 
 import javax.annotation.PostConstruct;
 import javax.enterprise.context.SessionScoped;
-import javax.faces.component.UIComponentBase;
+import javax.faces.component.UIComponent;
 import javax.inject.Inject;
 import javax.inject.Named;
 import java.util.ArrayList;
@@ -247,10 +247,9 @@ public class WebKitMenuBean extends ABaseManagedBean {
 				subMenToAdd.setId(String.format("om_%s", menuItmWhereParent.getMenuId()));
 				subMenToAdd.setLabel(menuItmWhereParent.getMenuLabel());
 				if (userHasAccLcl = this.populateSubmenuUserQuery(subMenToAdd, menuItems))
-					submenu.getElements().add(subMenToAdd);
-			} else {
-				userHasAccLcl = this.createMenuItem(submenu, menuItmWhereParent);
-			}
+					submenu.getChildren().add(subMenToAdd);
+			} else userHasAccLcl = this.createMenuItem(submenu, menuItmWhereParent);
+
 			if (userHasAccLcl) userHasAccess.set(true);
 		});
 		return userHasAccess.get();
@@ -301,7 +300,7 @@ public class WebKitMenuBean extends ABaseManagedBean {
 		}
 		menuItem.setOncomplete(onCompleteJS);
 
-		if (userHasAccLcl) submenu.getElements().add(menuItem);
+		if (userHasAccLcl) submenu.getChildren().add(menuItem);
 
 		return userHasAccLcl;
 	}
@@ -332,12 +331,12 @@ public class WebKitMenuBean extends ABaseManagedBean {
 			Long groupId = webKitGroupItm.getJobViewGroupId();
 			String groupIcon = webKitGroupItm.getJobViewGroupIcon();
 
-			final UIComponentBase groupBaseToAdd;
+			final UIComponent toAdd;
 			if (webKitGroupItm.isTGMCombined()) {
-				UIMenuItem menuItemGroup = new UIMenuItem();
-				menuItemGroup.setIcon(this.iconSafe(groupIcon, ICON_DEFAULT_GROUP));
-				menuItemGroup.setValue(groupLabel);
-				menuItemGroup.setAjax(true);
+				UIMenuItem menuItem = new UIMenuItem();
+				menuItem.setIcon(this.iconSafe(groupIcon, ICON_DEFAULT_GROUP));
+				menuItem.setValue(groupLabel);
+				menuItem.setAjax(true);
 				List<Long> jobViews = this.getViewIdsForGroup(webKitGroupItm);
 				final String onCompleteJS;
 				if (jobViews == null || jobViews.isEmpty()) {
@@ -362,15 +361,14 @@ public class WebKitMenuBean extends ABaseManagedBean {
 					}
 				}
 
-				if (onCompleteJS == null) {
-					groupBaseToAdd = null;
-				} else {
-					menuItemGroup.setOncomplete(onCompleteJS);
-					groupBaseToAdd = menuItemGroup;
+				if (onCompleteJS == null) toAdd = null;
+				else {
+					menuItem.setOncomplete(onCompleteJS);
+					toAdd = menuItem;
 				}
 			} else {
-				UISubmenu menuItemGroup = new UISubmenu();
-				menuItemGroup.setLabel(groupLabel);
+				UISubmenu submenu = new UISubmenu();
+				submenu.setLabel(groupLabel);
 
 				List<WebKitViewSub> subsForGroup = webKitGroupItm.getWebKitViewSubs();
 				if (subsForGroup != null && !subsForGroup.isEmpty()) {
@@ -384,6 +382,7 @@ public class WebKitMenuBean extends ABaseManagedBean {
 						menuItemSub.setIcon(this.iconSafe(subIcon, ICON_DEFAULT_SUB));
 						menuItemSub.setValue(subLabel);
 						menuItemSub.setAjax(true);
+
 						List<Long> jobViews = this.getViewIdsForSub(sub);
 						final String onCompleteJS;
 						if (jobViews == null || jobViews.isEmpty()) {
@@ -415,20 +414,21 @@ public class WebKitMenuBean extends ABaseManagedBean {
 
 						if (onCompleteJS != null) {
 							menuItemSub.setOncomplete(onCompleteJS);
-							menuItemGroup.getElements().add(menuItemSub);
+							submenu.getChildren().add(menuItemSub);
 						}
 					});
 				}
-				groupBaseToAdd = menuItemGroup.getElementsCount() > 0 ? menuItemGroup : null;
+				toAdd = submenu.getChildCount() > 0 ? submenu : null;
 			}
 
-			if (groupBaseToAdd != null) {
-				groupBaseToAdd.setId(String.format("menGroupId%d", groupCounter.getAndIncrement()));
-				this.submenuWorkspace.getElements().add(groupBaseToAdd);
+			if (toAdd != null) {
+				String id = String.format("menGroupId%d", groupCounter.getAndIncrement());
+				toAdd.setId(id);
+				this.submenuWorkspace.getChildren().add(toAdd);
 			}
 		});
 
-		if (this.submenuWorkspace.getElementsCount() < 1) this.noAccess();
+		if (this.submenuWorkspace.getChildCount() < 1) this.noAccess();
 	}
 
 	private void noAccess() {
@@ -436,7 +436,7 @@ public class WebKitMenuBean extends ABaseManagedBean {
 		menuItem.setValue("No Access");
 		menuItem.setIcon("pi pi-exclamation-triangle");
 		menuItem.setOutcome("access");
-		this.submenuWorkspace.getElements().add(this.submenuWorkspace.getElementsCount(), menuItem);
+		this.submenuWorkspace.getChildren().add(this.submenuWorkspace.getChildCount(), menuItem);
 	}
 
 	private void noGroups() {
@@ -444,7 +444,7 @@ public class WebKitMenuBean extends ABaseManagedBean {
 		menuItem.setValue("No Workspace Config");
 		menuItem.setIcon("pi pi-exclamation-triangle");
 		menuItem.setOutcome("noconfig");
-		this.submenuWorkspace.getElements().add(this.submenuWorkspace.getElementsCount(), menuItem);
+		this.submenuWorkspace.getChildren().add(this.submenuWorkspace.getChildCount(), menuItem);
 	}
 
 	private boolean doesUserHaveAccessToItemInGroup() {

@@ -232,7 +232,7 @@ public class WebKitAttachmentBean extends ABaseManagedBean {
 		InputStream inputStream = null;
 		try {
 			StreamedContent sc = this.fetchAttachmentData(new Attachment(attachmentIdParam));
-			inputStream = sc.getStream();
+			inputStream = sc.getStream().get();
 			FluidWorkspaceUtil fluidWorkspaceUtil = new FluidWorkspaceUtil();
 			List<Worksheet> returnVal = fluidWorkspaceUtil.getWorksheetsFromExcel(inputStream, excelPasswordParam);
 			return returnVal;

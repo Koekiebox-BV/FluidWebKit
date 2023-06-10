@@ -135,10 +135,10 @@ public class ImageServlet extends ABaseFWKServlet {
 		StreamedContent streamedContent
 	) throws IOException {
 		String filename = streamedContent.getName(), contentType = streamedContent.getContentType();
-		InputStream is = streamedContent.getStream();
+		InputStream is = streamedContent.getStream().get();
 		if (is == null && streamedContent instanceof ImageStreamedContent) {
 			ImageStreamedContent casted = (ImageStreamedContent)streamedContent;
-			is = casted.cloneAsDefaultStreamedContent().getStream();
+			is = casted.cloneAsDefaultStreamedContent().getStream().get();
 			if (filename == null) filename = casted.getNameLocal();
 			if (contentType == null) contentType = casted.getContentTypeLocal();
 		}

@@ -84,4 +84,9 @@ public abstract class ABaseLDM<T extends ABaseFluidVO> extends LazyDataModel<T> 
 		List<T> returnVal = this.dataListing.subList(first, toVal > totalSize ? totalSize : toVal);
 		return returnVal;
 	}
+
+	@Override
+	public int count(Map<String, FilterMeta> map) {
+		return this.getRowCount();
+	}
 }
