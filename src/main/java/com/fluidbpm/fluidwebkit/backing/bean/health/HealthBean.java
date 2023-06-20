@@ -44,7 +44,7 @@ public class HealthBean extends ABaseManagedBean {
 
 		if (this.getFluidClientDS() == null) return;
 
-		HealthClient healthClient = this.getFluidClientDS().getHealthClient();
+		HealthClient healthClient = this.getFluidClientDSConfig().getHealthClient();
 		try {
 			this.connectStatus = healthClient.getHealthAndServerInfo();
 		} catch (Exception except) {
