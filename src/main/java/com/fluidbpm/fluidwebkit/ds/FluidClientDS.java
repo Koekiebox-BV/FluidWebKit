@@ -28,6 +28,7 @@ import com.fluidbpm.ws.client.v1.flowitem.FlowItemClient;
 import com.fluidbpm.ws.client.v1.form.FormContainerClient;
 import com.fluidbpm.ws.client.v1.form.FormDefinitionClient;
 import com.fluidbpm.ws.client.v1.form.FormFieldClient;
+import com.fluidbpm.ws.client.v1.health.HealthClient;
 import com.fluidbpm.ws.client.v1.payment.PaymentClient;
 import com.fluidbpm.ws.client.v1.report.ReportSystemClient;
 import com.fluidbpm.ws.client.v1.report.ReportUserClient;
@@ -118,6 +119,10 @@ public class FluidClientDS implements Closeable {
 		return this.getClientFor(ReportUserClient.class);
 	}
 
+	public HealthClient getHealthClient() {
+		return this.getClientFor(HealthClient.class);
+	}
+
 	public ReportSystemClient getReportSystemClient() {
 		return this.getClientFor(ReportSystemClient.class);
 	}
@@ -201,6 +206,8 @@ public class FluidClientDS implements Closeable {
 			return new PaymentClient(this.endpoint, this.serviceTicket);
 		} else if (clazz.isAssignableFrom(SQLUtilWebSocketRESTWrapper.class)) {
 			return new SQLUtilWebSocketRESTWrapper(this.endpoint, this.serviceTicket, TimeUnit.SECONDS.toMillis(30));
+		} else if (clazz.isAssignableFrom(HealthClient.class)) {
+			return new HealthClient(this.endpoint, this.serviceTicket);
 		}
 
 		return null;

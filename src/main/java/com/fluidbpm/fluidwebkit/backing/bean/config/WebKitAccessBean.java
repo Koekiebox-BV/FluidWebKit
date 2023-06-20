@@ -127,9 +127,8 @@ public class WebKitAccessBean extends ABaseManagedBean {
 				canEditAtt = new AtomicLong(),
 				loggedInUserFormDefs = new AtomicLong();
 
-		List<CompletableFuture> allAsyncs = new ArrayList<>();
-
-		allAsyncs.add(CompletableFuture.runAsync(() -> {
+		List<CompletableFuture> allASyncs = new ArrayList<>();
+		allASyncs.add(CompletableFuture.runAsync(() -> {
 			long tick = System.currentTimeMillis();
 			this.formDefinitionsCanCreateInstanceOf = formDefinitionClient.getAllByLoggedInUserWhereCanCreateInstanceOf(
 					false, true);
@@ -138,12 +137,17 @@ public class WebKitAccessBean extends ABaseManagedBean {
 					this.formDefinitionsCanCreateInstanceOf = this.formDefinitionsCanCreateInstanceOf.stream()
 							.filter(itm -> !this.getFormDefsToIgnore().contains(itm.getFormType()))
 							.collect(Collectors.toList());
+
+					this.formDefinitionsCanCreateInstanceOf.forEach(itm -> {
+						this.getLogger().info("(%s) FFC-Bean: %d -> '%s'",
+								this.getLoggedInUserUsername(), itm.getFormTypeId(), itm.getFormType());
+					});
 				}
 				Collections.sort(this.formDefinitionsCanCreateInstanceOf, Comparator.comparing(Form::getFormType));
 			}
 			nowCanCreateInstance.set(System.currentTimeMillis() - tick);
 		}));
-		allAsyncs.add(CompletableFuture.runAsync(() -> {
+		allASyncs.add(CompletableFuture.runAsync(() -> {
 			long tick = System.currentTimeMillis();
 			this.formDefinitionsCanCreateInstanceOfIncTableFields = formDefinitionClient.getAllByLoggedInUserWhereCanCreateInstanceOf(
 					true, false);
@@ -158,24 +162,24 @@ public class WebKitAccessBean extends ABaseManagedBean {
 			nowCanCreateInstanceTbl.set(System.currentTimeMillis() - tick);
 		}));
 
-		allAsyncs.add(CompletableFuture.runAsync(() -> {
+		allASyncs.add(CompletableFuture.runAsync(() -> {
 			long tick = System.currentTimeMillis();
 			this.formDefinitionsAttachmentCanView = formDefinitionClient.getAllByLoggedInUserWhereCanViewAttachments();
 			canViewAtt.set(System.currentTimeMillis() - tick);
 		}));
 
-		allAsyncs.add(CompletableFuture.runAsync(() -> {
+		allASyncs.add(CompletableFuture.runAsync(() -> {
 			long tick = System.currentTimeMillis();
 			this.formDefinitionsAttachmentCanEdit = formDefinitionClient.getAllByLoggedInUserWhereCanEditAttachments();
 			canEditAtt.set(System.currentTimeMillis() - tick);
 		}));
 
-		allAsyncs.add(CompletableFuture.runAsync(() -> {
+		allASyncs.add(CompletableFuture.runAsync(() -> {
 			long tick = System.currentTimeMillis();
 			this.allFormDefinitionsForLoggedIn = formDefinitionClient.getAllByLoggedInUser(true);
 			loggedInUserFormDefs.set(System.currentTimeMillis() - tick);
 		}));
-		CompletableFuture.allOf(allAsyncs.toArray(new CompletableFuture[]{})).join();
+		CompletableFuture.allOf(allASyncs.toArray(new CompletableFuture[]{})).join();
 
 		this.getLogger().info("FFC-Bean: PART-1-COMPLETE (CanCreateInstanceOf[%d],CanCreateInstanceOfTable[%d],AttachmentsView[%d],AttachmentsEdit[%d],LoggedInFormDefs[%d]).",
 			nowCanCreateInstance.get(),
@@ -194,27 +198,27 @@ public class WebKitAccessBean extends ABaseManagedBean {
 			formDefsToFetchFor.add(formDefTitle);
 		}
 
-		allAsyncs.clear();
+		allASyncs.clear();
 
 		long tick = System.currentTimeMillis();
 		try (FormFieldClient formFieldClient = new FormFieldClient(
 			this.getFluidClientDS().getEndpoint(), this.getFluidClientDS().getServiceTicket())
 		) {
-			allAsyncs.add(CompletableFuture.runAsync(() -> {
+			allASyncs.add(CompletableFuture.runAsync(() -> {
 				List<Form> allFormsWithViewFields =
 						formFieldClient.getFieldsByFormNamesAndLoggedInUser(false, true, formDefsToFetchFor);
 				allFormsWithViewFields.forEach(itm -> {
 					this.fieldsForViewing.put(itm.getFormType(), itm.getFormFields());
 				});
 			}));
-			allAsyncs.add(CompletableFuture.runAsync(() -> {
+			allASyncs.add(CompletableFuture.runAsync(() -> {
 				List<Form> allFormsWithEditFields =
 						formFieldClient.getFieldsByFormNamesAndLoggedInUser(true, false, formDefsToFetchFor);
 				allFormsWithEditFields.forEach(itm -> {
 					this.fieldsForEditing.put(itm.getFormType(), itm.getFormFields());
 				});
 			}));
-			CompletableFuture.allOf(allAsyncs.toArray(new CompletableFuture[]{})).join();
+			CompletableFuture.allOf(allASyncs.toArray(new CompletableFuture[]{})).join();
 		}
 
 		this.getLogger().info(String.format("FFC-Bean: PART-2-COMPLETE: [%d] millis for fields. Total of [%d] items. RealtimeTaken [%d].",

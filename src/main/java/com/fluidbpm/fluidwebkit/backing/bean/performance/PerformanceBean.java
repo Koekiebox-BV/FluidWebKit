@@ -38,9 +38,6 @@ public class PerformanceBean extends ABaseManagedBean {
 	@Getter
 	private SystemUptimeReport systemUptimeReport;
 
-	/**
-	 *
-	 */
 	@PostConstruct
 	public void init() {
 		this.actionUpdatePerformanceResult();
