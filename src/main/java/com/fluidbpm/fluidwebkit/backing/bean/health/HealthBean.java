@@ -16,7 +16,9 @@
 package com.fluidbpm.fluidwebkit.backing.bean.health;
 
 import com.fluidbpm.fluidwebkit.backing.bean.ABaseManagedBean;
+import com.fluidbpm.program.api.util.UtilGlobal;
 import com.fluidbpm.program.api.vo.health.ConnectStatus;
+import com.fluidbpm.program.api.vo.health.Health;
 import com.fluidbpm.ws.client.v1.health.HealthClient;
 import lombok.Getter;
 
@@ -33,15 +35,13 @@ public class HealthBean extends ABaseManagedBean {
 
 	@PostConstruct
 	public void init() {
-		this.actionUpdateHealthResult();
+		this.connectStatus = new ConnectStatus();
 	}
 
 	/**
 	 * Update the data.
 	 */
 	public void actionUpdateHealthResult() {
-		this.connectStatus = new ConnectStatus();
-
 		if (this.getFluidClientDS() == null) return;
 
 		HealthClient healthClient = this.getFluidClientDSConfig().getHealthClient();
@@ -49,6 +49,16 @@ public class HealthBean extends ABaseManagedBean {
 			this.connectStatus = healthClient.getHealthAndServerInfo();
 		} catch (Exception except) {
 			this.raiseError(except);
+		}
+	}
+
+	public String calcStyleForHealth(Health health) {
+		if (health == null) return UtilGlobal.EMPTY;
+		switch (health) {
+			case Healthy: return "background-color: #66FF66; color: black;";
+			case Degraded: return "background-color: #FD8008; color: black;";
+			case Unhealthy: return "background-color: #FC6666; color: black;";
+			default: return UtilGlobal.EMPTY;
 		}
 	}
 	

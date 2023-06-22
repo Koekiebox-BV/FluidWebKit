@@ -137,13 +137,13 @@ public class WebKitAccessBean extends ABaseManagedBean {
 					this.formDefinitionsCanCreateInstanceOf = this.formDefinitionsCanCreateInstanceOf.stream()
 							.filter(itm -> !this.getFormDefsToIgnore().contains(itm.getFormType()))
 							.collect(Collectors.toList());
-
-					this.formDefinitionsCanCreateInstanceOf.forEach(itm -> {
-						this.getLogger().info("(%s) FFC-Bean: %d -> '%s'",
-								this.getLoggedInUserUsername(), itm.getFormTypeId(), itm.getFormType());
-					});
 				}
 				Collections.sort(this.formDefinitionsCanCreateInstanceOf, Comparator.comparing(Form::getFormType));
+
+				this.formDefinitionsCanCreateInstanceOf.forEach(itm -> {
+					this.getLogger().info("(%s) FFC-Bean: %d -> '%s'",
+							this.getLoggedInUserUsername(), itm.getFormTypeId(), itm.getFormType());
+				});
 			}
 			nowCanCreateInstance.set(System.currentTimeMillis() - tick);
 		}));
