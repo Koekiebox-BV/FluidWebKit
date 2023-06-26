@@ -18,9 +18,11 @@ package com.fluidbpm.fluidwebkit.backing.bean.health;
 import com.fluidbpm.fluidwebkit.backing.bean.ABaseManagedBean;
 import com.fluidbpm.program.api.util.UtilGlobal;
 import com.fluidbpm.program.api.vo.health.ConnectStatus;
+import com.fluidbpm.program.api.vo.health.ExtendedServerHealth;
 import com.fluidbpm.program.api.vo.health.Health;
 import com.fluidbpm.ws.client.v1.health.HealthClient;
 import lombok.Getter;
+import org.json.JSONObject;
 
 import javax.annotation.PostConstruct;
 import javax.enterprise.context.SessionScoped;
@@ -33,9 +35,13 @@ public class HealthBean extends ABaseManagedBean {
 	@Getter
 	private ConnectStatus connectStatus;
 
+	@Getter
+	private ExtendedServerHealth extendedServerHealth;
+
 	@PostConstruct
 	public void init() {
 		this.connectStatus = new ConnectStatus();
+		this.extendedServerHealth = new ExtendedServerHealth();
 	}
 
 	/**
@@ -50,6 +56,12 @@ public class HealthBean extends ABaseManagedBean {
 		} catch (Exception except) {
 			this.raiseError(except);
 		}
+
+		try {
+			this.extendedServerHealth = healthClient.getExtendedHealthAndServerInfo();
+		} catch (Exception except) {
+			this.raiseError(except);
+		}
 	}
 
 	public String calcStyleForHealth(Health health) {
@@ -60,6 +72,15 @@ public class HealthBean extends ABaseManagedBean {
 			case Unhealthy: return "background-color: #FC6666; color: black;";
 			default: return UtilGlobal.EMPTY;
 		}
+	}
+
+	public String getHealthCode() {
+		JSONObject returnVal = new JSONObject();
+
+		returnVal.put("connectStatus", this.connectStatus.toJsonObject());
+		returnVal.put("extendedServerHealth", this.extendedServerHealth.toJsonObject());
+
+		return returnVal.toString(2);
 	}
 	
 }

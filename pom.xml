@@ -22,6 +22,7 @@
 		<version.plugin.java.doc>3.4.1</version.plugin.java.doc>
 		<version.plugin.compiler>3.6.0</version.plugin.compiler>
 		<version.jdk.compile>1.8</version.jdk.compile>
+		<version.plugin.koekiebox.git-maven>1.1</version.plugin.koekiebox.git-maven>
 	</properties>
 
 	<licenses>
@@ -177,6 +178,25 @@
 	<!--Plugins-->
 	<build>
 		<plugins>
+			<plugin>
+				<groupId>com.koekiebox</groupId>
+				<artifactId>git-maven-plugin</artifactId>
+				<version>${version.plugin.koekiebox.git-maven}</version>
+				<executions>
+					<execution>
+						<goals>
+							<goal>git_describe</goal>
+						</goals>
+					</execution>
+				</executions>
+				<configuration>
+					<!--Property that will be set during initialization-->
+					<makeUseOfJavaFile>true</makeUseOfJavaFile>
+					<classPathToJavaFile>com.fluidbpm.fluidwebkit.GitDescribe</classPathToJavaFile>
+					<constantToChange>GIT_DESCRIBE</constantToChange>
+				</configuration>
+			</plugin>
+
 			<!--Maven GPG Sign Plugin-->
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
