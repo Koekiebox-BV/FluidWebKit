@@ -60,7 +60,7 @@ public class FluidClientDS implements Closeable {
 	public FluidClientDS() {
 		super();
 		this.clientCache = CacheBuilder.newBuilder()
-				.expireAfterAccess(60, TimeUnit.MINUTES)
+				.expireAfterAccess(120, TimeUnit.MINUTES)
 				.removalListener(new ExitEventForFluidAPI())
 				.build();
 	}
