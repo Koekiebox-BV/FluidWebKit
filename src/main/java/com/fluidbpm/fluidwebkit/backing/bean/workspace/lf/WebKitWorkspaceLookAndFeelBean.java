@@ -990,13 +990,13 @@ public class WebKitWorkspaceLookAndFeelBean extends ABaseManagedBean {
 		
 		switch (form.getInputLayout()) {
 			case WebKitForm.InputLayout.VERTICAL:
-				return "p-field";
+				return "field";
 			case WebKitForm.InputLayout.ADVANCED:
 				WebKitFormLayoutAdvance advance = form.retrieveLayoutAdvanceForField(field);
 				int columnSpan = 6;
 				if (advance != null) columnSpan = advance.getColSpan();
 
-				return String.format("p-field p-col-12 p-md-%d", columnSpan);
+				return String.format("field col-%d md-%d", columnSpan, columnSpan);
 			default:
 				return WebKitForm.InputLayout.VERTICAL;
 		}
@@ -1009,7 +1009,7 @@ public class WebKitWorkspaceLookAndFeelBean extends ABaseManagedBean {
 			case WebKitForm.InputLayout.VERTICAL:
 				return "ui-fluid";
 			case WebKitForm.InputLayout.ADVANCED:
-				return "ui-fluid p-formgrid p-grid";
+				return "ui-fluid formgrid grid";
 			default:
 				return WebKitForm.InputLayout.VERTICAL;
 		}

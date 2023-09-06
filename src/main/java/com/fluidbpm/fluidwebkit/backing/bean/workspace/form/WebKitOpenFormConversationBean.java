@@ -12,6 +12,7 @@ import com.fluidbpm.fluidwebkit.backing.bean.workspace.pi.PersonalInventoryItemV
 import com.fluidbpm.fluidwebkit.backing.utility.WebUtil;
 import com.fluidbpm.fluidwebkit.backing.utility.field.FieldMappingUtil;
 import com.fluidbpm.fluidwebkit.exception.ClientDashboardException;
+import com.fluidbpm.fluidwebkit.exception.CustomExecutionException;
 import com.fluidbpm.fluidwebkit.exception.MandatoryFieldsException;
 import com.fluidbpm.program.api.util.GeoUtil;
 import com.fluidbpm.program.api.util.UtilGlobal;
@@ -822,6 +823,9 @@ public class WebKitOpenFormConversationBean extends ABaseManagedBean {
 			if (except instanceof MandatoryFieldsException) {
 				FacesMessage fMsg = new FacesMessage(FacesMessage.SEVERITY_WARN, "Mandatory.", except.getMessage());
 				FacesContext.getCurrentInstance().addMessage(null, fMsg);
+			} else if (except instanceof CustomExecutionException) {
+				FacesMessage fMsg = new FacesMessage(FacesMessage.SEVERITY_ERROR, "Error.", except.getMessage());
+				FacesContext.getCurrentInstance().addMessage(null, fMsg);
 			} else this.raiseError(except);
 		}
 	}
@@ -959,6 +963,9 @@ public class WebKitOpenFormConversationBean extends ABaseManagedBean {
 			if (except instanceof MandatoryFieldsException) {
 				FacesMessage fMsg = new FacesMessage(FacesMessage.SEVERITY_WARN,
 						"Mandatory.", String.format("'%s' %s.", this.wsFluidItem.getFluidItemTitle(), except.getMessage()));
+				FacesContext.getCurrentInstance().addMessage(null, fMsg);
+			} else if (except instanceof CustomExecutionException) {
+				FacesMessage fMsg = new FacesMessage(FacesMessage.SEVERITY_ERROR, "Error.", except.getMessage());
 				FacesContext.getCurrentInstance().addMessage(null, fMsg);
 			} else this.raiseError(except);
 		}
@@ -1169,8 +1176,12 @@ public class WebKitOpenFormConversationBean extends ABaseManagedBean {
 		}
 
 		if (customAction != null) {
-			CustomWebAction execActionResult = formContClient.executeCustomWebAction(customAction, returnVal);
-			this.mergeFormFieldsFromCustomAction(execActionResult, returnVal);
+			try {
+				CustomWebAction execActionResult = formContClient.executeCustomWebAction(customAction, returnVal);
+				this.mergeFormFieldsFromCustomAction(execActionResult, returnVal);
+			} catch (Exception err) {
+				throw new CustomExecutionException(err.getMessage(), err);
+			}
 		}
 
 		return returnVal;
