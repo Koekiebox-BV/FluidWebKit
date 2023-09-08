@@ -17,6 +17,7 @@ package com.fluidbpm.fluidwebkit.servlet.content;
 
 import com.fluidbpm.fluidwebkit.backing.utility.ImageUtil;
 import com.fluidbpm.fluidwebkit.qualifier.cache.FormImageCache;
+import com.fluidbpm.program.api.util.UtilGlobal;
 import com.fluidbpm.program.api.vo.user.User;
 import com.google.common.cache.Cache;
 
@@ -60,15 +61,19 @@ public class NewOrUpdatedImageServlet extends ImageServlet {
 		}
 		int attachmentIndexInt = Integer.valueOf(attachmentIndex);
 		String imageKey = this.getImageCacheKey(conversationId, attachmentIndexInt);
-		ImageStreamedContent cacheImageStreamedContent = this.formImageCache.getIfPresent(imageKey);
-		if (cacheImageStreamedContent != null) {
-			byte[] nonImageData = ImageUtil.getNonImagePreviewForContentType(cacheImageStreamedContent.getContentType());
+		ImageStreamedContent isc = this.formImageCache.getIfPresent(imageKey);
+		if (isc != null) {
+			String contentType = isc.getContentType();
+			if (UtilGlobal.isBlank(contentType)) contentType = isc.getContentTypeLocal();
+			byte[] nonImageData = ImageUtil.getNonImagePreviewForContentType(contentType);
 			if (nonImageData == null) {
-				this.writeImageToResponseOutput(respParam, cacheImageStreamedContent.cloneAsDefaultStreamedContent());
+				this.writeImageToResponseOutput(respParam, isc.cloneAsDefaultStreamedContent());
 			} else {
 				ImageStreamedContent noPreview = new ImageStreamedContent(
-						nonImageData, "image/svg+xml",
-						String.format("preview_%s.svg", UUID.randomUUID().toString().substring(0, 5)));
+						nonImageData,
+						"image/svg+xml",
+						String.format("preview_%s.svg", UUID.randomUUID().toString().substring(0, 5))
+				);
 				this.writeImageToResponseOutput(respParam, noPreview);
 			}
 			return;
