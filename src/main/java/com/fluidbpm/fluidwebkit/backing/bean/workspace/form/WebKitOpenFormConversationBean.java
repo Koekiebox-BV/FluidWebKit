@@ -944,7 +944,7 @@ public class WebKitOpenFormConversationBean extends ABaseManagedBean {
 					fiClient.sendFormToFlow(createdForm, this.inputSelectedWorkflow);
 					actionString = String.format("%s and Sent to '%s'", actionString, this.inputSelectedWorkflow);
 				} else if (webKitForm.isUnlockFormOnSave()) {
-					fcClient.unLockFormContainer(wsFlItem.getFluidItemForm());
+					fcClient.unLockFormContainer(createdForm);
 				}
 			}
 
