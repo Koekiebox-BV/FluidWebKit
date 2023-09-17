@@ -244,6 +244,7 @@ public class WebKitConfigBean extends ABaseManagedBean {
 	public boolean isGoogleMapsAPIReachable() {
 		if (this.isGoogleMapsApiReachable == null) {
 			this.isGoogleMapsApiReachable = this.performCallToSeeIfGoogleReachable();
+			this.getLogger().info(String.format("Is GoogleAPI Reachable?: %s", this.isGoogleMapsApiReachable));
 		}
 		return this.isGoogleMapsApiReachable;
 	}
