@@ -385,19 +385,25 @@ public class WebKitOpenFormConversationBean extends ABaseManagedBean {
 	private void applyCurrencyFormatting() {
 		if (!this.webKitConfigBean.getEnableSOMPostCardFeatures()) return;
 
-		Currency currencyOverride = this.webKitConfigBean.getIssuerVelocityCurrency(
-			this.getFluidClientDSConfig().getSQLUtilWrapper(),
-			this.globalIssuerBean.getActiveIssuer()
-		);
+		Currency currencyOverride = null;
+		try {
+			currencyOverride = this.webKitConfigBean.getIssuerVelocityCurrency(
+					this.getFluidClientDSConfig().getSQLUtilWrapper(),
+					this.globalIssuerBean.getActiveIssuer()
+			);
+		} catch (Exception exc) {
+			this.getLogger().error(exc.getMessage(), exc);
+		}
 		if (currencyOverride == null) return;
 
+		final Currency constCurr = currencyOverride;
 		// Main Form fields (edit and view fields):
 		this.getWsFluidItem().getFormFieldsEdit().stream()
 				.filter(this::filterCurrencyFieldCanBeNullValue)
-				.forEach(field -> this.processCurrencyOverride(field, currencyOverride));
+				.forEach(field -> this.processCurrencyOverride(field, constCurr));
 		this.getWsFluidItem().getFormFieldsViewable().stream()
 				.filter(this::filterCurrencyFieldCanBeNullValue)
-				.forEach(field -> this.processCurrencyOverride(field, currencyOverride));
+				.forEach(field -> this.processCurrencyOverride(field, constCurr));
 
 		// Update the table field viewable map:
 		if (this.tableRecordViewableFields != null) {
@@ -405,7 +411,7 @@ public class WebKitOpenFormConversationBean extends ABaseManagedBean {
 				val.stream()
 						.filter(this::filterCurrencyFieldCanBeNullValue)
 						.forEach(field -> {
-							this.processCurrencyOverride(field, currencyOverride);
+							this.processCurrencyOverride(field, constCurr);
 						});
 			});
 		}
@@ -420,7 +426,7 @@ public class WebKitOpenFormConversationBean extends ABaseManagedBean {
 				.flatMap(Collection::stream)
 				.forEach(tableRecord -> {tableRecord.getFormFields().stream()
 						.filter(this::filterCurrencyFieldCanBeNullValue)
-						.forEach(field -> this.processCurrencyOverride(field, currencyOverride));
+						.forEach(field -> this.processCurrencyOverride(field, constCurr));
 				});
 		this.getWsFluidItem().getFormFieldsViewable().stream()
 				.filter(itm -> itm.getTypeAsEnum() == Field.Type.Table)
@@ -431,7 +437,7 @@ public class WebKitOpenFormConversationBean extends ABaseManagedBean {
 				.flatMap(Collection::stream)
 				.forEach(tableRecord -> {tableRecord.getFormFields().stream()
 						.filter(this::filterCurrencyFieldCanBeNullValue)
-						.forEach(field -> this.processCurrencyOverride(field, currencyOverride));
+						.forEach(field -> this.processCurrencyOverride(field, constCurr));
 				});
 	}
 
