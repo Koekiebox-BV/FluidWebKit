@@ -243,6 +243,7 @@ public class WebKitConfigBean extends ABaseManagedBean {
 
 	public boolean isGoogleMapsAPIReachable() {
 		if (this.isGoogleMapsApiReachable == null) {
+			this.getLogger().info(String.format("ConfirmingGoogleAPIReachableAt: %s", GOOGLE_MAPS_API_SERVER));
 			this.isGoogleMapsApiReachable = this.performCallToSeeIfGoogleReachable();
 			this.getLogger().info(String.format("Is GoogleAPI Reachable?: %s", this.isGoogleMapsApiReachable));
 		}
@@ -260,7 +261,7 @@ public class WebKitConfigBean extends ABaseManagedBean {
 				HttpsURLConnection casted = (HttpsURLConnection)con;
 				casted.setRequestMethod("GET");
 			} else {
-				System.err.printf("Connection is of type [%s]\n. Please confirm supported.", con.getClass().getName());
+				this.getLogger().error(String.format("Connection is of type [%s]%n. Please confirm supported.", con.getClass().getName()), null);
 			}
 
 			int timeout = (int) TimeUnit.SECONDS.toMillis(5);
@@ -270,8 +271,7 @@ public class WebKitConfigBean extends ABaseManagedBean {
 			con.connect();
 			return true;
 		} catch (IOException except) {
-			//IO Issue...
-			System.err.println("Error Checking connection (Unavailable). Link is ["+ GOOGLE_MAPS_API_SERVER+"]. "+except.getMessage());
+			this.getLogger().error("Error Checking connection (Unavailable). Link is ["+ GOOGLE_MAPS_API_SERVER+"]. "+except.getMessage(), except);
 			return false;
 		} finally {
 			if (con != null && con instanceof HttpsURLConnection) {
