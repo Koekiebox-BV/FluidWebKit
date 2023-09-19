@@ -1,10 +1,13 @@
 package com.fluidbpm.fluidwebkit.backing.bean.workspace.field;
 
 import com.fluidbpm.fluidwebkit.backing.bean.config.WebKitConfigHelperBean;
+import com.fluidbpm.fluidwebkit.backing.bean.quicksearch.FormFieldAutoCompleteBean;
 import com.fluidbpm.program.api.util.GeoUtil;
 import com.fluidbpm.program.api.util.UtilGlobal;
 import com.fluidbpm.program.api.vo.field.Field;
 import com.fluidbpm.program.api.vo.field.MultiChoice;
+import com.fluidbpm.ws.client.v1.form.FormFieldClient;
+import com.fluidbpm.ws.client.v1.user.LoginClient;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -12,11 +15,9 @@ import lombok.Setter;
 import javax.faces.component.UIComponent;
 import javax.faces.context.FacesContext;
 import javax.faces.model.SelectItem;
+import javax.inject.Inject;
 import javax.xml.bind.annotation.XmlTransient;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @NoArgsConstructor
@@ -29,6 +30,14 @@ public class WebKitField extends Field {
 	@Getter
 	@Setter
 	private boolean maskedFieldAndRevealed;
+
+	@Getter
+	@Setter
+	private boolean allowedAutoComplete;
+
+	// App Scoped Bean for Fluid client pool:
+	@Inject
+	private FormFieldAutoCompleteBean formFieldAutoCompleteBean;
 
 	private List<String> allowedAvailMultiChoiceForUser;
 
@@ -242,4 +251,37 @@ public class WebKitField extends Field {
 		return WebKitConfigHelperBean.Masked.getInputValueAsEncryptedMasked(
 				metaData, this.getFieldValueAsString());
 	}
+
+	@XmlTransient
+	public List<String> completeText(String query) {
+		FormFieldClient ffClient = null;
+		if (this.formFieldAutoCompleteBean == null) {
+			Properties existingProps = null;
+			String url = UtilGlobal.getConfigURLFromSystemProperty(existingProps);
+			try (LoginClient loginClient = new LoginClient(url);) {
+				String serviceTicket = loginClient.login(
+						UtilGlobal.getConfigUserProperty(existingProps),
+						UtilGlobal.getConfigUserPasswordProperty(existingProps)).getServiceTicket();
+				ffClient = new FormFieldClient(url, serviceTicket);
+			} catch (Exception except) {
+				throw new IllegalStateException(except.getMessage(), except);
+			}
+		} else {
+			ffClient = this.formFieldAutoCompleteBean.getFluidClientDSConfig().getFormFieldClient();
+		}
+
+		if (ffClient == null) return new ArrayList<>();
+
+		try {
+			String likeQuery = (query + "%");
+			return ffClient.autoCompleteBasedOnExisting(this, likeQuery, 200);
+		} catch (Exception exc) {
+			return new ArrayList<>();
+		} finally {
+			if (this.formFieldAutoCompleteBean == null) {
+				ffClient.close();
+			}
+		}
+	}
+
 }

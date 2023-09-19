@@ -46,7 +46,7 @@ public class QuickSearchConverter implements Converter {
 		long fieldId = UtilGlobal.toLongSafe(stringValueParam);
 		if (fieldId < 1) return null;
 
-		Form form = profileBean.getFluidClientDS().getFormContainerClient().getFormContainerById(fieldId);
+		Form form = this.profileBean.getFluidClientDS().getFormContainerClient().getFormContainerById(fieldId);
 		return new QuickSearchBean.QuickSearchResultVO(form, new SimpleDateFormat(this.profileBean.getDateAndTimeFormat()));
 	}
 

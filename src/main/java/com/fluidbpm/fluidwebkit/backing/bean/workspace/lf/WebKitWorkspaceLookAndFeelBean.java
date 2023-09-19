@@ -1002,6 +1002,20 @@ public class WebKitWorkspaceLookAndFeelBean extends ABaseManagedBean {
 		}
 	}
 
+	public boolean isFieldAllowedForAutoComplete(WebKitField field) {
+		if (field.isAllowedAutoComplete()) return true;
+
+		String autoCompleteFormFieldNames = this.getGlobalConfigOrPropValue(
+				"AutoCompleteFieldNames", "");
+		if (UtilGlobal.isBlank(autoCompleteFormFieldNames)) return false;
+
+		String[] fieldsAllowed = autoCompleteFormFieldNames.split(",");
+		for (String allowed : fieldsAllowed) {
+			if (allowed.trim().equalsIgnoreCase(field.getFieldName())) return true;
+		}
+		return false;
+	}
+
 	public String calculateCSSClassBasedOnConfigTopLevel(WebKitForm webKitForm) {
 		if (webKitForm == null) return WebKitForm.InputLayout.VERTICAL;
 
