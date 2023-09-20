@@ -34,7 +34,7 @@ import java.util.concurrent.TimeUnit;
  * CDI for resources.
  */
 public class Resources {
-	private static final Cache<String, FluidClientDS> cacheFluidDS = CacheBuilder.newBuilder()
+	public static final Cache<String, FluidClientDS> cacheFluidDS = CacheBuilder.newBuilder()
 			.expireAfterWrite(20, TimeUnit.HOURS)
 			.removalListener(new ExitEventForFluidAPI())
 			.build();
