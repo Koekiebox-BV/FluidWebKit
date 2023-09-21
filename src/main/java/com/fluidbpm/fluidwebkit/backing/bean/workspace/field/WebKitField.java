@@ -2,7 +2,6 @@ package com.fluidbpm.fluidwebkit.backing.bean.workspace.field;
 
 import com.fluidbpm.fluidwebkit.backing.bean.config.WebKitConfigHelperBean;
 import com.fluidbpm.fluidwebkit.ds.FluidClientDS;
-import com.fluidbpm.fluidwebkit.ds.FluidClientPool;
 import com.fluidbpm.fluidwebkit.infrastructure.Resources;
 import com.fluidbpm.program.api.util.GeoUtil;
 import com.fluidbpm.program.api.util.UtilGlobal;
@@ -16,7 +15,6 @@ import lombok.Setter;
 import javax.faces.component.UIComponent;
 import javax.faces.context.FacesContext;
 import javax.faces.model.SelectItem;
-import javax.inject.Inject;
 import javax.xml.bind.annotation.XmlTransient;
 import java.util.ArrayList;
 import java.util.Date;
@@ -40,9 +38,6 @@ public class WebKitField extends Field {
 	@Getter
 	@Setter
 	private boolean allowedAutoComplete;
-
-	@Inject
-	private transient FluidClientPool fcp;
 
 	private List<String> allowedAvailMultiChoiceForUser;
 

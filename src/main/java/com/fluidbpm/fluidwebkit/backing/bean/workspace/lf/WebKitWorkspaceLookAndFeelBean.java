@@ -135,6 +135,7 @@ public class WebKitWorkspaceLookAndFeelBean extends ABaseManagedBean {
 
 	private Map<String, List<SelectItem>> tableFieldsByFormDef;
 	private Map<String, List<SelectItem>> mandatoryFieldsByFormDef;
+	private Map<String, List<SelectItem>> autoCompleteFieldsByFormDef;
 	private Map<String, Map<String, NewInstanceDefault>> newInstanceDefaults;
 	private Map<String, List<SelectItem>> userToFormFieldLimitOnMultiChoiceByFormDef;
 
@@ -934,6 +935,24 @@ public class WebKitWorkspaceLookAndFeelBean extends ABaseManagedBean {
 				.forEach(itm -> returnVal.add(new SelectItem(itm, itm)));
 
 		this.mandatoryFieldsByFormDef.put(formDef, returnVal);
+		return returnVal;
+	}
+
+	public List<SelectItem> extractFieldsForAutoCompleteTextFrom(String formDef) {
+		if (this.autoCompleteFieldsByFormDef == null) this.autoCompleteFieldsByFormDef = new HashMap<>();
+
+		if (this.autoCompleteFieldsByFormDef.containsKey(formDef)) return this.autoCompleteFieldsByFormDef.get(formDef);
+
+		List<Field> fieldsForFormDef = this.accessBean.getFieldsEditableForFormDef(formDef);
+		List<SelectItem> returnVal = new ArrayList<>();
+		if (fieldsForFormDef == null) return returnVal;
+
+		fieldsForFormDef.stream()
+				.filter(itm -> itm.getTypeAsEnum() == Field.Type.Text && "Plain".equals(itm.getTypeMetaData()))
+				.map(itm -> itm.getFieldName())
+				.forEach(itm -> returnVal.add(new SelectItem(itm, itm)));
+
+		this.autoCompleteFieldsByFormDef.put(formDef, returnVal);
 		return returnVal;
 	}
 
