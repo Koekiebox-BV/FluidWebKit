@@ -60,7 +60,7 @@ public class FluidClientDS implements Closeable {
 	public FluidClientDS() {
 		super();
 		this.clientCache = CacheBuilder.newBuilder()
-				.expireAfterAccess(120, TimeUnit.MINUTES)
+				.expireAfterWrite(20, TimeUnit.MINUTES)
 				.removalListener(new ExitEventForFluidAPI())
 				.build();
 	}
@@ -162,7 +162,7 @@ public class FluidClientDS implements Closeable {
 					String.format("Unable to create client from '%s'. Please MAP!", keyToUse));
 
 			this.clientCache.put(keyToUse, fromKey);
-			return (T)this.clientCache.getIfPresent(keyToUse);
+			return (T)fromKey;
 		}
 		return (T)returnVal;
 	}

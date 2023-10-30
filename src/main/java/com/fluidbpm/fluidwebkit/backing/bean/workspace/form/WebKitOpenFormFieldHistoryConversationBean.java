@@ -737,7 +737,6 @@ public class WebKitOpenFormFieldHistoryConversationBean extends ABaseManagedBean
 		if (field == null || field.getFieldValue() == null) return "-";
 
 		if (field.isAmountMinorWithCurrency()) {
-			String fieldName = field.getFieldName();
 			DecimalFormat df = new DecimalFormat(
 					field.getDecimalMetaFormat().getCurrencyDecimalPlaces() > 2 ?
 							RETURN_FORMAT_000 : RETURN_FORMAT_00);
