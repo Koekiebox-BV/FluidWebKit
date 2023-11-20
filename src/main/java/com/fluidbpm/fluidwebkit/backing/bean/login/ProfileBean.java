@@ -31,7 +31,6 @@ import org.primefaces.model.StreamedContent;
 import javax.enterprise.context.SessionScoped;
 import javax.faces.application.FacesMessage;
 import javax.faces.context.FacesContext;
-import javax.faces.event.PhaseId;
 import javax.faces.model.SelectItem;
 import javax.inject.Named;
 import java.io.ByteArrayInputStream;
@@ -105,31 +104,26 @@ public class ProfileBean extends ABaseManagedBean {
 	 * @see User
 	 */
 	public StreamedContent getUserProfileImageForUser(User user, int size) {
-		if (user == null) return new DefaultStreamedContent();
+		if (user == null) return this.getNoGravatarStreamContent();
 
-		FacesContext context = FacesContext.getCurrentInstance();
-		if (context.getCurrentPhaseId() == PhaseId.RENDER_RESPONSE) {
-			return new DefaultStreamedContent();
-		} else {
-			User loggedInUser = this.getLoggedInUserSafe();
-			if (loggedInUser == null) return new DefaultStreamedContent();
+		User loggedInUser = this.getLoggedInUserSafe();
+		if (loggedInUser == null) return this.getNoGravatarStreamContent();
 
-			UserClient userClient = this.getFluidClientDS().getUserClient();
-			//Get the bytes by user...
-			try {
-				final byte[] imageBytes = userClient.getGravatarForUser(user, size);
-				if (imageBytes == null || imageBytes.length < 1) return this.getNoGravatarStreamContent();
+		UserClient userClient = this.getFluidClientDS().getUserClient();
+		//Get the bytes by user...
+		try {
+			final byte[] imageBytes = userClient.getGravatarForUser(user, size);
+			if (imageBytes == null || imageBytes.length < 1) return this.getNoGravatarStreamContent();
 
-				return DefaultStreamedContent.builder()
-						.stream(() -> new ByteArrayInputStream(imageBytes))
-						.name(String.format("profile_image_%d_%d.jpg", user.getId(), size))
-						.contentType("image/jpeg")
-						.contentLength(imageBytes.length)
-						.build();
-			} catch (Exception unable) {
-				this.getLogger().info("Unable to get Gravatar: "+unable.getMessage());
-				return this.getNoGravatarStreamContent();
-			}
+			return DefaultStreamedContent.builder()
+					.stream(() -> new ByteArrayInputStream(imageBytes))
+					.name(String.format("profile_image_%d_%d.jpg", user.getId(), size))
+					.contentType("image/jpeg")
+					.contentLength(imageBytes.length)
+					.build();
+		} catch (Exception unable) {
+			this.getLogger().info("Unable to get Gravatar: "+unable.getMessage());
+			return this.getNoGravatarStreamContent();
 		}
 	}
 
