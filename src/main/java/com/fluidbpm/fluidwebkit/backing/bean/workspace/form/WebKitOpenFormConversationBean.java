@@ -537,15 +537,15 @@ public class WebKitOpenFormConversationBean extends ABaseManagedBean {
 		DefaultMenuItem itemGotoFields = DefaultMenuItem.builder()
 				.value("Goto 'Input Form'")
 				.url("#frmOpenForm:outPanelFormBdy")
-				.icon("fa fa-link")
+				.icon("pi pi-link")
 				.build();
 
-		//TODO need to look at all label fields, and add placeholders for them here...
+		// TODO need to look at all label fields, and add placeholders for them here...
 
 		DefaultMenuItem itemGotoAttachments = DefaultMenuItem.builder()
 				.value("Goto 'Attachments'")
 				.url("#attachmentsAsListingGridList")
-				.icon("fa fa-link")
+				.icon("pi pi-link")
 				.build();
 		
 		DefaultMenuItem itemPrint = DefaultMenuItem.builder()
@@ -554,7 +554,7 @@ public class WebKitOpenFormConversationBean extends ABaseManagedBean {
 				.process("@this")
 				.update(":frmPrintForm")
 				.oncomplete("PF('varPrintFormDialog').show();")
-				.icon("fa fa-print")
+				.icon("pi pi-print")
 				.build();
 
 		this.contextMenuModel.getElements().add(itemGotoFields);
