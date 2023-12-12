@@ -17,6 +17,7 @@ package com.fluidbpm.fluidwebkit.backing.bean.attachment.sheet;
 import com.fluidbpm.fluidwebkit.exception.ClientDashboardException;
 import com.fluidbpm.program.api.util.UtilGlobal;
 import com.opencsv.CSVReader;
+import com.opencsv.exceptions.CsvException;
 import org.apache.poi.ss.util.CellReference;
 
 import java.io.IOException;
@@ -38,15 +39,9 @@ public class FluidWorkspaceUtil {
 				inputStreamParam,',', '"');
 	}
 
-	public List<Worksheet> getWorksheetsFromCSV(
-			InputStream inputStreamParam,
-			char separatorParam,
-			char quoteCharParam
-	) {
-		CSVReader csvReader = new CSVReader(new InputStreamReader(inputStreamParam), separatorParam, quoteCharParam);
-
+	public List<Worksheet> getWorksheetsFromCSV(InputStream inputStreamParam, char separator, char quoteChar) {
+		CSVReader csvReader = new CSVReader(new InputStreamReader(inputStreamParam));
 		List<Worksheet> returnVal = new ArrayList();
-
 		try {
 			List<String[]> rows = csvReader.readAll();
 			if (rows != null && !rows.isEmpty()) {
@@ -56,7 +51,6 @@ public class FluidWorkspaceUtil {
 					List<Cell> cellsToAdd = new ArrayList();
 
 					for (String column : columns) cellsToAdd.add(new Cell(column));
-
 					if (cellsToAdd.isEmpty()) continue;
 
 					returnValRows.add(new Row(cellsToAdd));
@@ -66,8 +60,14 @@ public class FluidWorkspaceUtil {
 			}
 		} catch (IOException ioExcept) {
 			throw new ClientDashboardException(
-					"Unable to extract CSV Values. "+ioExcept.getMessage(),
+					String.format("Unable to extract CSV Values. %s", ioExcept.getMessage()),
 					ioExcept, ClientDashboardException.ErrorCode.IO_ERROR);
+		} catch (CsvException csvExcept) {
+			throw new ClientDashboardException(
+					String.format(
+							"Unable to extract CSV Values Line[%d]. %s",
+							csvExcept.getLineNumber(), csvExcept.getMessage()),
+					csvExcept, ClientDashboardException.ErrorCode.IO_ERROR);
 		}
 		return returnVal;
 	}

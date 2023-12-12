@@ -52,7 +52,7 @@
 		<dependency>
 			<groupId>com.mindscapehq</groupId>
 			<artifactId>core</artifactId>
-			<version>3.0.0</version>
+			<version>4.0.0</version>
 			<scope>provided</scope>
 		</dependency>
 
@@ -60,22 +60,23 @@
 		<dependency>
 			<groupId>com.mindscapehq</groupId>
 			<artifactId>webprovider</artifactId>
-			<version>3.0.0</version>
+			<version>4.0.0</version>
 			<scope>provided</scope>
 		</dependency>
 
+		<!-- Bind https://mvnrepository.com/artifact/javax.xml.bind/jaxb-api -->
 		<dependency>
 			<groupId>javax.xml.bind</groupId>
 			<artifactId>jaxb-api</artifactId>
-			<version>2.3.0</version>
+			<version>2.3.1</version>
 			<scope>provided</scope>
 		</dependency>
 
-		<!--JUnit Testing-->
+		<!--JUnit Testing https://mvnrepository.com/artifact/junit/junit -->
 		<dependency>
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
-			<version>4.13.1</version>
+			<version>4.13.2</version>
 			<scope>test</scope>
 		</dependency>
 
@@ -103,7 +104,7 @@
 			<version>${version.j2ee}</version>
 		</dependency>
 
-		<!--JSP Prime Faces Dependencies-->
+		<!--JSP Prime Faces https://mvnrepository.com/artifact/org.primefaces/primefaces -->
 		<dependency>
 			<groupId>org.primefaces</groupId>
 			<artifactId>primefaces</artifactId>
@@ -111,12 +112,11 @@
 			<scope>provided</scope>
 		</dependency>
 
-		<!--Open CSV for Reading CSV Files-->
-		<!-- https://mvnrepository.com/artifact/com.opencsv/opencsv -->
+		<!--Open CSV https://mvnrepository.com/artifact/com.opencsv/opencsv -->
 		<dependency>
 			<groupId>com.opencsv</groupId>
 			<artifactId>opencsv</artifactId>
-			<version>4.1</version>
+			<version>5.9</version>
 			<scope>provided</scope>
 		</dependency>
 
@@ -126,14 +126,15 @@
 			<groupId>org.apache.poi</groupId>
 			<artifactId>poi</artifactId>
 			<scope>provided</scope>
-			<version>5.0.0</version>
+			<version>5.2.5</version>
 		</dependency>
 
+		<!--POI Scratchpad - https://mvnrepository.com/artifact/org.apache.poi/poi-scratchpad -->
 		<dependency>
 			<groupId>org.apache.poi</groupId>
 			<artifactId>poi-scratchpad</artifactId>
 			<scope>provided</scope>
-			<version>5.0.0</version>
+			<version>5.2.5</version>
 		</dependency>
 
 		<!-- https://mvnrepository.com/artifact/org.apache.poi/poi-ooxml -->
@@ -141,7 +142,7 @@
 			<groupId>org.apache.poi</groupId>
 			<artifactId>poi-ooxml</artifactId>
 			<scope>provided</scope>
-			<version>5.0.0</version>
+			<version>5.2.5</version>
 		</dependency>
 
 		<!--Google Guava - https://mvnrepository.com/artifact/com.google.guava/guava -->
@@ -152,10 +153,11 @@
 			<scope>provided</scope>
 		</dependency>
 
+		<!--Lombok - https://mvnrepository.com/artifact/org.projectlombok/lombok -->
 		<dependency>
 			<groupId>org.projectlombok</groupId>
 			<artifactId>lombok</artifactId>
-			<version>1.18.26</version>
+			<version>1.18.30</version>
 			<scope>provided</scope>
 		</dependency>
 	</dependencies>
