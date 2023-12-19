@@ -120,6 +120,9 @@ public class WebKitMenuBean extends ABaseManagedBean {
 					UISubmenu subMenToAdd = new UISubmenu();
 					subMenToAdd.setId(String.format("om_%s", itm.getMenuId()));
 					subMenToAdd.setLabel(itm.getMenuLabel());
+					if (UtilGlobal.isNotBlank(itm.getMenuIcon())) {
+						subMenToAdd.setIcon(itm.getMenuIcon());
+					}
 					if (this.populateSubmenuUserQuery(subMenToAdd, menuItems)) this.submenusUserQuery.add(subMenToAdd);
 				});
 	}
