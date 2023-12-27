@@ -104,7 +104,10 @@ public class ProfileBean extends ABaseManagedBean {
 	 * @see User
 	 */
 	public StreamedContent getUserProfileImageForUser(User user, int size) {
-		if (user == null) return this.getNoGravatarStreamContent();
+		if (user == null) {
+			this.getLogger().warn("UserProfileImg: User not logged in. No image.");
+			return this.getNoGravatarStreamContent();
+		}
 
 		User loggedInUser = this.getLoggedInUserSafe();
 		if (loggedInUser == null) return this.getNoGravatarStreamContent();
@@ -113,7 +116,10 @@ public class ProfileBean extends ABaseManagedBean {
 		//Get the bytes by user...
 		try {
 			final byte[] imageBytes = userClient.getGravatarForUser(user, size);
-			if (imageBytes == null || imageBytes.length < 1) return this.getNoGravatarStreamContent();
+			if (imageBytes == null || imageBytes.length < 1) {
+				this.getLogger().warn(String.format("UserProfileImg: GravatarForUser[%s] has no bytes.", user.getUsername()));
+				return this.getNoGravatarStreamContent();
+			}
 
 			return DefaultStreamedContent.builder()
 					.stream(() -> new ByteArrayInputStream(imageBytes))
@@ -122,7 +128,7 @@ public class ProfileBean extends ABaseManagedBean {
 					.contentLength(imageBytes.length)
 					.build();
 		} catch (Exception unable) {
-			this.getLogger().info("Unable to get Gravatar: "+unable.getMessage());
+			this.getLogger().error("UserProfileImg: Unable to get Gravatar: "+unable.getMessage(), unable);
 			return this.getNoGravatarStreamContent();
 		}
 	}
@@ -136,7 +142,9 @@ public class ProfileBean extends ABaseManagedBean {
 		String path = "/image/no_profile_logo.svg";
 		try {
 			InputStream inputStream = getClass().getClassLoader().getResourceAsStream(path);
-			if (inputStream == null) throw new IOException("Unable to find '"+ path+"'.");
+			if (inputStream == null) {
+				throw new IOException(String.format("Unable to find '%s'.", path));
+			}
 
 			return WebUtil.pfStreamContentFrom(
 					inputStream,
