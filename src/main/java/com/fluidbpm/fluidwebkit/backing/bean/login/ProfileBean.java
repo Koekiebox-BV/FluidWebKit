@@ -121,6 +121,9 @@ public class ProfileBean extends ABaseManagedBean {
 				return this.getNoGravatarStreamContent();
 			}
 
+			this.getLogger().info(String.format("UserProfileImg: GravatarForUser[%s:%d] found!.",
+					user.getUsername(), imageBytes.length));
+
 			return DefaultStreamedContent.builder()
 					.stream(() -> new ByteArrayInputStream(imageBytes))
 					.name(String.format("profile_image_%d_%d.jpg", user.getId(), size))
