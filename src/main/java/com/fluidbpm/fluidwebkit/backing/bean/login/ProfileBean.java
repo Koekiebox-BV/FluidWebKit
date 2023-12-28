@@ -104,6 +104,8 @@ public class ProfileBean extends ABaseManagedBean {
 	 * @see User
 	 */
 	public StreamedContent getUserProfileImageForUser(User user, int size) {
+		if (true) return this.getNoGravatarStreamContent();
+
 		if (user == null) {
 			this.getLogger().warn("UserProfileImg: User not logged in. No image.");
 			return this.getNoGravatarStreamContent();
@@ -128,7 +130,7 @@ public class ProfileBean extends ABaseManagedBean {
 					.stream(() -> new ByteArrayInputStream(imageBytes))
 					.name(String.format("profile_image_%d_%d.jpg", user.getId(), size))
 					.contentType("image/jpeg")
-					.contentLength(imageBytes.length)
+					//.contentLength(imageBytes.length)
 					.build();
 		} catch (Exception unable) {
 			this.getLogger().error("UserProfileImg: Unable to get Gravatar: "+unable.getMessage(), unable);
