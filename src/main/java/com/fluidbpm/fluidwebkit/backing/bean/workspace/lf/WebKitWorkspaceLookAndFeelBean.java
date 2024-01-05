@@ -51,9 +51,7 @@ import org.primefaces.event.TabChangeEvent;
 import org.primefaces.event.data.PageEvent;
 import org.primefaces.model.DefaultTreeNode;
 import org.primefaces.model.TreeNode;
-import org.primefaces.model.menu.DefaultMenuItem;
-import org.primefaces.model.menu.DefaultMenuModel;
-import org.primefaces.model.menu.MenuModel;
+import org.primefaces.model.menu.*;
 
 import javax.enterprise.context.SessionScoped;
 import javax.faces.application.FacesMessage;
@@ -150,6 +148,14 @@ public class WebKitWorkspaceLookAndFeelBean extends ABaseManagedBean {
 
 	@Getter
 	@Setter
+	private MenuModel contextMenuModelQuickToUserQuery;
+
+	@Getter
+	@Setter
+	private MenuModel contextMenuModelQuickToWorkspace;
+
+	@Getter
+	@Setter
 	private WebKitForm webKitFormQuickEdit;
 
 	@Inject
@@ -180,21 +186,43 @@ public class WebKitWorkspaceLookAndFeelBean extends ABaseManagedBean {
 		this.tabsViewed = new ArrayList<>();
 		this.tabsViewed.add(TabId.tabForm);//Form is always added since its visible...
 
+		this.contextMenuModelQuickToForm = new DefaultMenuModel();
+		this.contextMenuModelQuickToUserQuery = new DefaultMenuModel();
+		this.contextMenuModelQuickToWorkspace = new DefaultMenuModel();
+
 		this.setDialogHeaderTitle("Workspace - Look & Feel");
 
 		FluidClientDS configDS = this.getFluidClientDSConfig();
 		try {
+			// WebKit groups:
+			Map<String, Integer> groupMenuIndex = new HashMap<>();
 			try {
 				this.webKitViewGroups = this.periodicUpdateBean.getWebKitViewGroups();
 				if (this.webKitViewGroups == null) {
 					this.webKitViewGroups = configDS.getFlowClient().getViewGroupWebKit().getListing();
 					this.periodicUpdateBean.setWebKitViewGroups(this.webKitViewGroups);
 				}
+				AtomicInteger aiGroup = new AtomicInteger(0);
+				DefaultMenuItem itemGotoMenuLayout = DefaultMenuItem.builder()
+						.value("Goto 'Top'")
+						.url("#frmWebKitGroupConfig:tabViewLookAndFeel:panelWorkspace")
+						.icon("fa fa-link")
+						.build();
+				this.contextMenuModelQuickToWorkspace.getElements().add(itemGotoMenuLayout);
+				this.contextMenuModelQuickToWorkspace.getElements().add(new DefaultSeparator());
+				this.webKitViewGroups.forEach(itm -> {
+					String viewGroupName = itm.getJobViewGroupName();
+					Submenu subMenuViewGroup = DefaultSubMenu.builder()
+							.label(viewGroupName)
+							.build();
+					this.contextMenuModelQuickToWorkspace.getElements().add(subMenuViewGroup);
+					groupMenuIndex.put(viewGroupName, aiGroup.getAndIncrement());
+				});
 			} catch (FluidClientException fce) {
 				if (fce.getErrorCode() != FluidClientException.ErrorCode.NO_RESULT) throw fce;
 			}
 
-			//Populate the menu items...
+			// Populate the menu items:
 			ConfigurationListing configurationListing = this.periodicUpdateBean.getConfigurationListing();
 			if (configurationListing == null || configurationListing.isListingEmpty()) {
 				configurationListing = configDS.getConfigurationClient().getAllConfigurations();
@@ -203,6 +231,7 @@ public class WebKitWorkspaceLookAndFeelBean extends ABaseManagedBean {
 			this.populateUserQueryMenu(configurationListing);
 			this.populatePersonalInventory(configurationListing);
 
+			// User Queries:
 			try {
 				this.webKitUserQueries = this.periodicUpdateBean.getWebKitUserQueries();
 				if (this.webKitUserQueries == null) {
@@ -210,17 +239,36 @@ public class WebKitWorkspaceLookAndFeelBean extends ABaseManagedBean {
 					this.periodicUpdateBean.setWebKitUserQueries(this.webKitUserQueries);
 				}
 				this.userQueryLDM.addToInitialListing(this.webKitUserQueries);
+
+				DefaultMenuItem itemGotoMenuLayout = DefaultMenuItem.builder()
+						.value("Goto 'Menu Layout'")
+						.url("#frmWebKitGroupConfig:tabViewLookAndFeel:panelUserQuery")
+						.icon("fa fa-link")
+						.build();
+				this.contextMenuModelQuickToUserQuery.getElements().add(itemGotoMenuLayout);
+				this.contextMenuModelQuickToUserQuery.getElements().add(new DefaultSeparator());
+
+				AtomicInteger ai = new AtomicInteger(0);
+				this.webKitUserQueries.forEach(itm -> {
+					DefaultMenuItem itemGotoUQ = DefaultMenuItem.builder()
+							.value(String.format("Goto '%s'", itm.getUserQuery().getName()))
+							.url(String.format("#frmWebKitGroupConfig:tabViewLookAndFeel:dataTableUserQueries:%s:uqInternalExpansionGrid", ai.getAndIncrement()))
+							.icon("fa fa-link")
+							.build();
+					this.contextMenuModelQuickToUserQuery.getElements().add(itemGotoUQ);
+				});
+
 			} catch (FluidClientException fce) {
 				if (fce.getErrorCode() != FluidClientException.ErrorCode.NO_RESULT) throw fce;
 			}
 
+			// Form Definitions:
 			try {
 				this.webKitForms = this.periodicUpdateBean.getWebKitForms();
 				if (this.webKitForms == null) {
 					this.webKitForms = configDS.getFormDefinitionClient().getAllFormWebKits();
 					this.periodicUpdateBean.setWebKitForms(this.webKitForms);
 				}
-				this.contextMenuModelQuickToForm = new DefaultMenuModel();
 
 				AtomicInteger ai = new AtomicInteger(0);
 				this.webKitForms.forEach(itm -> {
@@ -231,7 +279,6 @@ public class WebKitWorkspaceLookAndFeelBean extends ABaseManagedBean {
 							.build();
 					this.contextMenuModelQuickToForm.getElements().add(itemGotoForm);
 				});
-
 				this.formDefinitionLDM.addToInitialListing(this.webKitForms);
 			} catch (FluidClientException fce) {
 				if (fce.getErrorCode() != FluidClientException.ErrorCode.NO_RESULT) throw fce;
@@ -245,7 +292,7 @@ public class WebKitWorkspaceLookAndFeelBean extends ABaseManagedBean {
 
 			RouteFieldClient routeFieldClient = configDS.getRouteFieldClient();
 
-			//Set the Views available for the Groups...
+			// Set the Views available for the Groups...
 			if (this.allJobViews != null) {
 				this.allJobViews.stream()
 						.filter(itm -> itm.getViewGroupName() != null && !itm.getViewGroupName().isEmpty())
@@ -259,7 +306,7 @@ public class WebKitWorkspaceLookAndFeelBean extends ABaseManagedBean {
 						});
 			}
 
-			//Set the Route Fields for the Groups...
+			// Set the Route Fields for the Groups...
 			this.groupToViewMapping.forEach((key, value) -> {
 				this.inputVisibleButtons.put(key, new ArrayList<>());
 
@@ -272,10 +319,10 @@ public class WebKitWorkspaceLookAndFeelBean extends ABaseManagedBean {
 				this.groupToRouteFieldMapping.put(key, routeFieldsForGroup);
 			});
 
-			//Merged with existing configuration set...
+			// Merged with existing configuration set:
 			if (this.webKitViewGroups == null || this.webKitViewGroups.isEmpty()) return;
 
-			//Merge the properties with what is stored...
+			// Merge the properties with what is stored...
 			this.webKitViewGroups.forEach(groupItm -> {
 				String groupName = groupItm.getJobViewGroupName();
 				this.inputVisibleButtons.put(groupName, WebKitViewGroup.VisibleButtonItems.asListFrom(groupItm));
@@ -283,6 +330,7 @@ public class WebKitWorkspaceLookAndFeelBean extends ABaseManagedBean {
 				List<WebKitViewSub> subsForGroup = groupItm.getWebKitViewSubs();
 				if (subsForGroup == null || subsForGroup.isEmpty()) return;
 
+				AtomicInteger ai = new AtomicInteger(0);
 				subsForGroup.forEach(subItm -> {
 					String keyForStorage = this.generateGroupSubKey(groupItm.getJobViewGroupName(), subItm.getLabel());
 					List<WebKitWorkspaceJobView> jobViewsToSet = new ArrayList<>();
@@ -329,6 +377,24 @@ public class WebKitWorkspaceLookAndFeelBean extends ABaseManagedBean {
 
 					this.inputSubToViewMapping.put(keyForStorage, new WebKitWorkspaceJobViewLDM(jobViewsToSet));
 					this.inputSubToRouteFieldMapping.put(keyForStorage, new WebKitWorkspaceRouteFieldLDM(fieldsToSet));
+					Submenu groupSubMenu = this.contextMenuModelQuickToWorkspace.getElements()
+							.stream()
+							.filter(menItm -> menItm instanceof Submenu)
+							.map(menItm -> (Submenu)menItm)
+							.filter(menItm -> groupItm.getJobViewGroupName().equals(menItm.getLabel()))
+							.findFirst()
+							.orElse(null);
+					if (groupSubMenu != null) {
+						DefaultMenuItem itemGotoViewSec = DefaultMenuItem.builder()
+								.value(String.format("Goto '%s'", subItm.getLabel()))
+								.url(String.format("#frmWebKitGroupConfig:tabViewLookAndFeel:rptWebKitViewGroup:%s:rptWebKitViewSub:%s:pnlWebKitViewSub",
+										groupMenuIndex.get(groupName),
+										ai.getAndIncrement())
+								)
+								.icon("fa fa-link")
+								.build();
+						groupSubMenu.getElements().add(itemGotoViewSec);
+					}
 				});
 			});
 		} catch (Exception err) {
