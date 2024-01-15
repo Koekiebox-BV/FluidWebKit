@@ -19,6 +19,8 @@ import com.fluidbpm.fluidwebkit.backing.bean.workspace.contentview.WebKitViewCon
 import com.fluidbpm.fluidwebkit.backing.bean.workspace.form.IConversationCallback;
 import com.fluidbpm.fluidwebkit.backing.bean.workspace.jv.ContentViewJV;
 import com.fluidbpm.fluidwebkit.backing.bean.workspace.jv.JobViewItemVO;
+import com.fluidbpm.fluidwebkit.backing.bean.workspace.menu.WebKitMenuBean;
+import com.fluidbpm.program.api.util.UtilGlobal;
 import com.fluidbpm.program.api.vo.field.Field;
 import com.fluidbpm.program.api.vo.item.FluidItem;
 import com.fluidbpm.program.api.vo.webkit.viewgroup.WebKitViewGroup;
@@ -128,21 +130,38 @@ public class WorkspaceBean extends ABaseWorkspaceBean<JobViewItemVO, ContentView
 		}
 	}
 
+	@Override
+	public String getDestinationNavigationForCancel() {
+		return "workspace";
+	}
+
 	/**
 	 * Open an 'Form' for editing or viewing.
 	 * Custom functionality needs to be placed in {@code this#actionOpenFormForEditingFromWorkspace}.
 	 *
 	 * @see #actionOpenForm(WorkspaceFluidItem)
 	 */
-	public void actionOpenFormForEditingFromWorkspace(WorkspaceFluidItem workspaceFluidItem) {
+	public void actionOpenFormForEditingFromWorkspace(WorkspaceFluidItem wfItem) {
 		this.setAreaToUpdateForDialogAfterSubmit(null);
+		this.currentOpenFormTitle = null;
 		this.currentlyHaveItemOpen = false;
+		// Dialog or Workspace for form layout;
+		this.dialogDisplay = !this.isOpenItemInWorkspace(wfItem);
 
 		try {
 			this.openFormBean.startConversation();
-			this.openFormBean.setAreaToUpdateAfterSave(":dataListResults");
+			this.openFormBean.setAreaToUpdateAfterSave(":panelWorkspace");
 			this.openFormBean.setConversationCallback(this);
-			this.actionOpenForm(workspaceFluidItem);
+			this.actionOpenForm(wfItem);
+
+			if (this.dialogDisplay) {
+				// Now open:
+				this.executeJavaScript("PF('varFormDialog').show();");
+			} else {
+				// Only set the title if not dialog display:
+				this.currentOpenFormTitle = wfItem.getFluidItemTitle();
+				this.openFormBean.setAreaToUpdateAfterSave(":panelBreadcrumb: :panelWorkspace");
+			}
 			this.currentlyHaveItemOpen = true;
 		} catch (Exception except) {
 			this.raiseError(except);
@@ -151,7 +170,20 @@ public class WorkspaceBean extends ABaseWorkspaceBean<JobViewItemVO, ContentView
 
 	@Override
 	public void afterSaveProcessing(WorkspaceFluidItem workspaceItemSaved) {
+		this.dialogDisplay = false;
+		this.currentlyHaveItemOpen = false;
+		this.currentOpenFormTitle = null;
 		this.actionOpenMainPage();
+	}
+
+	@Override
+	public void afterSendOnProcessing(WorkspaceFluidItem workspaceItemSaved) {
+		this.afterSaveProcessing(workspaceItemSaved);
+	}
+
+	@Override
+	public void closeFormDialog() {
+		this.actionCloseOpenForm();
 	}
 
 	@Override
@@ -208,6 +240,30 @@ public class WorkspaceBean extends ABaseWorkspaceBean<JobViewItemVO, ContentView
 		}
 		
 		return this.colorQueue.poll();
+	}
+
+	@Override
+	public void actionPreRenderProcess() {
+		String clickedSubAlias = this.getStringRequestParam(RequestParam.FRESH_LOOKUP);
+		if (UtilGlobal.isNotBlank(clickedSubAlias)) {
+			this.actionCloseOpenForm();
+		}
+	}
+
+	public String getWebKitItmClickedSubAlias() {
+		String clickedSubAlias = this.getStringRequestParam(WebKitMenuBean.ReqParam.CLICKED_SUB_ALIAS);
+		if (UtilGlobal.isBlank(clickedSubAlias) && this.openPageLastCache != null) {
+			return this.openPageLastCache.getClickedSubAlias();
+		}
+		return clickedSubAlias;
+	}
+
+	public String getWebKitItmClickedGroupAlias() {
+		String groupAlias = this.getStringRequestParam(WebKitMenuBean.ReqParam.CLICKED_GROUP_ALIAS);
+		if (UtilGlobal.isBlank(groupAlias) && this.openPageLastCache != null) {
+			return this.openPageLastCache.getClickedGroupAlias();
+		}
+		return groupAlias;
 	}
 
 }

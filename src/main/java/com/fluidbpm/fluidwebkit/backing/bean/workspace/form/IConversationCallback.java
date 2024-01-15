@@ -7,4 +7,9 @@ import com.fluidbpm.fluidwebkit.backing.bean.workspace.WorkspaceFluidItem;
  */
 public interface IConversationCallback {
 	void afterSaveProcessing(WorkspaceFluidItem workspaceItemSaved);
+	void afterSendOnProcessing(WorkspaceFluidItem workspaceItemSaved);
+
+	void closeFormDialog();
+
+	String getDestinationNavigationForCancel();
 }

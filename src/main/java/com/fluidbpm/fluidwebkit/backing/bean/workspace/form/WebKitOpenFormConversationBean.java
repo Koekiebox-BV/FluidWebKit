@@ -67,6 +67,11 @@ import static com.fluidbpm.fluidwebkit.backing.bean.workspace.pi.PersonalInvento
 @ConversationScoped
 @Named("webKitOpenFormConversationBean")
 public class WebKitOpenFormConversationBean extends ABaseManagedBean {
+	public static final String MAP_CENTER_DEFAULT = "41.850033, -87.6500523";
+	public static final String MAP_ZOOM_DEFAULT = "1";
+	public static final String MAP_ZOOM_CLOSE = "19";
+	public static final String VISIBLE_FOR_CHECKER = "Visible For Checker";
+
 	@Inject
 	@Getter
 	private Conversation conversation;
@@ -176,10 +181,6 @@ public class WebKitOpenFormConversationBean extends ABaseManagedBean {
 	@Getter
 	@Setter
 	private String mapZoom;
-
-	public static final String MAP_CENTER_DEFAULT = "41.850033, -87.6500523";
-	public static final String MAP_ZOOM_DEFAULT = "1";
-	public static final String MAP_ZOOM_CLOSE = "19";
 	
 	@PostConstruct
 	public void init() {
@@ -236,7 +237,7 @@ public class WebKitOpenFormConversationBean extends ABaseManagedBean {
 
 			this.setDialogHeaderTitle(titleToUse);
 
-			WebKitForm webKitForm = this.lookAndFeelBean.getWebKitFormWithFormDef(formType);
+			WebKitForm webKitForm = this.getWebKitFormWithFormDef(wfiParam);
 			if (webKitForm == null && WebKitForm.EMAIL_FORM_TYPE.equals(formType)) webKitForm = WebKitForm.emailWebKitForm();
 			else if (webKitForm == null) throw new ClientDashboardException(
 					String.format("Form Type '%s' WebKit Form not configured.", formType),
@@ -458,7 +459,6 @@ public class WebKitOpenFormConversationBean extends ABaseManagedBean {
 			final String areaToUpdate;
 			if (UtilGlobal.isBlank(this.getAreaToUpdateAfterSave())) areaToUpdate = UtilGlobal.EMPTY;
 			else areaToUpdate = String.format(" %s", this.getAreaToUpdateAfterSave());
-
 			DefaultMenuItem itemSave = DefaultMenuItem.builder()
 					.value("Save")
 					.icon("pi pi-save")
@@ -469,7 +469,7 @@ public class WebKitOpenFormConversationBean extends ABaseManagedBean {
 		}
 
 		String formDef = this.getWsFluidItem().getFluidItemFormType();
-		WebKitForm webKitForm = this.lookAndFeelBean.getWebKitFormWithFormDef(formDef);
+		WebKitForm webKitForm = this.getWebKitFormWithFormDef(this.getWsFluidItem());
 		if (webKitForm == null) {
 			getLogger().error(String.format("WebKitForm is not set for Def [%s].", formDef),
 					new IllegalStateException());
@@ -728,7 +728,7 @@ public class WebKitOpenFormConversationBean extends ABaseManagedBean {
 					this.getUpdatedAttachments().remove(attFomFresh);
 				});
 
-		//Rebuild the context menu...
+		// Rebuild the context menu:
 		this.buildContextMenuForConversation();
 
 		FacesMessage fMsg = new FacesMessage(FacesMessage.SEVERITY_INFO,
@@ -900,50 +900,50 @@ public class WebKitOpenFormConversationBean extends ABaseManagedBean {
 
 			if (wsFlItem.isFluidItemFormSet()) {
 				actionString = "Updated";
-				//Always lock the form first on a save...
+				// Always lock the form first on a save:
 				if (!wsFlItem.isFormLockedByLoggedInUser()) {
-					//Lock then send it on...
+					//Lock then send it on:
 					fcClient.lockFormContainer(wsFlItem.getFluidItemForm(), wsFlItem.getJobView());
 					this.lockByLoggedInUser(wsFlItem.getFluidItemForm());
 				}
 
-				//Update the Table Records...
+				// Update the Table Records:
 				Form formToSave = this.toFormToSave(wsFlItem, fcClient);
 				this.upsertTableRecordsInFluid(formToSave);
 
-				//Existing Item...
+				// Existing Item:
 				Long formId = fcClient.updateFormContainer(formToSave).getId();
 				this.handleAttachmentStorageForForm(formId);
 
-				//Locked by current user...
+				// Locked by current user:
 				if (wsFlItem.isFormLockedByLoggedInUser()) {
 					//Set to Send on After and Form in Workflow state
 					if (webKitForm.isSendOnAfterSave() && wsFlItem.isFluidItemInWIPState()) {
-						//Send on in the workflow...
+						// Send on in the workflow:
 						fiClient.sendFlowItemOn(wsFlItem.getFluidItem(), true);
 						actionString = String.format("%s and placed successfully. Please verify processed results for final status.", actionString);
 					} else if (!wsFlItem.isFluidItemInWIPState() && UtilGlobal.isNotBlank(this.inputSelectedWorkflow)) {
-						//Not in workflow and a workflow route has been selected...
+						// Not in workflow and a workflow route has been selected:
 						fiClient.sendFormToFlow(wsFlItem.getFluidItemForm(), this.inputSelectedWorkflow);
 						actionString = String.format("%s and placed on '%s' successfully. Please verify processed results for final status.",
 								actionString, this.inputSelectedWorkflow);
 					} else if (webKitForm.isUnlockFormOnSave()) {
-						//Unlock form on save...
+						// Unlock form on save:
 						fcClient.unLockFormContainer(wsFlItem.getFluidItemForm());
 					}
 				}
 			} else {
-				//Create a new item...
+				//Create a new item:
 				boolean sendingOn = (webKitForm.isSendToWorkflowAfterCreate() &&
 						UtilGlobal.isNotBlank(this.inputSelectedWorkflow));
 				Form formToSave = this.toFormToSave(wsFlItem, fcClient);
 				final Form createdForm = fcClient.createFormContainer(formToSave, !sendingOn);
 				formToSave.setId(createdForm.getId());
 
-				//Update the table records...
+				//Update the table records:
 				this.upsertTableRecordsInFluid(formToSave);
 
-				//Update attachments...
+				//Update attachments:
 				this.handleAttachmentStorageForForm(createdForm.getId());
 
 				if (sendingOn) {
@@ -954,10 +954,16 @@ public class WebKitOpenFormConversationBean extends ABaseManagedBean {
 				}
 			}
 
-			//After 'Save' Processing...
-			if (this.conversationCallback != null) this.conversationCallback.afterSaveProcessing(wsFlItem);
+			// After 'Save' Processing:
+			if (UtilGlobal.isBlank(dialogToHideAfterSuccess)) {
+				if (this.conversationCallback != null) {
+					this.conversationCallback.afterSaveProcessing(wsFlItem);
+				}
+			} else {
+				// The close event will execute the workspace update:
+				this.executeJavaScript(String.format("PF('%s').hide();", dialogToHideAfterSuccess));
+			}
 
-			this.executeJavaScript(String.format("PF('%s').hide();", dialogToHideAfterSuccess));
 			FacesMessage fMsg = new FacesMessage(FacesMessage.SEVERITY_INFO,
 					"Success", String.format("'%s' %s.", this.wsFluidItem.getFluidItemTitle(), actionString));
 			FacesContext.getCurrentInstance().addMessage(null, fMsg);
@@ -986,8 +992,14 @@ public class WebKitOpenFormConversationBean extends ABaseManagedBean {
 			FlowItemClient fiClient = this.getFluidClientDS().getFlowItemClient();
 			WorkspaceFluidItem wsFlItem = this.getWsFluidItem();
 			fiClient.sendFlowItemOn(wsFlItem.getFluidItem(), true);
-			
-			this.executeJavaScript(String.format("PF('%s').hide();", dialogToHideAfterSuccess));
+
+			if (UtilGlobal.isBlank()) {
+				if (this.conversationCallback != null) {
+					this.conversationCallback.afterSendOnProcessing(wsFlItem);
+				}
+			} else {
+				this.executeJavaScript(String.format("PF('%s').hide();", dialogToHideAfterSuccess));
+			}
 			FacesMessage fMsg = new FacesMessage(FacesMessage.SEVERITY_INFO,
 					"Success", String.format("'%s' %s.", this.wsFluidItem.getFluidItemTitle(), "Send On."));
 			FacesContext.getCurrentInstance().addMessage(null, fMsg);
@@ -998,8 +1010,19 @@ public class WebKitOpenFormConversationBean extends ABaseManagedBean {
 		}
 	}
 
+	public void actionCloseDialog() {
+		try {
+			if (this.conversationCallback != null) this.conversationCallback.closeFormDialog();
+		} catch (Exception except) {
+			this.raiseError(except);
+		}
+	}
+
 	public void actionLoadFormHistoricData(String btnToReEnable, String dialogToShowIfSuccess) {
-		String jsToExec = String.format("PF('%s').enable();", btnToReEnable);
+		String jsToExec = "";
+		if (UtilGlobal.isNotBlank(btnToReEnable)) {
+			jsToExec = String.format("PF('%s').enable();", btnToReEnable);
+		}
 		try {
 			this.fieldHistoryConvBean.setHistoryForm(this.getWsFluidItem().getFluidItemForm());
 			this.fieldHistoryConvBean.actionLoadFormHistoricData(true);
@@ -1254,8 +1277,7 @@ public class WebKitOpenFormConversationBean extends ABaseManagedBean {
 		int workflowOptionCount = this.getInputWorkflowsForFormDefCount();
 		if (workflowOptionCount < 1) return false;
 
-		WebKitForm webKitForm = this.lookAndFeelBean.getWebKitFormWithFormDef(
-				this.getWsFluidItem().getFluidItemFormType());
+		WebKitForm webKitForm = this.getWebKitFormWithFormDef(this.getWsFluidItem());
 		//if configured to send to workflow after created, but it should not be created...
 		if ((webKitForm != null && webKitForm.isSendToWorkflowAfterCreate()) &&
 				(workflowOptionCount == 1 && this.getWsFluidItem().isFluidItemFormSet())) return false;
@@ -1265,11 +1287,15 @@ public class WebKitOpenFormConversationBean extends ABaseManagedBean {
 
 	public boolean getRenderSendOnButton() {
 		if (this.getWsFluidItem() == null) return false;
-		WebKitForm webKitForm = this.lookAndFeelBean.getWebKitFormWithFormDef(
-				this.getWsFluidItem().getFluidItemFormType());
+		WebKitForm webKitForm = this.getWebKitFormWithFormDef(this.getWsFluidItem());
 		if ((webKitForm != null && webKitForm.isSendOnAfterSave()) ||
 				!this.getWsFluidItem().isFluidItemFormSet()) return false;
 		return (this.getWsFluidItem().isFluidItemInWIPState() && this.getWsFluidItem().isFormLockedByLoggedInUser());
+	}
+
+	public WebKitForm getWebKitFormWithFormDef(WorkspaceFluidItem workspaceFluidItem) {
+		if (workspaceFluidItem == null) return null;
+		return this.lookAndFeelBean.getWebKitFormWithFormDef(workspaceFluidItem.getFluidItemFormType());
 	}
 
 	public boolean isTableRecordPlaceholder(Form tableRecordForm) {
@@ -1525,7 +1551,6 @@ public class WebKitOpenFormConversationBean extends ABaseManagedBean {
 		return (!format.contains("d"));
 	}
 
-	public static final String VISIBLE_FOR_CHECKER = "Visible For Checker";
 	public List<Form> filterOutRowsWhereCheckerCannotView(List<Form> records) {
 		if (records == null) return null;
 
@@ -1543,5 +1568,16 @@ public class WebKitOpenFormConversationBean extends ABaseManagedBean {
 					.collect(Collectors.toList());
 		}
 		return records;
+	}
+
+	public String destinationNavigationForCancel() {
+		return this.getDestinationNavigationForCancel();
+	}
+
+	public String getDestinationNavigationForCancel() {
+		if (this.conversationCallback != null) {
+			return this.conversationCallback.getDestinationNavigationForCancel();
+		}
+		return null;
 	}
 }

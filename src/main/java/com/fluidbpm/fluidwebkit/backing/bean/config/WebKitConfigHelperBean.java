@@ -224,7 +224,20 @@ public class WebKitConfigHelperBean extends ABaseManagedBean {
 	}
 
 	public String convertToUpper(String toConvert) {
+		if (UtilGlobal.isBlank(toConvert)) return toConvert;
 		return toConvert.toUpperCase();
+	}
+
+	public String splitIntoWords(String capitalCaseWord) {
+		if (UtilGlobal.isBlank(capitalCaseWord)) return capitalCaseWord;
+		StringBuilder retVal = new StringBuilder();
+		for (int index = 0; index < capitalCaseWord.length(); index++) {
+			char ch = capitalCaseWord.charAt(index);
+			if (Character.isUpperCase(ch) && index != 0) {
+				retVal.append(String.format(" %s", Character.toLowerCase(ch)));
+			} else retVal.append(ch);
+		}
+		return retVal.toString();
 	}
 
 	public String objectHashCode(Object objectAddress) {

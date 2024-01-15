@@ -73,9 +73,20 @@ public class WebKitUserQueryBean extends ABaseWorkspaceBean<UserQueryItemVO, Con
 	public static final String TGM_TABLE_PER_VIEW_SECTION_DEL = " - ";
 	public static final int TGM_TABLE_PER_VIEW_SECTION_DEL_LEN = TGM_TABLE_PER_VIEW_SECTION_DEL.length();
 
-	public String actionOpenMainPageNonAjax() {
-		this.actionOpenMainPage();
+	@Override
+	public String getDestinationNavigationForCancel() {
 		return "userquery";
+	}
+
+	@Override
+	public void actionPreRenderProcess() {
+		String freshLookup = this.getStringRequestParam(RequestParam.FRESH_LOOKUP);
+		if (UtilGlobal.isNotBlank(freshLookup)) {
+			this.currentlyHaveItemOpen = false;
+			this.currentOpenFormTitle = null;
+			this.dialogDisplay = false;
+		}
+		//this.actionOpenMainPage();
 	}
 
 	@Override
@@ -101,13 +112,27 @@ public class WebKitUserQueryBean extends ABaseWorkspaceBean<UserQueryItemVO, Con
 	 *
 	 * @see #actionOpenForm(WorkspaceFluidItem)
 	 */
-	public void actionOpenFormForEditingFromWorkspace(WorkspaceFluidItem workspaceFluidItem) {
+	public void actionOpenFormForEditingFromWorkspace(WorkspaceFluidItem wfItem) {
 		this.setAreaToUpdateForDialogAfterSubmit(null);
+		this.currentOpenFormTitle = null;
+		this.currentlyHaveItemOpen = false;
+		// Dialog or Workspace for form layout;
+		this.dialogDisplay = !this.isOpenItemInWorkspace(wfItem);
+
 		try {
 			this.openFormBean.startConversation();
 			this.openFormBean.setAreaToUpdateAfterSave(this.getAreaToUpdateAfterSave());
 			this.openFormBean.setConversationCallback(this);
-			this.actionOpenForm(workspaceFluidItem);
+			this.actionOpenForm(wfItem);
+
+			if (this.dialogDisplay) {
+				// Now open:
+				this.executeJavaScript("PF('varFormDialog').show();");
+			} else {
+				// Only set the title if not dialog display:
+				this.currentOpenFormTitle = wfItem.getFluidItemTitle();
+				this.openFormBean.setAreaToUpdateAfterSave(":panelBreadcrumb: :panelWorkspace");
+			}
 			this.currentlyHaveItemOpen = true;
 		} catch (Exception except) {
 			this.raiseError(except);
@@ -120,20 +145,33 @@ public class WebKitUserQueryBean extends ABaseWorkspaceBean<UserQueryItemVO, Con
 
 	@Override
 	public void afterSaveProcessing(WorkspaceFluidItem workspaceItemSaved) {
-		//No Need to do anything after a save...
-		//this.getContentView().getFluidItemsLazyModel().load()
+		this.dialogDisplay = false;
+		this.currentlyHaveItemOpen = false;
+		this.currentOpenFormTitle = null;
 	}
 
 	@Override
-	protected ContentViewUQ actionOpenMainPage(
-		WebKitViewGroup webKitGroup,
-		WebKitViewSub selectedSub
-	) {
-		String userQueryLabel = this.getStringRequestParam(WebKitMenuBean.ReqParam.USER_QUERY_LABEL);
+	public void closeFormDialog() {
+		this.actionCloseOpenForm();
+	}
+
+	@Override
+	public void afterSendOnProcessing(WorkspaceFluidItem workspaceItemSaved) {
+		
+	}
+
+	@Override
+	protected ContentViewUQ actionOpenMainPage(WebKitViewGroup webKitGroup, WebKitViewSub selectedSub) {
+		String userQueryLabel = this.getUserQueryLabel();
 		String sectionName = String.format("User Query - %s", userQueryLabel);
 		
 		try {
 			if (this.getFluidClientDS() == null) return null;
+
+			String userQuerySec = this.getUserQuerySection();
+			if (UtilGlobal.isNotBlank(userQuerySec, userQueryLabel)) {
+				this.openPageLastCache = new OpenPageLastCache(userQuerySec, userQuerySec, "", userQueryLabel);
+			}
 
 			Long userQueryId = this.getLongRequestParam(WebKitMenuBean.ReqParam.USER_QUERY_ID);
 			WebKitUserQuery wkUserQuery = this.webKitMenuBean.getWebKitUserQueryWithId(userQueryId);
@@ -258,6 +296,22 @@ public class WebKitUserQueryBean extends ABaseWorkspaceBean<UserQueryItemVO, Con
 			if (wkUserQueryWithName.isEnableForTopBar()) uqEnabled.add(uqCanExec);
 		});
 		return uqEnabled;
+	}
+
+	public String getUserQuerySection() {
+		String returnVal = this.getStringRequestParam(WebKitMenuBean.ReqParam.USER_QUERY_SECTION);
+		if (UtilGlobal.isBlank(returnVal) && this.openPageLastCache != null) {
+			return this.openPageLastCache.getClickedGroup();
+		}
+		return returnVal;
+	}
+
+	public String getUserQueryLabel() {
+		String returnVal = this.getStringRequestParam(WebKitMenuBean.ReqParam.USER_QUERY_LABEL);
+		if (UtilGlobal.isBlank(returnVal) && this.openPageLastCache != null) {
+			return this.openPageLastCache.getClickedSubAlias();
+		}
+		return returnVal;
 	}
 
 }

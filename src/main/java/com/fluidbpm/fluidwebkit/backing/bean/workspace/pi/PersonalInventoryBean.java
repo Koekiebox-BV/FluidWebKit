@@ -21,6 +21,7 @@ import com.fluidbpm.fluidwebkit.backing.bean.workspace.ABaseWorkspaceBean;
 import com.fluidbpm.fluidwebkit.backing.bean.workspace.WorkspaceFluidItem;
 import com.fluidbpm.fluidwebkit.backing.bean.workspace.contentview.WebKitViewContentModelBean;
 import com.fluidbpm.fluidwebkit.backing.bean.workspace.form.IConversationCallback;
+import com.fluidbpm.program.api.util.UtilGlobal;
 import com.fluidbpm.program.api.vo.flow.JobView;
 import com.fluidbpm.program.api.vo.form.Form;
 import com.fluidbpm.program.api.vo.item.FluidItem;
@@ -62,7 +63,6 @@ implements IConversationCallback {
 	@PostConstruct
 	public void actionPopulateInit() {
 		//Do nothing...
-		//this.actionOpenMainPage();
 	}
 
 	@Override
@@ -73,6 +73,34 @@ implements IConversationCallback {
 	@Override
 	public void actionOpenMainPage() {
 		this.contentView = this.actionOpenMainPage(null, null);
+	}
+
+	public String actionOpenMainPageNonAjax() {
+		if (this.openFormBean != null) {
+			if (this.openFormBean.getContextMenuModel() != null) {
+				this.openFormBean.getContextMenuModel().getElements().clear();
+			}
+			this.openFormBean.setAreaToUpdateAfterSave(null);
+			this.openFormBean.endConversation();
+		}
+		// actionPreRenderProcess will be executed with [freshLookup] param.
+		return this.getDestinationNavigationForCancel();
+	}
+
+	@Override
+	public String getDestinationNavigationForCancel() {
+		return "pi";
+	}
+
+	@Override
+	public void actionPreRenderProcess() {
+		String freshLookup = this.getStringRequestParam(RequestParam.FRESH_LOOKUP);
+		if (UtilGlobal.isNotBlank(freshLookup)) {
+			this.currentlyHaveItemOpen = false;
+			this.currentOpenFormTitle = null;
+			this.dialogDisplay = false;
+		}
+		this.actionOpenMainPage();
 	}
 
 	@Override
@@ -127,13 +155,27 @@ implements IConversationCallback {
 	 *
 	 * @see #actionOpenForm(WorkspaceFluidItem)
 	 */
-	public void actionOpenFormForEditingFromWorkspace(WorkspaceFluidItem workspaceFluidItem) {
+	public void actionOpenFormForEditingFromWorkspace(WorkspaceFluidItem wfItem) {
 		this.setAreaToUpdateForDialogAfterSubmit(null);
+		this.currentOpenFormTitle = null;
+		this.currentlyHaveItemOpen = false;
+		// Dialog or Workspace for form layout;
+		this.dialogDisplay = !this.isOpenItemInWorkspace(wfItem);
+		
 		try {
 			this.openFormBean.startConversation();
 			this.openFormBean.setAreaToUpdateAfterSave(":frmPIContent");
 			this.openFormBean.setConversationCallback(this);
-			this.actionOpenForm(workspaceFluidItem);
+			this.actionOpenForm(wfItem);
+
+			if (this.dialogDisplay) {
+				// Now open:
+				this.executeJavaScript("PF('varFormDialog').show();");
+			} else {
+				// Only set the title if not dialog display:
+				this.currentOpenFormTitle = wfItem.getFluidItemTitle();
+				this.openFormBean.setAreaToUpdateAfterSave(":panelBreadcrumb: :piMasterPanel");
+			}
 			this.currentlyHaveItemOpen = true;
 		} catch (Exception except) {
 			this.raiseError(except);
@@ -142,7 +184,20 @@ implements IConversationCallback {
 
 	@Override
 	public void afterSaveProcessing(WorkspaceFluidItem workspaceItemSaved) {
+		this.dialogDisplay = false;
+		this.currentlyHaveItemOpen = false;
+		this.currentOpenFormTitle = null;
 		this.actionOpenMainPage();
+	}
+
+	@Override
+	public void afterSendOnProcessing(WorkspaceFluidItem workspaceItemSaved) {
+		this.afterSaveProcessing(workspaceItemSaved);
+	}
+
+	@Override
+	public void closeFormDialog() {
+		this.actionCloseOpenForm();
 	}
 
 	public void actionRemoveSelectedItemsFromPI() {

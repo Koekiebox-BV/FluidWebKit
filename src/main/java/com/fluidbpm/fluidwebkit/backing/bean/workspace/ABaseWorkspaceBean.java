@@ -22,12 +22,14 @@ import com.fluidbpm.fluidwebkit.backing.bean.workspace.menu.WebKitMenuBean;
 import com.fluidbpm.fluidwebkit.backing.utility.Globals;
 import com.fluidbpm.fluidwebkit.backing.vo.ABaseWebVO;
 import com.fluidbpm.fluidwebkit.exception.ClientDashboardException;
+import com.fluidbpm.program.api.util.UtilGlobal;
 import com.fluidbpm.program.api.vo.flow.JobView;
 import com.fluidbpm.program.api.vo.flow.JobViewListing;
 import com.fluidbpm.program.api.vo.item.FluidItem;
 import com.fluidbpm.program.api.vo.item.FluidItemListing;
 import com.fluidbpm.program.api.vo.userquery.UserQueryListing;
 import com.fluidbpm.program.api.vo.webkit.RowExpansion;
+import com.fluidbpm.program.api.vo.webkit.form.WebKitForm;
 import com.fluidbpm.program.api.vo.webkit.viewgroup.WebKitViewGroup;
 import com.fluidbpm.program.api.vo.webkit.viewgroup.WebKitViewSub;
 import com.fluidbpm.program.api.vo.webkit.viewgroup.WebKitWorkspaceJobView;
@@ -40,6 +42,7 @@ import com.fluidbpm.ws.client.v1.userquery.UserQueryClient;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import javax.annotation.PostConstruct;
 import javax.faces.application.FacesMessage;
@@ -70,10 +73,22 @@ public abstract class ABaseWorkspaceBean<T extends ABaseWebVO, J extends ABaseCo
 	@Getter
 	protected J contentView;
 
-	//Config...
+	@Getter
+	@Setter
 	protected boolean currentlyHaveItemOpen;
+
+	@Getter
+	@Setter
+	protected String currentOpenFormTitle;
+
+	@Getter
+	@Setter
+	protected boolean dialogDisplay;
+
 	protected OpenPageLastCache openPageLastCache;
 
+	@Getter
+	@Setter
 	private String areaToUpdateForDialogAfterSubmit;
 
 	@Inject
@@ -112,6 +127,7 @@ public abstract class ABaseWorkspaceBean<T extends ABaseWebVO, J extends ABaseCo
 		public static final String USER_QUERY = "userQuery";
 		public static final String RETAIN_USER_QUERY = "retainUserQuery";
 		public static final String USER_QUERY_ID = "userQueryId";
+		public static final String FRESH_LOOKUP = "freshLookup";
 	}
 
 	/**
@@ -128,9 +144,7 @@ public abstract class ABaseWorkspaceBean<T extends ABaseWebVO, J extends ABaseCo
 	 */
 	@PostConstruct
 	public void actionPopulateInit() {
-		if (this.getFluidClientDS() == null) {
-			return;
-		}
+		if (this.getFluidClientDS() == null) return;
 
 		FlowStepClient flowStepClient = this.getFluidClientDS().getFlowStepClient();
 		UserQueryClient userQueryClient = this.getFluidClientDS().getUserQueryClient();
@@ -242,11 +256,25 @@ public abstract class ABaseWorkspaceBean<T extends ABaseWebVO, J extends ABaseCo
 	 */
 	public void actionCloseOpenForm() {
 		if (this.openFormBean != null) {
+			this.openFormBean.setAreaToUpdateAfterSave(null);
 			this.openFormBean.endConversation();
 		}
 
 		this.currentlyHaveItemOpen = false;
+		this.currentOpenFormTitle = null;
+		this.dialogDisplay = false;
 		this.actionOpenMainPage();
+	}
+
+	public String areaToUpdateForOpenItem(WorkspaceFluidItem wfItem) {
+		if (this.isOpenItemInWorkspace(wfItem)) return ":panelBreadcrumb: :panelWorkspace";
+		else return ":frmOpenForm";
+	}
+
+	protected boolean isOpenItemInWorkspace(WorkspaceFluidItem wfItem) {
+		WebKitForm wkForm = this.openFormBean.getWebKitFormWithFormDef(wfItem);
+		if (wkForm == null) return false;
+		return  ("workspace".equalsIgnoreCase(wkForm.getFormDisplayBehaviour()));
 	}
 
 	/**
@@ -267,9 +295,21 @@ public abstract class ABaseWorkspaceBean<T extends ABaseWebVO, J extends ABaseCo
 	 */
 	public abstract void actionOpenForm(WorkspaceFluidItem workspaceFluidItem);
 
+	public abstract String getDestinationNavigationForCancel();
+
+	public abstract void actionPreRenderProcess();
+
 	public String actionOpenMainPageNonAjax() {
 		this.actionOpenMainPage();
-		return "workspace";
+		if (this.openFormBean != null) {
+			if (this.openFormBean.getContextMenuModel() != null) {
+				this.openFormBean.getContextMenuModel().getElements().clear();
+			}
+			this.openFormBean.setAreaToUpdateAfterSave(null);
+			this.openFormBean.endConversation();
+		}
+
+		return this.getDestinationNavigationForCancel();
 	}
 
 	/**
@@ -291,13 +331,17 @@ public abstract class ABaseWorkspaceBean<T extends ABaseWebVO, J extends ABaseCo
 		String clickedGroupAlias = this.getStringRequestParam(WebKitMenuBean.ReqParam.CLICKED_GROUP_ALIAS);
 		String clickedSubAlias = this.getStringRequestParam(WebKitMenuBean.ReqParam.CLICKED_SUB_ALIAS);
 		String clickedWorkspaceViews = this.getStringRequestParam(WebKitMenuBean.ReqParam.CLICKED_VIEWS);
-		if ((clickedWorkspaceViews == null || clickedWorkspaceViews.trim().isEmpty())
-				&& this.openPageLastCache != null) {
+		boolean viewsBlank = UtilGlobal.isBlank(clickedWorkspaceViews);
+		if (viewsBlank && this.openPageLastCache != null) {
 			clickedGroup = this.openPageLastCache.clickedGroup;
 			clickedWorkspaceViews = this.openPageLastCache.selectedJobViews;
 			clickedGroupAlias = this.openPageLastCache.clickedGroupAlias;
 			clickedSubAlias = this.openPageLastCache.clickedSubAlias;
+		} else if (!viewsBlank) {
+			this.currentlyHaveItemOpen = false;
+			this.currentOpenFormTitle = null;
 		}
+
 		this.openPageLastCache = new OpenPageLastCache(
 			clickedGroup,
 			clickedGroupAlias,
@@ -580,45 +624,6 @@ public abstract class ABaseWorkspaceBean<T extends ABaseWebVO, J extends ABaseCo
 
 		returnVal += " | ";
 		return returnVal;
-	}
-
-	/**
-	 * Get if a item is currently open from the main workspace screen.
-	 * @return {@code true} if a item is open, otherwise {@code false}.
-	 */
-	public boolean isCurrentlyHaveItemOpen() {
-		return this.currentlyHaveItemOpen;
-	}
-
-	/**
-	 * Set if a item is currently open from the main workspace screen.
-	 * The {@code currentlyHaveItemOpen} will automatically be set to {@code true}
-	 * in the event of {@code this#actionOpenFormForEditingFromWorkspace}.
-	 * 
-	 * @param currentlyHaveItemOpenParam Set whether an item is currently open.
-	 *
-	 * @see #actionOpenFormForEditingFromWorkspace(WorkspaceFluidItem)
-	 */
-	public void setCurrentlyHaveItemOpen(boolean currentlyHaveItemOpenParam) {
-		this.currentlyHaveItemOpen = currentlyHaveItemOpenParam;
-	}
-
-	/**
-	 * Get area to update after a submission has taken place.
-	 *
-	 * @return {@code String} areaToUpdateForDialogAfterSubmit.
-	 */
-	public String getAreaToUpdateForDialogAfterSubmit() {
-		return this.areaToUpdateForDialogAfterSubmit;
-	}
-
-	/**
-	 * Set area to update after a submission has taken place.
-	 *
-	 * @param areaToUpdateForDialogAfterSubmitParam areaToUpdateForDialogAfterSubmit.
-	 */
-	public void setAreaToUpdateForDialogAfterSubmit(String areaToUpdateForDialogAfterSubmitParam) {
-		this.areaToUpdateForDialogAfterSubmit = areaToUpdateForDialogAfterSubmitParam;
 	}
 
 	public String getCategory() {

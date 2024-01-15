@@ -398,7 +398,7 @@ public class WebKitMenuBean extends ABaseManagedBean {
 								onCompleteJS = null;
 							} else {
 								String combinedViewsAsList = jobViews.stream()
-										.map(itm -> String.valueOf(itm))
+										.map(String::valueOf)
 										.collect(Collectors.joining(","));
 								onCompleteJS = String.format("javascript:rcOpenWorkspaceItem" +
 												"([{name:'%s', value:'%d'}, {name:'%s', value:'%s'}, {name:'%s', value:\"%s\"}, {name:'%s', value:'%d'}, {name:'%s', value:\"%s\"}]);",

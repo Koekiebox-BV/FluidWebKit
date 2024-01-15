@@ -270,6 +270,14 @@ public class WebKitWorkspaceLookAndFeelBean extends ABaseManagedBean {
 					this.periodicUpdateBean.setWebKitForms(this.webKitForms);
 				}
 
+				DefaultMenuItem itemGotoTop = DefaultMenuItem.builder()
+						.value("Goto 'Top'")
+						.url("#frmWebKitGroupConfig:tabViewLookAndFeel:panelForm")
+						.icon("fa fa-link")
+						.build();
+				this.contextMenuModelQuickToWorkspace.getElements().add(itemGotoTop);
+				this.contextMenuModelQuickToWorkspace.getElements().add(new DefaultSeparator());
+
 				AtomicInteger ai = new AtomicInteger(0);
 				this.webKitForms.forEach(itm -> {
 					DefaultMenuItem itemGotoForm = DefaultMenuItem.builder()
