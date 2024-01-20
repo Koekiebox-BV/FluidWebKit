@@ -108,6 +108,7 @@ public abstract class ABaseWorkspaceBean<T extends ABaseWebVO, J extends ABaseCo
 		public String clickedGroupAlias;
 		public String selectedJobViews;
 		public String clickedSubAlias;
+		public Long userQueryId;
 	}
 
 	/**
@@ -346,7 +347,8 @@ public abstract class ABaseWorkspaceBean<T extends ABaseWebVO, J extends ABaseCo
 			clickedGroup,
 			clickedGroupAlias,
 			clickedWorkspaceViews,
-			clickedSubAlias
+			clickedSubAlias,
+			null
 		);
 
 		//Clear the content view...

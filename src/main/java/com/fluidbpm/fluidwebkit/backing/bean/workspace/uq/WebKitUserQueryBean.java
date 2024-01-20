@@ -169,13 +169,18 @@ public class WebKitUserQueryBean extends ABaseWorkspaceBean<UserQueryItemVO, Con
 			if (this.getFluidClientDS() == null) return null;
 
 			String userQuerySec = this.getUserQuerySection();
-			if (UtilGlobal.isNotBlank(userQuerySec, userQueryLabel)) {
-				this.openPageLastCache = new OpenPageLastCache(userQuerySec, userQuerySec, "", userQueryLabel);
+			Long userQueryId = this.getUserQueryId();
+			if (UtilGlobal.isNotBlank(userQuerySec, userQueryLabel) && userQueryId > 0L) {
+				this.openPageLastCache = new OpenPageLastCache(
+						userQuerySec,
+						userQuerySec,
+						"",
+						userQueryLabel,
+						userQueryId
+				);
 			}
 
-			Long userQueryId = this.getLongRequestParam(WebKitMenuBean.ReqParam.USER_QUERY_ID);
 			WebKitUserQuery wkUserQuery = this.webKitMenuBean.getWebKitUserQueryWithId(userQueryId);
-
 			ContentViewUQ contentViewUserQuery = new ContentViewUQ(
 					this.getLoggedInUser(),
 					sectionName,
@@ -312,6 +317,12 @@ public class WebKitUserQueryBean extends ABaseWorkspaceBean<UserQueryItemVO, Con
 			return this.openPageLastCache.getClickedSubAlias();
 		}
 		return returnVal;
+	}
+
+	public Long getUserQueryId() {
+		Long uqId = this.getLongRequestParam(WebKitMenuBean.ReqParam.USER_QUERY_ID);
+		if (uqId < 1L) return this.openPageLastCache.getUserQueryId();
+		return uqId;
 	}
 
 }
