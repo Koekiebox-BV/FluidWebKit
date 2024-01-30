@@ -30,7 +30,7 @@ public class WebKitViewContentModelBean extends ABaseManagedBean {
 	private Map<String, Map<String, List<ABaseManagedBean.ColumnModel>>> columnModels;
 
 	public WebKitViewContentModelBean() {
-		this.columnModels = /*Collections.synchronizedMap(*/new HashMap<>()/*)*/;
+		this.columnModels = new HashMap<>();
 	}
 
 	public void storeModelFor(String category, String sectionAlias, List<ABaseManagedBean.ColumnModel> model) {
@@ -42,9 +42,7 @@ public class WebKitViewContentModelBean extends ABaseManagedBean {
 			Map<String, List<ABaseManagedBean.ColumnModel>> sectionMapping =
 					this.columnModels.getOrDefault(category, new HashMap<>());
 			List<ABaseManagedBean.ColumnModel> cloned = new ArrayList<>();
-			model.forEach(itm -> {
-				cloned.add(itm.cloneCM());
-			});
+			model.forEach(itm -> cloned.add(itm.cloneCM()));
 			sectionMapping.put(sectionAlias, cloned);
 			this.columnModels.put(category, sectionMapping);
 		}
