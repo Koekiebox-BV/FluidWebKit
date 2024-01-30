@@ -82,5 +82,10 @@ public class HealthBean extends ABaseManagedBean {
 
 		return returnVal.toString(2);
 	}
-	
+
+	public String healthConsumptionExtract(String org, int index) {
+		if (org == null) return null;
+		String[] split = org.split("\\|");
+		return split[index];
+	}
 }
