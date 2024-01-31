@@ -27,10 +27,15 @@ import org.json.JSONObject;
 import javax.annotation.PostConstruct;
 import javax.enterprise.context.SessionScoped;
 import javax.inject.Named;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @SessionScoped
 @Named("webKitHealthBean")
 public class HealthBean extends ABaseManagedBean {
+	private static String REG_EX_SPLIT = "\\|";
 
 	@Getter
 	private ConnectStatus connectStatus;
@@ -85,7 +90,26 @@ public class HealthBean extends ABaseManagedBean {
 
 	public String healthConsumptionExtract(String org, int index) {
 		if (org == null) return null;
-		String[] split = org.split("\\|");
+		String[] split = org.split(REG_EX_SPLIT);
 		return split[index];
+	}
+
+	public List<String> orderCacheConsumptionBySize(List<String> existing) {
+		if (existing == null) return null;
+
+		Comparator<String> consumptionComparator = (h1, h2) -> {
+			String[] h1Split = h1.split(REG_EX_SPLIT);
+			String[] h2Split = h2.split(REG_EX_SPLIT);
+
+			Integer h1Int = UtilGlobal.toIntSafe(h1Split[1]);
+			Integer h2Int = UtilGlobal.toIntSafe(h2Split[1]);
+			return h1Int.compareTo(h2Int);
+		};
+
+		List<String> returnVal = existing.stream()
+				.sorted(consumptionComparator)
+				.collect(Collectors.toList());
+		Collections.reverse(returnVal);
+		return returnVal;
 	}
 }
