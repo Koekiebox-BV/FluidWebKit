@@ -94,7 +94,7 @@ public class HealthBean extends ABaseManagedBean {
 		return split[index];
 	}
 
-	public List<String> orderCacheConsumptionBySize(List<String> existing) {
+	public List<String> orderCacheConsumptionBySizeOnlyWithCount(List<String> existing) {
 		if (existing == null) return null;
 
 		Comparator<String> consumptionComparator = (h1, h2) -> {
@@ -107,6 +107,10 @@ public class HealthBean extends ABaseManagedBean {
 		};
 
 		List<String> returnVal = existing.stream()
+				.filter(itm -> {
+					String[] split = itm.split(REG_EX_SPLIT);
+					return UtilGlobal.toIntSafe(split[1]) > 0;
+				})
 				.sorted(consumptionComparator)
 				.collect(Collectors.toList());
 		Collections.reverse(returnVal);
