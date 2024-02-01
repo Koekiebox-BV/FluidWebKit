@@ -19,7 +19,6 @@ import com.fluidbpm.program.api.util.UtilGlobal;
 import com.fluidbpm.program.api.vo.attachment.Attachment;
 import com.fluidbpm.program.api.vo.field.DecimalMetaFormat;
 import com.fluidbpm.program.api.vo.field.Field;
-import com.fluidbpm.program.api.vo.field.MultiChoice;
 import com.fluidbpm.program.api.vo.field.TableField;
 import com.fluidbpm.program.api.vo.flow.Flow;
 import com.fluidbpm.program.api.vo.form.Form;
@@ -1242,25 +1241,12 @@ public class WebKitOpenFormConversationBean extends ABaseManagedBean {
 					//Ignore Table Records...
 					if (fieldItemFromExec.getTypeAsEnum() == null || fieldItemFromExec.getTypeAsEnum() == Field.Type.Table) return;
 
-					if (fieldItemFromExec.getFieldValue() instanceof MultiChoice) {
-						MultiChoice casted = (MultiChoice)fieldItemFromExec.getFieldValue();
-						MultiChoice multi = formToUpdate.getFieldValueAsMultiChoice(fieldItemFromExec.getFieldName());
-						
-						if (multi != null) {
-							casted.setAvailableMultiChoices(multi.getAvailableMultiChoices());
-							casted.setAvailableMultiChoicesCombined(multi.getAvailableMultiChoicesCombined());
-						}
-
-						formToUpdate.setFieldValue(
-								fieldItemFromExec.getFieldName(),
-								casted,
-								fieldItemFromExec.getTypeAsEnum());
-					} else {
-						formToUpdate.setFieldValue(
-								fieldItemFromExec.getFieldName(),
-								fieldItemFromExec.getFieldValue(),
-								fieldItemFromExec.getTypeAsEnum());
-					};
+					// Set field values from Exec result:
+					formToUpdate.setFieldValue(
+							fieldItemFromExec.getFieldName(),
+							fieldItemFromExec.getFieldValue(),
+							fieldItemFromExec.getTypeAsEnum()
+					);
 		});
 	}
 
