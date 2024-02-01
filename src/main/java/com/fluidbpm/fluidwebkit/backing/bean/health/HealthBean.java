@@ -69,6 +69,20 @@ public class HealthBean extends ABaseManagedBean {
 		}
 	}
 
+	/**
+	 * Update the data.
+	 */
+	public void actionUpdateHealthResultForBasicOnly() {
+		if (this.getFluidClientDS() == null) return;
+
+		HealthClient healthClient = this.getFluidClientDSConfig().getHealthClient();
+		try {
+			this.connectStatus = healthClient.getHealthAndServerInfo();
+		} catch (Exception except) {
+			this.raiseError(except);
+		}
+	}
+
 	public String calcStyleForHealth(Health health) {
 		if (health == null) return UtilGlobal.EMPTY;
 		switch (health) {
