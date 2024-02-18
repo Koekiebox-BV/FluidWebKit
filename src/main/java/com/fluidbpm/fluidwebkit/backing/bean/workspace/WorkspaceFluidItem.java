@@ -179,7 +179,7 @@ public class WorkspaceFluidItem extends ABaseFluidVO {
 			Object fieldValueToSet = formFields.stream()
 							.filter(itm -> itm.getFieldName().equals(visibleField.getFieldName()))
 							.findFirst()
-							.map(itm -> itm.getFieldValue())
+							.map(Field::getFieldValue)
 							.orElse(visibleField.getFieldValue());
 			final List<String> userFilteredAvailableOptions;
 			if (fieldValueToSet instanceof MultiChoice) {

@@ -174,7 +174,7 @@ implements IConversationCallback {
 			} else {
 				// Only set the title if not dialog display:
 				this.currentOpenFormTitle = wfItem.getFluidItemTitle();
-				this.openFormBean.setAreaToUpdateAfterSave(":panelBreadcrumb: :piMasterPanel");
+				this.openFormBean.setAreaToUpdateAfterSave(":panelBreadcrumb: :panelWorkspace");
 			}
 			this.currentlyHaveItemOpen = true;
 		} catch (Exception except) {

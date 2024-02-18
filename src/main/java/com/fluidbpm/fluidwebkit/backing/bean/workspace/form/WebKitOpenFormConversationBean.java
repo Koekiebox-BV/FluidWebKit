@@ -16,6 +16,7 @@ import com.fluidbpm.fluidwebkit.exception.CustomExecutionException;
 import com.fluidbpm.fluidwebkit.exception.MandatoryFieldsException;
 import com.fluidbpm.program.api.util.GeoUtil;
 import com.fluidbpm.program.api.util.UtilGlobal;
+import com.fluidbpm.program.api.vo.ABaseListing;
 import com.fluidbpm.program.api.vo.attachment.Attachment;
 import com.fluidbpm.program.api.vo.field.DecimalMetaFormat;
 import com.fluidbpm.program.api.vo.field.Field;
@@ -303,9 +304,8 @@ public class WebKitOpenFormConversationBean extends ABaseManagedBean {
 			List<Flow> associatedFlowsForFormDef = formDefs.stream()
 					.filter(itm -> itm.getFormType().equals(wfiParam.getFluidItemFormType()))
 					.findFirst()
-					.map(itm -> itm.getAssociatedFlows())
+					.map(Form::getAssociatedFlows)
 					.orElse(new ArrayList<>());
-			if (associatedFlowsForFormDef == null) associatedFlowsForFormDef = new ArrayList<>();
 			associatedFlowsForFormDef.forEach(flowItm -> this.getInputWorkflowsForFormDef().add(flowItm.getName()));
 
 			Form freshFetchForm = new Form();
@@ -325,7 +325,7 @@ public class WebKitOpenFormConversationBean extends ABaseManagedBean {
 						List<Form> tableRecordsForField = new ArrayList<>();
 						childForms.stream()
 								.filter(itm -> !itm.isListingEmpty())
-								.map(itm -> itm.getListing())
+								.map(ABaseListing::getListing)
 								.flatMap(List::stream)
 								.filter(itm -> itm.getFormType() != null &&
 										itm.getFormType().equals(fieldNameToFormDef.get(tableFieldName)))

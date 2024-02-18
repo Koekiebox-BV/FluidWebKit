@@ -90,7 +90,7 @@ public class FieldMappingUtil {
 		if (UtilGlobal.isBlank(formFieldsString)) return formula.substring(lastIndexOfPipe - 1);
 
 		String[] formFieldNames = formFieldsString.substring(1).split("\\,");
-		if (formFieldNames == null || formFieldNames.length < 1) return formFieldsString;
+		if (formFieldNames.length < 1) return formFieldsString;
 
 		try {
 			return String.format(formula.substring(0, lastIndexOfPipe), toObjs(formFieldNames, formFields));
