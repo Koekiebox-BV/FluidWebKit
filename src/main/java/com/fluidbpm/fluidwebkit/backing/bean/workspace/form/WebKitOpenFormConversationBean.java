@@ -1261,14 +1261,13 @@ public class WebKitOpenFormConversationBean extends ABaseManagedBean {
 
 	public boolean getRenderWorkflowSelectDropdown() {
 		int workflowOptionCount = this.getInputWorkflowsForFormDefCount();
-		if (workflowOptionCount < 1) return false;
+		if (workflowOptionCount < 2) return false;
 
 		WebKitForm webKitForm = this.getWebKitFormWithFormDef(this.getWsFluidItem());
 		//if configured to send to workflow after created, but it should not be created...
-		if ((webKitForm != null && webKitForm.isSendToWorkflowAfterCreate()) &&
-				(workflowOptionCount == 1 && this.getWsFluidItem().isFluidItemFormSet())) return false;
+		if ((webKitForm != null && !webKitForm.isSendToWorkflowAfterCreate())) return false;
 		//Or, the item is not in WIP state and locked by current user...
-		return (!this.getWsFluidItem().isFluidItemInWIPState() && this.getWsFluidItem().isFormLockedByLoggedInUser());
+		return (!this.getWsFluidItem().isFluidItemInWIPState());
 	}
 
 	public boolean getRenderSendOnButton() {
