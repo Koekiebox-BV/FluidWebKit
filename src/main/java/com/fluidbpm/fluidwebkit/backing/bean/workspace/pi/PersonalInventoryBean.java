@@ -50,251 +50,267 @@ import java.util.Map;
 public class PersonalInventoryBean extends ABaseWorkspaceBean<PersonalInventoryItemVO, ContentViewPI>
 implements IConversationCallback {
 
-	@Inject
-	private PerformanceBean performanceBean;
+    @Inject
+    private PerformanceBean performanceBean;
 
-	@Inject
-	private WebKitViewContentModelBean webKitViewContentModelBean;
+    @Inject
+    private WebKitViewContentModelBean webKitViewContentModelBean;
 
-	@Inject
-	private WebKitAccessBean accessBean;
+    @Inject
+    private WebKitAccessBean accessBean;
 
-	@Override
-	@PostConstruct
-	public void actionPopulateInit() {
-		//Do nothing...
-	}
+    @Override
+    @PostConstruct
+    public void actionPopulateInit() {
+        //Do nothing...
+    }
 
-	@Override
-	public void actionOpenForm(WorkspaceFluidItem workspaceFluidItem) {
-		this.openFormBean.actionFreshLoadFormAndSet(workspaceFluidItem);
-	}
+    @Override
+    public void actionOpenForm(WorkspaceFluidItem workspaceFluidItem) {
+        this.openFormBean.actionFreshLoadFormAndSet(workspaceFluidItem);
+    }
 
-	@Override
-	public void actionOpenMainPage() {
-		this.contentView = this.actionOpenMainPage(null, null);
-	}
+    @Override
+    public void actionOpenMainPage() {
+        this.contentView = this.actionOpenMainPage(null, null);
+    }
 
-	public String actionOpenMainPageNonAjax() {
-		if (this.openFormBean != null) {
-			if (this.openFormBean.getContextMenuModel() != null) {
-				this.openFormBean.getContextMenuModel().getElements().clear();
-			}
-			this.openFormBean.setAreaToUpdateAfterSave(null);
-			this.openFormBean.endConversation();
-		}
-		// actionPreRenderProcess will be executed with [freshLookup] param.
-		return this.getDestinationNavigationForCancel();
-	}
+    public String actionOpenMainPageNonAjax() {
+        if (this.openFormBean != null) {
+            if (this.openFormBean.getContextMenuModel() != null) {
+                this.openFormBean.getContextMenuModel().getElements().clear();
+            }
+            this.openFormBean.setAreaToUpdateAfterSave(null);
+            this.openFormBean.endConversation();
+        }
+        // actionPreRenderProcess will be executed with [freshLookup] param.
+        return this.getDestinationNavigationForCancel();
+    }
 
-	@Override
-	public String getDestinationNavigationForCancel() {
-		return "pi";
-	}
+    @Override
+    public String getDestinationNavigationForCancel() {
+        return "pi";
+    }
 
-	@Override
-	public void actionPreRenderProcess() {
-		String freshLookup = this.getStringRequestParam(RequestParam.FRESH_LOOKUP);
-		if (UtilGlobal.isNotBlank(freshLookup)) {
-			this.currentlyHaveItemOpen = false;
-			this.currentOpenFormTitle = null;
-			this.dialogDisplay = false;
-		}
-		this.actionOpenMainPage();
-	}
+    @Override
+    public void actionPreRenderProcess() {
+        String freshLookup = this.getStringRequestParam(RequestParam.FRESH_LOOKUP);
+        if (UtilGlobal.isNotBlank(freshLookup)) {
+            this.currentlyHaveItemOpen = false;
+            this.currentOpenFormTitle = null;
+            this.dialogDisplay = false;
+        }
+        this.actionOpenMainPage();
+    }
 
-	@Override
-	protected ContentViewPI actionOpenMainPage(
-		WebKitViewGroup webKitGroup,
-		WebKitViewSub selectedSub
-	) {
-		try {
-			if (this.getFluidClientDS() == null) return null;
+    @Override
+    protected ContentViewPI actionOpenMainPage(
+        WebKitViewGroup webKitGroup,
+        WebKitViewSub selectedSub
+    ) {
+        try {
+            if (this.getFluidClientDS() == null) return null;
 
-			PersonalInventoryClient persInvClient = this.getFluidClientDS().getPersonalInventoryClient();
-			List<FluidItem> piItems = persInvClient.getPersonalInventoryItems();
-			List<WorkspaceFluidItem> wsFldItms = new ArrayList<>();
-			piItems.forEach(flItm -> {
-				wsFldItms.add(new WorkspaceFluidItem(this.createABaseWebVO(webKitGroup, selectedSub, null, flItm)));
-			});
+            PersonalInventoryClient persInvClient = this.getFluidClientDS().getPersonalInventoryClient();
+            List<FluidItem> piItems = persInvClient.getPersonalInventoryItems();
+            List<WorkspaceFluidItem> wsFldItms = new ArrayList<>();
+            piItems.forEach(flItm -> {
+                wsFldItms.add(new WorkspaceFluidItem(this.createABaseWebVO(webKitGroup, selectedSub, null, flItm)));
+            });
 
-			Map<WebKitViewSub, Map<WebKitWorkspaceJobView, List<WorkspaceFluidItem>>> data = new HashMap<>();
-			Map<WebKitWorkspaceJobView, List<WorkspaceFluidItem>> wsFluidItmsMap = new HashMap<>();
-			wsFluidItmsMap.put(new WebKitWorkspaceJobView(new JobView(ContentViewPI.PI)), wsFldItms);
-			data.put(new WebKitViewSub(), wsFluidItmsMap);
+            Map<WebKitViewSub, Map<WebKitWorkspaceJobView, List<WorkspaceFluidItem>>> data = new HashMap<>();
+            Map<WebKitWorkspaceJobView, List<WorkspaceFluidItem>> wsFluidItmsMap = new HashMap<>();
+            wsFluidItmsMap.put(new WebKitWorkspaceJobView(new JobView(ContentViewPI.PI)), wsFldItms);
+            data.put(new WebKitViewSub(), wsFluidItmsMap);
 
-			ContentViewPI contentViewPI = new ContentViewPI(this.getLoggedInUser(), this.webKitViewContentModelBean);
-			contentViewPI.refreshData(data);
-			return contentViewPI;
-		} catch (Exception fce) {
-			if (fce instanceof FluidClientException) {
-				FluidClientException casted = (FluidClientException)fce;
-				if (casted.getErrorCode() == FluidClientException.ErrorCode.NO_RESULT) {
-					return new ContentViewPI(this.getLoggedInUser(), this.webKitViewContentModelBean);
-				}
-			}
-			this.raiseError(fce);
-			return new ContentViewPI(this.getLoggedInUser(), this.webKitViewContentModelBean);
-		}
-	}
+            ContentViewPI contentViewPI = new ContentViewPI(this.getLoggedInUser(), this.webKitViewContentModelBean);
+            contentViewPI.refreshData(data);
+            return contentViewPI;
+        } catch (Exception fce) {
+            if (fce instanceof FluidClientException) {
+                FluidClientException casted = (FluidClientException)fce;
+                if (casted.getErrorCode() == FluidClientException.ErrorCode.NO_RESULT) {
+                    return new ContentViewPI(this.getLoggedInUser(), this.webKitViewContentModelBean);
+                }
+            }
+            this.raiseError(fce);
+            return new ContentViewPI(this.getLoggedInUser(), this.webKitViewContentModelBean);
+        }
+    }
 
-	@Override
-	protected PersonalInventoryItemVO createABaseWebVO(
-			WebKitViewGroup group,
-			WebKitViewSub sub,
-			WebKitWorkspaceJobView view,
-			FluidItem item
-	) {
-		PersonalInventoryItemVO returnVal = new PersonalInventoryItemVO(item);
-		return returnVal;
-	}
+    @Override
+    protected PersonalInventoryItemVO createABaseWebVO(
+            WebKitViewGroup group,
+            WebKitViewSub sub,
+            WebKitWorkspaceJobView view,
+            FluidItem item
+    ) {
+        PersonalInventoryItemVO returnVal = new PersonalInventoryItemVO(item);
+        return returnVal;
+    }
 
-	/**
-	 * Open an 'Form' for editing or viewing.
-	 * Custom functionality needs to be placed in {@code this#actionOpenFormForEditingFromWorkspace}.
-	 *
-	 * @see #actionOpenForm(WorkspaceFluidItem)
-	 */
-	public void actionOpenFormForEditingFromWorkspace(WorkspaceFluidItem wfItem) {
-		this.setAreaToUpdateForDialogAfterSubmit(null);
-		this.currentOpenFormTitle = null;
-		this.currentlyHaveItemOpen = false;
-		// Dialog or Workspace for form layout;
-		this.dialogDisplay = !this.isOpenItemInWorkspace(wfItem);
-		
-		try {
-			this.openFormBean.startConversation();
-			this.openFormBean.setAreaToUpdateAfterSave(":frmPIContent");
-			this.openFormBean.setConversationCallback(this);
-			this.actionOpenForm(wfItem);
+    /**
+     * Open an 'Form' for editing or viewing.
+     * Custom functionality needs to be placed in {@code this#actionOpenFormForEditingFromWorkspace}.
+     *
+     * @see #actionOpenForm(WorkspaceFluidItem)
+     */
+    public void actionOpenFormForEditingFromWorkspace(WorkspaceFluidItem wfItem) {
+        this.setAreaToUpdateForDialogAfterSubmit(null);
+        this.currentOpenFormTitle = null;
+        this.currentlyHaveItemOpen = false;
+        // Dialog or Workspace for form layout;
+        this.dialogDisplay = !this.isOpenItemInWorkspace(wfItem);
 
-			if (this.dialogDisplay) {
-				// Now open:
-				this.executeJavaScript("PF('varFormDialog').show();");
-			} else {
-				// Only set the title if not dialog display:
-				this.currentOpenFormTitle = wfItem.getFluidItemTitle();
-				this.openFormBean.setAreaToUpdateAfterSave(":panelBreadcrumb: :panelWorkspace");
-			}
-			this.currentlyHaveItemOpen = true;
-		} catch (Exception except) {
-			this.raiseError(except);
-		}
-	}
+        try {
+            this.openFormBean.startConversation();
+            this.openFormBean.setAreaToUpdateAfterSave(":frmPIContent");
+            this.openFormBean.setConversationCallback(this);
+            this.actionOpenForm(wfItem);
 
-	@Override
-	public void afterSaveProcessing(WorkspaceFluidItem workspaceItemSaved) {
-		this.dialogDisplay = false;
-		this.currentlyHaveItemOpen = false;
-		this.currentOpenFormTitle = null;
-		this.actionOpenMainPage();
-	}
+            if (this.dialogDisplay) {
+                // Now open:
+                this.executeJavaScript("PF('varFormDialog').show();");
+            } else {
+                // Only set the title if not dialog display:
+                this.currentOpenFormTitle = wfItem.getFluidItemTitle();
+                this.openFormBean.setAreaToUpdateAfterSave(":panelBreadcrumb: :panelWorkspace");
+            }
+            this.currentlyHaveItemOpen = true;
+        } catch (Exception except) {
+            this.raiseError(except);
+        }
+    }
 
-	@Override
-	public void afterSendOnProcessing(WorkspaceFluidItem workspaceItemSaved) {
-		this.afterSaveProcessing(workspaceItemSaved);
-	}
+    @Override
+    public void afterSaveProcessing(WorkspaceFluidItem workspaceItemSaved) {
+        this.dialogDisplay = false;
+        this.currentlyHaveItemOpen = false;
+        this.currentOpenFormTitle = null;
+        this.actionOpenMainPage();
+    }
 
-	@Override
-	public void closeFormDialog() {
-		this.actionCloseOpenForm();
-	}
+    @Override
+    public void afterSendOnProcessing(WorkspaceFluidItem workspaceItemSaved) {
+        this.afterSaveProcessing(workspaceItemSaved);
+    }
 
-	public void actionRemoveSelectedItemsFromPI() {
-		try {
-			if (this.getContentView().getFluidItemsSelectedList() == null) return;
+    @Override
+    public void closeFormDialog() {
+        this.actionCloseOpenForm();
+    }
 
-			final PersonalInventoryClient piClient = this.getFluidClientDS().getPersonalInventoryClient();
-			this.getContentView().getFluidItemsSelectedList().forEach(itm -> {
-				piClient.removeFromPersonalInventory(itm.getFluidItemForm());
-			});
-			int numberOfSelected = this.getContentView().getFluidItemsSelectedList().size();
+    public void actionRemoveSelectedItemsFromPI() {
+        try {
+            if (this.getContentView().getFluidItemsSelectedList() == null) return;
 
-			this.getContentView().getFluidItemsSelectedList().clear();
-			FacesContext.getCurrentInstance().addMessage(null, new FacesMessage(String.format("%d Removed.", numberOfSelected)));
-			//PrimeFaces.current().ajax().update("form:messages", "form:dt-products");
-		} catch (Exception fce) {
-			this.raiseError(fce);
-		}
-	}
+            final PersonalInventoryClient piClient = this.getFluidClientDS().getPersonalInventoryClient();
+            List<Long> idsToRemove = new ArrayList<>();
+            this.getContentView().getFluidItemsSelectedList().forEach(itm -> {
+                Form form = itm.getFluidItemForm();
+                try {
+                    piClient.removeFromPersonalInventory(form);
+                    idsToRemove.add(form.getId());
+                } catch (Exception err) {
+                    this.raiseError(err);
+                }
+            });
+            int numberOfSelected = this.getContentView().getFluidItemsSelectedList().size();
+            this.getContentView().getFluidItemsSelectedList().clear();
 
-	public void actionRemoveAllItemsFromPI() {
-		try {
-			List<WorkspaceFluidItem> piItems =
-					this.getContentView().getWorkspaceFluidItemsForSection(ContentViewPI.PI);
-			if (piItems == null) return;
-			
-			int numberOfSelected = piItems.size();
-			final PersonalInventoryClient piClient = this.getFluidClientDS().getPersonalInventoryClient();
-			piClient.clearPersonalInventoryItems();
-			piItems.clear();
-			FacesContext.getCurrentInstance().addMessage(null, new FacesMessage(String.format("%d Removed.", numberOfSelected)));
-		} catch (Exception fce) {
-			this.raiseError(fce);
-		}
-	}
+            List<WorkspaceFluidItem> piItems =
+                    this.getContentView().getWorkspaceFluidItemsForSection(ContentViewPI.PI);
+            if (piItems != null && !idsToRemove.isEmpty()) {
+                idsToRemove.forEach(formId -> {
+                    piItems.stream()
+                            .filter(workFluidItm -> formId.equals(workFluidItm.getFluidItemFormId()))
+                            .findFirst().ifPresent(piItems::remove);
+                });
+            }
 
-	public void actionRemoveItemFromPI(WorkspaceFluidItem toRemove) {
-		try {
-			if (toRemove == null) return;
-			final PersonalInventoryClient piClient = this.getFluidClientDS().getPersonalInventoryClient();
-			piClient.removeFromPersonalInventory(toRemove.getFluidItemForm());
+            FacesContext.getCurrentInstance().addMessage(null, new FacesMessage(String.format("%d Removed.", numberOfSelected)));
+        } catch (Exception fce) {
+            this.raiseError(fce);
+        }
+    }
 
-			List<WorkspaceFluidItem> piItems =
-					this.getContentView().getWorkspaceFluidItemsForSection(ContentViewPI.PI);
-			piItems.remove(toRemove);
-			
-			FacesContext.getCurrentInstance().addMessage(null, new FacesMessage(String.format("'%s' Removed.",
-					toRemove.getFluidItemTitle())));
-		} catch (Exception fce) {
-			this.raiseError(fce);
-		}
-	}
+    public void actionRemoveAllItemsFromPI() {
+        try {
+            List<WorkspaceFluidItem> piItems =
+                    this.getContentView().getWorkspaceFluidItemsForSection(ContentViewPI.PI);
+            if (piItems == null) return;
 
-	public int getNumberOfPersonalInventoryItems() {
-		return performanceBean.getUserStatsReport().getPiCount();
-	}
+            int numberOfSelected = piItems.size();
+            final PersonalInventoryClient piClient = this.getFluidClientDS().getPersonalInventoryClient();
+            piClient.clearPersonalInventoryItems();
+            piItems.clear();
+            FacesContext.getCurrentInstance().addMessage(null, new FacesMessage(String.format("%d Removed.", numberOfSelected)));
+        } catch (Exception fce) {
+            this.raiseError(fce);
+        }
+    }
 
-	public int getNumberOfPersonalInventoryLockedItems() {
-		return performanceBean.getUserStatsReport().getPiLockedCount();
-	}
+    public void actionRemoveItemFromPI(WorkspaceFluidItem toRemove) {
+        try {
+            if (toRemove == null) return;
+            final PersonalInventoryClient piClient = this.getFluidClientDS().getPersonalInventoryClient();
+            piClient.removeFromPersonalInventory(toRemove.getFluidItemForm());
 
-	/**
-	 * Prepare to create a new instane of a form.
-	 */
-	public void actionPrepToCreateNewInstanceOf() {
-		this.setAreaToUpdateForDialogAfterSubmit(null);
-		this.currentlyHaveItemOpen = false;
-		this.setDialogHeaderTitle(null);
+            List<WorkspaceFluidItem> piItems =
+                    this.getContentView().getWorkspaceFluidItemsForSection(ContentViewPI.PI);
+            piItems.remove(toRemove);
 
-		Long formIdType = this.getLongRequestParam(RequestParam.FORM_TYPE_ID);
-		String formType = this.getStringRequestParam(RequestParam.FORM_TYPE);
+            FacesContext.getCurrentInstance().addMessage(null, new FacesMessage(String.format("'%s' Removed.",
+                    toRemove.getFluidItemTitle())));
+        } catch (Exception fce) {
+            this.raiseError(fce);
+        }
+    }
 
-		if (this.accessBean.getFormDefinitionsCanCreateInstanceOfSorted() == null) return;
+    public int getNumberOfPersonalInventoryItems() {
+        return performanceBean.getUserStatsReport().getPiCount();
+    }
 
-		Form formDefWithNewInstanceAccess =
-				this.accessBean.getFormDefinitionsCanCreateInstanceOfSorted().stream()
-				.filter(itm -> itm.getFormType().equals(formType) ||
-								(itm.getFormTypeId() != null && itm.getFormTypeId().equals(formIdType)))
-				.findFirst()
-				.orElse(null);
-		if (formDefWithNewInstanceAccess == null) {
-			FacesMessage fMsg = new FacesMessage(
-					FacesMessage.SEVERITY_ERROR, "Failed.", String.format(
-							"You do not have access to '%s'.", formType));
-			FacesContext.getCurrentInstance().addMessage(null, fMsg);
-			return;
-		}
+    public int getNumberOfPersonalInventoryLockedItems() {
+        return performanceBean.getUserStatsReport().getPiLockedCount();
+    }
 
-		FluidItem newFluidItem = new FluidItem(new Form(formDefWithNewInstanceAccess.getFormType()));
-		newFluidItem.getForm().setFormTypeId(formDefWithNewInstanceAccess.getFormTypeId());
-		WorkspaceFluidItem newItem = new WorkspaceFluidItem(new PersonalInventoryItemVO(newFluidItem));
-		try {
-			this.openFormBean.startConversation();
-			this.actionOpenForm(newItem);
-			this.currentlyHaveItemOpen = true;
-		} catch (Exception except) {
-			this.raiseError(except);
-		}
-	}
+    /**
+     * Prepare to create a new instane of a form.
+     */
+    public void actionPrepToCreateNewInstanceOf() {
+        this.setAreaToUpdateForDialogAfterSubmit(null);
+        this.currentlyHaveItemOpen = false;
+        this.setDialogHeaderTitle(null);
+
+        Long formIdType = this.getLongRequestParam(RequestParam.FORM_TYPE_ID);
+        String formType = this.getStringRequestParam(RequestParam.FORM_TYPE);
+
+        if (this.accessBean.getFormDefinitionsCanCreateInstanceOfSorted() == null) return;
+
+        Form formDefWithNewInstanceAccess =
+                this.accessBean.getFormDefinitionsCanCreateInstanceOfSorted().stream()
+                .filter(itm -> itm.getFormType().equals(formType) ||
+                                (itm.getFormTypeId() != null && itm.getFormTypeId().equals(formIdType)))
+                .findFirst()
+                .orElse(null);
+        if (formDefWithNewInstanceAccess == null) {
+            FacesMessage fMsg = new FacesMessage(
+                    FacesMessage.SEVERITY_ERROR, "Failed.", String.format(
+                            "You do not have access to '%s'.", formType));
+            FacesContext.getCurrentInstance().addMessage(null, fMsg);
+            return;
+        }
+
+        FluidItem newFluidItem = new FluidItem(new Form(formDefWithNewInstanceAccess.getFormType()));
+        newFluidItem.getForm().setFormTypeId(formDefWithNewInstanceAccess.getFormTypeId());
+        WorkspaceFluidItem newItem = new WorkspaceFluidItem(new PersonalInventoryItemVO(newFluidItem));
+        try {
+            this.openFormBean.startConversation();
+            this.actionOpenForm(newItem);
+            this.currentlyHaveItemOpen = true;
+        } catch (Exception except) {
+            this.raiseError(except);
+        }
+    }
 }
