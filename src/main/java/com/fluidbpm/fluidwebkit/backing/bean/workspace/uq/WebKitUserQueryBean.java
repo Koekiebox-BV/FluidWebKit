@@ -321,7 +321,10 @@ public class WebKitUserQueryBean extends ABaseWorkspaceBean<UserQueryItemVO, Con
 
 	public Long getUserQueryId() {
 		Long uqId = this.getLongRequestParam(WebKitMenuBean.ReqParam.USER_QUERY_ID);
-		if (uqId < 1L) return this.openPageLastCache.getUserQueryId();
+		if (uqId < 1L &&
+				(this.openPageLastCache != null && this.openPageLastCache.getUserQueryId() != null)) {
+			return this.openPageLastCache.getUserQueryId();
+		}
 		return uqId;
 	}
 
