@@ -873,6 +873,13 @@ public class WebKitOpenFormConversationBean extends ABaseManagedBean {
 		try {
 			FormContainerClient fcClient = this.getFluidClientDS().getFormContainerClient();
 			WorkspaceFluidItem wsFlItem = this.getWsFluidItem();
+			if (wsFlItem == null) {
+				FacesMessage fMsg = new FacesMessage(FacesMessage.SEVERITY_WARN,
+						"Failure", String.format("Workspace Item is not set. Not allowed to execute '%s'.", customAction));
+				FacesContext.getCurrentInstance().addMessage(null, fMsg);
+				return;
+			}
+
 			Form updatedForm = this.toFormToSave(wsFlItem, fcClient, customAction);
 
 			FacesMessage fMsg = new FacesMessage(FacesMessage.SEVERITY_INFO,
