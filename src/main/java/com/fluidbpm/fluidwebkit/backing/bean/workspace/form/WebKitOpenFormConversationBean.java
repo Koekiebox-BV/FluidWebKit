@@ -1176,13 +1176,18 @@ public class WebKitOpenFormConversationBean extends ABaseManagedBean {
 		returnVal.setFormFields(editFormFields);
 
 		WebKitForm wkForm = this.lookAndFeelBean.getWebKitFormWithFormDef(returnVal.getFormType());
+		if (wkForm == null) {
+			throw new ClientDashboardException(
+					String.format("No WebKit Form of type '%s'.", returnVal.getFormType()),
+					ClientDashboardException.ErrorCode.VALIDATION);
+		}
 		returnVal.setFormTypeId(fluidItem.getFluidItemForm().getFormTypeId());
 		returnVal.setFormType(fluidItem.getFluidItemForm().getFormType());
 		returnVal.setTitle(FieldMappingUtil.generateNewFormTitle(
-			this.getDateFormat(),
-			wkForm == null ? null : wkForm.getNewFormTitleFormula(),
-			fluidItem.getFluidItemFormType(),
-			fluidItem.getFormFieldsEditAsFields())
+				this.getDateFormat(),
+				wkForm.getNewFormTitleFormula(),
+				fluidItem.getFluidItemFormType(),
+				fluidItem.getFormFieldsEditAsFields())
 		);
 
 		//Apply the Custom Action when applicable...
