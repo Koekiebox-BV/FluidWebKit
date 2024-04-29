@@ -776,7 +776,7 @@ public abstract class ABaseManagedBean implements Serializable {
 		if (UtilGlobal.isBlank(fieldPropName)) return null;
 
 		try {
-			return Integer.parseInt(asTxt.trim());
+			return (int)Double.parseDouble(asTxt.trim());
 		} catch (NumberFormatException nfe) {
 			return null;
 		}
