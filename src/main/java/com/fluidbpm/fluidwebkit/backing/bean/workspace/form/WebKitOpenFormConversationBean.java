@@ -1092,10 +1092,10 @@ public class WebKitOpenFormConversationBean extends ABaseManagedBean {
 		formToUpdateForm.getFormFields().stream()
 				// Only table fields:
 				.filter(itm -> itm.getTypeAsEnum() == Field.Type.Table)
-				.map(itm -> itm.getFieldValueAsTableField())
+				.map(Field::getFieldValueAsTableField)
 				// Only where there is table records:
 				.filter(tblField -> tblField != null && (tblField.getTableRecords() != null && !tblField.getTableRecords().isEmpty()))
-				.map(tblRecords -> tblRecords.getTableRecords())
+				.map(TableField::getTableRecords)
 				.flatMap(Collection::stream)
 				// Only where modified by currently logged in user and not a placeholder:
 				.filter(tblRecordItm -> loggedInUser.equals(tblRecordItm.getCurrentUser()) &&
