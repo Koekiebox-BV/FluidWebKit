@@ -313,7 +313,7 @@ public class WebKitOpenFormConversationBean extends ABaseManagedBean {
 				//Lock the Form as it is being opened...
 				if (webKitForm.isLockFormOnOpen() && Form.State.OPEN.equals(freshFetchForm.getState())) {
 					fcClient.lockFormContainer(freshFetchForm, wfiParam.getJobView());
-					this.lockByLoggedInUser(freshFetchForm);
+					this.lockByLoggedInUserLocally(freshFetchForm);
 				}
 
 				//Fetch the table field forms...
@@ -453,17 +453,26 @@ public class WebKitOpenFormConversationBean extends ABaseManagedBean {
 		Separator sep = new DefaultSeparator();
 		//Save Button...
 		if (!this.getWsFluidItem().isFormLocked() || this.getWsFluidItem().isFormLockedByLoggedInUser()) {
-
 			final String areaToUpdate;
 			if (UtilGlobal.isBlank(this.getAreaToUpdateAfterSave())) areaToUpdate = UtilGlobal.EMPTY;
 			else areaToUpdate = String.format(" %s", this.getAreaToUpdateAfterSave());
-			DefaultMenuItem itemSave = DefaultMenuItem.builder()
-					.value("Save")
-					.icon("pi pi-save")
-					.command("#{webKitOpenFormConversationBean.actionSaveForm('varFormDialog', '')}")
+
+			this.contextMenuModel.getElements().add(
+					DefaultMenuItem.builder()
+							.value("Save")
+							.icon("pi pi-save")
+							.command("#{webKitOpenFormConversationBean.actionSaveForm('varFormDialog', '')}")
+							.update(String.format("manage-product-content growl%s", areaToUpdate))
+							.build()
+			);
+
+			this.contextMenuModel.getElements().add(DefaultMenuItem.builder()
+					.value("Save Progress")
+					.icon("pi pi-bolt")
+					.command("#{webKitOpenFormConversationBean.actionSaveForm('', '', true)}")
 					.update(String.format("manage-product-content growl%s", areaToUpdate))
-					.build();
-			this.contextMenuModel.getElements().add(itemSave);
+					.build()
+			);
 		}
 
 		String formDef = this.getWsFluidItem().getFluidItemFormType();
@@ -894,8 +903,11 @@ public class WebKitOpenFormConversationBean extends ABaseManagedBean {
 	}
 
 	public void actionSaveForm(String dialogToHideAfterSuccess, String varBtnToEnableFailedSave) {
-		if (this.getFluidClientDS() == null) return;
+		this.actionSaveForm(dialogToHideAfterSuccess, varBtnToEnableFailedSave, false);
+	}
 
+	public void actionSaveForm(String dialogToHideAfterSuccess, String varBtnToEnableFailedSave, boolean saveOnly) {
+		if (this.getFluidClientDS() == null) return;
 		try {
 			String actionString = "Created";
 			FormContainerClient fcClient = this.getFluidClientDS().getFormContainerClient();
@@ -906,10 +918,10 @@ public class WebKitOpenFormConversationBean extends ABaseManagedBean {
 			if (wsFlItem.isFluidItemFormSet()) {
 				actionString = "Updated";
 				// Always lock the form first on a save:
-				if (!wsFlItem.isFormLockedByLoggedInUser()) {
+				if (!saveOnly && !wsFlItem.isFormLockedByLoggedInUser()) {
 					//Lock then send it on:
 					fcClient.lockFormContainer(wsFlItem.getFluidItemForm(), wsFlItem.getJobView());
-					this.lockByLoggedInUser(wsFlItem.getFluidItemForm());
+					this.lockByLoggedInUserLocally(wsFlItem.getFluidItemForm());
 				}
 
 				// Update the Table Records:
@@ -925,16 +937,24 @@ public class WebKitOpenFormConversationBean extends ABaseManagedBean {
 					//Set to Send on After and Form in Workflow state
 					if (webKitForm.isSendOnAfterSave() && wsFlItem.isFluidItemInWIPState()) {
 						// Send on in the workflow:
-						fiClient.sendFlowItemOn(wsFlItem.getFluidItem(), true);
-						actionString = String.format("%s and placed successfully. Please verify processed results for final status.", actionString);
+						if (saveOnly) {
+							actionString = String.format("%s and Progress Saved", actionString);
+						} else {
+							fiClient.sendFlowItemOn(wsFlItem.getFluidItem(), true);
+							actionString = String.format("%s and placed successfully. Please verify processed results for final status", actionString);
+						}
 					} else if (!wsFlItem.isFluidItemInWIPState() && UtilGlobal.isNotBlank(this.inputSelectedWorkflow)) {
 						// Not in workflow and a workflow route has been selected:
-						fiClient.sendFormToFlow(wsFlItem.getFluidItemForm(), this.inputSelectedWorkflow);
-						actionString = String.format("%s and placed on '%s' successfully. Please verify processed results for final status.",
-								actionString, this.inputSelectedWorkflow);
+						if (saveOnly) {
+							actionString = String.format("%s and Progress Saved.", actionString);
+						} else {
+							fiClient.sendFormToFlow(wsFlItem.getFluidItemForm(), this.inputSelectedWorkflow);
+							actionString = String.format("%s and placed on '%s' successfully. Please verify processed results for final status",
+									actionString, this.inputSelectedWorkflow);
+						}
 					} else if (webKitForm.isUnlockFormOnSave()) {
 						// Unlock form on save:
-						fcClient.unLockFormContainer(wsFlItem.getFluidItemForm());
+						if (!saveOnly) fcClient.unLockFormContainer(wsFlItem.getFluidItemForm());
 					}
 				}
 			} else {
@@ -951,17 +971,19 @@ public class WebKitOpenFormConversationBean extends ABaseManagedBean {
 				//Update attachments:
 				this.handleAttachmentStorageForForm(createdForm.getId());
 
-				if (sendingOn) {
-					fiClient.sendFormToFlow(createdForm, this.inputSelectedWorkflow);
-					actionString = String.format("%s and Sent to '%s'", actionString, this.inputSelectedWorkflow);
-				} else if (webKitForm.isUnlockFormOnSave()) {
-					fcClient.unLockFormContainer(createdForm);
+				if (!saveOnly) {
+					if (sendingOn) {
+						fiClient.sendFormToFlow(createdForm, this.inputSelectedWorkflow);
+						actionString = String.format("%s and Sent to '%s'", actionString, this.inputSelectedWorkflow);
+					} else if (webKitForm.isUnlockFormOnSave()) {
+						fcClient.unLockFormContainer(createdForm);
+					}
 				}
 			}
 
-			// After 'Save' Processing:
 			if (UtilGlobal.isBlank(dialogToHideAfterSuccess)) {
-				if (this.conversationCallback != null) {
+				// After 'Save' Processing:
+				if (!saveOnly && this.conversationCallback != null) {
 					this.conversationCallback.afterSaveProcessing(wsFlItem);
 				}
 			} else {
@@ -1261,7 +1283,7 @@ public class WebKitOpenFormConversationBean extends ABaseManagedBean {
 		});
 	}
 
-	private void lockByLoggedInUser(Form form) {
+	private void lockByLoggedInUserLocally(Form form) {
 		form.setCurrentUser(this.getLoggedInUser());
 		form.setState(Form.State.LOCKED);
 	}
