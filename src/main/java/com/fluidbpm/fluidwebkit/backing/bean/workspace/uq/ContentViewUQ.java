@@ -20,7 +20,6 @@ import com.fluidbpm.fluidwebkit.backing.bean.config.WebKitAccessBean;
 import com.fluidbpm.fluidwebkit.backing.bean.workspace.WorkspaceFluidItem;
 import com.fluidbpm.fluidwebkit.backing.bean.workspace.contentview.ABaseContentView;
 import com.fluidbpm.fluidwebkit.backing.bean.workspace.contentview.WebKitViewContentModelBean;
-import com.fluidbpm.fluidwebkit.exception.ClientDashboardException;
 import com.fluidbpm.program.api.util.UtilGlobal;
 import com.fluidbpm.program.api.vo.field.Field;
 import com.fluidbpm.program.api.vo.field.MultiChoice;
@@ -271,11 +270,8 @@ public class ContentViewUQ extends ABaseContentView {
 		String section = this.getSections()[0];
 
 		if (this.sectionFilterableColumns == null) {
+			if (this.wkUserQuery == null) return new HashMap<>();
 			this.sectionFilterableColumns = new HashMap<>();
-
-			if (this.wkUserQuery == null)
-				throw new ClientDashboardException("WebKit UserQuery is not set.",
-						ClientDashboardException.ErrorCode.VALIDATION);
 
 			String userQueryName = this.wkUserQuery.getUserQuery().getName();
 			UserQuery freshFetch = this.accessBean.fetchUserQueryWithNameUsingConfigUser(userQueryName);
