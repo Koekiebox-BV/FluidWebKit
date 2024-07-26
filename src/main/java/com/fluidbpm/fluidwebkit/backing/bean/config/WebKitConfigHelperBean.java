@@ -189,7 +189,7 @@ public class WebKitConfigHelperBean extends ABaseManagedBean {
 	}
 
 	public int getUserBrowserSessionDialogWidth() {
-		return (this.getUserBrowserSessionWindowWidth() - 200);
+		return (this.getUserBrowserSessionWindowWidth() - 50);
 	}
 
 	public int getUserBrowserSessionScrollableHeight() {
@@ -213,7 +213,7 @@ public class WebKitConfigHelperBean extends ABaseManagedBean {
 		if (httpSessionObj instanceof HttpSession) {
 			HttpSession casted = (HttpSession)httpSessionObj;
 			Object heightValue = casted.getAttribute(SessionVariable.USER_BROWSER_WINDOW_WIDTH);
-			if (heightValue != null && heightValue instanceof Number) return ((Number)heightValue).intValue();
+			if (heightValue instanceof Number) return ((Number)heightValue).intValue();
 		}
 		return 500;
 	}
