@@ -130,10 +130,6 @@ public class GuestPreferencesBean extends ABaseManagedBean {
 		return this.webKitGlobal.getLayoutMode();
 	}
 
-	public boolean isLightLogo() {
-		return lightLogo;
-	}
-
 	public void setDarkMode(String darkMode) {
 		this.webKitGlobal.setLayoutMode(darkMode);
 		this.webKitGlobal.setMenuTheme(darkMode);

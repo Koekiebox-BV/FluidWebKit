@@ -102,6 +102,7 @@ public class WebKitOpenFormFieldHistoryConversationBean extends ABaseManagedBean
 	}
 	
 	@Data
+	@EqualsAndHashCode(callSuper = false)
 	@NoArgsConstructor
 	@ToString
 	public static class PriorField extends Field {
