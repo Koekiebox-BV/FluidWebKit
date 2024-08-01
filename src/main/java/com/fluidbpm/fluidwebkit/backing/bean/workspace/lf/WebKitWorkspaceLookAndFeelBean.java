@@ -915,6 +915,7 @@ public class WebKitWorkspaceLookAndFeelBean extends ABaseManagedBean {
 
 	public WebKitForm getWebKitFormWithFormDef(String formDefType) {
 		if (formDefType == null) return null;
+		if (this.webKitForms == null) return null;
 		return this.webKitForms.stream()
 				.filter(itm -> formDefType.equals(itm.getForm().getFormType()))
 				.findFirst()
