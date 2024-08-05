@@ -147,15 +147,16 @@ public class ImageUtil {
 	public static byte[] getContentForPath(String path) throws IOException {
 		if (path == null || path.isEmpty()) throw new IOException("Path to content in package is not set!");
 
-		InputStream inputStream = ImageUtil.class.getClassLoader().getResourceAsStream(path);
-		if (inputStream == null) throw new IOException("Unable to find '"+ path+"'.");
+		try (InputStream inputStream = ImageUtil.class.getClassLoader().getResourceAsStream(path);) {
+			if (inputStream == null) throw new IOException("Unable to find '"+ path+"'.");
 
-		try (ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
-			int readVal = -1;
-			while ((readVal = inputStream.read()) != -1) baos.write(readVal);
+			try (ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
+				int readVal = -1;
+				while ((readVal = inputStream.read()) != -1) baos.write(readVal);
 
-			baos.flush();
-			return baos.toByteArray();
+				baos.flush();
+				return baos.toByteArray();
+			}
 		}
 	}
 }
