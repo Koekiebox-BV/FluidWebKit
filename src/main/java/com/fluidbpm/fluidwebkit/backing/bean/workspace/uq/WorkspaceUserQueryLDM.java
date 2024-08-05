@@ -4,7 +4,7 @@ import com.fluidbpm.fluidwebkit.backing.bean.ABaseLDM;
 import com.fluidbpm.fluidwebkit.backing.bean.workspace.WorkspaceFluidItem;
 import com.fluidbpm.fluidwebkit.ds.FluidClientDS;
 import com.fluidbpm.program.api.vo.field.Field;
-import com.fluidbpm.program.api.vo.item.FluidItemListing;
+import com.fluidbpm.program.api.vo.item.FluidItem;
 import com.fluidbpm.program.api.vo.userquery.UserQuery;
 import com.fluidbpm.program.api.vo.webkit.userquery.WebKitUserQuery;
 import com.fluidbpm.ws.client.v1.userquery.UserQueryClient;
@@ -60,7 +60,7 @@ public class WorkspaceUserQueryLDM extends ABaseLDM<WorkspaceFluidItem> {
 			UserQuery userQueryToExec = new UserQuery(this.userQueryId);
 			userQueryToExec.setInputs(inputFields);
 
-			FluidItemListing result = userQueryClient.executeUserQuery(
+			List<FluidItem> result = userQueryClient.executeUserQuery(
 				userQueryToExec,
 				false,
 				executeCustomProgramLabels,
@@ -71,19 +71,19 @@ public class WorkspaceUserQueryLDM extends ABaseLDM<WorkspaceFluidItem> {
 			long end = System.currentTimeMillis();
 
 			List<WorkspaceFluidItem> wfiList = new ArrayList<>();
-			this.setRowCount(result.getListingCount());
+			this.setRowCount(result.size());
 
-			if (result.getListingCount() > 0) {
-				result.getListing().forEach(flItm -> {
+			if (!result.isEmpty()) {
+				result.forEach(flItm -> {
 					UserQueryItemVO vo = this.webKitUserQueryBean.createABaseWebVO(null, null, null, flItm);
 					wfiList.add(new WorkspaceFluidItem(vo));
 				});
 			}
 
-			if (result.getListingCount() > 0) {
+			if (!result.isEmpty()) {
 				FacesMessage fMsg = new FacesMessage(FacesMessage.SEVERITY_INFO,
 						"Success.", String.format("Total of %d results took %d millis.",
-						result.getListingCount(), end - now));
+						result.size(), end - now));
 				FacesContext.getCurrentInstance().addMessage(null, fMsg);
 			} else {
 				FacesMessage fMsg = new FacesMessage(FacesMessage.SEVERITY_WARN,

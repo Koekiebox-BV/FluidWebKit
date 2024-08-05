@@ -23,7 +23,6 @@ import com.fluidbpm.program.api.vo.flow.JobViewListing;
 import com.fluidbpm.program.api.vo.form.Form;
 import com.fluidbpm.program.api.vo.user.User;
 import com.fluidbpm.program.api.vo.userquery.UserQuery;
-import com.fluidbpm.program.api.vo.userquery.UserQueryListing;
 import com.fluidbpm.ws.client.v1.flow.FlowStepClient;
 import com.fluidbpm.ws.client.v1.form.FormDefinitionClient;
 import com.fluidbpm.ws.client.v1.form.FormFieldClient;
@@ -230,8 +229,7 @@ public class WebKitAccessBean extends ABaseManagedBean {
 	private void cacheUserQueries() {
 		long now = System.currentTimeMillis();
 		UserQueryClient userQueryClient = this.getFluidClientDS().getUserQueryClient();
-		UserQueryListing userQueries = userQueryClient.getAllUserQueriesByLoggedInUser();
-		this.userQueriesCanExecute = userQueries.getListing();
+		this.userQueriesCanExecute = userQueryClient.getAllUserQueriesByLoggedInUser();
 		if (this.userQueriesCanExecute == null) this.userQueriesCanExecute = new ArrayList<>();
 		
 		this.getLogger().info("FFC-Bean: We have all the user queries (Took [%d]). Now to fetch the fields for them.",

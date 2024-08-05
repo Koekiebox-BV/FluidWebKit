@@ -110,7 +110,7 @@ public class PeriodicUpdateBean extends ABaseManagedBean {
 	private void populateWebKitUserQueries() {
 		this.configWebKitUserQueries = new ArrayList<>();
 		try {
-			this.configWebKitUserQueries = this.getFluidClientDSConfig().getUserQueryClient().getUserQueryWebKit().getListing();
+			this.configWebKitUserQueries = this.getFluidClientDSConfig().getUserQueryClient().getUserQueryWebKit();
 		} catch (FluidClientException fce) {
 			if (fce.getErrorCode() != FluidClientException.ErrorCode.NO_RESULT) throw fce;
 		}

@@ -235,7 +235,7 @@ public class WebKitWorkspaceLookAndFeelBean extends ABaseManagedBean {
 			try {
 				this.webKitUserQueries = this.periodicUpdateBean.getWebKitUserQueries();
 				if (this.webKitUserQueries == null) {
-					this.webKitUserQueries = configDS.getUserQueryClient().getUserQueryWebKit().getListing();
+					this.webKitUserQueries = configDS.getUserQueryClient().getUserQueryWebKit();
 					this.periodicUpdateBean.setWebKitUserQueries(this.webKitUserQueries);
 				}
 				this.userQueryLDM.addToInitialListing(this.webKitUserQueries);

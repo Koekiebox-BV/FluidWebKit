@@ -27,7 +27,7 @@ import com.fluidbpm.program.api.vo.flow.JobView;
 import com.fluidbpm.program.api.vo.flow.JobViewListing;
 import com.fluidbpm.program.api.vo.item.FluidItem;
 import com.fluidbpm.program.api.vo.item.FluidItemListing;
-import com.fluidbpm.program.api.vo.userquery.UserQueryListing;
+import com.fluidbpm.program.api.vo.userquery.UserQuery;
 import com.fluidbpm.program.api.vo.webkit.RowExpansion;
 import com.fluidbpm.program.api.vo.webkit.form.WebKitForm;
 import com.fluidbpm.program.api.vo.webkit.viewgroup.WebKitViewGroup;
@@ -64,7 +64,7 @@ import java.util.stream.Collectors;
  */
 public abstract class ABaseWorkspaceBean<T extends ABaseWebVO, J extends ABaseContentView> extends ABaseManagedBean {
 	private JobViewListing jobViewListing = new JobViewListing();
-	protected UserQueryListing userQueryListing = new UserQueryListing();
+	protected List<UserQuery> userQueryListing = new ArrayList<>();
 	//Views...
 	protected List<JobView> viewsAll;
 	protected Map<String, List<JobView>> loggedInUsrViewGroupPlacings;
