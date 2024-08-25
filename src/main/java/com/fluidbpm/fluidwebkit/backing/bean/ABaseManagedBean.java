@@ -28,6 +28,7 @@ import com.fluidbpm.program.api.util.UtilGlobal;
 import com.fluidbpm.program.api.vo.field.Field;
 import com.fluidbpm.program.api.vo.field.MultiChoice;
 import com.fluidbpm.program.api.vo.form.Form;
+import com.fluidbpm.program.api.vo.role.AdminPermission;
 import com.fluidbpm.program.api.vo.role.Role;
 import com.fluidbpm.program.api.vo.thirdpartylib.ThirdPartyLibraryTaskIdentifier;
 import com.fluidbpm.program.api.vo.user.User;
@@ -458,13 +459,20 @@ public abstract class ABaseManagedBean implements Serializable {
 		return params;
 	}
 
-	public boolean doesUserHavePermission(String permissionsParam) {
-		String permissionLower = permissionsParam.toLowerCase();
+	public boolean doesUserHavePermission(String permissions) {
+		String permissionLower = permissions.toLowerCase();
 		return this.doesUserHavePermissionArray(permissionLower.split("\\|"));
 	}
 
-	public boolean doesUserHavePermissionArray(String ... permissionParam) {
-		if (permissionParam == null || permissionParam.length == 0) return false;
+	public boolean doesUserHavePermission(AdminPermission ... adminPermissions) {
+		String[] strings = new String[adminPermissions.length];
+		for (int i = 0; i < strings.length;i++) strings[i] = adminPermissions[i].toString();
+
+		return this.doesUserHavePermissionArray(strings);
+	}
+
+	public boolean doesUserHavePermissionArray(String ... permissions) {
+		if (permissions == null || permissions.length == 0) return false;
 
 		User loggedInUser = null;
 		try {
@@ -483,7 +491,7 @@ public abstract class ABaseManagedBean implements Serializable {
 		if (roles == null || roles.isEmpty()) return false;
 
 		Map<String, Boolean> accessMap = new HashMap<>();
-		for (String param : permissionParam) accessMap.put(param, Boolean.FALSE);
+		for (String param : permissions) accessMap.put(param, Boolean.FALSE);
 
 		List<Role> updatedRolesForReCache = new ArrayList<>();
 		for (Role role : roles) {
@@ -494,13 +502,13 @@ public abstract class ABaseManagedBean implements Serializable {
 				updatedRolesForReCache.add(roleById);
 			}
 
-			for (String param : permissionParam) {
+			for (String param : permissions) {
 				if (role.getAdminPermissions().contains(param)) accessMap.put(param, Boolean.TRUE);
 			}
 		}
 
 		AtomicBoolean returnVal = new AtomicBoolean(true);
-		accessMap.values().stream().forEach(bool -> {
+		accessMap.values().forEach(bool -> {
 			if (!bool) {
 				returnVal.set(false);
 				return;
