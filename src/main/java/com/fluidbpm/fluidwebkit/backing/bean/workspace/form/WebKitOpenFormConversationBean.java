@@ -913,6 +913,12 @@ public class WebKitOpenFormConversationBean extends ABaseManagedBean {
 			FormContainerClient fcClient = this.getFluidClientDS().getFormContainerClient();
 			FlowItemClient fiClient = this.getFluidClientDS().getFlowItemClient();
 			WorkspaceFluidItem wsFlItem = this.getWsFluidItem();
+			if (wsFlItem == null) {
+				throw new ClientDashboardException(
+						"Workspace item is not set! Potential timeout.",
+						ClientDashboardException.ErrorCode.VALIDATION
+				);
+			}
 			WebKitForm webKitForm = wsFlItem.getWebKitForm();
 
 			if (wsFlItem.isFluidItemFormSet()) {
