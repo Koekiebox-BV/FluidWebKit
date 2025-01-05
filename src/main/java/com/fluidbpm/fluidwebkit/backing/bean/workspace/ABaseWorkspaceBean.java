@@ -122,6 +122,7 @@ public abstract class ABaseWorkspaceBean<T extends ABaseWebVO, J extends ABaseCo
 
 		//Create new Form instance...
 		public static final String FORM_TYPE = "formType";
+		public static final String GROUP_NAME = "groupName";
 		public static final String FORM_TYPE_ID = "formTypeId";
 
 		//User Query Search...

@@ -21,15 +21,19 @@ import com.fluidbpm.fluidwebkit.backing.bean.workspace.ABaseWorkspaceBean;
 import com.fluidbpm.fluidwebkit.backing.bean.workspace.WorkspaceFluidItem;
 import com.fluidbpm.fluidwebkit.backing.bean.workspace.contentview.WebKitViewContentModelBean;
 import com.fluidbpm.fluidwebkit.backing.bean.workspace.form.IConversationCallback;
+import com.fluidbpm.fluidwebkit.backing.bean.workspace.lf.WebKitWorkspaceLookAndFeelBean;
 import com.fluidbpm.program.api.util.UtilGlobal;
 import com.fluidbpm.program.api.vo.flow.JobView;
 import com.fluidbpm.program.api.vo.form.Form;
 import com.fluidbpm.program.api.vo.item.FluidItem;
+import com.fluidbpm.program.api.vo.webkit.form.WebKitForm;
 import com.fluidbpm.program.api.vo.webkit.viewgroup.WebKitViewGroup;
 import com.fluidbpm.program.api.vo.webkit.viewgroup.WebKitViewSub;
 import com.fluidbpm.program.api.vo.webkit.viewgroup.WebKitWorkspaceJobView;
 import com.fluidbpm.ws.client.FluidClientException;
 import com.fluidbpm.ws.client.v1.user.PersonalInventoryClient;
+import lombok.Getter;
+import lombok.Setter;
 
 import javax.annotation.PostConstruct;
 import javax.enterprise.context.SessionScoped;
@@ -58,6 +62,17 @@ implements IConversationCallback {
 
     @Inject
     private WebKitAccessBean accessBean;
+
+    @Inject
+    private WebKitWorkspaceLookAndFeelBean lookAndFeelBean;
+
+    @Getter
+    @Setter
+    private String formsListGroupName;
+
+    @Getter
+    @Setter
+    private List<WebKitForm> formsListForGroup;
 
     @Override
     @PostConstruct
@@ -276,7 +291,7 @@ implements IConversationCallback {
     }
 
     /**
-     * Prepare to create a new instane of a form.
+     * Prepare to create a new instance of a form.
      */
     public void actionPrepToCreateNewInstanceOf() {
         this.setAreaToUpdateForDialogAfterSubmit(null);
@@ -309,6 +324,23 @@ implements IConversationCallback {
             this.openFormBean.startConversation();
             this.actionOpenForm(newItem);
             this.currentlyHaveItemOpen = true;
+        } catch (Exception except) {
+            this.raiseError(except);
+        }
+    }
+
+    /**
+     * List all the items for a group.
+     */
+    public void actionPrepToListItemsForGroupToCreateNewInstanceOf() {
+        this.formsListForGroup = new ArrayList<>();
+        this.formsListGroupName = this.getStringRequestParam(RequestParam.GROUP_NAME);
+        if (UtilGlobal.isBlank(this.formsListGroupName)) return;
+
+        try {
+            this.formsListForGroup = this.lookAndFeelBean.getFormDefinitionsCanCreateInstanceOfGrouped().get(
+                    this.formsListGroupName
+            );
         } catch (Exception except) {
             this.raiseError(except);
         }
