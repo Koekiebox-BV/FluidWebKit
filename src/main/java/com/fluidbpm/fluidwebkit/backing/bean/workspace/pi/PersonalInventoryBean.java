@@ -293,7 +293,7 @@ implements IConversationCallback {
     /**
      * Prepare to create a new instance of a form.
      */
-    public void actionPrepToCreateNewInstanceOf() {
+    public WorkspaceFluidItem actionPrepToCreateNewInstanceOf() {
         this.setAreaToUpdateForDialogAfterSubmit(null);
         this.currentlyHaveItemOpen = false;
         this.setDialogHeaderTitle(null);
@@ -301,7 +301,7 @@ implements IConversationCallback {
         Long formIdType = this.getLongRequestParam(RequestParam.FORM_TYPE_ID);
         String formType = this.getStringRequestParam(RequestParam.FORM_TYPE);
 
-        if (this.accessBean.getFormDefinitionsCanCreateInstanceOfSorted() == null) return;
+        if (this.accessBean.getFormDefinitionsCanCreateInstanceOfSorted() == null) return null;
 
         Form formDefWithNewInstanceAccess =
                 this.accessBean.getFormDefinitionsCanCreateInstanceOfSorted().stream()
@@ -314,7 +314,7 @@ implements IConversationCallback {
                     FacesMessage.SEVERITY_ERROR, "Failed.", String.format(
                             "You do not have access to '%s'.", formType));
             FacesContext.getCurrentInstance().addMessage(null, fMsg);
-            return;
+            return null;
         }
 
         FluidItem newFluidItem = new FluidItem(new Form(formDefWithNewInstanceAccess.getFormType()));
@@ -324,8 +324,10 @@ implements IConversationCallback {
             this.openFormBean.startConversation();
             this.actionOpenForm(newItem);
             this.currentlyHaveItemOpen = true;
+            return newItem;
         } catch (Exception except) {
             this.raiseError(except);
+            return null;
         }
     }
 
