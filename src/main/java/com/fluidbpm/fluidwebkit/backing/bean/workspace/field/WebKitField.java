@@ -41,6 +41,10 @@ public class WebKitField extends Field {
 
 	private List<String> allowedAvailMultiChoiceForUser;
 
+	public WebKitField(Field field) {
+		this(field.getId(), field.getFieldName(), field.getFieldValue(), field.getTypeAsEnum());
+	}
+
 	public WebKitField(
 		Long fieldIdParam,
 		String fieldNameParam,

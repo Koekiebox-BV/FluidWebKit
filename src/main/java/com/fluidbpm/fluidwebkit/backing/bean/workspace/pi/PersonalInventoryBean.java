@@ -324,7 +324,7 @@ implements IConversationCallback {
             this.openFormBean.startConversation();
             this.actionOpenForm(newItem);
             this.currentlyHaveItemOpen = true;
-            return newItem;
+            return this.openFormBean.getWsFluidItem();
         } catch (Exception except) {
             this.raiseError(except);
             return null;
