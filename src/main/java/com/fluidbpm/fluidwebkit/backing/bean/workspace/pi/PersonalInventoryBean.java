@@ -292,6 +292,7 @@ implements IConversationCallback {
 
     /**
      * Prepare to create a new instance of a form.
+     * @return initiated {@code WorkspaceFluidItem}
      */
     public WorkspaceFluidItem actionPrepToCreateNewInstanceOf() {
         this.setAreaToUpdateForDialogAfterSubmit(null);
