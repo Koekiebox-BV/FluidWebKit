@@ -208,7 +208,7 @@ public class WebKitOpenFormConversationBean extends ABaseManagedBean {
 		return (this.conversation == null);
 	}
 
-	public void actionFreshLoadFormAndSet(WorkspaceFluidItem wfiParam) {
+	public WorkspaceFluidItem actionFreshLoadFormAndSet(WorkspaceFluidItem wfiParam) {
 		this.setDialogHeaderTitle(null);
 		this.setWsFluidItem(null);
 		this.setTableRecordWSFluidItems(null);
@@ -223,8 +223,8 @@ public class WebKitOpenFormConversationBean extends ABaseManagedBean {
 		this.setInputWorkflowsForFormDef(new ArrayList<>());
 		this.setInputSelectedWorkflow(null);
 
-		if (wfiParam == null) return;
-		if (this.getFluidClientDS() == null) return;
+		if (wfiParam == null) return null;
+		if (this.getFluidClientDS() == null) return null;
 
 		wfiParam.resetFormFieldsEditMandatoryAndEmpty();
 
@@ -379,6 +379,8 @@ public class WebKitOpenFormConversationBean extends ABaseManagedBean {
 
 		//The Context Menu...
 		this.buildContextMenuForConversation();
+
+		return this.getWsFluidItem();
 	}
 
 	private void applyCurrencyFormatting() {

@@ -81,8 +81,8 @@ implements IConversationCallback {
     }
 
     @Override
-    public void actionOpenForm(WorkspaceFluidItem workspaceFluidItem) {
-        this.openFormBean.actionFreshLoadFormAndSet(workspaceFluidItem);
+    public WorkspaceFluidItem actionOpenForm(WorkspaceFluidItem workspaceFluidItem) {
+        return this.openFormBean.actionFreshLoadFormAndSet(workspaceFluidItem);
     }
 
     @Override
@@ -170,7 +170,8 @@ implements IConversationCallback {
      *
      * @see #actionOpenForm(WorkspaceFluidItem)
      */
-    public void actionOpenFormForEditingFromWorkspace(WorkspaceFluidItem wfItem) {
+    @Override
+    public WorkspaceFluidItem actionOpenFormForEditingFromWorkspace(WorkspaceFluidItem wfItem) {
         this.setAreaToUpdateForDialogAfterSubmit(null);
         this.currentOpenFormTitle = null;
         this.currentlyHaveItemOpen = false;
@@ -181,7 +182,7 @@ implements IConversationCallback {
             this.openFormBean.startConversation();
             this.openFormBean.setAreaToUpdateAfterSave(":frmPIContent");
             this.openFormBean.setConversationCallback(this);
-            this.actionOpenForm(wfItem);
+            WorkspaceFluidItem returnval = this.actionOpenForm(wfItem);
 
             if (this.dialogDisplay) {
                 // Now open:
@@ -192,8 +193,10 @@ implements IConversationCallback {
                 this.openFormBean.setAreaToUpdateAfterSave(":panelBreadcrumb: :panelWorkspace");
             }
             this.currentlyHaveItemOpen = true;
+            return returnval;
         } catch (Exception except) {
             this.raiseError(except);
+            return null;
         }
     }
 

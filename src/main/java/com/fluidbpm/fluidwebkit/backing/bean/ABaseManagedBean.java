@@ -802,4 +802,25 @@ public abstract class ABaseManagedBean implements Serializable {
 				"yes".equals(asTxt)
 		));
 	}
+
+	public void raiseMessageWarning(String summary, String detail) {
+		this.raiseMessage(FacesMessage.SEVERITY_WARN, summary, detail);
+	}
+
+	public void raiseMessageInfo(String summary, String detail) {
+		this.raiseMessage(FacesMessage.SEVERITY_INFO, summary, detail);
+	}
+
+	public void raiseMessageError(String summary, String detail) {
+		this.raiseMessage(FacesMessage.SEVERITY_ERROR, summary, detail);
+	}
+
+	public void raiseMessageFatal(String summary, String detail) {
+		this.raiseMessage(FacesMessage.SEVERITY_FATAL, summary, detail);
+	}
+
+	private void raiseMessage(FacesMessage.Severity severity, String summary, String detail) {
+		FacesMessage fMsg = new FacesMessage(severity, summary, detail);
+		FacesContext.getCurrentInstance().addMessage(null, fMsg);
+	}
 }

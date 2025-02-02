@@ -68,8 +68,8 @@ public class WorkspaceBean extends ABaseWorkspaceBean<JobViewItemVO, ContentView
 	};
 
 	@Override
-	public void actionOpenForm(WorkspaceFluidItem workspaceFluidItem) {
-		this.openFormBean.actionFreshLoadFormAndSet(workspaceFluidItem);
+	public WorkspaceFluidItem actionOpenForm(WorkspaceFluidItem workspaceFluidItem) {
+		return this.openFormBean.actionFreshLoadFormAndSet(workspaceFluidItem);
 	}
 
 	@Override
@@ -141,7 +141,8 @@ public class WorkspaceBean extends ABaseWorkspaceBean<JobViewItemVO, ContentView
 	 *
 	 * @see #actionOpenForm(WorkspaceFluidItem)
 	 */
-	public void actionOpenFormForEditingFromWorkspace(WorkspaceFluidItem wfItem) {
+	@Override
+	public WorkspaceFluidItem actionOpenFormForEditingFromWorkspace(WorkspaceFluidItem wfItem) {
 		this.setAreaToUpdateForDialogAfterSubmit(null);
 		this.currentOpenFormTitle = null;
 		this.currentlyHaveItemOpen = false;
@@ -152,7 +153,7 @@ public class WorkspaceBean extends ABaseWorkspaceBean<JobViewItemVO, ContentView
 			this.openFormBean.startConversation();
 			this.openFormBean.setAreaToUpdateAfterSave(":panelWorkspace");
 			this.openFormBean.setConversationCallback(this);
-			this.actionOpenForm(wfItem);
+			WorkspaceFluidItem returnVal = this.actionOpenForm(wfItem);
 
 			if (this.dialogDisplay) {
 				// Now open:
@@ -163,8 +164,10 @@ public class WorkspaceBean extends ABaseWorkspaceBean<JobViewItemVO, ContentView
 				this.openFormBean.setAreaToUpdateAfterSave(":panelBreadcrumb: :panelWorkspace");
 			}
 			this.currentlyHaveItemOpen = true;
+			return returnVal;
 		} catch (Exception except) {
 			this.raiseError(except);
+			return null;
 		}
 	}
 

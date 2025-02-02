@@ -287,7 +287,7 @@ public abstract class ABaseWorkspaceBean<T extends ABaseWebVO, J extends ABaseCo
 	 *
 	 * @see #actionOpenForm(WorkspaceFluidItem)
 	 */
-	public abstract void actionOpenFormForEditingFromWorkspace(WorkspaceFluidItem workspaceFluidItem);
+	public abstract WorkspaceFluidItem actionOpenFormForEditingFromWorkspace(WorkspaceFluidItem workspaceFluidItem);
 
 	/**
 	 * Custom functionality for when a Form is clicked on to be opened.
@@ -295,7 +295,7 @@ public abstract class ABaseWorkspaceBean<T extends ABaseWebVO, J extends ABaseCo
 	 *
 	 * @param workspaceFluidItem The workitem to open.
 	 */
-	public abstract void actionOpenForm(WorkspaceFluidItem workspaceFluidItem);
+	public abstract WorkspaceFluidItem actionOpenForm(WorkspaceFluidItem workspaceFluidItem);
 
 	public abstract String getDestinationNavigationForCancel();
 
