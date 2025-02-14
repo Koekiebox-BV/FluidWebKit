@@ -271,6 +271,11 @@ public abstract class ABaseManagedBean implements Serializable {
 				if (exception != null) exception.printStackTrace();
 			}
 
+			@Override
+			public void trace(String details, Object... args) {
+				// Do nothing for now.
+			}
+
 			private String getPrefix() {
 				return this.getClass().getSimpleName();
 			}
@@ -769,7 +774,7 @@ public abstract class ABaseManagedBean implements Serializable {
 
 		String val = this.allGlobalFields.stream()
 				.filter(field -> fieldPropName.equalsIgnoreCase(field.getFieldName()))
-				.map(regExExtField -> regExExtField.getFieldValueAsString())
+				.map(Field::getFieldValueAsString)
 				.findFirst()
 				.orElse(null);
 		if (UtilGlobal.isNotBlank(val)) return val;

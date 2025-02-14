@@ -24,6 +24,21 @@ import java.io.Serializable;
  * @since 1.0
  */
 public interface ILogger extends Serializable {
+	/**
+	 * Log data with trace log level.
+	 *
+	 * @param details Message to log.
+	 * @param args Additional arguments in case of template.
+	 */
+	void trace(String details, Object ... args);
+	
+	/**
+	 * Log data with debug log level.
+	 *
+	 * @param details Message to log.
+	 * @param args Additional arguments in case of template.
+	 */
+	void debug(String details, Object ... args);
 
 	/**
 	 * Log data with info log level.
@@ -32,14 +47,6 @@ public interface ILogger extends Serializable {
 	 * @param args Additional arguments in case of template.
 	 */
 	void info(String details, Object ... args);
-
-	/**
-	 * Log data with debug log level.
-	 *
-	 * @param details Message to log.
-	 * @param args Additional arguments in case of template.
-	 */
-	void debug(String details, Object ... args);
 
 	/**
 	 * Log data with warn log level.
