@@ -43,6 +43,7 @@ public class WebKitField extends Field {
 
 	public WebKitField(Field field) {
 		this(field.getId(), field.getFieldName(), field.getFieldValue(), field.getTypeAsEnum());
+		this.setTypeMetaData(field.getTypeMetaData());
 	}
 
 	public WebKitField(
