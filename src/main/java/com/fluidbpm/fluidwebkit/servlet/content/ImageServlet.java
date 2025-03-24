@@ -228,6 +228,8 @@ public class ImageServlet extends ABaseFWKServlet {
 	) throws IOException {
 		ByteArrayInputStream in = new ByteArrayInputStream(fileDataParam);
 		BufferedImage img = ImageIO.read(in);
+		if (img == null) return fileDataParam;
+
 		//Lets not enlarge an image that is less than {widthParam}.
 		if (widthParam > img.getWidth() || heightParam > img.getHeight()) return fileDataParam;
 
