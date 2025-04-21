@@ -199,7 +199,7 @@ public class WebKitWorkspaceLookAndFeelBean extends ABaseManagedBean {
 			try {
 				this.webKitViewGroups = this.periodicUpdateBean.getWebKitViewGroups();
 				if (this.webKitViewGroups == null) {
-					this.webKitViewGroups = configDS.getFlowClient().getViewGroupWebKit().getListing();
+					this.webKitViewGroups = configDS.getFlowClient().getViewGroupsWebKit();
 					this.periodicUpdateBean.setWebKitViewGroups(this.webKitViewGroups);
 				}
 				AtomicInteger aiGroup = new AtomicInteger(0);
@@ -661,7 +661,7 @@ public class WebKitWorkspaceLookAndFeelBean extends ABaseManagedBean {
 				WebKitViewGroupListing listingVg = new WebKitViewGroupListing();
 				listingVg.setListing(this.webKitViewGroups);
 				listingVg.setListingCount(this.webKitViewGroups.size());
-				configDs.getFlowClient().upsertViewGroupWebKit(listingVg);
+				configDs.getFlowClient().upsertViewGroupsWebKit(listingVg);
 			}
 
 			//User Query...
