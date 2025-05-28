@@ -28,6 +28,7 @@ import com.fluidbpm.program.api.vo.form.TableRecord;
 import com.fluidbpm.program.api.vo.item.CustomWebAction;
 import com.fluidbpm.program.api.vo.item.FluidItem;
 import com.fluidbpm.program.api.vo.payment.PaymentLinkAdyen;
+import com.fluidbpm.program.api.vo.role.AdminPermission;
 import com.fluidbpm.program.api.vo.user.User;
 import com.fluidbpm.program.api.vo.webkit.form.WebKitForm;
 import com.fluidbpm.ws.client.FluidClientException;
@@ -362,7 +363,7 @@ public class WebKitOpenFormConversationBean extends ABaseManagedBean {
 				this.getWsFluidItem().getFormFieldsEdit().stream()
 						.filter(itm -> tableFieldName.equals(itm.getFieldName()))
 						.findFirst()
-						.ifPresent(fieldWithName -> this.actionAddPlaceholderRowOfType(fieldWithName));
+						.ifPresent(this::actionAddPlaceholderRowOfType);
 			});
 			//Add all the table records...
 			existingTableRecords.forEach((key, val) -> {
@@ -520,7 +521,7 @@ public class WebKitOpenFormConversationBean extends ABaseManagedBean {
 					this.contextMenuModel.getElements().add(itmReplAtt);
 				});
 
-				if (this.doesUserHavePermission("delete_electronic_form")) {
+				if (this.doesUserHavePermission(AdminPermission.delete_electronic_form)) {
 					this.contextMenuModel.getElements().add(sep);
 					this.getFreshAndExistingAttachments().forEach(attItm -> {
 						String command = (attItm.getId() == null || attItm.getId() < 1) ?
@@ -572,7 +573,7 @@ public class WebKitOpenFormConversationBean extends ABaseManagedBean {
 			this.contextMenuModel.getElements().add(itemGotoAttachments);
 		}
 
-		if (this.doesUserHavePermission("print_forms")) {
+		if (this.doesUserHavePermission(AdminPermission.print_forms)) {
 			this.contextMenuModel.getElements().add(sep);
 			this.contextMenuModel.getElements().add(itemPrint);
 		}
