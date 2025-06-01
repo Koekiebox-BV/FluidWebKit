@@ -494,7 +494,7 @@ public abstract class ABaseManagedBean implements Serializable {
         String[] strings = new String[adminPermissions.length];
         for (int i = 0; i < strings.length;i++) strings[i] = adminPermissions[i].toString();
 
-        return this.doesUserHavePermission(strings);
+        return this.doesUserHavePermissionTxt(strings);
     }
 
     /**
@@ -509,7 +509,7 @@ public abstract class ABaseManagedBean implements Serializable {
         String[] strings = new String[customPermissions.length];
         for (int i = 0; i < strings.length;i++) strings[i] = customPermissions[i].getPermission();
 
-        return this.doesUserHavePermission(strings);
+        return this.doesUserHavePermissionTxt(strings);
     }
 
     /**
@@ -519,7 +519,7 @@ public abstract class ABaseManagedBean implements Serializable {
      *                    If no permissions are provided or if the array is null, the method returns {@code false}.
      * @return {@code true} if the user has all the specified permissions; {@code false} otherwise or in case of an error.
      */
-    public boolean doesUserHavePermission(String ... permissions) {
+    public boolean doesUserHavePermissionTxt(String ... permissions) {
         if (permissions == null || permissions.length == 0) return false;
 
         User loggedInUser = null;
