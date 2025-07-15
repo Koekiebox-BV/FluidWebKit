@@ -36,6 +36,7 @@ public class ClientDashboardException extends RuntimeException {
 		public static final int VALIDATION = 10003;
 		public static final int ILLEGAL_STATE = 10004;
 		public static final int ACCESS_DENIED = 10005;
+		public static final int IP_CHANGED = 10006;
 	}
 
 	public ClientDashboardException(String message, int errorCodeParam) {

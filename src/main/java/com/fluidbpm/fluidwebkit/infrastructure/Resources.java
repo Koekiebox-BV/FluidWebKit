@@ -20,6 +20,7 @@ import com.fluidbpm.fluidwebkit.infrastructure.cache.ExitEventForFluidAPI;
 import com.fluidbpm.fluidwebkit.qualifier.WebKitResource;
 import com.fluidbpm.fluidwebkit.qualifier.cache.FormAttachmentsCache;
 import com.fluidbpm.fluidwebkit.qualifier.cache.FormImageCache;
+import com.fluidbpm.fluidwebkit.qualifier.cache.LoggedInUsersCache;
 import com.fluidbpm.fluidwebkit.qualifier.cache.RAWAttachmentsCache;
 import com.fluidbpm.fluidwebkit.servlet.content.ImageStreamedContent;
 import com.fluidbpm.program.api.vo.attachment.Attachment;
@@ -48,6 +49,9 @@ public class Resources {
 	private static Cache<Long, Attachment> rawAttachmentsByIdCache =
 			CacheBuilder.newBuilder().expireAfterAccess(30, TimeUnit.SECONDS).build();
 
+	private static Cache<String, String> loggedInUsersIp =
+			CacheBuilder.newBuilder().expireAfterWrite(7, TimeUnit.DAYS).build();
+
 	@Produces
 	@WebKitResource
 	public Cache<String, FluidClientDS> getFluidClientDSCache() {
@@ -72,4 +76,9 @@ public class Resources {
 		return Resources.rawAttachmentsByIdCache;
 	}
 
+	@Produces
+	@LoggedInUsersCache
+	public Cache<String, String> getLoggedInUsersCache(){
+		return Resources.loggedInUsersIp;
+	}
 }

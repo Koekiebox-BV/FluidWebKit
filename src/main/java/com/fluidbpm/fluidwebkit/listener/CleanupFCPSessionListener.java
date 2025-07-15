@@ -15,7 +15,10 @@
 
 package com.fluidbpm.fluidwebkit.listener;
 
+import com.fluidbpm.fluidwebkit.backing.bean.ABaseManagedBean;
+import com.fluidbpm.fluidwebkit.backing.bean.login.LoggedInUsersBean;
 import com.fluidbpm.fluidwebkit.ds.FluidClientPool;
+import com.fluidbpm.program.api.vo.user.User;
 
 import javax.inject.Inject;
 import javax.servlet.annotation.WebListener;
@@ -27,9 +30,11 @@ import javax.servlet.http.HttpSessionListener;
  */
 @WebListener("Cleanup-FCP-Session")
 public class CleanupFCPSessionListener implements HttpSessionListener {
-
 	@Inject
 	private FluidClientPool fcp;
+
+	@Inject
+	private LoggedInUsersBean loggedInUsersBean;
 
 	/**
 	 * When the session is destroyed, we want to close all the Fluid clients.
@@ -38,6 +43,12 @@ public class CleanupFCPSessionListener implements HttpSessionListener {
 	 */
 	@Override
 	public void sessionDestroyed(HttpSessionEvent se) {
+		Object userObj = se.getSession().getAttribute(ABaseManagedBean.SessionVariable.USER);
+		if (userObj instanceof User) {
+			User casted = (User)userObj;
+			this.loggedInUsersBean.logoutUser(casted.getUsername());
+		}
+
 		this.fcp.invalidate(se.getSession().getId());
 	}
 }

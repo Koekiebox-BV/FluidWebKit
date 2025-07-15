@@ -28,6 +28,7 @@ import com.fluidbpm.ws.client.v1.user.LoginClient;
 
 import javax.faces.application.FacesMessage;
 import javax.faces.context.FacesContext;
+import javax.inject.Inject;
 import javax.servlet.http.HttpSession;
 import java.util.Map;
 import java.util.Properties;
@@ -44,18 +45,17 @@ public abstract class ABaseLoginBean extends ABaseManagedBean {
 
 	private static final int MAX_LOGIN_MSG = 50;
 
+	@Inject
+	private LoggedInUsersBean loggedInUsersBean;
+
 	/**
 	 * action="#{loginBean.actionLogin}"
-	 *
-	 * Log a user into the SAIB Dashboard.
-	 *
 	 * @return navigation {@code dashboard}.
 	 */
 	public String actionLogin() {
 		Properties existingProps = null;
 
-		this.getLogger().debug("Login attempt ["+ this.getInputUsername()+":"+
-				UtilGlobal.getConfigURLFromSystemProperty(existingProps)+"]");
+		this.getLogger().debug("Login attempt ["+ this.getInputUsername()+":"+ UtilGlobal.getConfigURLFromSystemProperty(existingProps)+"]");
 
 		//Let's confirm username and password is set first...
 		if (this.getInputUsername() == null ||
@@ -95,6 +95,9 @@ public abstract class ABaseLoginBean extends ABaseManagedBean {
 				serviceTicket = appReqToken.getServiceTicket();
 				user.setRoles(Role.convertToObjects(appReqToken.getRoleString()));
 			}
+
+			// Mark the user as logged in:
+			this.loggedInUsersBean.loginUser(this.getInputUsername());
 
 			//We have a valid login here...
 			user.setServiceTicket(serviceTicket);
@@ -138,10 +141,15 @@ public abstract class ABaseLoginBean extends ABaseManagedBean {
 		} catch (ClientDashboardException dashExcept) {
 			this.getLogger().error(dashExcept.getMessage(), dashExcept);
 
-			FacesMessage fMsg = new FacesMessage(FacesMessage.SEVERITY_ERROR,
-					"Failed to Login. ", this.shortenMessage(dashExcept.getMessage(), MAX_LOGIN_MSG));
-			FacesContext.getCurrentInstance().addMessage(null, fMsg);
-
+			if (dashExcept.getErrorCode() == ClientDashboardException.ErrorCode.IP_CHANGED) {
+				FacesMessage fMsg = new FacesMessage(FacesMessage.SEVERITY_WARN,
+						"Existing Login on another IP address. ", this.shortenMessage(dashExcept.getMessage(), MAX_LOGIN_MSG));
+				FacesContext.getCurrentInstance().addMessage(null, fMsg);
+			} else {
+				FacesMessage fMsg = new FacesMessage(FacesMessage.SEVERITY_ERROR,
+						"Failed to Login. ", this.shortenMessage(dashExcept.getMessage(), MAX_LOGIN_MSG));
+				FacesContext.getCurrentInstance().addMessage(null, fMsg);
+			}
 			return null;
 		} finally {//Close the login after done...
 			loginClient.closeAndClean();

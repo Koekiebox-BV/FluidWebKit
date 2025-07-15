@@ -1,6 +1,7 @@
 package com.fluidbpm.fluidwebkit.backing.bean.config;
 
 import com.fluidbpm.fluidwebkit.backing.bean.ABaseManagedBean;
+import com.fluidbpm.fluidwebkit.backing.bean.login.LoggedInUsersBean;
 import com.fluidbpm.program.api.vo.config.ConfigurationListing;
 import com.fluidbpm.program.api.vo.flow.JobView;
 import com.fluidbpm.program.api.vo.thirdpartylib.ThirdPartyLibraryTaskIdentifier;
@@ -14,6 +15,7 @@ import javax.annotation.PostConstruct;
 import javax.enterprise.context.ApplicationScoped;
 import javax.faces.application.FacesMessage;
 import javax.faces.context.FacesContext;
+import javax.inject.Inject;
 import javax.inject.Named;
 import java.util.ArrayList;
 import java.util.List;
@@ -46,6 +48,9 @@ public class PeriodicUpdateBean extends ABaseManagedBean {
 	@Setter
 	private List<JobView> allJobViews;
 
+	@Inject
+	private LoggedInUsersBean loggedInUsersBean;
+
 	@PostConstruct
 	public void actionPopulateInit() {
 		this.populateWebKitUserQueries();
@@ -57,7 +62,21 @@ public class PeriodicUpdateBean extends ABaseManagedBean {
 		this.allJobViews = null;
 	}
 
+	/**
+	 * Clears all application-level caches and resets managed bean properties.
+	 *
+	 * This method performs the following actions in sequence:
+	 * 1. Clears the cache of all logged-in users by invoking {@code clearLoggedInUsers()}
+	 *    on the {@code loggedInUsersBean}.
+	 * 2. Reinitializes all properties and data structures by invoking {@code actionPopulateInit()}.
+	 * 3. Adds a success message to the {@code FacesContext} to notify the user that
+	 *    the application caches have been cleared.
+	 *
+	 * The method is intended to provide a comprehensive reset of cached data and
+	 * application state, ensuring a clean slate for subsequent operations.
+	 */
 	public void actionClearAllAppCaches() {
+		this.loggedInUsersBean.clearLoggedInUsers();
 		this.actionPopulateInit();
 		FacesMessage fMsg = new FacesMessage(FacesMessage.SEVERITY_INFO,
 				"Success", "App cache has been cleared.");
