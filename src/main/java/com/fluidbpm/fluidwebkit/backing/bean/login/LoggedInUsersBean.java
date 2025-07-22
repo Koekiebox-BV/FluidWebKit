@@ -17,6 +17,7 @@ package com.fluidbpm.fluidwebkit.backing.bean.login;
 
 import com.fluidbpm.fluidwebkit.backing.bean.ABaseManagedBean;
 import com.fluidbpm.fluidwebkit.backing.utility.Globals;
+import com.fluidbpm.fluidwebkit.backing.vo.LoginSessionInfoVO;
 import com.fluidbpm.fluidwebkit.exception.ClientDashboardException;
 import com.fluidbpm.fluidwebkit.qualifier.cache.LoggedInUsersCache;
 import com.fluidbpm.program.api.util.UtilGlobal;
@@ -27,6 +28,7 @@ import javax.faces.context.FacesContext;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.servlet.http.HttpServletRequest;
+import java.util.Date;
 import java.util.Map;
 
 
@@ -35,7 +37,7 @@ import java.util.Map;
 public class LoggedInUsersBean extends ABaseManagedBean {
 	@Inject
 	@LoggedInUsersCache
-	private Cache<String, String> loggedInUsers;
+	private Cache<String, LoginSessionInfoVO> loggedInUsers;
 
 	public LoggedInUsersBean() {
 		super();
@@ -64,7 +66,7 @@ public class LoggedInUsersBean extends ABaseManagedBean {
 	 * @return a {@code Map<String, String>} where the key represents the username of a logged-in user
 	 *         and the value represents their corresponding client IP address.
 	 */
-	public Map<String, String> getLoggedInUsers() {
+	public Map<String, LoginSessionInfoVO> getLoggedInUsers() {
 		return this.loggedInUsers.asMap();
 	}
 
@@ -85,16 +87,16 @@ public class LoggedInUsersBean extends ABaseManagedBean {
 
 		username = username.trim().toLowerCase();
 
-		String existingClientIp = this.loggedInUsers.getIfPresent(username);
+		LoginSessionInfoVO loginSession = this.loggedInUsers.getIfPresent(username);
 		if (Globals.isLoginIPLocked() &&
-				(UtilGlobal.isNotBlank(existingClientIp) && !existingClientIp.equalsIgnoreCase(clientIp))) {
+				(loginSession != null && loginSession.hasIpAddressChanged(clientIp))) {
 			throw new ClientDashboardException(
-					String.format("Not allowed, previously logged in from '%s'. Now '%s'.",existingClientIp, clientIp),
+					String.format("Not allowed, previously logged in from '%s'. Now '%s'.",loginSession, clientIp),
 					ClientDashboardException.ErrorCode.IP_CHANGED
 			);
 		}
-
-		this.loggedInUsers.put(username, clientIp);
+		loginSession = new LoginSessionInfoVO(username, clientIp, new Date());
+		this.loggedInUsers.put(username, loginSession);
 	}
 
 	/**

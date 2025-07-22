@@ -15,6 +15,7 @@
 
 package com.fluidbpm.fluidwebkit.infrastructure;
 
+import com.fluidbpm.fluidwebkit.backing.vo.LoginSessionInfoVO;
 import com.fluidbpm.fluidwebkit.ds.FluidClientDS;
 import com.fluidbpm.fluidwebkit.infrastructure.cache.ExitEventForFluidAPI;
 import com.fluidbpm.fluidwebkit.qualifier.WebKitResource;
@@ -49,7 +50,7 @@ public class Resources {
 	private static Cache<Long, Attachment> rawAttachmentsByIdCache =
 			CacheBuilder.newBuilder().expireAfterAccess(30, TimeUnit.SECONDS).build();
 
-	private static Cache<String, String> loggedInUsersIp =
+	private static Cache<String, LoginSessionInfoVO> loggedInUsersIp =
 			CacheBuilder.newBuilder().expireAfterWrite(7, TimeUnit.DAYS).build();
 
 	@Produces
@@ -78,7 +79,7 @@ public class Resources {
 
 	@Produces
 	@LoggedInUsersCache
-	public Cache<String, String> getLoggedInUsersCache(){
+	public Cache<String, LoginSessionInfoVO> getLoggedInUsersCache(){
 		return Resources.loggedInUsersIp;
 	}
 }
