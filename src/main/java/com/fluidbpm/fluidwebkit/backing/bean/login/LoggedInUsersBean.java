@@ -16,6 +16,7 @@
 package com.fluidbpm.fluidwebkit.backing.bean.login;
 
 import com.fluidbpm.fluidwebkit.backing.bean.ABaseManagedBean;
+import com.fluidbpm.fluidwebkit.backing.utility.Globals;
 import com.fluidbpm.fluidwebkit.exception.ClientDashboardException;
 import com.fluidbpm.fluidwebkit.qualifier.cache.LoggedInUsersCache;
 import com.fluidbpm.program.api.util.UtilGlobal;
@@ -85,7 +86,8 @@ public class LoggedInUsersBean extends ABaseManagedBean {
 		username = username.trim().toLowerCase();
 
 		String existingClientIp = this.loggedInUsers.getIfPresent(username);
-		if (UtilGlobal.isNotBlank(existingClientIp) && !existingClientIp.equalsIgnoreCase(clientIp) ) {
+		if (Globals.isLoginIPLocked() &&
+				(UtilGlobal.isNotBlank(existingClientIp) && !existingClientIp.equalsIgnoreCase(clientIp))) {
 			throw new ClientDashboardException(
 					String.format("Not allowed, previously logged in from '%s'. Now '%s'.",existingClientIp, clientIp),
 					ClientDashboardException.ErrorCode.IP_CHANGED
@@ -95,6 +97,18 @@ public class LoggedInUsersBean extends ABaseManagedBean {
 		this.loggedInUsers.put(username, clientIp);
 	}
 
+	/**
+	 * Retrieves the client's IP address from the incoming HTTP request.
+	 * The method first checks for the presence of the "X-Forwarded-For" header,
+	 * which is typically used when the request is routed through a proxy or load balancer.
+	 * If the header is not present or contains an invalid value, the method falls back to
+	 * the remote address directly obtained from the request.
+	 *
+	 * @param request the {@code HttpServletRequest} object representing the client request.
+	 *                Must not be null.
+	 * @return the client's IP address as a {@code String}. If no valid IP address is found,
+	 *         the method returns the remote address from the request.
+	 */
 	private String getClientIpAddress(HttpServletRequest request) {
 		String ipAddress = request.getHeader("X-Forwarded-For");
 		if (ipAddress == null || ipAddress.isEmpty() || "unknown".equalsIgnoreCase(ipAddress)) {

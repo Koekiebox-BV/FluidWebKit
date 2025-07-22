@@ -29,7 +29,17 @@ import java.util.concurrent.TimeUnit;
 import static java.lang.Class.forName;
 
 /**
+ * The {@code Globals} class provides various global configurations, constants,
+ * and utility methods that are used across the application. This class includes
+ * utility functionalities for handling environment-specific properties
+ * and service integrations.
  *
+ * It contains static fields and methods designed for global accessibility,
+ * such as encoding constants, timeout values, system property checks,
+ * and integration helpers.
+ *
+ * Note: This class should primarily be used for read-only constants and
+ * utility methods that do not require instantiation.
  */
 public class Globals {
 	public static String CHARSET_UTF8 = "UTF-8";
@@ -37,12 +47,21 @@ public class Globals {
 	
 	public static final String NOT_SET = "[Not Set]";
 
+	private static String JS_USER_TRACKING_FR = null;
+	public static String EXCEL_WARNING = "WARNING: ";
+
 	private static String getTextContentOnlyFrom(Element elementParam) {
 		return elementParam.getTextContent();
 	}
 
-	public static String EXCEL_WARNING = "WARNING: ";
-
+	/**
+	 * Checks whether basic authentication is configured via the "USE_BASIC_AUTH" system property.
+	 * The system property is expected to be a boolean value.
+	 *
+	 * @return {@code true} if the "USE_BASIC_AUTH" system property is set to "true",
+	 *         {@code false} otherwise. If the property is not set or has an invalid format,
+	 *         {@code false} is returned.
+	 */
 	public static boolean isConfigBasicAuthFromSystemProperty() {
 		String useBasicAuth = System.getProperty(
 				"USE_BASIC_AUTH",
@@ -54,7 +73,25 @@ public class Globals {
 		}
 	}
 
-	private static String JS_USER_TRACKING_FR = null;
+	/**
+	 * Determines if login attempts from a specific IP address are locked,
+	 * based on the value of the "LOGIN_IP_LOCKED" system property.
+	 * The system property is expected to be a boolean value.
+	 *
+	 * @return {@code true} if the "LOGIN_IP_LOCKED" system property is set to "true",
+	 *         {@code false} otherwise. If the property is not set or has an invalid format,
+	 *         {@code false} is returned.
+	 */
+	public static boolean isLoginIPLocked() {
+		String ipLocked = System.getProperty(
+				"LOGIN_IP_LOCKED",
+				"false");
+		try {
+			return Boolean.parseBoolean(ipLocked);
+		} catch (NumberFormatException nfe) {
+			return false;
+		}
+	}
 
 	public static String getFRUserTrackingScript() {
 		if (JS_USER_TRACKING_FR != null) {
@@ -76,6 +113,16 @@ public class Globals {
 		return JS_USER_TRACKING_FR;
 	}
 
+	/**
+	 * Creates and returns an instance of {@code SQLUtilWebSocketRESTWrapper} configured with
+	 * the necessary properties and authentication tokens.
+	 *
+	 * Note: This method is marked as deprecated and its usage is discouraged.
+	 *
+	 * @return An instance of {@code SQLUtilWebSocketRESTWrapper} configured with the system properties
+	 *          and authentication details. May return {@code null} or throw an exception during
+	 *          initialization if configuration or authentication errors occur.
+	 */
 	@Deprecated
 	public static SQLUtilWebSocketRESTWrapper getConfigWrapperInstance() {
 		Properties existingProps = null;
