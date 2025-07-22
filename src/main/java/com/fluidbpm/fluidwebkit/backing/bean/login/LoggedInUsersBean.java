@@ -28,8 +28,7 @@ import javax.faces.context.FacesContext;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.servlet.http.HttpServletRequest;
-import java.util.Date;
-import java.util.Map;
+import java.util.*;
 
 
 @ApplicationScoped
@@ -68,6 +67,20 @@ public class LoggedInUsersBean extends ABaseManagedBean {
 	 */
 	public Map<String, LoginSessionInfoVO> getLoggedInUsers() {
 		return this.loggedInUsers.asMap();
+	}
+
+	/**
+	 * Retrieves a list of logged-in user sessions sorted in descending order based on their login timestamp.
+	 * The list contains instances of {@code LoginSessionInfoVO}, which store details such as username,
+	 * IP address, and login time.
+	 *
+	 * @return a {@code List<LoginSessionInfoVO>} containing the currently logged-in user sessions,
+	 *         sorted by login timestamp in descending order.
+	 */
+	public List<LoginSessionInfoVO> getLoggedInUsersList() {
+		List<LoginSessionInfoVO> vos = new ArrayList<>(this.loggedInUsers.asMap().values());
+		vos.sort(Comparator.comparing(LoginSessionInfoVO::getLoggedInAt).reversed());
+		return vos;
 	}
 
 	/**
