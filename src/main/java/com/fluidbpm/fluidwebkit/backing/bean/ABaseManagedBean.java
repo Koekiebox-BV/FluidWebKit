@@ -874,6 +874,8 @@ public abstract class ABaseManagedBean implements Serializable {
 
     private void raiseMessage(FacesMessage.Severity severity, String summary, String detail) {
         FacesMessage fMsg = new FacesMessage(severity, summary, detail);
-        FacesContext.getCurrentInstance().addMessage(null, fMsg);
+        if (FacesContext.getCurrentInstance() == null) {
+            this.getLogger().info(String.format("Unable to raise message. FacesContext is null. Summary: %s, Detail: %s", summary, detail));
+        } else FacesContext.getCurrentInstance().addMessage(null, fMsg);
     }
 }
