@@ -1153,7 +1153,7 @@ public class WebKitOpenFormConversationBean extends ABaseManagedBean {
 
 						Form upsertForm = null;
 						if (tableRecord.getId() == null || tableRecord.getId() < 1) {
-							Field parentField = new Field(tableRecord.getTableFieldParentId());
+							Field parentField = new Field(tableRecord.getTableFieldParentId(), tableRecord.getTableFieldParentName());
 							TableRecord tableRecordCreate = new TableRecord(tableRecord, formToUpdateForm, parentField);
 							upsertForm = formContClient.createTableRecord(tableRecordCreate).getFormContainer();
 						} else {
