@@ -65,6 +65,24 @@ import java.util.stream.Collectors;
 
 import static com.fluidbpm.fluidwebkit.backing.bean.workspace.pi.PersonalInventoryItemVO.PLACEHOLDER_TITLE;
 
+/**
+ * Conversation-scoped managed bean responsible for handling form operations within a conversation context.
+ * 
+ * This bean manages the lifecycle of form interactions including:
+ * - Loading and displaying form data
+ * - Handling form field updates and validation
+ * - Managing form attachments (upload, download, delete)
+ * - Processing form submissions and custom web actions
+ * - Supporting table record operations (add, edit, delete)
+ * - Providing geolocation and mapping functionality
+ * - Managing the conversation lifecycle
+ *
+ * The conversation scope ensures that form data persists across multiple requests
+ * until the conversation is explicitly ended.
+ *
+ * @author jasonbruwer
+ * @since 1.0
+ */
 @ConversationScoped
 @Named("webKitOpenFormConversationBean")
 public class WebKitOpenFormConversationBean extends ABaseManagedBean {
@@ -183,13 +201,20 @@ public class WebKitOpenFormConversationBean extends ABaseManagedBean {
 	@Setter
 	private String mapZoom;
 	
+	/**
+	 * Initializes the bean after construction.
+	 * This method is called automatically by the CDI container after the bean is constructed
+	 * but before it is put into service.
+	 */
 	@PostConstruct
 	public void init() {
-
+		// Initialization is handled when a form is loaded
 	}
 
 	/**
-	 * Start the conversation scope.
+	 * Starts a new conversation if one is not already active.
+	 * Sets a timeout of 120 minutes for the conversation to prevent resource leaks.
+	 * The conversation context allows form data to persist across multiple requests.
 	 */
 	public void startConversation() {
 		if (this.conversation.isTransient()) {
@@ -199,16 +224,39 @@ public class WebKitOpenFormConversationBean extends ABaseManagedBean {
 	}
 
 	/**
-	 * End the conversation.
+	 * Ends the current conversation if one is active.
+	 * This releases all conversation-scoped resources and should be called
+	 * when form processing is complete.
 	 */
 	public void endConversation() {
 		if (!this.conversation.isTransient()) this.conversation.end();
 	}
 
+	/**
+	 * Checks if the conversation has been closed or is unavailable.
+	 *
+	 * @return true if the conversation is null (closed or unavailable), false otherwise
+	 */
 	public boolean isConversationClosed() {
 		return (this.conversation == null);
 	}
 
+	/**
+	 * Loads a fresh copy of a form and sets it up for display and editing.
+	 * 
+	 * This method performs several key operations:
+	 * - Resets the current form state and attachments
+	 * - Sets the dialog title based on the form type and title
+	 * - Loads the WebKit form configuration for the form type
+	 * - Determines which fields are editable and viewable based on user permissions
+	 * - Loads the form data from the server if it exists
+	 * - Sets up table fields and their records if applicable
+	 * - Applies currency formatting to relevant fields
+	 * - Builds the context menu for the form
+	 * 
+	 * @param wfiParam The WorkspaceFluidItem containing the form to load
+	 * @return The loaded and configured WorkspaceFluidItem, or null if loading failed
+	 */
 	public WorkspaceFluidItem actionFreshLoadFormAndSet(WorkspaceFluidItem wfiParam) {
 		this.setDialogHeaderTitle(null);
 		this.setWsFluidItem(null);

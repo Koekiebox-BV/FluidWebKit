@@ -40,7 +40,19 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 /**
- * Bean to handle user profile related operations.
+ * Session-scoped managed bean responsible for handling user profile operations in the WebKit interface.
+ * 
+ * This bean provides functionality for:
+ * - Retrieving and displaying user profile images (avatars)
+ * - Managing user profile information and preferences
+ * - Handling password changes
+ * - Providing access to user-specific settings like time zones and date/time formats
+ * 
+ * The session scope ensures that user profile information persists across multiple requests
+ * within the same user session.
+ *
+ * @author jasonbruwer
+ * @since 1.0
  */
 @SessionScoped
 @Named("webKitProfileBean")
@@ -90,6 +102,16 @@ public class ProfileBean extends ABaseManagedBean {
 		return this.getUserProfileImageForUser(this.getLoggedInUserSafe(), 250);
 	}
 
+	/**
+	 * Returns the profile image for a user specified by username.
+	 * This is a convenience method that creates a User object from the username
+	 * and delegates to getUserProfileImageForUser.
+	 *
+	 * @param username The username of the user whose profile image is to be retrieved
+	 * @param size The desired width and height of the image in pixels
+	 * @return StreamedContent containing the user's profile image
+	 * @see #getUserProfileImageForUser(User, int)
+	 */
 	public StreamedContent getUserProfileImageForUsername(String username, int size) {
 		return this.getUserProfileImageForUser(new User(username), size);
 	}

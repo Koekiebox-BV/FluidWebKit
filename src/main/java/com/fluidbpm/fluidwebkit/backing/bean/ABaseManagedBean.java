@@ -19,6 +19,7 @@ import com.fluidbpm.GitDescribe;
 import com.fluidbpm.fluidwebkit.backing.bean.config.WebKitConfigBean;
 import com.fluidbpm.fluidwebkit.backing.bean.logger.ILogger;
 import com.fluidbpm.fluidwebkit.backing.bean.workspace.field.WebKitField;
+import com.fluidbpm.fluidwebkit.backing.bean.workspace.pi.PersonalInventoryItemVO;
 import com.fluidbpm.fluidwebkit.backing.utility.RaygunUtil;
 import com.fluidbpm.fluidwebkit.ds.FluidClientDS;
 import com.fluidbpm.fluidwebkit.ds.FluidClientPool;
@@ -98,6 +99,12 @@ public abstract class ABaseManagedBean implements Serializable {
         return "FluidWebKit";
     }
 
+    /**
+     * Logs an error and optionally sends it to Raygun error tracking service.
+     * Also adds an error message to the FacesContext if available.
+     *
+     * @param exception The exception to be logged and reported
+     */
     public void raiseError(Exception exception) {
         this.getLogger().error(exception.getMessage(), exception);
         if (RaygunUtil.isRaygunEnabled()) {
@@ -114,6 +121,14 @@ public abstract class ABaseManagedBean implements Serializable {
         FacesContext.getCurrentInstance().addMessage(null, fMsg);
     }
 
+    /**
+     * Logs an error and sends it to Raygun error tracking service if enabled.
+     * This overloaded version accepts HTTP request and response objects for additional context.
+     *
+     * @param exception The exception to be logged and reported
+     * @param httpServletRequest The HTTP request associated with the error
+     * @param httpServletResponse The HTTP response associated with the error
+     */
     public void raiseError(
         Exception exception,
         HttpServletRequest httpServletRequest,
@@ -128,27 +143,60 @@ public abstract class ABaseManagedBean implements Serializable {
                 httpServletResponse);
     }
 
+    /**
+     * Constants for JSF navigation outcomes used throughout the application.
+     * These constants represent the possible navigation destinations for JSF actions.
+     */
     protected static class Outcome {
+        /** Navigation outcome for redirecting to the login page */
         public static final String LOGIN = "login";
+        
+        /** Navigation outcome for redirecting to the session expired page */
         public static final String SESSION_EXPIRED = "session_expired";
+        
+        /** Navigation outcome for redirecting to the dashboard page */
         public static final String DASHBOARD = "dashboard";
     }
 
+    /**
+     * Represents a column model for data tables in the UI.
+     * This class encapsulates information about a column including its header, field name,
+     * type, visibility, and other display properties.
+     */
     @Getter
     @Setter
     @NoArgsConstructor
     @EqualsAndHashCode
     public static class ColumnModel implements Serializable {
+        /** The header text displayed for this column */
         private String header;
+        
+        /** The name of the Fluid field this column represents */
         private String fluidFieldName;
+        
+        /** Description of the Fluid field */
         private String fluidFieldDescription;
+        
+        /** The data type of the Fluid field */
         private Field.Type fluidFieldColumnType;
+        
+        /** Additional metadata for the Fluid field */
         private String fluidFieldMetaData;
 
+        /** Whether this column is enabled */
         private boolean enabled;
+        
+        /** Whether this column is visible */
         private boolean visible;
+        
+        /** Whether this column can be filtered */
         private boolean filterable;
 
+        /**
+         * Copy constructor that creates a new ColumnModel by copying values from an existing one.
+         *
+         * @param colMdl The ColumnModel to copy values from
+         */
         private ColumnModel(ColumnModel colMdl) {
             if (colMdl == null) return;
 
@@ -162,6 +210,18 @@ public abstract class ABaseManagedBean implements Serializable {
             this.filterable = colMdl.filterable;
         }
 
+        /**
+         * Constructs a ColumnModel with all properties specified.
+         *
+         * @param header The header text displayed for this column
+         * @param fluidFieldName The name of the Fluid field this column represents
+         * @param fluidFieldDescription Description of the Fluid field
+         * @param fluidFieldColumnType The data type of the Fluid field
+         * @param fluidFieldMetaData Additional metadata for the Fluid field
+         * @param enabled Whether this column is enabled
+         * @param visible Whether this column is visible
+         * @param filterable Whether this column can be filtered
+         */
         public ColumnModel(
             String header,
             String fluidFieldName,
@@ -182,6 +242,17 @@ public abstract class ABaseManagedBean implements Serializable {
             this.filterable = (filterable);
         }
 
+        /**
+         * Constructs a ColumnModel with essential properties specified, omitting the field description.
+         *
+         * @param header The header text displayed for this column
+         * @param fluidFieldName The name of the Fluid field this column represents
+         * @param fluidFieldColumnType The data type of the Fluid field
+         * @param fluidFieldMetaData Additional metadata for the Fluid field
+         * @param enabled Whether this column is enabled
+         * @param visible Whether this column is visible
+         * @param filterable Whether this column can be filtered
+         */
         public ColumnModel(
             String header,
             String fluidFieldName,
@@ -200,44 +271,78 @@ public abstract class ABaseManagedBean implements Serializable {
             this.filterable = (filterable);
         }
 
+        /**
+         * Sets the visibility of this column.
+         * Note: This implementation is currently commented out and does not change the visibility.
+         *
+         * @param vis The visibility value to set
+         */
         public void setVisible(boolean vis) {
             //this.visible = vis;
             //System.out.println("ignore: Hidden: "+vis);
         }
 
+        /**
+         * Checks if this column is visible.
+         *
+         * @return true if the column is visible, false otherwise
+         */
         public boolean isVisible() {
             return this.visible;
         }
 
+        /**
+         * Gets the visibility of this column.
+         * This is an alias for isVisible().
+         *
+         * @return true if the column is visible, false otherwise
+         */
         public boolean getVisible() {
             return this.isVisible();
         }
 
+        /**
+         * Gets the string representation of the fluid field column type.
+         *
+         * @return The string representation of the column type, or null if the type is not set
+         */
         public String getFluidFieldColumnTypeTxt() {
             return (this.getFluidFieldColumnType() == null) ? null: this.getFluidFieldColumnType().toString();
         }
 
+        /**
+         * Creates a clone of this ColumnModel.
+         *
+         * @return A new ColumnModel with the same properties as this one
+         */
         public ColumnModel cloneCM() {
             return new ColumnModel(this);
         }
 
+        /**
+         * Toggles the visibility of this column.
+         * If the column is currently visible, it will be hidden, and vice versa.
+         */
         public void flipVisibility() {
             this.visible = !this.visible;
         }
     }
 
     /**
-     * Session related variables.
+     * Constants for session-related variables used throughout the application.
+     * These constants represent keys for storing and retrieving values from the session.
      */
     public static class SessionVariable {
-        //User...
+        /** Key for storing the user object in the session */
         public static final String USER = "user";
 
-        //User Browser
+        /** Key for storing the user's browser window width */
         public static final String USER_BROWSER_WINDOW_WIDTH = "ub_window_width";
+        
+        /** Key for storing the user's browser window height */
         public static final String USER_BROWSER_WINDOW_HEIGHT = "ub_window_height";
 
-        //Push Servlet...
+        /** Key for storing the push servlet event bus */
         public static final String PUSH_SERVLET_EVENT_BUS = "push_servlet_event_bus";
     }
 
@@ -283,14 +388,30 @@ public abstract class ABaseManagedBean implements Serializable {
         };
     }
 
+    /**
+     * Gets the current software version from Git describe information.
+     *
+     * @return The software version string
+     */
     public String getSoftwareVersion() {
         return GitDescribe.GIT_DESCRIBE;
     }
 
+    /**
+     * Gets the default page size used for pagination.
+     *
+     * @return The number of items per page
+     */
     public int getPageSize() {
         return this.pageSize;
     }
 
+    /**
+     * Gets the combined date and time format string for the currently logged-in user.
+     * If the session has expired or an error occurs, returns a default format.
+     *
+     * @return The date and time format string (e.g., "yyyy-MMM-dd HH:mm")
+     */
     public String getDateAndTimeFormat() {
         try {
             String returnVal = this.getLoggedInUser().getDateFormat();
@@ -305,6 +426,12 @@ public abstract class ABaseManagedBean implements Serializable {
         }
     }
 
+    /**
+     * Gets the date format string for the currently logged-in user.
+     * If the session has expired or an error occurs, returns a default format.
+     *
+     * @return The date format string (e.g., "yyyy-MMM-dd")
+     */
     public String getDateFormat() {
         try {
             return this.getLoggedInUser().getDateFormat();
@@ -316,28 +443,62 @@ public abstract class ABaseManagedBean implements Serializable {
         }
     }
 
+    /**
+     * Gets the number format pattern used for formatting numeric values.
+     *
+     * @return The number format pattern
+     */
     public String getNumberFormat() {
         return "###,###,###.000";
     }
 
+    /**
+     * Gets the length of the date and time format string.
+     * This is useful for UI components that need to adjust their size based on the format length.
+     *
+     * @return The length of the date and time format string
+     */
     public int getDateAndTimeFormatLength() {
         return this.getDateAndTimeFormat().length();
     }
 
+    /**
+     * Gets the length of the date format string.
+     * This is useful for UI components that need to adjust their size based on the format length.
+     *
+     * @return The length of the date format string
+     */
     public int getDateFormatLength() {
         return getDateFormat().length();
     }
 
+    /**
+     * Gets the username of the currently logged-in user.
+     *
+     * @return The username of the logged-in user
+     */
     public String getLoggedInUserUsername() {
         return this.getLoggedInUserSafe().getUsername();
     }
 
+    /**
+     * Gets the username of the currently logged-in user with all whitespace removed.
+     * This is useful for scenarios where spaces in usernames might cause issues.
+     *
+     * @return The username with all whitespace removed, or the original username if it's blank
+     */
     public String getLoggedInUserUsernameNoSpaces() {
         String username = this.getLoggedInUserUsername();
         if (UtilGlobal.isBlank(username)) return username;
         return UtilGlobal.removeWhitespace(username);
     }
 
+    /**
+     * Gets the currently logged-in user in a safe manner that handles session expiration.
+     * If the session has expired, returns an empty User object instead of throwing an exception.
+     *
+     * @return The logged-in User object, or a new empty User if the session has expired
+     */
     public User getLoggedInUserSafe() {
         try {
             return this.getLoggedInUser();
@@ -346,6 +507,13 @@ public abstract class ABaseManagedBean implements Serializable {
         }
     }
 
+    /**
+     * Retrieves a custom field value from the logged-in user's profile by field name.
+     *
+     * @param fieldNameParam The name of the custom field to retrieve
+     * @return The string value of the custom field, or null if the field doesn't exist,
+     *         has no value, or if the session has expired
+     */
     protected String getCustomUserFieldByName(String fieldNameParam){
         if (fieldNameParam == null || fieldNameParam.isEmpty()) return null;
 
@@ -366,6 +534,12 @@ public abstract class ABaseManagedBean implements Serializable {
         }
     }
 
+    /**
+     * Gets the currently logged-in user from the session.
+     * 
+     * @return The User object for the currently logged-in user
+     * @throws WebSessionExpiredException if the session has expired or the user is not logged in
+     */
     public User getLoggedInUser() {
         FacesContext facCont = FacesContext.getCurrentInstance();
         ExternalContext externalContext = (facCont == null) ? null : facCont.getExternalContext();
@@ -383,6 +557,11 @@ public abstract class ABaseManagedBean implements Serializable {
         throw new WebSessionExpiredException("No session. Session expired. User logged out.");
     }
 
+    /**
+     * Gets the current HTTP session.
+     * 
+     * @return The current HttpSession object, or null if no session exists
+     */
     public HttpSession getHttpSession() {
         FacesContext facCont = FacesContext.getCurrentInstance();
         ExternalContext externalContext = (facCont == null) ? null : facCont.getExternalContext();
@@ -393,6 +572,12 @@ public abstract class ABaseManagedBean implements Serializable {
         return null;
     }
 
+    /**
+     * Gets the current session ID.
+     * If the HTTP session is null, attempts to use the fallback session ID.
+     * 
+     * @return The session ID, or null if no session exists and no fallback is available
+     */
     protected String getSessionId() {
         HttpSession session = this.getHttpSession();
         if (session == null) {
@@ -404,6 +589,11 @@ public abstract class ABaseManagedBean implements Serializable {
         return session.getId();
     }
 
+    /**
+     * Gets the Fluid Client Data Source for the current session.
+     * 
+     * @return The FluidClientDS for the current session, or null if the session has expired
+     */
     public FluidClientDS getFluidClientDS() {
         try {
             return this.fcp.get(this.getSessionId());
@@ -864,18 +1054,50 @@ public abstract class ABaseManagedBean implements Serializable {
         this.raiseMessage(FacesMessage.SEVERITY_INFO, summary, detail);
     }
 
+    /**
+     * 
+     * @param summary
+     * @param detail
+     */
     public void raiseMessageError(String summary, String detail) {
         this.raiseMessage(FacesMessage.SEVERITY_ERROR, summary, detail);
     }
 
+    /**
+     * Adds a fatal severity FacesMessage to the current FacesContext with the provided summary and detail.
+     * Utilizes the {@code raiseMessage} method with a severity level of {@code FacesMessage.SEVERITY_FATAL}.
+     *
+     * @param summary A brief summary of the message.
+     * @param detail A detailed description of the message.
+     */
     public void raiseMessageFatal(String summary, String detail) {
         this.raiseMessage(FacesMessage.SEVERITY_FATAL, summary, detail);
     }
 
+    /**
+     * Adds a FacesMessage to the current FacesContext with the specified severity, summary, and detail.
+     * If the FacesContext is null, logs an informational message indicating the failure to raise the message.
+     *
+     * @param severity The severity level of the message (e.g., Info, Warning, Error, Fatal).
+     * @param summary A brief summary of the message.
+     * @param detail A detailed description of the message.
+     */
     private void raiseMessage(FacesMessage.Severity severity, String summary, String detail) {
         FacesMessage fMsg = new FacesMessage(severity, summary, detail);
         if (FacesContext.getCurrentInstance() == null) {
             this.getLogger().info(String.format("Unable to raise message. FacesContext is null. Summary: %s, Detail: %s", summary, detail));
         } else FacesContext.getCurrentInstance().addMessage(null, fMsg);
+    }
+
+    /**
+     * Filters a list of Form objects by removing those with a title matching the placeholder value.
+     *
+     * @param toFilter the list of Form objects to be filtered
+     * @return a new list of Form objects excluding those with titles equal to the placeholder value
+     */
+    protected List<Form> filterNoPlaceholders(List<Form> toFilter) {
+        return toFilter.stream()
+                .filter(itm -> !PersonalInventoryItemVO.PLACEHOLDER_TITLE.equals(itm.getTitle()))
+                .collect(Collectors.toList());
     }
 }

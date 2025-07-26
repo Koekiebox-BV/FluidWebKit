@@ -47,6 +47,22 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 
+/**
+ * Request-scoped managed bean responsible for handling form attachments in the WebKit interface.
+ * 
+ * This bean provides functionality for:
+ * - Fetching attachments associated with forms
+ * - Managing attachment caches to improve performance
+ * - Generating URLs for thumbnails and raw attachment content
+ * - Handling attachment data retrieval and processing
+ * - Supporting Excel worksheet extraction from attachments
+ * 
+ * The bean uses various caches to optimize attachment handling and reduce server load
+ * when working with potentially large attachment files.
+ *
+ * @author jasonbruwer
+ * @since 1.0
+ */
 @RequestScoped
 @Named("webKitAttachmentBean")
 public class WebKitAttachmentBean extends ABaseManagedBean {
@@ -62,6 +78,15 @@ public class WebKitAttachmentBean extends ABaseManagedBean {
     @FormImageCache
     private Cache<String, ImageStreamedContent> formImageStreamedCache;
 
+    /**
+     * Fetches a paginated subset of attachments for the specified form.
+     * 
+     * @param form The form for which to fetch attachments
+     * @param fromIndex The starting index for pagination (0-based)
+     * @param maxAllowed The maximum number of attachments to return
+     * @return A list of attachments for the form, limited by the pagination parameters,
+     *         or an empty list if no attachments are available or the pagination is out of bounds
+     */
     public List<Attachment> actionFetchAttachmentsForForm(Form form, int fromIndex, int maxAllowed) {
         List<Attachment> returnVal = this.actionFetchAttachmentsForForm(form);
         if (maxAllowed < 1) maxAllowed = (returnVal == null) ? 0 : returnVal.size();
@@ -72,6 +97,16 @@ public class WebKitAttachmentBean extends ABaseManagedBean {
         return subList;
     }
 
+    /**
+     * Fetches all attachments for the specified form.
+     * 
+     * This method first checks the cache for attachments. If found, it returns clones of the cached
+     * attachments with the base64 data cleared to reduce memory usage. If not found in the cache,
+     * it fetches the attachments from the server, caches them, and returns clones with the base64 data cleared.
+     * 
+     * @param form The form for which to fetch attachments
+     * @return A list of attachments for the form, or null if an error occurs or the form is invalid
+     */
     public List<Attachment> actionFetchAttachmentsForForm(Form form) {
         try {
             if (this.getFluidClientDS() == null || (form == null || form.getId() == null)) return null;
@@ -125,6 +160,19 @@ public class WebKitAttachmentBean extends ABaseManagedBean {
         }
     }
 
+    /**
+     * Clears all attachment caches associated with the specified form.
+     * 
+     * This method removes:
+     * - All attachments for the form from the form attachment cache
+     * - Each individual attachment from the RAW attachment cache
+     * - All entries from the form image streamed cache
+     * 
+     * This is typically called when a form is updated or when attachments are added, 
+     * modified, or removed to ensure that subsequent requests fetch fresh data.
+     * 
+     * @param formToClearFor The form for which to clear attachment caches
+     */
     public void clearAttachmentCacheFor(Form formToClearFor) {
         if (formToClearFor == null || formToClearFor.getId() == null) return;
 
@@ -154,6 +202,16 @@ public class WebKitAttachmentBean extends ABaseManagedBean {
         return 1;
     }
 
+    /**
+     * Generates a URL for retrieving a thumbnail image of a form.
+     * 
+     * This method creates a URL that can be used to fetch a thumbnail image of the form
+     * at the specified scale. The URL includes the form ID, form definition, and thumbnail scale.
+     * 
+     * @param wfItem The workspace fluid item containing form information
+     * @param thumbnailScale The scale factor for the thumbnail (higher values produce larger thumbnails)
+     * @return A URL string for retrieving the form thumbnail
+     */
     public String actionGenerateURLForThumbnail(WorkspaceFluidItem wfItem, int thumbnailScale) {
         StringBuffer buffer = new StringBuffer();
         String postFix = String.format(
@@ -166,6 +224,18 @@ public class WebKitAttachmentBean extends ABaseManagedBean {
         return returnVal;
     }
 
+    /**
+     * Generates a URL for retrieving a thumbnail image of a specific attachment.
+     * 
+     * This method creates a URL that can be used to fetch a thumbnail image of the specified
+     * attachment at the specified scale. The URL includes the form ID, form definition,
+     * attachment ID, and thumbnail scale.
+     * 
+     * @param wfItem The workspace fluid item containing form information
+     * @param attachment The attachment for which to generate a thumbnail URL
+     * @param thumbnailScale The scale factor for the thumbnail (higher values produce larger thumbnails)
+     * @return A URL string for retrieving the attachment thumbnail, or null if either wfItem or attachment is null
+     */
     public String actionGenerateURLForThumbnail(WorkspaceFluidItem wfItem, Attachment attachment, int thumbnailScale) {
         if (wfItem == null || attachment == null) return null;
 
