@@ -21,9 +21,8 @@ import com.fluidbpm.fluidwebkit.ds.FluidClientDS;
 import com.fluidbpm.fluidwebkit.exception.WebSessionExpiredException;
 import com.fluidbpm.fluidwebkit.servlet.ABaseFWKServlet;
 import com.fluidbpm.program.api.vo.user.User;
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
 
 import javax.inject.Inject;
 import javax.servlet.ServletException;
@@ -104,12 +103,12 @@ public class PushServlet extends ABaseFWKServlet {
 		this.webKitNotificationsBean.setSessionIdFallback(null);
 		HttpSession httpSession = httpServletRequestParam.getSession(false);
 		User loggedInUser = this.getLoggedInUser(httpServletRequestParam);
-		JSONObject returnObject = new JSONObject();
+		JsonObject returnObject = new JsonObject();
 		try {
 			//User not logged in...
 			if (loggedInUser == null) {
-				returnObject.put(FieldMapping.ERROR, "User not logged in. Refresh browser.");
-				returnObject.put(FieldMapping.ERROR_CODE, ErrorCode.USER_NOT_LOGGED_IN);
+				returnObject.addProperty(FieldMapping.ERROR, "User not logged in. Refresh browser.");
+				returnObject.addProperty(FieldMapping.ERROR_CODE, ErrorCode.USER_NOT_LOGGED_IN);
 				//Invalidate...
 				if (httpSession != null) httpSession.invalidate();
 			} else {
@@ -126,7 +125,7 @@ public class PushServlet extends ABaseFWKServlet {
 					//Do something...
 				}
 			}
-		} catch (JSONException jsonExcept) {
+		} catch (Exception jsonExcept) {
 			//JSON issue...
 			this.webKitNotificationsBean.raiseError(jsonExcept);
 		}
@@ -141,9 +140,7 @@ public class PushServlet extends ABaseFWKServlet {
 		printWriter.close();
 	}
 
-	private boolean processUserNotifications(
-		JSONObject jsonCmdObject
-	) throws JSONException {
+	private boolean processUserNotifications(JsonObject jsonCmdObject) {
 		switch (this.webKitNotificationsBean.getNotificationState()) {
 			case UnreadNotificationsFull:
 				return false;
@@ -172,21 +169,19 @@ public class PushServlet extends ABaseFWKServlet {
 	}
 
 	private void addRefreshNotificationCommandObjectToArray(
-		JSONObject returnObjectParam,
+		JsonObject returnObjectParam,
 		long delayMillis
-	) throws JSONException {
+	) {
 		if (!returnObjectParam.has(FieldMapping.COMMANDS)) {
-			returnObjectParam.put(FieldMapping.COMMANDS, new JSONArray());
+			returnObjectParam.add(FieldMapping.COMMANDS, new JsonArray());
 		}
-		JSONArray jsonCommandsArray = returnObjectParam.getJSONArray(FieldMapping.COMMANDS);
-		JSONObject commandObject = new JSONObject();
-		commandObject.put(
-				FieldMapping.COMMAND,
-				Commands.REFRESH_USER_NOTIFICATION);
-		commandObject.put(FieldMapping.DELAY, delayMillis);
+		JsonArray jsonCommandsArray = returnObjectParam.getAsJsonArray(FieldMapping.COMMANDS);
+		JsonObject commandObject = new JsonObject();
+		commandObject.addProperty(FieldMapping.COMMAND, Commands.REFRESH_USER_NOTIFICATION);
+		commandObject.addProperty(FieldMapping.DELAY, delayMillis);
 
 		//Add to the array...
-		jsonCommandsArray.put(commandObject);
+		jsonCommandsArray.add(commandObject);
 	}
 	
 	private boolean processWindowSize(

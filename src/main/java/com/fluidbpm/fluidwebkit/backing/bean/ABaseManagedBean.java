@@ -106,6 +106,15 @@ public abstract class ABaseManagedBean implements Serializable {
      * @param exception The exception to be logged and reported
      */
     public void raiseError(Exception exception) {
+        if (exception instanceof ClientDashboardException) {
+            ClientDashboardException cde = (ClientDashboardException) exception;
+            if (cde.getErrorCode() == ClientDashboardException.ErrorCode.VALIDATION) {
+                FacesMessage fMsg = new FacesMessage(FacesMessage.SEVERITY_ERROR, "Error", cde.getMessage());
+                FacesContext.getCurrentInstance().addMessage(null, fMsg);
+                return;
+            }
+        }
+
         this.getLogger().error(exception.getMessage(), exception);
         if (RaygunUtil.isRaygunEnabled()) {
             new RaygunUtil(this.getRaygunUITag()).raiseErrorToRaygun(exception, this.getLoggedInUserSafe());

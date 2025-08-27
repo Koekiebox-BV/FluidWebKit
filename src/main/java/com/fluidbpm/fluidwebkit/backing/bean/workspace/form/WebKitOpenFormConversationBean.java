@@ -16,7 +16,7 @@ import com.fluidbpm.fluidwebkit.exception.CustomExecutionException;
 import com.fluidbpm.fluidwebkit.exception.MandatoryFieldsException;
 import com.fluidbpm.program.api.util.GeoUtil;
 import com.fluidbpm.program.api.util.UtilGlobal;
-import com.fluidbpm.program.api.vo.ABaseListing;
+import com.fluidbpm.program.api.vo.ABaseGSONListing;
 import com.fluidbpm.program.api.vo.attachment.Attachment;
 import com.fluidbpm.program.api.vo.field.DecimalMetaFormat;
 import com.fluidbpm.program.api.vo.field.Field;
@@ -373,7 +373,7 @@ public class WebKitOpenFormConversationBean extends ABaseManagedBean {
 						List<Form> tableRecordsForField = new ArrayList<>();
 						childForms.stream()
 								.filter(itm -> !itm.isListingEmpty())
-								.map(ABaseListing::getListing)
+								.map(ABaseGSONListing::getListing)
 								.flatMap(List::stream)
 								.filter(itm -> itm.getFormType() != null &&
 										itm.getFormType().equals(fieldNameToFormDef.get(tableFieldName)))
@@ -717,7 +717,16 @@ public class WebKitOpenFormConversationBean extends ABaseManagedBean {
 					"Success", String.format("Uploaded '%s'. Remember to Save!", uploaded.getFileName()));
 			FacesContext.getCurrentInstance().addMessage(null, fMsg);
 		} catch (Exception except) {
-			this.raiseError(except);
+			if (except instanceof ClientDashboardException) {
+				ClientDashboardException cde = (ClientDashboardException) except;
+				if (cde.getErrorCode() == ClientDashboardException.ErrorCode.VALIDATION) {
+					FacesMessage fMsg = new FacesMessage(FacesMessage.SEVERITY_ERROR,
+							"Error", cde.getMessage());
+					FacesContext.getCurrentInstance().addMessage(null, fMsg);
+				} else {
+					this.raiseError(except);
+				}
+			}
 		}
 	}
 

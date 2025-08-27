@@ -1,268 +1,276 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-		 xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-	<modelVersion>4.0.0</modelVersion>
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
 
-	<groupId>com.fluidbpm</groupId>
-	<artifactId>fluidwebkit</artifactId>
-	<version>1.3</version>
-	<packaging>jar</packaging>
+    <groupId>com.fluidbpm</groupId>
+    <artifactId>fluidwebkit</artifactId>
+    <version>1.3</version>
+    <packaging>jar</packaging>
 
-	<name>Fluid Webkit</name>
-	<description>The Fluid WebKit for JSP PrimeFaces applications.</description>
-	<url>https://github.com/Koekiebox-BV/FluidWebKit</url>
+    <name>Fluid Webkit</name>
+    <description>The Fluid WebKit for JSP PrimeFaces applications.</description>
+    <url>https://github.com/Koekiebox-BV/FluidWebKit</url>
 
-	<properties>
-		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<version.fluid.api>1.13</version.fluid.api>
-		<version.j2ee>8.0</version.j2ee>
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <version.fluid.api>1.13</version.fluid.api>
+        <version.j2ee>8.0</version.j2ee>
 
-		<!--Plugins-->
-		<version.plugin.gpg>1.6</version.plugin.gpg>
-		<version.plugin.java.source>3.2.1</version.plugin.java.source>
-		<version.plugin.java.doc>3.4.1</version.plugin.java.doc>
-		<version.plugin.compiler>3.13.0</version.plugin.compiler>
-		<version.jdk.compile>1.8</version.jdk.compile>
-		<version.plugin.koekiebox.git-maven>1.1</version.plugin.koekiebox.git-maven>
-	</properties>
+        <!--Plugins-->
+        <version.plugin.gpg>1.6</version.plugin.gpg>
+        <version.plugin.java.source>3.2.1</version.plugin.java.source>
+        <version.plugin.java.doc>3.4.1</version.plugin.java.doc>
+        <version.plugin.compiler>3.13.0</version.plugin.compiler>
+        <version.jdk.compile>1.8</version.jdk.compile>
+        <version.plugin.koekiebox.git-maven>1.1</version.plugin.koekiebox.git-maven>
+    </properties>
 
-	<licenses>
-		<license>
-			<name>GNU GENERAL PUBLIC LICENSE, Version 3</name>
-			<url>https://github.com/Koekiebox-BV/FluidWebKit/blob/develop/LICENSE</url>
-			<distribution>repo</distribution>
-		</license>
-	</licenses>
+    <licenses>
+        <license>
+            <name>GNU GENERAL PUBLIC LICENSE, Version 3</name>
+            <url>https://github.com/Koekiebox-BV/FluidWebKit/blob/develop/LICENSE</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
 
-	<developers>
-		<developer>
-			<name>Jason Bruwer</name>
-			<email>jason@koekiebox.com</email>
-			<organization>Koekiebox B.V.</organization>
-		</developer>
-	</developers>
+    <developers>
+        <developer>
+            <name>Jason Bruwer</name>
+            <email>jason@koekiebox.com</email>
+            <organization>Koekiebox B.V.</organization>
+        </developer>
+    </developers>
 
-	<scm>
-		<connection>scm:git:git@github.com:Koekiebox-BV/FluidWebKit.git</connection>
-		<developerConnection>scm:git:git@github.com:Koekiebox-BV/FluidWebKit.git</developerConnection>
-		<url>git@github.com:Koekiebox-BV/FluidWebKit.git</url>
-	</scm>
+    <scm>
+        <connection>scm:git:git@github.com:Koekiebox-BV/FluidWebKit.git</connection>
+        <developerConnection>scm:git:git@github.com:Koekiebox-BV/FluidWebKit.git</developerConnection>
+        <url>git@github.com:Koekiebox-BV/FluidWebKit.git</url>
+    </scm>
 
-	<dependencies>
-		<!--Raygun - https://mvnrepository.com/artifact/com.mindscapehq/core -->
-		<dependency>
-			<groupId>com.mindscapehq</groupId>
-			<artifactId>core</artifactId>
-			<version>4.0.0</version>
-			<scope>provided</scope>
-		</dependency>
+    <dependencies>
+        <!--Raygun - https://mvnrepository.com/artifact/com.mindscapehq/core -->
+        <dependency>
+            <groupId>com.mindscapehq</groupId>
+            <artifactId>core</artifactId>
+            <version>4.0.0</version>
+            <scope>provided</scope>
+        </dependency>
 
-		<!--Raygun - https://mvnrepository.com/artifact/com.mindscapehq/webprovider -->
-		<dependency>
-			<groupId>com.mindscapehq</groupId>
-			<artifactId>webprovider</artifactId>
-			<version>4.0.0</version>
-			<scope>provided</scope>
-		</dependency>
+        <!--Raygun - https://mvnrepository.com/artifact/com.mindscapehq/webprovider -->
+        <dependency>
+            <groupId>com.mindscapehq</groupId>
+            <artifactId>webprovider</artifactId>
+            <version>4.0.0</version>
+            <scope>provided</scope>
+        </dependency>
 
-		<!-- Bind https://mvnrepository.com/artifact/javax.xml.bind/jaxb-api -->
-		<dependency>
-			<groupId>javax.xml.bind</groupId>
-			<artifactId>jaxb-api</artifactId>
-			<version>2.3.1</version>
-			<scope>provided</scope>
-		</dependency>
+        <!-- Bind https://mvnrepository.com/artifact/javax.xml.bind/jaxb-api -->
+        <dependency>
+            <groupId>javax.xml.bind</groupId>
+            <artifactId>jaxb-api</artifactId>
+            <version>2.3.1</version>
+            <scope>provided</scope>
+        </dependency>
 
-		<!--JUnit Testing https://mvnrepository.com/artifact/junit/junit -->
-		<dependency>
-			<groupId>junit</groupId>
-			<artifactId>junit</artifactId>
-			<version>4.13.2</version>
-			<scope>test</scope>
-		</dependency>
+        <!--JUnit Testing https://mvnrepository.com/artifact/junit/junit -->
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>4.13.2</version>
+            <scope>test</scope>
+        </dependency>
 
-		<!--Fluid API Dependencies-->
-		<!--The API is expected to be in the [WildFly] Web Container-->
-		<dependency>
-			<groupId>com.fluidbpm</groupId>
-			<artifactId>fluid-ws-java-client</artifactId>
-			<version>${version.fluid.api}</version>
-			<scope>provided</scope>
-		</dependency>
+        <!--Fluid API Dependencies-->
+        <!--The API is expected to be in the [WildFly] Web Container-->
+        <dependency>
+            <groupId>com.fluidbpm</groupId>
+            <artifactId>fluid-ws-java-client</artifactId>
+            <version>${version.fluid.api}</version>
+            <scope>provided</scope>
+        </dependency>
 
-		<dependency>
-			<groupId>com.fluidbpm</groupId>
-			<artifactId>fluid-api</artifactId>
-			<version>${version.fluid.api}</version>
-			<scope>provided</scope>
-		</dependency>
+        <dependency>
+            <groupId>com.fluidbpm</groupId>
+            <artifactId>fluid-api</artifactId>
+            <version>${version.fluid.api}</version>
+            <scope>provided</scope>
+        </dependency>
 
-		<!-- J2EE -->
-		<dependency>
-			<groupId>javax</groupId>
-			<artifactId>javaee-api</artifactId>
-			<scope>provided</scope>
-			<version>${version.j2ee}</version>
-		</dependency>
+        <!-- J2EE -->
+        <dependency>
+            <groupId>javax</groupId>
+            <artifactId>javaee-api</artifactId>
+            <scope>provided</scope>
+            <version>${version.j2ee}</version>
+        </dependency>
 
-		<!--JSP Prime Faces https://mvnrepository.com/artifact/org.primefaces/primefaces -->
-		<dependency>
-			<groupId>org.primefaces</groupId>
-			<artifactId>primefaces</artifactId>
-			<version>12.0.0</version>
-			<scope>provided</scope>
-		</dependency>
+        <!--JSP Prime Faces https://mvnrepository.com/artifact/org.primefaces/primefaces -->
+        <dependency>
+            <groupId>org.primefaces</groupId>
+            <artifactId>primefaces</artifactId>
+            <version>12.0.0</version>
+            <scope>provided</scope>
+        </dependency>
 
-		<!--Open CSV https://mvnrepository.com/artifact/com.opencsv/opencsv -->
-		<dependency>
-			<groupId>com.opencsv</groupId>
-			<artifactId>opencsv</artifactId>
-			<version>5.9</version>
-			<scope>provided</scope>
-		</dependency>
+        <!--Open CSV https://mvnrepository.com/artifact/com.opencsv/opencsv -->
+        <dependency>
+            <groupId>com.opencsv</groupId>
+            <artifactId>opencsv</artifactId>
+            <version>5.9</version>
+            <scope>provided</scope>
+        </dependency>
 
-		<!--Apache POI-->
-		<!--POI for Excel exports - https://mvnrepository.com/artifact/org.apache.poi/poi -->
-		<dependency>
-			<groupId>org.apache.poi</groupId>
-			<artifactId>poi</artifactId>
-			<scope>provided</scope>
-			<version>5.2.5</version>
-		</dependency>
+        <!--Apache POI-->
+        <!--POI for Excel exports - https://mvnrepository.com/artifact/org.apache.poi/poi -->
+        <dependency>
+            <groupId>org.apache.poi</groupId>
+            <artifactId>poi</artifactId>
+            <scope>provided</scope>
+            <version>5.4.1</version>
+        </dependency>
 
-		<!--POI Scratchpad - https://mvnrepository.com/artifact/org.apache.poi/poi-scratchpad -->
-		<dependency>
-			<groupId>org.apache.poi</groupId>
-			<artifactId>poi-scratchpad</artifactId>
-			<scope>provided</scope>
-			<version>5.2.5</version>
-		</dependency>
+        <!--POI Scratchpad - https://mvnrepository.com/artifact/org.apache.poi/poi-scratchpad -->
+        <dependency>
+            <groupId>org.apache.poi</groupId>
+            <artifactId>poi-scratchpad</artifactId>
+            <scope>provided</scope>
+            <version>5.4.1</version>
+        </dependency>
 
-		<!-- https://mvnrepository.com/artifact/org.apache.poi/poi-ooxml -->
-		<dependency>
-			<groupId>org.apache.poi</groupId>
-			<artifactId>poi-ooxml</artifactId>
-			<scope>provided</scope>
-			<version>5.2.5</version>
-		</dependency>
+        <!-- https://mvnrepository.com/artifact/org.apache.poi/poi-ooxml -->
+        <dependency>
+            <groupId>org.apache.poi</groupId>
+            <artifactId>poi-ooxml</artifactId>
+            <scope>provided</scope>
+            <version>5.4.1</version>
+        </dependency>
 
-		<!--Google Guava - https://mvnrepository.com/artifact/com.google.guava/guava -->
-		<dependency>
-			<groupId>com.google.guava</groupId>
-			<artifactId>guava</artifactId>
-			<version>32.1.3-jre</version>
-			<scope>provided</scope>
-		</dependency>
+        <!--Google Guava - https://mvnrepository.com/artifact/com.google.guava/guava -->
+        <dependency>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
+            <version>32.1.3-jre</version>
+            <scope>provided</scope>
+        </dependency>
 
-		<!--Lombok - https://mvnrepository.com/artifact/org.projectlombok/lombok -->
-		<dependency>
-			<groupId>org.projectlombok</groupId>
-			<artifactId>lombok</artifactId>
-			<version>1.18.34</version>
-			<scope>provided</scope>
-		</dependency>
-	</dependencies>
+        <!--Lombok - https://mvnrepository.com/artifact/org.projectlombok/lombok -->
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <version>1.18.34</version>
+            <scope>provided</scope>
+        </dependency>
 
-	<!--Distribution Management-->
-	<distributionManagement>
-		<!--Snapshot-->
-		<snapshotRepository>
-			<id>fluid_open_source</id>
-			<url>https://oss.sonatype.org/content/repositories/snapshots</url>
-		</snapshotRepository>
+        <!-- Gson for JSON handling -->
+        <dependency>
+            <groupId>com.google.code.gson</groupId>
+            <artifactId>gson</artifactId>
+            <version>2.13.1</version>
+            <scope>provided</scope>
+        </dependency>
+    </dependencies>
 
-		<!--Release-->
-		<repository>
-			<id>fluid_open_source</id>
-			<url>https://oss.sonatype.org/service/local/staging/deploy/maven2</url>
-		</repository>
-	</distributionManagement>
+    <!--Distribution Management-->
+    <distributionManagement>
+        <!--Snapshot-->
+        <snapshotRepository>
+            <id>fluid_open_source</id>
+            <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+        </snapshotRepository>
 
-	<!--Plugins-->
-	<build>
-		<plugins>
-			<plugin>
-				<groupId>com.koekiebox</groupId>
-				<artifactId>git-maven-plugin</artifactId>
-				<version>${version.plugin.koekiebox.git-maven}</version>
-				<executions>
-					<execution>
-						<goals>
-							<goal>git_describe</goal>
-						</goals>
-					</execution>
-				</executions>
-				<configuration>
-					<!--Property that will be set during initialization-->
-					<makeUseOfJavaFile>true</makeUseOfJavaFile>
-					<classPathToJavaFile>com.fluidbpm.fluidwebkit.GitDescribe</classPathToJavaFile>
-					<constantToChange>GIT_DESCRIBE</constantToChange>
-				</configuration>
-			</plugin>
+        <!--Release-->
+        <repository>
+            <id>fluid_open_source</id>
+            <url>https://oss.sonatype.org/service/local/staging/deploy/maven2</url>
+        </repository>
+    </distributionManagement>
 
-			<!--Maven GPG Sign Plugin-->
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-gpg-plugin</artifactId>
-				<version>${version.plugin.gpg}</version>
-				<executions>
-					<execution>
-						<id>sign-artifacts</id>
-						<phase>verify</phase>
-						<goals>
-							<goal>sign</goal>
-						</goals>
-					</execution>
-				</executions>
-			</plugin>
+    <!--Plugins-->
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>com.koekiebox</groupId>
+                <artifactId>git-maven-plugin</artifactId>
+                <version>${version.plugin.koekiebox.git-maven}</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>git_describe</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <!--Property that will be set during initialization-->
+                    <makeUseOfJavaFile>true</makeUseOfJavaFile>
+                    <classPathToJavaFile>com.fluidbpm.fluidwebkit.GitDescribe</classPathToJavaFile>
+                    <constantToChange>GIT_DESCRIBE</constantToChange>
+                </configuration>
+            </plugin>
 
-			<!--Compiler Plugin-->
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-compiler-plugin</artifactId>
-				<version>${version.plugin.compiler}</version>
-				<configuration>
-					<source>${version.jdk.compile}</source>
-					<target>${version.jdk.compile}</target>
-					<compilerArgs>
-						<!--arg>add-modules</arg>
+            <!--Maven GPG Sign Plugin-->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-gpg-plugin</artifactId>
+                <version>${version.plugin.gpg}</version>
+                <executions>
+                    <execution>
+                        <id>sign-artifacts</id>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>sign</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <!--Compiler Plugin-->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>${version.plugin.compiler}</version>
+                <configuration>
+                    <source>${version.jdk.compile}</source>
+                    <target>${version.jdk.compile}</target>
+                    <compilerArgs>
+                        <!--arg>add-modules</arg>
                         <arg>java.xml.bind</arg-->
-					</compilerArgs>
-				</configuration>
-			</plugin>
+                    </compilerArgs>
+                </configuration>
+            </plugin>
 
-			<!--Maven Source Plugin-->
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-source-plugin</artifactId>
-				<version>${version.plugin.java.source}</version>
-				<executions>
-					<execution>
-						<id>attach-sources</id>
-						<goals>
-							<goal>jar</goal>
-						</goals>
-					</execution>
-				</executions>
-			</plugin>
+            <!--Maven Source Plugin-->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-source-plugin</artifactId>
+                <version>${version.plugin.java.source}</version>
+                <executions>
+                    <execution>
+                        <id>attach-sources</id>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
 
-			<!--Maven Javadoc Plugin-->
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-javadoc-plugin</artifactId>
-				<version>${version.plugin.java.doc}</version>
-				<configuration>
-					<source>8</source>
-					<javadocExecutable>${java.home}/bin/javadoc</javadocExecutable>
-				</configuration>
-				<executions>
-					<execution>
-						<id>attach-javadocs</id>
-						<goals>
-							<goal>jar</goal>
-						</goals>
-					</execution>
-				</executions>
-			</plugin>
-		</plugins>
-	</build>
+            <!--Maven Javadoc Plugin-->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <version>${version.plugin.java.doc}</version>
+                <configuration>
+                    <source>8</source>
+                    <javadocExecutable>${java.home}/bin/javadoc</javadocExecutable>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>attach-javadocs</id>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
 </project>

@@ -21,8 +21,8 @@ import com.fluidbpm.program.api.vo.health.ConnectStatus;
 import com.fluidbpm.program.api.vo.health.ExtendedServerHealth;
 import com.fluidbpm.program.api.vo.health.Health;
 import com.fluidbpm.ws.client.v1.health.HealthClient;
+import com.google.gson.JsonObject;
 import lombok.Getter;
-import org.json.JSONObject;
 
 import javax.annotation.PostConstruct;
 import javax.enterprise.context.SessionScoped;
@@ -94,12 +94,10 @@ public class HealthBean extends ABaseManagedBean {
 	}
 
 	public String getHealthCode() {
-		JSONObject returnVal = new JSONObject();
-
-		returnVal.put("connectStatus", this.connectStatus.toJsonObject());
-		returnVal.put("extendedServerHealth", this.extendedServerHealth.toJsonObject());
-
-		return returnVal.toString(2);
+		JsonObject returnVal = new JsonObject();
+		returnVal.add("connectStatus", this.connectStatus.toJsonObject());
+		returnVal.add("extendedServerHealth", this.extendedServerHealth.toJsonObject());
+		return returnVal.toString();
 	}
 
 	public String healthConsumptionExtract(String org, int index) {

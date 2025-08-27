@@ -6,10 +6,11 @@ import com.fluidbpm.program.api.vo.config.Configuration;
 import com.fluidbpm.program.api.vo.config.ConfigurationListing;
 import com.fluidbpm.program.api.vo.webkit.global.WebKitGlobal;
 import com.fluidbpm.ws.client.v1.config.ConfigurationClient;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
-import org.json.JSONObject;
 
 import javax.annotation.PostConstruct;
 import javax.enterprise.context.ApplicationScoped;
@@ -23,235 +24,236 @@ import java.util.List;
 @Named("webKitGuestPreferencesBean")
 public class GuestPreferencesBean extends ABaseManagedBean {
 
-	@Getter
-	private boolean lightLogo = true;
+    @Getter
+    private boolean lightLogo = true;
 
-	@Getter
-	@Setter
-	private WebKitGlobal webKitGlobal;
+    @Getter
+    @Setter
+    private WebKitGlobal webKitGlobal;
 
-	@Getter
-	private List<ComponentTheme> componentThemes = new ArrayList();
-	{
-		componentThemes.add(new ComponentTheme("Blue", "blue", "#2c84d8"));
-		componentThemes.add(new ComponentTheme("Wisteria", "wisteria", "#A864AE"));
-		componentThemes.add(new ComponentTheme("Cyan", "cyan", "#25A4D4"));
-		componentThemes.add(new ComponentTheme("Amber", "amber", "#DB8519"));
-		componentThemes.add(new ComponentTheme("Pink", "pink", "#F5487F"));
-		componentThemes.add(new ComponentTheme("Orange", "orange", "#CB623A"));
-		componentThemes.add(new ComponentTheme("Victoria", "victoria", "#594791"));
-		componentThemes.add(new ComponentTheme("Chateau Green", "chateau-green", "#3C9462"));
-		componentThemes.add(new ComponentTheme("Paradiso", "paradiso", "#3B9195"));
-		componentThemes.add(new ComponentTheme("Chambray", "chambray", "#3161BA"));
-		componentThemes.add(new ComponentTheme("Tapestry", "tapestry", "#A2527F"));
-	}
+    @Getter
+    private List<ComponentTheme> componentThemes = new ArrayList();
 
-	@Getter
-	private List<LayoutPrimaryColor> layoutPrimaryColors = new ArrayList<LayoutPrimaryColor>();
-	{
-		layoutPrimaryColors.add(new LayoutPrimaryColor("Blue", "blue", "#2c84d8"));
-		layoutPrimaryColors.add(new LayoutPrimaryColor("Wisteria", "wisteria", "#A053A7"));
-		layoutPrimaryColors.add(new LayoutPrimaryColor("Cyan", "cyan", "#25A4D4"));
-		layoutPrimaryColors.add(new LayoutPrimaryColor("Amber", "amber", "#DB8519"));
-		layoutPrimaryColors.add(new LayoutPrimaryColor("Pink", "pink", "#F5487F"));
-		layoutPrimaryColors.add(new LayoutPrimaryColor("Orange", "orange", "#CB623A"));
-		layoutPrimaryColors.add(new LayoutPrimaryColor("Victoria", "victoria", "#705BB1"));
-		layoutPrimaryColors.add(new LayoutPrimaryColor("Chateau Green", "chateau-green", "#3C9462"));
-		layoutPrimaryColors.add(new LayoutPrimaryColor("Paradiso", "paradiso", "#3B9195"));
-		layoutPrimaryColors.add(new LayoutPrimaryColor("Chambray", "chambray", "#3161BA"));
-		layoutPrimaryColors.add(new LayoutPrimaryColor("Tapestry", "tapestry", "#924470"));
-	}
+    {
+        componentThemes.add(new ComponentTheme("Blue", "blue", "#2c84d8"));
+        componentThemes.add(new ComponentTheme("Wisteria", "wisteria", "#A864AE"));
+        componentThemes.add(new ComponentTheme("Cyan", "cyan", "#25A4D4"));
+        componentThemes.add(new ComponentTheme("Amber", "amber", "#DB8519"));
+        componentThemes.add(new ComponentTheme("Pink", "pink", "#F5487F"));
+        componentThemes.add(new ComponentTheme("Orange", "orange", "#CB623A"));
+        componentThemes.add(new ComponentTheme("Victoria", "victoria", "#594791"));
+        componentThemes.add(new ComponentTheme("Chateau Green", "chateau-green", "#3C9462"));
+        componentThemes.add(new ComponentTheme("Paradiso", "paradiso", "#3B9195"));
+        componentThemes.add(new ComponentTheme("Chambray", "chambray", "#3161BA"));
+        componentThemes.add(new ComponentTheme("Tapestry", "tapestry", "#A2527F"));
+    }
 
-	@PostConstruct
-	public void init() {
-		//CONFIGS...
-		this.bindConfigFluidClientDS();
-		ConfigurationListing configurationListing =
-				this.getFluidClientDSConfig().getConfigurationClient().getAllConfigurations();
+    @Getter
+    private List<LayoutPrimaryColor> layoutPrimaryColors = new ArrayList<LayoutPrimaryColor>();
 
-		//Global...
-		Configuration webKitGlobal = configurationListing.getListing().stream()
-				.filter(itm -> WebKitConfigBean.ConfigKey.WebKit.equals(itm.getKey()))
-				.findFirst()
-				.orElse(null);
-		if (webKitGlobal != null) {
-			String jsonVal = webKitGlobal.getValue();
-			this.webKitGlobal = this.populateWebKitGlobal(jsonVal);
-		} else {
-			this.webKitGlobal = this.populateWebKitGlobal(null);
-		}
-	}
+    {
+        layoutPrimaryColors.add(new LayoutPrimaryColor("Blue", "blue", "#2c84d8"));
+        layoutPrimaryColors.add(new LayoutPrimaryColor("Wisteria", "wisteria", "#A053A7"));
+        layoutPrimaryColors.add(new LayoutPrimaryColor("Cyan", "cyan", "#25A4D4"));
+        layoutPrimaryColors.add(new LayoutPrimaryColor("Amber", "amber", "#DB8519"));
+        layoutPrimaryColors.add(new LayoutPrimaryColor("Pink", "pink", "#F5487F"));
+        layoutPrimaryColors.add(new LayoutPrimaryColor("Orange", "orange", "#CB623A"));
+        layoutPrimaryColors.add(new LayoutPrimaryColor("Victoria", "victoria", "#705BB1"));
+        layoutPrimaryColors.add(new LayoutPrimaryColor("Chateau Green", "chateau-green", "#3C9462"));
+        layoutPrimaryColors.add(new LayoutPrimaryColor("Paradiso", "paradiso", "#3B9195"));
+        layoutPrimaryColors.add(new LayoutPrimaryColor("Chambray", "chambray", "#3161BA"));
+        layoutPrimaryColors.add(new LayoutPrimaryColor("Tapestry", "tapestry", "#924470"));
+    }
 
-	public void actionUpdateGlobalWebKit() {
-		try {
-			final ConfigurationClient configurationClient = this.getFluidClientDSConfig().getConfigurationClient();
-			configurationClient.upsertConfiguration(
-					WebKitConfigBean.ConfigKey.WebKit, this.webKitGlobal.toString());
-			FacesMessage fMsg = new FacesMessage(FacesMessage.SEVERITY_INFO,
-					"Success", "Look and Feel Updated.");
-			FacesContext.getCurrentInstance().addMessage(null, fMsg);
-		} catch (Exception except) {
-			this.raiseError(except);
-		}
-	}
+    @PostConstruct
+    public void init() {
+        //CONFIGS...
+        this.bindConfigFluidClientDS();
+        ConfigurationListing configurationListing =
+                this.getFluidClientDSConfig().getConfigurationClient().getAllConfigurations();
 
-	public void populateWebKitGlobalFromConfigs(ConfigurationListing configurationListing) {
-		Configuration webKitGlobal = configurationListing.getListing().stream()
-				.filter(itm -> WebKitConfigBean.ConfigKey.WebKit.equals(itm.getKey()))
-				.findFirst()
-				.orElse(null);
-		if (webKitGlobal != null) {
-			String jsonVal = webKitGlobal.getValue();
-			this.webKitGlobal = this.populateWebKitGlobal(jsonVal);
-		}
-	}
+        //Global...
+        Configuration webKitGlobal = configurationListing.getListing().stream()
+                .filter(itm -> WebKitConfigBean.ConfigKey.WebKit.equals(itm.getKey()))
+                .findFirst()
+                .orElse(null);
+        if (webKitGlobal != null) {
+            String jsonVal = webKitGlobal.getValue();
+            this.webKitGlobal = this.populateWebKitGlobal(jsonVal);
+        } else {
+            this.webKitGlobal = this.populateWebKitGlobal(null);
+        }
+    }
 
-	public WebKitGlobal populateWebKitGlobal(String json) {
-		JSONObject jsonObj = (json == null || json.trim().isEmpty()) ?
-				new JSONObject() : new JSONObject(json);
+    public void actionUpdateGlobalWebKit() {
+        try {
+            final ConfigurationClient configurationClient = this.getFluidClientDSConfig().getConfigurationClient();
+            configurationClient.upsertConfiguration(
+                    WebKitConfigBean.ConfigKey.WebKit, this.webKitGlobal.toString());
+            FacesMessage fMsg = new FacesMessage(FacesMessage.SEVERITY_INFO,
+                    "Success", "Look and Feel Updated.");
+            FacesContext.getCurrentInstance().addMessage(null, fMsg);
+        } catch (Exception except) {
+            this.raiseError(except);
+        }
+    }
 
-		WebKitGlobal returnVal = (jsonObj.isEmpty()) ?
-				new WebKitGlobal(new JSONObject()) : new WebKitGlobal(new JSONObject(json));
+    public void populateWebKitGlobalFromConfigs(ConfigurationListing configurationListing) {
+        Configuration webKitGlobal = configurationListing.getListing().stream()
+                .filter(itm -> WebKitConfigBean.ConfigKey.WebKit.equals(itm.getKey()))
+                .findFirst()
+                .orElse(null);
+        if (webKitGlobal != null) {
+            String jsonVal = webKitGlobal.getValue();
+            this.webKitGlobal = this.populateWebKitGlobal(jsonVal);
+        }
+    }
 
-		if (UtilGlobal.isBlank(returnVal.getLayoutMode())) returnVal.setLayoutMode("light");
-		if (UtilGlobal.isBlank(returnVal.getFormType())) returnVal.setFormType("outlined");
-		if (UtilGlobal.isBlank(returnVal.getLayoutColors())) returnVal.setLayoutColors("amber");
-		if (UtilGlobal.isBlank(returnVal.getTopbarTheme())) returnVal.setTopbarTheme("dark");
-		if (UtilGlobal.isBlank(returnVal.getMenuTheme())) returnVal.setMenuTheme("dark");
-		if (returnVal.getMenuTypeDefault() == null) returnVal.setMenuTypeDefault(true);
-		if (UtilGlobal.isBlank(returnVal.getMenuModeDefault())) returnVal.setMenuModeDefault("layout-static layout-static-active");
-		if (UtilGlobal.isBlank(returnVal.getProfileModeDefault())) returnVal.setProfileModeDefault("popup");
-		if (UtilGlobal.isBlank(returnVal.getComponentColors())) returnVal.setComponentColors("amber");
+    public WebKitGlobal populateWebKitGlobal(String json) {
+        JsonObject jsonObj = (json == null || json.trim().isEmpty()) ? new JsonObject() :
+                JsonParser.parseString(json).getAsJsonObject();
 
-		return returnVal;
-	}
+        WebKitGlobal returnVal = new WebKitGlobal(jsonObj);
+        if (UtilGlobal.isBlank(returnVal.getLayoutMode())) returnVal.setLayoutMode("light");
+        if (UtilGlobal.isBlank(returnVal.getFormType())) returnVal.setFormType("outlined");
+        if (UtilGlobal.isBlank(returnVal.getLayoutColors())) returnVal.setLayoutColors("amber");
+        if (UtilGlobal.isBlank(returnVal.getTopbarTheme())) returnVal.setTopbarTheme("dark");
+        if (UtilGlobal.isBlank(returnVal.getMenuTheme())) returnVal.setMenuTheme("dark");
+        if (returnVal.getMenuTypeDefault() == null) returnVal.setMenuTypeDefault(true);
+        if (UtilGlobal.isBlank(returnVal.getMenuModeDefault()))
+            returnVal.setMenuModeDefault("layout-static layout-static-active");
+        if (UtilGlobal.isBlank(returnVal.getProfileModeDefault())) returnVal.setProfileModeDefault("popup");
+        if (UtilGlobal.isBlank(returnVal.getComponentColors())) returnVal.setComponentColors("amber");
 
-	public String getDarkMode() {
-		return this.webKitGlobal.getLayoutMode();
-	}
+        return returnVal;
+    }
 
-	public void setDarkMode(String darkMode) {
-		this.webKitGlobal.setLayoutMode(darkMode);
-		this.webKitGlobal.setMenuTheme(darkMode);
-		this.webKitGlobal.setTopbarTheme(darkMode);
-		this.lightLogo = !this.webKitGlobal.getTopbarTheme().equals("light");
-	}
+    public String getDarkMode() {
+        return this.webKitGlobal.getLayoutMode();
+    }
 
-	public String getLayout() {
-		return String.format("layout-%s-%s", this.webKitGlobal.getLayoutColors(), this.getDarkMode());
-	}
+    public void setDarkMode(String darkMode) {
+        this.webKitGlobal.setLayoutMode(darkMode);
+        this.webKitGlobal.setMenuTheme(darkMode);
+        this.webKitGlobal.setTopbarTheme(darkMode);
+        this.lightLogo = !this.webKitGlobal.getTopbarTheme().equals("light");
+    }
 
-	public String getTheme() {
-		return this.webKitGlobal.getComponentColors() + '-' + this.getDarkMode();
-	}
+    public String getLayout() {
+        return String.format("layout-%s-%s", this.webKitGlobal.getLayoutColors(), this.getDarkMode());
+    }
 
-	public String getLayoutPrimaryColor() {
-		return this.webKitGlobal.getLayoutColors();
-	}
+    public String getTheme() {
+        return this.webKitGlobal.getComponentColors() + '-' + this.getDarkMode();
+    }
 
-	public void setLayoutPrimaryColor(String layoutPrimaryColor) {
-		this.webKitGlobal.setLayoutColors(layoutPrimaryColor);
-		this.webKitGlobal.setComponentColors(layoutPrimaryColor);
-	}
+    public String getLayoutPrimaryColor() {
+        return this.webKitGlobal.getLayoutColors();
+    }
 
-	public String getComponentTheme() {
-		return this.webKitGlobal.getComponentColors();
-	}
+    public void setLayoutPrimaryColor(String layoutPrimaryColor) {
+        this.webKitGlobal.setLayoutColors(layoutPrimaryColor);
+        this.webKitGlobal.setComponentColors(layoutPrimaryColor);
+    }
 
-	public void setComponentTheme(String componentTheme) {
-		this.webKitGlobal.setComponentColors(componentTheme);
-	}
+    public String getComponentTheme() {
+        return this.webKitGlobal.getComponentColors();
+    }
 
-	public String getMenuTheme() {
-		return this.webKitGlobal.getMenuTheme();
-	}
+    public void setComponentTheme(String componentTheme) {
+        this.webKitGlobal.setComponentColors(componentTheme);
+    }
 
-	public void setMenuTheme(String menuTheme) {
-		this.webKitGlobal.setMenuTheme(menuTheme);
-	}
+    public String getMenuTheme() {
+        return this.webKitGlobal.getMenuTheme();
+    }
 
-	public String getTopbarTheme() {
-		return this.webKitGlobal.getTopbarTheme();
-	}
+    public void setMenuTheme(String menuTheme) {
+        this.webKitGlobal.setMenuTheme(menuTheme);
+    }
 
-	public void setTopbarTheme(String topbarTheme) {
-		this.webKitGlobal.setTopbarTheme(topbarTheme);
-		this.lightLogo = !this.webKitGlobal.getTopbarTheme().equals("light");
-	}
+    public String getTopbarTheme() {
+        return this.webKitGlobal.getTopbarTheme();
+    }
 
-	public String getMenuMode() {
-		return this.webKitGlobal.getMenuModeDefault();
-	}
+    public void setTopbarTheme(String topbarTheme) {
+        this.webKitGlobal.setTopbarTheme(topbarTheme);
+        this.lightLogo = !this.webKitGlobal.getTopbarTheme().equals("light");
+    }
 
-	public void setMenuMode(String menuMode) {
-		this.webKitGlobal.setMenuModeDefault(menuMode);
-	}
+    public String getMenuMode() {
+        return this.webKitGlobal.getMenuModeDefault();
+    }
 
-	public boolean isGroupedMenu() {
-		return this.webKitGlobal.getMenuTypeDefault();
-	}
+    public void setMenuMode(String menuMode) {
+        this.webKitGlobal.setMenuModeDefault(menuMode);
+    }
 
-	public void setGroupedMenu(boolean value) {
-		this.webKitGlobal.setMenuTypeDefault(value);
-	}
+    public boolean isGroupedMenu() {
+        return this.webKitGlobal.getMenuTypeDefault();
+    }
 
-	public String getProfileMode() {
-		return this.webKitGlobal.getProfileModeDefault();
-	}
+    public void setGroupedMenu(boolean value) {
+        this.webKitGlobal.setMenuTypeDefault(value);
+    }
 
-	public void setProfileMode(String profileMode) {
-		this.webKitGlobal.setProfileModeDefault(profileMode);
-	}
+    public String getProfileMode() {
+        return this.webKitGlobal.getProfileModeDefault();
+    }
 
-	public String getInputStyle() {
-		return this.webKitGlobal.getFormType();
-	}
+    public void setProfileMode(String profileMode) {
+        this.webKitGlobal.setProfileModeDefault(profileMode);
+    }
 
-	public void setInputStyle(String inputStyle) {
-		this.webKitGlobal.setFormType(inputStyle);
-	}
+    public String getInputStyle() {
+        return this.webKitGlobal.getFormType();
+    }
 
-	public String getInputStyleClass() {
-		return this.getInputStyle().equals("filled") ? "ui-input-filled" : "";
-	}
+    public void setInputStyle(String inputStyle) {
+        this.webKitGlobal.setFormType(inputStyle);
+    }
 
-	public String getInputStyleAddition() {
-		return this.webKitGlobal.getInputStyleAddition();
-	}
+    public String getInputStyleClass() {
+        return this.getInputStyle().equals("filled") ? "ui-input-filled" : "";
+    }
 
-	public void setInputStyleAddition(String inputStyleAddition) {
-		this.webKitGlobal.setInputStyleAddition(inputStyleAddition);
-	}
+    public String getInputStyleAddition() {
+        return this.webKitGlobal.getInputStyleAddition();
+    }
 
-	public String getFluidLogoFilename() {
-		String topbarTheme = this.getTopbarTheme();
-		if (topbarTheme == null) return null;
+    public void setInputStyleAddition(String inputStyleAddition) {
+        this.webKitGlobal.setInputStyleAddition(inputStyleAddition);
+    }
 
-		switch (topbarTheme) {
-			case "light" :
-				return "fluid-black.svg";
-			case "dark" :
-			case "dim" :
-				return "fluid-white.svg";
-			default:
-				return "fluid-white.svg";
-		}
-	}
+    public String getFluidLogoFilename() {
+        String topbarTheme = this.getTopbarTheme();
+        if (topbarTheme == null) return null;
 
-	@AllArgsConstructor
-	@Getter
-	public class ComponentTheme {
-		String name;
-		String file;
-		String color;
-	}
+        switch (topbarTheme) {
+            case "light":
+                return "fluid-black.svg";
+            case "dark":
+            case "dim":
+                return "fluid-white.svg";
+            default:
+                return "fluid-white.svg";
+        }
+    }
 
-	@AllArgsConstructor
-	@Getter
-	public class LayoutPrimaryColor {
-		String name;
-		String file;
-		String color;
-	}
+    @AllArgsConstructor
+    @Getter
+    public class ComponentTheme {
+        String name;
+        String file;
+        String color;
+    }
+
+    @AllArgsConstructor
+    @Getter
+    public class LayoutPrimaryColor {
+        String name;
+        String file;
+        String color;
+    }
 
 }
