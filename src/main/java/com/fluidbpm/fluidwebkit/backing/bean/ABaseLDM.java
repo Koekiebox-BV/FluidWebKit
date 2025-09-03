@@ -14,79 +14,79 @@ import java.util.Map;
 
 public abstract class ABaseLDM<T extends ABaseFluidVO> extends LazyDataModel<T> {
 
-	@Getter
-	protected List<T> dataListing;
+    @Getter
+    protected List<T> dataListing;
 
-	@Setter
-	private Comparator comparator;
+    @Setter
+    private Comparator comparator;
 
-	public ABaseLDM() {
-		this(new ArrayList<>());
-	}
+    public ABaseLDM() {
+        this(new ArrayList<>());
+    }
 
-	public ABaseLDM(List<T> initialListing) {
-		this.dataListing = initialListing;
-	}
+    public ABaseLDM(List<T> initialListing) {
+        this.dataListing = initialListing;
+    }
 
-	@Override
-	public T getRowData(String rowKey) {
-		if (this.dataListing == null) return null;
+    @Override
+    public T getRowData(String rowKey) {
+        if (this.dataListing == null) return null;
 
-		Long idAsLong = Long.parseLong(rowKey.trim());
-		return this.dataListing.stream()
-				.filter(itm -> idAsLong.equals(itm.getId()))
-				.findFirst()
-				.orElse(null);
-	}
+        Long idAsLong = Long.parseLong(rowKey.trim());
+        return this.dataListing.stream()
+                .filter(itm -> idAsLong.equals(itm.getId()))
+                .findFirst()
+                .orElse(null);
+    }
 
-	@Override
-	public String getRowKey(T object) {
-		if (object.getId() == null) return null;
+    @Override
+    public String getRowKey(T object) {
+        if (object.getId() == null) return null;
 
-		return object.getId().toString();
-	}
+        return object.getId().toString();
+    }
 
-	public void addToInitialListing(List<T> listingToAdd) {
-		if (listingToAdd == null || listingToAdd.isEmpty()) return;
+    public void addToInitialListing(List<T> listingToAdd) {
+        if (listingToAdd == null || listingToAdd.isEmpty()) return;
 
-		this.dataListing.addAll(listingToAdd);
-	}
+        this.dataListing.addAll(listingToAdd);
+    }
 
-	public void addToInitialListing(T toAdd) {
-		if (toAdd == null) return;
+    public void addToInitialListing(T toAdd) {
+        if (toAdd == null) return;
 
-		this.dataListing.add(toAdd);
-	}
+        this.dataListing.add(toAdd);
+    }
 
-	public void clearInitialListing() {
-		if (dataListing == null) return;
+    public void clearInitialListing() {
+        if (dataListing == null) return;
 
-		this.dataListing.clear();
-	}
+        this.dataListing.clear();
+    }
 
-	@Override
-	public List<T> load(
-		int first,
-		int pageSize,
-		Map<String, SortMeta> sortMeta,
-		Map<String, FilterMeta> filters
-	) {
-		this.setRowCount(0);
-		if (this.dataListing == null) return null;
+    @Override
+    public List<T> load(
+            int first,
+            int pageSize,
+            Map<String, SortMeta> sortMeta,
+            Map<String, FilterMeta> filters
+    ) {
+        this.setRowCount(0);
+        if (this.dataListing == null) return null;
 
-		if (this.dataListing.isEmpty()) return this.dataListing;
+        if (this.dataListing.isEmpty()) return this.dataListing;
 
-		if (this.comparator != null) this.dataListing.sort(this.comparator);
+        if (this.comparator != null) this.dataListing.sort(this.comparator);
 
-		int totalSize = this.dataListing.size();
-		this.setRowCount(totalSize);
-		int toVal = (first + pageSize);
-		List<T> returnVal = this.dataListing.subList(first, toVal > totalSize ? totalSize : toVal);
-		return returnVal;
-	}
+        int totalSize = this.dataListing.size();
+        this.setRowCount(totalSize);
+        int toVal = (first + pageSize);
+        List<T> returnVal = this.dataListing.subList(first, toVal > totalSize ? totalSize : toVal);
+        return returnVal;
+    }
 
-	@Override
-	public int count(Map<String, FilterMeta> map) {
-		return this.getRowCount();
-	}
+    @Override
+    public int count(Map<String, FilterMeta> map) {
+        return this.getRowCount();
+    }
 }
