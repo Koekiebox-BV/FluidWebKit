@@ -18,9 +18,9 @@ import lombok.*;
 import org.primefaces.event.ToggleEvent;
 import org.primefaces.model.Visibility;
 
-import javax.enterprise.context.SessionScoped;
-import javax.inject.Inject;
-import javax.inject.Named;
+import jakarta.enterprise.context.SessionScoped;
+import jakarta.inject.Inject;
+import jakarta.inject.Named;
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.math.MathContext;

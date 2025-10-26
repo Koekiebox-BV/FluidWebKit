@@ -23,11 +23,11 @@ import com.fluidbpm.fluidwebkit.qualifier.cache.LoggedInUsersCache;
 import com.fluidbpm.program.api.util.UtilGlobal;
 import com.google.common.cache.Cache;
 
-import javax.enterprise.context.ApplicationScoped;
-import javax.faces.context.FacesContext;
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.servlet.http.HttpServletRequest;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.faces.context.FacesContext;
+import jakarta.inject.Inject;
+import jakarta.inject.Named;
+import jakarta.servlet.http.HttpServletRequest;
 import java.util.*;
 
 

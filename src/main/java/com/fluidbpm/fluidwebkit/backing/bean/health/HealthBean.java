@@ -24,9 +24,9 @@ import com.fluidbpm.ws.client.v1.health.HealthClient;
 import com.google.gson.JsonObject;
 import lombok.Getter;
 
-import javax.annotation.PostConstruct;
-import javax.enterprise.context.SessionScoped;
-import javax.inject.Named;
+import jakarta.annotation.PostConstruct;
+import jakarta.enterprise.context.SessionScoped;
+import jakarta.inject.Named;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;

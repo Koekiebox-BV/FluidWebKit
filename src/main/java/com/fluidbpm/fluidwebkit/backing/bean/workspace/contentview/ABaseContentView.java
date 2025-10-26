@@ -32,7 +32,7 @@ import lombok.Setter;
 import org.primefaces.event.ToggleEvent;
 import org.primefaces.model.Visibility;
 
-import javax.faces.model.SelectItem;
+import jakarta.faces.model.SelectItem;
 import java.io.Serializable;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;

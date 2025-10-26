@@ -19,7 +19,7 @@ import com.fluidbpm.fluidwebkit.exception.WebSessionExpiredException;
 import com.fluidbpm.fluidwebkit.qualifier.WebKitResource;
 import com.google.common.cache.Cache;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 /**
  * Data Source for all the Fluid API's.

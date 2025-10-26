@@ -20,10 +20,10 @@ import com.fluidbpm.fluidwebkit.backing.bean.login.LoggedInUsersBean;
 import com.fluidbpm.fluidwebkit.ds.FluidClientPool;
 import com.fluidbpm.program.api.vo.user.User;
 
-import javax.inject.Inject;
-import javax.servlet.annotation.WebListener;
-import javax.servlet.http.HttpSessionEvent;
-import javax.servlet.http.HttpSessionListener;
+import jakarta.inject.Inject;
+import jakarta.servlet.annotation.WebListener;
+import jakarta.servlet.http.HttpSessionEvent;
+import jakarta.servlet.http.HttpSessionListener;
 
 /**
  * Cleanup the FCP.

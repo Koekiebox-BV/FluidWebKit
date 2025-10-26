@@ -20,11 +20,11 @@ import com.fluidbpm.program.api.vo.report.system.SystemUptimeReport;
 import com.fluidbpm.program.api.vo.report.userstats.UserStatsReport;
 import com.fluidbpm.ws.client.v1.report.ReportSystemClient;
 import com.fluidbpm.ws.client.v1.report.ReportUserClient;
+import jakarta.enterprise.context.SessionScoped;
+import jakarta.inject.Named;
 import lombok.Getter;
 
-import javax.annotation.PostConstruct;
-import javax.enterprise.context.SessionScoped;
-import javax.inject.Named;
+import jakarta.annotation.PostConstruct;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 

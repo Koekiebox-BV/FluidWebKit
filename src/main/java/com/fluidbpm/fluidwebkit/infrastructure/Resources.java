@@ -28,7 +28,7 @@ import com.fluidbpm.program.api.vo.attachment.Attachment;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 
-import javax.enterprise.inject.Produces;
+import jakarta.enterprise.inject.Produces;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 

@@ -27,7 +27,7 @@ import com.fluidbpm.program.api.vo.webkit.viewgroup.WebKitWorkspaceJobView;
 import com.fluidbpm.program.api.vo.webkit.viewgroup.WebKitWorkspaceRouteField;
 import lombok.Getter;
 
-import javax.faces.model.SelectItem;
+import jakarta.faces.model.SelectItem;
 import java.util.*;
 import java.util.stream.Collectors;
 

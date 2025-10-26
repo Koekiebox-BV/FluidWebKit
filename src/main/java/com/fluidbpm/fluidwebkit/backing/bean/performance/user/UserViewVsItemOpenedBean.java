@@ -19,6 +19,9 @@ import com.fluidbpm.fluidwebkit.backing.bean.performance.ABasePerformanceBean;
 import com.fluidbpm.fluidwebkit.backing.bean.performance.PerformanceBean;
 import com.fluidbpm.program.api.util.UtilGlobal;
 import com.fluidbpm.program.api.vo.report.userstats.ViewOpenedAndSentOnEntry;
+import jakarta.enterprise.context.RequestScoped;
+import jakarta.inject.Inject;
+import jakarta.inject.Named;
 import lombok.Getter;
 import lombok.Setter;
 import org.primefaces.model.chart.Axis;
@@ -26,10 +29,7 @@ import org.primefaces.model.chart.AxisType;
 import org.primefaces.model.chart.BubbleChartModel;
 import org.primefaces.model.chart.BubbleChartSeries;
 
-import javax.annotation.PostConstruct;
-import javax.enterprise.context.RequestScoped;
-import javax.inject.Inject;
-import javax.inject.Named;
+import jakarta.annotation.PostConstruct;
 import java.util.List;
 
 /**

@@ -17,8 +17,8 @@ package com.fluidbpm.fluidwebkit.backing.bean.quicksearch;
 
 import com.fluidbpm.fluidwebkit.backing.bean.ABaseManagedBean;
 
-import javax.enterprise.context.ApplicationScoped;
-import javax.inject.Named;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Named;
 
 
 @ApplicationScoped

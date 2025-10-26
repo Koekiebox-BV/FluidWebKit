@@ -8,15 +8,15 @@ import com.fluidbpm.program.api.vo.webkit.global.WebKitGlobal;
 import com.fluidbpm.ws.client.v1.config.ConfigurationClient;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.faces.application.FacesMessage;
+import jakarta.faces.context.FacesContext;
+import jakarta.inject.Named;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
 
-import javax.annotation.PostConstruct;
-import javax.enterprise.context.ApplicationScoped;
-import javax.faces.application.FacesMessage;
-import javax.faces.context.FacesContext;
-import javax.inject.Named;
+import jakarta.annotation.PostConstruct;
 import java.util.ArrayList;
 import java.util.List;
 

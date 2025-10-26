@@ -24,7 +24,7 @@ import com.fluidbpm.program.api.vo.user.User;
 import lombok.Getter;
 import lombok.Setter;
 
-import javax.faces.model.SelectItem;
+import jakarta.faces.model.SelectItem;
 import java.awt.*;
 import java.io.Serializable;
 import java.util.ArrayList;

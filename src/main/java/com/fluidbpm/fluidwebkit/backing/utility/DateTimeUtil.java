@@ -2,7 +2,7 @@ package com.fluidbpm.fluidwebkit.backing.utility;
 
 import lombok.Getter;
 
-import javax.faces.model.SelectItem;
+import jakarta.faces.model.SelectItem;
 import java.util.ArrayList;
 import java.util.List;
 

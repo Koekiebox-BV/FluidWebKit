@@ -15,11 +15,11 @@
 
 package com.fluidbpm.fluidwebkit.backing.bean.workspace.converter;
 
-import javax.faces.component.UIComponent;
-import javax.faces.context.FacesContext;
-import javax.faces.convert.Converter;
-import javax.faces.model.SelectItem;
-import javax.inject.Named;
+import jakarta.faces.component.UIComponent;
+import jakarta.faces.context.FacesContext;
+import jakarta.faces.convert.Converter;
+import jakarta.faces.model.SelectItem;
+import jakarta.inject.Named;
 
 @Named(value = "webKitSelectItemStringConverter")
 public class WebKitSelectItemStringConverter implements Converter {

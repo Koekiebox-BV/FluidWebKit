@@ -29,9 +29,9 @@ import com.fluidbpm.ws.client.v1.form.FormFieldClient;
 import com.fluidbpm.ws.client.v1.userquery.UserQueryClient;
 import lombok.Getter;
 
-import javax.annotation.PostConstruct;
-import javax.enterprise.context.SessionScoped;
-import javax.inject.Named;
+import jakarta.annotation.PostConstruct;
+import jakarta.enterprise.context.SessionScoped;
+import jakarta.inject.Named;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicLong;

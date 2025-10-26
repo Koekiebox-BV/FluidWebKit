@@ -18,8 +18,8 @@ package com.fluidbpm.fluidwebkit.backing.bean.workspace.contentview;
 import com.fluidbpm.fluidwebkit.backing.bean.ABaseManagedBean;
 import lombok.Getter;
 
-import javax.enterprise.context.SessionScoped;
-import javax.inject.Named;
+import jakarta.enterprise.context.SessionScoped;
+import jakarta.inject.Named;
 import java.util.*;
 import java.util.stream.Collectors;
 

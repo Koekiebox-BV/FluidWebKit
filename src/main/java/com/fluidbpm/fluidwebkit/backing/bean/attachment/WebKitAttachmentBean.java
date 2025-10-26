@@ -33,11 +33,11 @@ import com.google.common.io.BaseEncoding;
 import org.primefaces.model.DefaultStreamedContent;
 import org.primefaces.model.StreamedContent;
 
-import javax.enterprise.context.RequestScoped;
-import javax.faces.context.FacesContext;
-import javax.faces.event.PhaseId;
-import javax.inject.Inject;
-import javax.inject.Named;
+import jakarta.enterprise.context.RequestScoped;
+import jakarta.faces.context.FacesContext;
+import jakarta.faces.event.PhaseId;
+import jakarta.inject.Inject;
+import jakarta.inject.Named;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
