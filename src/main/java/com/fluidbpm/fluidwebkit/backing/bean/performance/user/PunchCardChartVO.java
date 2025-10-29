@@ -19,7 +19,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import org.primefaces.model.chart.OhlcChartModel;
+import software.xdev.chartjs.model.charts.ScatterChart;
 
 import java.io.Serializable;
 
@@ -29,6 +29,7 @@ import java.io.Serializable;
 @Setter
 public class PunchCardChartVO implements Serializable {
 
-	private OhlcChartModel ohlcChartModel;
+	// Kept property name for XHTML/backing-bean compatibility; type migrated to Chart.js model
+	private ScatterChart ohlcChartModel;
 	private String yearMonthLabel;
 }

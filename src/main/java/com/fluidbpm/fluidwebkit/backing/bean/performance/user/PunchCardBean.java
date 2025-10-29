@@ -20,9 +20,9 @@ import com.fluidbpm.fluidwebkit.backing.bean.performance.PerformanceBean;
 import com.fluidbpm.program.api.vo.report.userstats.PunchCardEntry;
 import lombok.Getter;
 import lombok.Setter;
-import org.primefaces.model.chart.AxisType;
-import org.primefaces.model.chart.OhlcChartModel;
-import org.primefaces.model.chart.OhlcChartSeries;
+import software.xdev.chartjs.model.charts.ScatterChart;
+import software.xdev.chartjs.model.dataset.ScatterDataset;
+import software.xdev.chartjs.model.datapoint.ScatterDataPoint;
 
 import jakarta.annotation.PostConstruct;
 import jakarta.enterprise.context.RequestScoped;
@@ -68,14 +68,23 @@ public class PunchCardBean extends ABasePerformanceBean {
 			for (String yearAndMonth : entries.keySet()) {
 				List<PunchCardEntry> punchCardEntriesFromMap = entries.get(yearAndMonth);
 
-				int lowestValue = PerformanceBean.getDayAsInt(
-						Collections.min(punchCardEntriesFromMap, new PunchCardEntryComp()).getPunchCardDay());
-				int highestValue = PerformanceBean.getDayAsInt(
-						Collections.max(punchCardEntriesFromMap, new PunchCardEntryComp()).getPunchCardDay());
+				// Build ScatterChart using chartjs-java-model
+				ScatterChart modelToAdd = new ScatterChart();
+				// Title per month
+				modelToAdd.getOptions().getPlugins().getTitle().setDisplay(true);
+				modelToAdd.getOptions().getPlugins().getTitle().setText(yearAndMonth);
 
-				OhlcChartModel modelToAdd = this.createPunchCard(lowestValue, highestValue, yearAndMonth, isFirst);
+				// Create datasets representing login/logout moments
+				ScatterDataset dsFirstLogin = new ScatterDataset();
+				dsFirstLogin.setLabel("First Login");
+				ScatterDataset dsSecondLastLogin = new ScatterDataset();
+				dsSecondLastLogin.setLabel("Second Last Login");
+				ScatterDataset dsSecondLastLogout = new ScatterDataset();
+				dsSecondLastLogout.setLabel("Second Last Logout");
+				ScatterDataset dsLastLogout = new ScatterDataset();
+				dsLastLogout.setLabel("Last Logout");
 
-				//Add all of the data to the Punchcard model...
+				//Add all of the data to the datasets...
 				for (PunchCardEntry entry: punchCardEntriesFromMap) {
 					int date = PerformanceBean.getDayAsInt(entry.getPunchCardDay());
 					double firstLogin = PerformanceBean.getHourAndMinuteAsDouble(entry.getFirstLoginForDay());
@@ -83,14 +92,19 @@ public class PunchCardBean extends ABasePerformanceBean {
 					double secondLastLogout = PerformanceBean.getHourAndMinuteAsDouble(entry.getSecondLastLogout());
 					double secondLastLogin = PerformanceBean.getHourAndMinuteAsDouble(entry.getSecondLastLogin());
 
-					modelToAdd.add(new OhlcChartSeries(
-							date,
-							firstLogin,
-							secondLastLogout,
-							secondLastLogin,
-							lastLogout));
+					dsFirstLogin.addData(new ScatterDataPoint((double)date, firstLogin));
+					dsSecondLastLogin.addData(new ScatterDataPoint((double)date, secondLastLogin));
+					dsSecondLastLogout.addData(new ScatterDataPoint((double)date, secondLastLogout));
+					dsLastLogout.addData(new ScatterDataPoint((double)date, lastLogout));
 				}
 
+				// Attach datasets to the chart
+				modelToAdd.getData().addDataset(dsFirstLogin);
+				modelToAdd.getData().addDataset(dsSecondLastLogin);
+				modelToAdd.getData().addDataset(dsSecondLastLogout);
+				modelToAdd.getData().addDataset(dsLastLogout);
+
+				// Backward-compatibility no-op
 				this.setChartBasics(modelToAdd);
 				this.userPunchcardCharts.add(new PunchCardChartVO(modelToAdd, yearAndMonth));
 				isFirst = false;
@@ -208,36 +222,6 @@ public class PunchCardBean extends ABasePerformanceBean {
 		return String.format("%02d", intValueParam);
 	}
 
-	private OhlcChartModel createPunchCard(
-		int lowestValueParam,
-		int highestValueParam,
-		String yearAndMonthParam,
-		boolean isFirstParam
-	) {
-		OhlcChartModel returnVal = new OhlcChartModel();
-
-		returnVal.setTitle(yearAndMonthParam);
-		returnVal.getAxis(AxisType.X).setLabel("Day in Month");
-		returnVal.getAxis(AxisType.X).setTickFormat("%d");
-		returnVal.getAxis(AxisType.X).setTickInterval("1");
-		returnVal.getAxis(AxisType.X).setMin(lowestValueParam);
-		returnVal.getAxis(AxisType.X).setMax(highestValueParam);
-
-		returnVal.setAnimate(true);
-		returnVal.setCandleStick(true);
-
-		if (isFirstParam) {
-			returnVal.getAxis(AxisType.Y).setLabel("Time (Hour in Day)");
-			returnVal.getAxis(AxisType.Y).setTickFormat("%.2f");
-			returnVal.getAxis(AxisType.Y).setMin(00.00);
-			returnVal.getAxis(AxisType.Y).setMax(24.00);
-		} else {
-			returnVal.getAxis(AxisType.Y).setMin(00.00);
-			returnVal.getAxis(AxisType.Y).setMax(24.00);
-		}
-
-		return returnVal;
-	}
 
 	private Map<String,List<PunchCardEntry>> breakPunchCardUpMonthly(
 		List<PunchCardEntry> punchCardEntriesParam

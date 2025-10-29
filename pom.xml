@@ -14,7 +14,7 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <version.fluid.api>1.13</version.fluid.api>
-        <version.jakarta>9.1.0</version.jakarta>
+        <version.jakarta>10.0.0</version.jakarta>
 
         <!--Plugins-->
         <version.plugin.gpg>1.6</version.plugin.gpg>
@@ -96,7 +96,7 @@
             <scope>provided</scope>
         </dependency>
 
-        <!-- Jakarta -->
+        <!-- Jakarta  -->
         <dependency>
             <groupId>jakarta.platform</groupId>
             <artifactId>jakarta.jakartaee-api</artifactId>
@@ -108,8 +108,7 @@
         <dependency>
             <groupId>org.primefaces</groupId>
             <artifactId>primefaces</artifactId>
-            <!--version>12.0.0</version-->
-            <version>12.0.11-LTS</version>
+            <version>15.0.8</version>
             <classifier>jakarta</classifier>
             <scope>provided</scope>
         </dependency>
@@ -169,6 +168,14 @@
             <artifactId>gson</artifactId>
             <version>2.13.1</version>
             <scope>provided</scope>
+        </dependency>
+
+        <!-- Chart.js Java Model used by PrimeFaces 15 charts -->
+        <dependency>
+            <groupId>software.xdev</groupId>
+            <artifactId>chartjs-java-model</artifactId>
+            <version>2.7.0</version>
+            <scope>compile</scope>
         </dependency>
     </dependencies>
 

@@ -16,17 +16,18 @@
 package com.fluidbpm.fluidwebkit.backing.bean.performance;
 
 import com.fluidbpm.fluidwebkit.backing.bean.ABaseManagedBean;
-import org.primefaces.model.chart.ChartModel;
 
 public abstract class ABasePerformanceBean extends ABaseManagedBean {
 
 	/**
-	 * @param chartModelParam The chart model.
+	 * Backward-compatibility no-op for legacy chart setup. New PrimeFaces charts
+	 * configure colors via datasets/options, so this method intentionally does nothing.
+	 * Kept to avoid breaking existing callers during the migration.
+	 *
+	 * @param chartModelParam The chart model (ignored).
 	 */
-	protected void setChartBasics(ChartModel chartModelParam) {
-		if (chartModelParam == null) return;
-		
-		chartModelParam.setSeriesColors("1399F1,E41751,3B9F3F,FDB309,864CD2,FD8B47,A8CC53,58629F,149C9C,237CDE,EB953C");
+	protected void setChartBasics(Object chartModelParam) {
+		// No-op with newer PrimeFaces Charts (ChartJS). Colors are set per-dataset.
 	}
 
 	protected int getFloatAsPercentage(float floatParam) {

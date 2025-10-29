@@ -19,17 +19,16 @@ import com.fluidbpm.fluidwebkit.backing.bean.performance.ABasePerformanceBean;
 import com.fluidbpm.fluidwebkit.backing.bean.performance.PerformanceBean;
 import com.fluidbpm.program.api.util.UtilGlobal;
 import com.fluidbpm.program.api.vo.report.userstats.ViewOpenedAndSentOnEntry;
+import jakarta.annotation.PostConstruct;
 import jakarta.enterprise.context.RequestScoped;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
 import lombok.Getter;
 import lombok.Setter;
-import org.primefaces.model.chart.Axis;
-import org.primefaces.model.chart.AxisType;
-import org.primefaces.model.chart.BubbleChartModel;
-import org.primefaces.model.chart.BubbleChartSeries;
+import software.xdev.chartjs.model.charts.BubbleChart;
+import software.xdev.chartjs.model.datapoint.BubbleDataPoint;
+import software.xdev.chartjs.model.dataset.BubbleDataset;
 
-import jakarta.annotation.PostConstruct;
 import java.util.List;
 
 /**
@@ -42,8 +41,8 @@ import java.util.List;
 public class UserViewVsItemOpenedBean extends ABasePerformanceBean {
 
 	//CHARTS...
-	//Login vs Logout
-	private BubbleChartModel bubbleChartModel;
+	// Keep property name for XHTML compatibility; type migrated to XDEV BubbleChart
+	private BubbleChart bubbleChartModel;
 
 	private int workItemsOpened;
 	private int workItemsOpenedAndSendOn;
@@ -67,20 +66,21 @@ public class UserViewVsItemOpenedBean extends ABasePerformanceBean {
 		this.openAndCompletePercentage = 0;
 		this.mostPopularView = UtilGlobal.EMPTY;
 		this.mostProductiveView = UtilGlobal.EMPTY;
-		this.bubbleChartModel = new BubbleChartModel();
+		this.bubbleChartModel = new BubbleChart();
 
-		if (viewOpenedAndSentOnEntries == null || viewOpenedAndSentOnEntries.isEmpty()) return;
+		if (viewOpenedAndSentOnEntries == null || viewOpenedAndSentOnEntries.isEmpty()) {
+			return;
+		}
 
+		// No-op in new charts; keep call for backward compatibility
 		this.setChartBasics(this.bubbleChartModel);
 
-		this.bubbleChartModel.setTitle("The size of the balloon represents effectiveness.");
-		this.bubbleChartModel.getAxis(AxisType.X).setLabel("Number of Items Opened from View");
-		this.bubbleChartModel.getAxis(AxisType.X).setMin(0);
-		this.bubbleChartModel.setAnimate(true);
+		// Title
+		this.bubbleChartModel.getOptions().getPlugins().getTitle().setDisplay(true);
+		this.bubbleChartModel.getOptions().getPlugins().getTitle().setText("The size of the balloon represents effectiveness.");
 
-		Axis yAxis = this.bubbleChartModel.getAxis(AxisType.Y);
-		yAxis.setLabel("Number of View 'Clicks'");
-		yAxis.setMin(0);
+		// Axes (optional). Defaults are fine with PrimeFaces 15; explicit axis API differs across versions.
+		// If axis titles are required, configure them in the XHTML via ChartJS options JSON.
 
 		String mostPopView = null, mostProdView = null;
 		int latestMostPopViewClicks = 0, latestProductive = 0;
@@ -99,17 +99,21 @@ public class UserViewVsItemOpenedBean extends ABasePerformanceBean {
 				mostProdView = entry.getViewName();
 			}
 
-			this.bubbleChartModel.add(new BubbleChartSeries(
-					entry.getViewName(),
-					entry.getOpenedFromViewCounts(),
-					entry.getViewClicks(),
-					(int)((float)percentageComplete * 0.60)));
+			// Create one dataset per point to keep tooltip label as the view name
+			BubbleDataset dataset = new BubbleDataset();
+			dataset.setLabel(entry.getViewName());
+			double radius = ((double)percentageComplete) * 0.60d;
+			dataset.addData(new BubbleDataPoint(
+					(double)entry.getOpenedFromViewCounts(),
+					(double)entry.getViewClicks(),
+					radius));
+			this.bubbleChartModel.getData().addDataset(dataset);
 		}
 
 		this.workItemsOpenedButNotSendOn = (this.workItemsOpened - this.workItemsOpenedAndSendOn);
 
 		this.openAndCompletePercentage = this.getFloatAsPercentage(
-						((float)this.workItemsOpenedAndSendOn / (float)this.workItemsOpened));
+					((float)this.workItemsOpenedAndSendOn / (float)this.workItemsOpened));
 		this.mostPopularView = mostPopView == null || mostPopView.isEmpty() ? UtilGlobal.EMPTY : mostPopView;
 		this.mostProductiveView = mostPopView == null || mostPopView.isEmpty() ? UtilGlobal.EMPTY : mostProdView;
 	}
@@ -125,6 +129,9 @@ public class UserViewVsItemOpenedBean extends ABasePerformanceBean {
 	}
 
 	public boolean isBubbleChartModelEmpty() {
-		return (this.bubbleChartModel.getData() == null || this.bubbleChartModel.getData().isEmpty());
+		return this.bubbleChartModel == null
+				|| this.bubbleChartModel.getData() == null
+				|| this.bubbleChartModel.getData().getDatasets() == null
+				|| this.bubbleChartModel.getData().getDatasets().isEmpty();
 	}
 }

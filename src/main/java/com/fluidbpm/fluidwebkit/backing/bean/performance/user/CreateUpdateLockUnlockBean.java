@@ -15,19 +15,20 @@
 
 package com.fluidbpm.fluidwebkit.backing.bean.performance.user;
 
-import com.fluidbpm.fluidwebkit.backing.bean.ABaseManagedBean;
 import com.fluidbpm.fluidwebkit.backing.bean.performance.ABasePerformanceBean;
 import com.fluidbpm.fluidwebkit.backing.bean.performance.PerformanceBean;
 import com.fluidbpm.program.api.vo.report.userstats.CreateUpdateLockUnlockEntry;
-import com.fluidbpm.program.api.vo.report.userstats.FormContainerTypeStats;
-import lombok.Getter;
-import lombok.Setter;
-import org.primefaces.model.chart.*;
-
 import jakarta.annotation.PostConstruct;
 import jakarta.enterprise.context.SessionScoped;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
+import lombok.Getter;
+import lombok.Setter;
+import software.xdev.chartjs.model.charts.BarChart;
+import software.xdev.chartjs.model.dataset.BarDataset;
+
+import java.util.Arrays;
+
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -47,6 +48,11 @@ public class CreateUpdateLockUnlockBean extends ABasePerformanceBean {
 	private int duplicatedLocksCount;
 	private int duplicatedUnLocksCount;
 	private int duplicatedUpdatesCount;
+
+	// Charts using Chart.js Java Model (PrimeFaces 15)
+	// Keep generic property names for possible XHTML compatibility
+	private BarChart barChartModel; // Totals: Create/Update/Lock/Unlock
+	private BarChart duplicateBarChartModel; // Duplicates: Locks/Unlocks/Updates
 
 	@Inject
 	private PerformanceBean performanceBean;
@@ -98,5 +104,50 @@ public class CreateUpdateLockUnlockBean extends ABasePerformanceBean {
 		this.duplicatedLocksCount = aiDuplicatedLocksCount.get();
 		this.duplicatedUnLocksCount = aiDuplicatedUnLocksCount.get();
 		this.duplicatedUpdatesCount = aiDuplicatedUpdatesCount.get();
+
+		// Build total actions bar chart
+		this.barChartModel = new BarChart();
+		this.setChartBasics(this.barChartModel);
+		this.barChartModel.getOptions().getPlugins().getTitle().setDisplay(true);
+		this.barChartModel.getOptions().getPlugins().getTitle().setText("Create / Update / Lock / Unlock");
+		this.barChartModel.getData().setLabels(Arrays.asList("Create", "Update", "Lock", "Unlock"));
+		BarDataset totals = new BarDataset();
+		totals.setLabel("Totals");
+		totals.setData(Arrays.asList(
+				this.createdCount,
+				this.updatedCount,
+				this.lockedCount,
+				this.unLockedCount
+		));
+		this.barChartModel.getData().addDataset(totals);
+
+		// Build duplicate actions bar chart
+		this.duplicateBarChartModel = new BarChart();
+		this.setChartBasics(this.duplicateBarChartModel);
+		this.duplicateBarChartModel.getOptions().getPlugins().getTitle().setDisplay(true);
+		this.duplicateBarChartModel.getOptions().getPlugins().getTitle().setText("Duplicate Actions");
+		this.duplicateBarChartModel.getData().setLabels(Arrays.asList("Dup Locks", "Dup Unlocks", "Dup Updates"));
+		BarDataset dups = new BarDataset();
+		dups.setLabel("Duplicates");
+		dups.setData(Arrays.asList(
+				this.duplicatedLocksCount,
+				this.duplicatedUnLocksCount,
+				this.duplicatedUpdatesCount
+		));
+		this.duplicateBarChartModel.getData().addDataset(dups);
+	}
+
+	public boolean isBarChartModelEmpty() {
+		return this.barChartModel == null
+				|| this.barChartModel.getData() == null
+				|| this.barChartModel.getData().getDatasets() == null
+				|| this.barChartModel.getData().getDatasets().isEmpty();
+	}
+
+	public boolean isDuplicateBarChartModelEmpty() {
+		return this.duplicateBarChartModel == null
+				|| this.duplicateBarChartModel.getData() == null
+				|| this.duplicateBarChartModel.getData().getDatasets() == null
+				|| this.duplicateBarChartModel.getData().getDatasets().isEmpty();
 	}
 }
