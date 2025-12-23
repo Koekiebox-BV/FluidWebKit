@@ -4,7 +4,7 @@
 
     <groupId>com.fluidbpm</groupId>
     <artifactId>fluidwebkit</artifactId>
-    <version>1.4</version>
+    <version>1.5</version>
     <packaging>jar</packaging>
 
     <name>Fluid Webkit</name>
@@ -13,7 +13,7 @@
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <version.fluid.api>1.14</version.fluid.api>
+        <version.fluid.api>1.15</version.fluid.api>
         <version.jakarta>10.0.0</version.jakarta>
 
         <!--Plugins-->
@@ -21,7 +21,7 @@
         <version.plugin.java.source>3.2.1</version.plugin.java.source>
         <version.plugin.java.doc>3.4.1</version.plugin.java.doc>
         <version.plugin.compiler>3.13.0</version.plugin.compiler>
-        <version.jdk.compile>11</version.jdk.compile>
+        <maven.compiler.release>11</maven.compiler.release>
         <version.plugin.koekiebox.git-maven>1.1</version.plugin.koekiebox.git-maven>
     </properties>
 
@@ -246,8 +246,7 @@
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>${version.plugin.compiler}</version>
                 <configuration>
-                    <source>${version.jdk.compile}</source>
-                    <target>${version.jdk.compile}</target>
+                    <release>${maven.compiler.release}</release>
                     <compilerArgs>
                         <!--arg>add-modules</arg>
                         <arg>java.xml.bind</arg-->
