@@ -13,7 +13,7 @@
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <version.fluid.api>1.13</version.fluid.api>
+        <version.fluid.api>1.14</version.fluid.api>
         <version.jakarta>10.0.0</version.jakarta>
 
         <!--Plugins-->
@@ -181,22 +181,30 @@
 
     <!--Distribution Management-->
     <distributionManagement>
-        <!--Snapshot-->
-        <snapshotRepository>
-            <id>fluid_open_source</id>
-            <url>https://oss.sonatype.org/content/repositories/snapshots</url>
-        </snapshotRepository>
-
         <!--Release-->
         <repository>
-            <id>fluid_open_source</id>
-            <url>https://oss.sonatype.org/service/local/staging/deploy/maven2</url>
+            <id>central</id>
+            <url>https://central.sonatype.com/repository/maven-releases/</url>
         </repository>
     </distributionManagement>
 
     <!--Plugins-->
     <build>
         <plugins>
+            <!-- Central Portal publishing -->
+            <plugin>
+                <groupId>org.sonatype.central</groupId>
+                <artifactId>central-publishing-maven-plugin</artifactId>
+                <version>0.9.0</version>
+                <extensions>true</extensions>
+                <configuration>
+                    <publishingServerId>central</publishingServerId>
+                    <!-- optional but nice for CI: -->
+                    <!-- <autoPublish>true</autoPublish> -->
+                    <!-- <waitUntil>published</waitUntil> -->
+                </configuration>
+            </plugin>
+
             <plugin>
                 <groupId>com.koekiebox</groupId>
                 <artifactId>git-maven-plugin</artifactId>
