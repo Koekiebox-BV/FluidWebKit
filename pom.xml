@@ -21,7 +21,7 @@
         <version.plugin.java.source>3.2.1</version.plugin.java.source>
         <version.plugin.java.doc>3.4.1</version.plugin.java.doc>
         <version.plugin.compiler>3.13.0</version.plugin.compiler>
-        <version.jdk.compile>1.8</version.jdk.compile>
+        <version.jdk.compile>11</version.jdk.compile>
         <version.plugin.koekiebox.git-maven>1.1</version.plugin.koekiebox.git-maven>
     </properties>
 
@@ -158,7 +158,7 @@
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
-            <version>1.18.34</version>
+            <version>1.18.42</version>
             <scope>provided</scope>
         </dependency>
 
