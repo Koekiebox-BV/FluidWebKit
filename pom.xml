@@ -4,7 +4,7 @@
 
     <groupId>com.fluidbpm</groupId>
     <artifactId>fluidwebkit</artifactId>
-    <version>1.5</version>
+    <version>10.0</version>
     <packaging>jar</packaging>
 
     <name>Fluid Webkit</name>
@@ -13,7 +13,7 @@
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <version.fluid.api>1.15</version.fluid.api>
+        <version.fluid.api>10.0</version.fluid.api>
         <version.jakarta>10.0.0</version.jakarta>
 
         <!--Plugins-->

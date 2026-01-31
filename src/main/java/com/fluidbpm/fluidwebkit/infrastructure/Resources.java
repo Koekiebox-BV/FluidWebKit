@@ -27,59 +27,61 @@ import com.fluidbpm.fluidwebkit.servlet.content.ImageStreamedContent;
 import com.fluidbpm.program.api.vo.attachment.Attachment;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
-
+import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.inject.Produces;
+
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 /**
  * CDI for resources.
  */
+@ApplicationScoped
 public class Resources {
-	public static final Cache<String, FluidClientDS> cacheFluidDS = CacheBuilder.newBuilder()
-			.expireAfterWrite(20, TimeUnit.HOURS)
-			.removalListener(new ExitEventForFluidAPI())
-			.build();
+    public static final Cache<String, FluidClientDS> cacheFluidDS = CacheBuilder.newBuilder()
+            .expireAfterWrite(20, TimeUnit.HOURS)
+            .removalListener(new ExitEventForFluidAPI())
+            .build();
 
-	private static Cache<String, ImageStreamedContent> imageServletImageCache =
-			CacheBuilder.newBuilder().expireAfterWrite(60, TimeUnit.MINUTES).build();
+    private static Cache<String, ImageStreamedContent> imageServletImageCache =
+            CacheBuilder.newBuilder().expireAfterWrite(60, TimeUnit.MINUTES).build();
 
-	private static Cache<Long, List<Attachment>> imageAttachmentsByFormCache =
-			CacheBuilder.newBuilder().expireAfterAccess(7, TimeUnit.SECONDS).build();
+    private static Cache<Long, List<Attachment>> imageAttachmentsByFormCache =
+            CacheBuilder.newBuilder().expireAfterAccess(7, TimeUnit.SECONDS).build();
 
-	private static Cache<Long, Attachment> rawAttachmentsByIdCache =
-			CacheBuilder.newBuilder().expireAfterAccess(30, TimeUnit.SECONDS).build();
+    private static Cache<Long, Attachment> rawAttachmentsByIdCache =
+            CacheBuilder.newBuilder().expireAfterAccess(30, TimeUnit.SECONDS).build();
 
-	private static Cache<String, LoginSessionInfoVO> loggedInUsersIp =
-			CacheBuilder.newBuilder().expireAfterWrite(7, TimeUnit.DAYS).build();
+    private static Cache<String, LoginSessionInfoVO> loggedInUsersIp =
+            CacheBuilder.newBuilder().expireAfterWrite(7, TimeUnit.DAYS).build();
 
-	@Produces
-	@WebKitResource
-	public Cache<String, FluidClientDS> getFluidClientDSCache() {
-		return Resources.cacheFluidDS;
-	}
+    @Produces
+    @WebKitResource
+    public Cache<String, FluidClientDS> getFluidClientDSCache() {
+        return Resources.cacheFluidDS;
+    }
 
-	@Produces
-	@FormImageCache
-	public Cache<String, ImageStreamedContent> getFormImageServletCache(){
-		return Resources.imageServletImageCache;
-	}
+    @Produces
+    @FormImageCache
+    public Cache<String, ImageStreamedContent> getFormImageServletCache(){
+        return Resources.imageServletImageCache;
+    }
 
-	@Produces
-	@FormAttachmentsCache
-	public Cache<Long, List<Attachment>> getFormAttachmentsCache(){
-		return Resources.imageAttachmentsByFormCache;
-	}
+    @Produces
+    @FormAttachmentsCache
+    public Cache<Long, List<Attachment>> getFormAttachmentsCache(){
+        return Resources.imageAttachmentsByFormCache;
+    }
 
-	@Produces
-	@RAWAttachmentsCache
-	public Cache<Long, Attachment> getRAWAttachmentsCache(){
-		return Resources.rawAttachmentsByIdCache;
-	}
+    @Produces
+    @RAWAttachmentsCache
+    public Cache<Long, Attachment> getRAWAttachmentsCache(){
+        return Resources.rawAttachmentsByIdCache;
+    }
 
-	@Produces
-	@LoggedInUsersCache
-	public Cache<String, LoginSessionInfoVO> getLoggedInUsersCache(){
-		return Resources.loggedInUsersIp;
-	}
+    @Produces
+    @LoggedInUsersCache
+    public Cache<String, LoginSessionInfoVO> getLoggedInUsersCache(){
+        return Resources.loggedInUsersIp;
+    }
 }
