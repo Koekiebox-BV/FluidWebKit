@@ -56,7 +56,7 @@ public class PunchCardBean extends ABasePerformanceBean {
 
 	@PostConstruct
 	public void createUserPunchCardModel() {
-		this.userPunchcardCharts = new ArrayList();
+		this.userPunchcardCharts = new ArrayList<>();
 		this.loggedInForATotalOfDays = 0;
 		this.loggedInForATotalOfHours = 0;
 
@@ -71,8 +71,10 @@ public class PunchCardBean extends ABasePerformanceBean {
 				// Build ScatterChart using chartjs-java-model
 				ScatterChart modelToAdd = new ScatterChart();
 				// Title per month
-				modelToAdd.getOptions().getPlugins().getTitle().setDisplay(true);
-				modelToAdd.getOptions().getPlugins().getTitle().setText(yearAndMonth);
+				if (modelToAdd.getOptions() != null) {
+					modelToAdd.getOptions().getPlugins().getTitle().setDisplay(true);
+					modelToAdd.getOptions().getPlugins().getTitle().setText(yearAndMonth);
+				}
 
 				// Create datasets representing login/logout moments
 				ScatterDataset dsFirstLogin = new ScatterDataset();
@@ -99,10 +101,12 @@ public class PunchCardBean extends ABasePerformanceBean {
 				}
 
 				// Attach datasets to the chart
-				modelToAdd.getData().addDataset(dsFirstLogin);
-				modelToAdd.getData().addDataset(dsSecondLastLogin);
-				modelToAdd.getData().addDataset(dsSecondLastLogout);
-				modelToAdd.getData().addDataset(dsLastLogout);
+				if (modelToAdd.getData() != null) {
+					modelToAdd.getData().addDataset(dsFirstLogin);
+					modelToAdd.getData().addDataset(dsSecondLastLogin);
+					modelToAdd.getData().addDataset(dsSecondLastLogout);
+					modelToAdd.getData().addDataset(dsLastLogout);
+				}
 
 				// Backward-compatibility no-op
 				this.setChartBasics(modelToAdd);
