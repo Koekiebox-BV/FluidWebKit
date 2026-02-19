@@ -75,6 +75,10 @@ public class UserViewVsItemOpenedBean extends ABasePerformanceBean {
 		// No-op in new charts; keep call for backward compatibility
 		this.setChartBasics(this.bubbleChartModel);
 
+		if (this.bubbleChartModel.getOptions() == null) return;
+		if (this.bubbleChartModel.getOptions().getPlugins() == null) return;
+		if (this.bubbleChartModel.getOptions().getPlugins().getTitle() == null) return;
+
 		// Title
 		this.bubbleChartModel.getOptions().getPlugins().getTitle().setDisplay(true);
 		this.bubbleChartModel.getOptions().getPlugins().getTitle().setText("The size of the balloon represents effectiveness.");

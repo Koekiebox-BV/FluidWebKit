@@ -70,6 +70,7 @@ public class PunchCardBean extends ABasePerformanceBean {
 
 				// Build ScatterChart using chartjs-java-model
 				ScatterChart modelToAdd = new ScatterChart();
+				
 				// Title per month
 				if (modelToAdd.getOptions() != null) {
 					modelToAdd.getOptions().getPlugins().getTitle().setDisplay(true);

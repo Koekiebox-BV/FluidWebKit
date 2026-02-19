@@ -108,6 +108,11 @@ public class CreateUpdateLockUnlockBean extends ABasePerformanceBean {
 		// Build total actions bar chart
 		this.barChartModel = new BarChart();
 		this.setChartBasics(this.barChartModel);
+
+		if (this.barChartModel.getOptions() == null) return;
+		if (this.barChartModel.getOptions().getPlugins() == null) return;
+		if (this.barChartModel.getOptions().getPlugins().getTitle() == null) return;
+
 		this.barChartModel.getOptions().getPlugins().getTitle().setDisplay(true);
 		this.barChartModel.getOptions().getPlugins().getTitle().setText("Create / Update / Lock / Unlock");
 		this.barChartModel.getData().setLabels(Arrays.asList("Create", "Update", "Lock", "Unlock"));
