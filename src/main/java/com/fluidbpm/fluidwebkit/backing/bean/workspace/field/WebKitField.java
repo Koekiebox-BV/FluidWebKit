@@ -27,253 +27,253 @@ import static com.fluidbpm.fluidwebkit.backing.bean.ABaseManagedBean.CONFIG_USER
 @NoArgsConstructor
 public class WebKitField extends Field {
 
-	@Getter
-	@Setter
-	private boolean mandatoryAndEmpty;
+    @Getter
+    @Setter
+    private boolean mandatoryAndEmpty;
 
-	@Getter
-	@Setter
-	private boolean maskedFieldAndRevealed;
+    @Getter
+    @Setter
+    private boolean maskedFieldAndRevealed;
 
-	@Getter
-	@Setter
-	private boolean allowedAutoComplete;
+    @Getter
+    @Setter
+    private boolean allowedAutoComplete;
 
-	private List<String> allowedAvailMultiChoiceForUser;
+    private List<String> allowedAvailMultiChoiceForUser;
 
-	public WebKitField(Field field) {
-		this(field.getId(), field.getFieldName(), field.getFieldValue(), field.getTypeAsEnum());
-		this.setTypeMetaData(field.getTypeMetaData());
-	}
+    public WebKitField(Field field) {
+        this(field.getId(), field.getFieldName(), field.getFieldValue(), field.getTypeAsEnum());
+        this.setTypeMetaData(field.getTypeMetaData());
+    }
 
-	public WebKitField(
-		Long fieldIdParam,
-		String fieldNameParam,
-		Object fieldValueParam,
-		Type fieldTypeParam
-	) {
-		super(fieldIdParam);
-		this.setFieldName(fieldNameParam);
-		this.setTypeAsEnum(fieldTypeParam);
-		this.setFieldValue(fieldValueParam);
-		this.allowedAvailMultiChoiceForUser = null;
-	}
+    public WebKitField(
+        Long fieldIdParam,
+        String fieldNameParam,
+        Object fieldValueParam,
+        Type fieldTypeParam
+    ) {
+        super(fieldIdParam);
+        this.setFieldName(fieldNameParam);
+        this.setTypeAsEnum(fieldTypeParam);
+        this.setFieldValue(fieldValueParam);
+        this.allowedAvailMultiChoiceForUser = null;
+    }
 
-	public WebKitField(
-		Long fieldIdParam,
-		String fieldNameParam,
-		Object fieldValueParam,
-		Type fieldTypeParam,
-		List<String> allowedAvailMultiChoiceForUser
-	) {
-		this(fieldIdParam, fieldNameParam, fieldValueParam, fieldTypeParam);
-		this.allowedAvailMultiChoiceForUser = allowedAvailMultiChoiceForUser;
-	}
+    public WebKitField(
+        Long fieldIdParam,
+        String fieldNameParam,
+        Object fieldValueParam,
+        Type fieldTypeParam,
+        List<String> allowedAvailMultiChoiceForUser
+    ) {
+        this(fieldIdParam, fieldNameParam, fieldValueParam, fieldTypeParam);
+        this.allowedAvailMultiChoiceForUser = allowedAvailMultiChoiceForUser;
+    }
 
-	@XmlTransient
-	public void actionMarkTextEncryptedAsRevealed() {
-		FacesContext context = FacesContext.getCurrentInstance();
-		WebKitField wkF = (WebKitField)
-				UIComponent.getCurrentComponent(context).getAttributes().get("fieldModelItem");
-		wkF.setMaskedFieldAndRevealed(true);
-		this.maskedFieldAndRevealed = true;
-	}
+    @XmlTransient
+    public void actionMarkTextEncryptedAsRevealed() {
+        FacesContext context = FacesContext.getCurrentInstance();
+        WebKitField wkF = (WebKitField)
+                UIComponent.getCurrentComponent(context).getAttributes().get("fieldModelItem");
+        wkF.setMaskedFieldAndRevealed(true);
+        this.maskedFieldAndRevealed = true;
+    }
 
-	@XmlTransient
-	public SelectItem getSelectedMultiChoiceSelectItem() {
-		MultiChoice multi = this.getFieldValueAsMultiChoice();
-		if (multi == null) return null;
-		
-		return new SelectItem(multi.getSelectedMultiChoice(), multi.getSelectedMultiChoice());
-	}
+    @XmlTransient
+    public SelectItem getSelectedMultiChoiceSelectItem() {
+        MultiChoice multi = this.getFieldValueAsMultiChoice();
+        if (multi == null) return null;
 
-	@XmlTransient
-	public void setSelectedMultiChoiceSelectItem(SelectItem selectItem) {
-		MultiChoice multi = this.getFieldValueAsMultiChoice();
-		if (multi == null) return;
-		
-		multi.setSelectedMultiChoice(selectItem.getValue() == null ? null : selectItem.getValue().toString());
-	}
+        return new SelectItem(multi.getSelectedMultiChoice(), multi.getSelectedMultiChoice());
+    }
 
-	@XmlTransient
-	public List<SelectItem> getActionFetchAllAvailMultiChoice() {
-		List<SelectItem> returnList = new ArrayList();
-		MultiChoice multi = this.getFieldValueAsMultiChoice();
-		if (multi == null) return returnList;
-		
-		List<String> availSelectItems = multi.getAvailableMultiChoices();
-		if (availSelectItems == null) return returnList;
-		return new ArrayList<>(availSelectItems.stream()
-				.map(itm -> new SelectItem(itm, itm))
-				.collect(Collectors.toList()));
-	}
+    @XmlTransient
+    public void setSelectedMultiChoiceSelectItem(SelectItem selectItem) {
+        MultiChoice multi = this.getFieldValueAsMultiChoice();
+        if (multi == null) return;
 
-	@XmlTransient
-	public List<SelectItem> getActionFetchAllAvailMultiChoiceWithUserFilter() {
-		List<SelectItem> returnVal = this.getActionFetchAllAvailMultiChoice();
-		if (this.allowedAvailMultiChoiceForUser == null || this.allowedAvailMultiChoiceForUser.isEmpty()) return returnVal;
+        multi.setSelectedMultiChoice(selectItem.getValue() == null ? null : selectItem.getValue().toString());
+    }
 
-		return returnVal.stream()
-				.filter(itm -> this.allowedAvailMultiChoiceForUser.contains(itm.getLabel()))
-				.collect(Collectors.toList());
-	}
-	
-	@XmlTransient
-	public List<SelectItem> autoCompleteWithQuery(String itemQueryParam) {
-		List<SelectItem> returnList = new ArrayList();
+    @XmlTransient
+    public List<SelectItem> getActionFetchAllAvailMultiChoice() {
+        List<SelectItem> returnList = new ArrayList();
+        MultiChoice multi = this.getFieldValueAsMultiChoice();
+        if (multi == null) return returnList;
 
-		MultiChoice multi = this.getFieldValueAsMultiChoice();
-		if (multi == null) return returnList;
+        List<String> availSelectItems = multi.getAvailableMultiChoices();
+        if (availSelectItems == null) return returnList;
+        return new ArrayList<>(availSelectItems.stream()
+                .map(itm -> new SelectItem(itm, itm))
+                .collect(Collectors.toList()));
+    }
 
-		List<String> availSelectItems = multi.getAvailableMultiChoices();
-		List<SelectItem> availSelectItemsAsSE = new ArrayList<>(availSelectItems.stream()
-				.map(itm -> new SelectItem(itm, itm))
-				.collect(Collectors.toList()));
+    @XmlTransient
+    public List<SelectItem> getActionFetchAllAvailMultiChoiceWithUserFilter() {
+        List<SelectItem> returnVal = this.getActionFetchAllAvailMultiChoice();
+        if (this.allowedAvailMultiChoiceForUser == null || this.allowedAvailMultiChoiceForUser.isEmpty()) return returnVal;
 
-		if (UtilGlobal.isBlank(itemQueryParam)) {
-			returnList.addAll(availSelectItemsAsSE);
-			return returnList;
-		}
+        return returnVal.stream()
+                .filter(itm -> this.allowedAvailMultiChoiceForUser.contains(itm.getLabel()))
+                .collect(Collectors.toList());
+    }
 
-		String itemQueryParamLower = itemQueryParam.toLowerCase();
-		for (SelectItem toCheck : availSelectItemsAsSE) {
-			String label = toCheck.getLabel();
+    @XmlTransient
+    public List<SelectItem> autoCompleteWithQuery(String itemQueryParam) {
+        List<SelectItem> returnList = new ArrayList();
 
-			if (UtilGlobal.isBlank(label)) continue;
+        MultiChoice multi = this.getFieldValueAsMultiChoice();
+        if (multi == null) return returnList;
 
-			if (toCheck.getValue() == null || !(toCheck.getValue() instanceof String)) continue;
+        List<String> availSelectItems = multi.getAvailableMultiChoices();
+        List<SelectItem> availSelectItemsAsSE = new ArrayList<>(availSelectItems.stream()
+                .map(itm -> new SelectItem(itm, itm))
+                .collect(Collectors.toList()));
 
-			String stringValue = (String)toCheck.getValue();
-			if (UtilGlobal.isBlank(stringValue)) continue;
+        if (UtilGlobal.isBlank(itemQueryParam)) {
+            returnList.addAll(availSelectItemsAsSE);
+            return returnList;
+        }
 
-			String labelLower = label.toLowerCase();
-			if (labelLower.indexOf(itemQueryParamLower) > -1) returnList.add(toCheck);
-		}
+        String itemQueryParamLower = itemQueryParam.toLowerCase();
+        for (SelectItem toCheck : availSelectItemsAsSE) {
+            String label = toCheck.getLabel();
 
-		return returnList;
-	}
+            if (UtilGlobal.isBlank(label)) continue;
 
-	@XmlTransient
-	public List<String> autoCompleteWithQueryString(String itemQueryParam) {
-		List<String> returnList = new ArrayList();
+            if (toCheck.getValue() == null || !(toCheck.getValue() instanceof String)) continue;
 
-		MultiChoice multi = this.getFieldValueAsMultiChoice();
-		if (multi == null) return returnList;
+            String stringValue = (String)toCheck.getValue();
+            if (UtilGlobal.isBlank(stringValue)) continue;
 
-		List<String> availSelectItems = multi.getAvailableMultiChoices();
+            String labelLower = label.toLowerCase();
+            if (labelLower.indexOf(itemQueryParamLower) > -1) returnList.add(toCheck);
+        }
 
-		if (UtilGlobal.isBlank(itemQueryParam)) {
-			returnList.addAll(availSelectItems);
-			return returnList;
-		}
+        return returnList;
+    }
 
-		String itemQueryParamLower = itemQueryParam.toLowerCase();
-		for (String toCheck : availSelectItems) {
-			if (UtilGlobal.isBlank(toCheck)) continue;
+    @XmlTransient
+    public List<String> autoCompleteWithQueryString(String itemQueryParam) {
+        List<String> returnList = new ArrayList();
 
-			String labelLower = toCheck.toLowerCase();
-			if (labelLower.indexOf(itemQueryParamLower) > -1) returnList.add(toCheck);
-		}
+        MultiChoice multi = this.getFieldValueAsMultiChoice();
+        if (multi == null) return returnList;
 
-		return returnList;
-	}
+        List<String> availSelectItems = multi.getAvailableMultiChoices();
 
-	@XmlTransient
-	public int getInputValueColumnCount() {
-		MultiChoice multi = this.getFieldValueAsMultiChoice();
-		if (multi == null || multi.getAvailableMultiChoices() == null) return 1;
+        if (UtilGlobal.isBlank(itemQueryParam)) {
+            returnList.addAll(availSelectItems);
+            return returnList;
+        }
 
-		int count = multi.getAvailableMultiChoices().size();
+        String itemQueryParamLower = itemQueryParam.toLowerCase();
+        for (String toCheck : availSelectItems) {
+            if (UtilGlobal.isBlank(toCheck)) continue;
 
-		if (count < 1) return 1;
+            String labelLower = toCheck.toLowerCase();
+            if (labelLower.indexOf(itemQueryParamLower) > -1) returnList.add(toCheck);
+        }
 
-		int returnVal = (int)Math.sqrt(count);
+        return returnList;
+    }
 
-		if (returnVal > 3) returnVal = 3;
+    @XmlTransient
+    public int getInputValueColumnCount() {
+        MultiChoice multi = this.getFieldValueAsMultiChoice();
+        if (multi == null || multi.getAvailableMultiChoices() == null) return 1;
 
-		return returnVal;
-	}
+        int count = multi.getAvailableMultiChoices().size();
 
-	@XmlTransient
-	public Field asField() {
-		return this;
-	}
+        if (count < 1) return 1;
 
-	@XmlTransient
-	public GeoUtil getFieldValueAsGeo() {
-		return new GeoUtil(this.getFieldValueAsString());
-	}
+        int returnVal = (int)Math.sqrt(count);
 
-	@XmlTransient
-	public void setFieldValueAsGeo(GeoUtil geo) {
-		if (geo == null) {
-			this.setFieldValue(null);
-			return;
-		}
-		this.setFieldValue(geo.toString());
-	}
+        if (returnVal > 3) returnVal = 3;
 
-	@XmlTransient
-	public boolean isFieldValueEmpty() {
-		switch (this.getTypeAsEnum()) {
-			case Text:
-			case ParagraphText:
-			case TextEncrypted:
-				String textVal = this.getFieldValueAsString();
-				if (textVal == null || textVal.trim().isEmpty()) return true;
-				else return false;
-			case Decimal:
-				Double fieldVal = this.getFieldValueAsDouble();
-				if (fieldVal == null || fieldVal.doubleValue() == 0.0D) return true;
-				else return false;
-			case DateTime:
-				Date dateVal = this.getFieldValueAsDate();
-				if (dateVal == null) return true;
-				else return false;
-			case MultipleChoice:
-				MultiChoice mc = this.getFieldValueAsMultiChoice();
-				if ((mc.getSelectedMultiChoice() == null || mc.getSelectedMultiChoice().isEmpty()) &&
-				mc.getSelectedMultiChoices() == null || mc.getSelectedMultiChoices().isEmpty()) return true;
-				else return false;
-			default:
-				return false;
-		}
-	}
+        return returnVal;
+    }
 
-	@XmlTransient
-	public String getFieldIdHTMLSafe() {
-		Long id = this.getId();
-		if (id != null && id.longValue() > 0) return Long.toString(id);
+    @XmlTransient
+    public Field asField() {
+        return this;
+    }
 
-		String fieldName = this.getFieldNameAsUpperCamel();
-		if (UtilGlobal.isNotBlank(fieldName)) return fieldName;
+    @XmlTransient
+    public GeoUtil getFieldValueAsGeo() {
+        return new GeoUtil(this.getFieldValueAsString());
+    }
 
-		return UUID.randomUUID().toString();
-	}
+    @XmlTransient
+    public void setFieldValueAsGeo(GeoUtil geo) {
+        if (geo == null) {
+            this.setFieldValue(null);
+            return;
+        }
+        this.setFieldValue(geo.toString());
+    }
 
-	@XmlTransient
-	public String fieldValueMasked(String metaData) {
-		return WebKitConfigHelperBean.Masked.getInputValueAsEncryptedMasked(
-				metaData, this.getFieldValueAsString());
-	}
+    @XmlTransient
+    public boolean isFieldValueEmpty() {
+        switch (this.getTypeAsEnum()) {
+            case Text:
+            case ParagraphText:
+            case TextEncrypted:
+                String textVal = this.getFieldValueAsString();
+                if (textVal == null || textVal.trim().isEmpty()) return true;
+                else return false;
+            case Decimal:
+                Double fieldVal = this.getFieldValueAsDouble();
+                if (fieldVal == null || fieldVal.doubleValue() == 0.0D) return true;
+                else return false;
+            case DateTime:
+                Date dateVal = this.getFieldValueAsDate();
+                if (dateVal == null) return true;
+                else return false;
+            case MultipleChoice:
+                MultiChoice mc = this.getFieldValueAsMultiChoice();
+                if ((mc.getSelectedMultiChoice() == null || mc.getSelectedMultiChoice().isEmpty()) &&
+                mc.getSelectedMultiChoices() == null || mc.getSelectedMultiChoices().isEmpty()) return true;
+                else return false;
+            default:
+                return false;
+        }
+    }
 
-	@XmlTransient
-	public List<String> completeText(String query) {
-		FluidClientDS ds = this.getFluidClientDSConfig();
-		if (ds == null) return new ArrayList<>();
-		FormFieldClient ffClient = ds.getFormFieldClient();
-		if (ffClient == null) return new ArrayList<>();
+    @XmlTransient
+    public String getFieldIdHTMLSafe() {
+        Long id = this.getId();
+        if (id != null && id.longValue() > 0) return Long.toString(id);
 
-		try {
-			String likeQuery = (query + "%");
-			return ffClient.autoCompleteBasedOnExisting(this, likeQuery, 100);
-		} catch (Exception exc) {
-			return new ArrayList<>();
-		}
-	}
+        String fieldName = this.getFieldNameAsUpperCamel();
+        if (UtilGlobal.isNotBlank(fieldName)) return fieldName;
 
-	private FluidClientDS getFluidClientDSConfig() {
-		return Resources.cacheFluidDS.getIfPresent(CONFIG_USER_GLOBAL_ID);
-	}
+        return UUID.randomUUID().toString();
+    }
+
+    @XmlTransient
+    public String fieldValueMasked(String metaData) {
+        return WebKitConfigHelperBean.Masked.getInputValueAsEncryptedMasked(
+                metaData, this.getFieldValueAsString());
+    }
+
+    @XmlTransient
+    public List<String> completeText(String query) {
+        FluidClientDS ds = this.getFluidClientDSConfig();
+        if (ds == null) return new ArrayList<>();
+        FormFieldClient ffClient = ds.getFormFieldClient();
+        if (ffClient == null) return new ArrayList<>();
+
+        try {
+            String likeQuery = (query + "%");
+            return ffClient.autoCompleteBasedOnExisting(this, likeQuery, 100);
+        } catch (Exception exc) {
+            return new ArrayList<>();
+        }
+    }
+
+    private FluidClientDS getFluidClientDSConfig() {
+        return Resources.cacheFluidDS.getIfPresent(CONFIG_USER_GLOBAL_ID);
+    }
 
 }
