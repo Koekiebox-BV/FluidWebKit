@@ -712,6 +712,17 @@ public abstract class ABaseManagedBean implements Serializable {
     }
 
     /**
+     * Checks if the user has the specified permission.
+     *
+     * @param permissionName the name of the permission to check; must not be blank
+     * @return true if the user has the specified permission, false otherwise
+     */
+    public boolean doesUserHavePermissionTxt(String permissionName) {
+        if (UtilGlobal.isBlank(permissionName)) return false;
+        return this.doesUserHavePermissionTxt(new String[] {permissionName});
+    }
+
+    /**
      * Checks if the currently logged-in user has all the specified permissions.
      *
      * @param permissions A variable-length list of permissions to check. Each permission is represented as a string.
@@ -1109,4 +1120,6 @@ public abstract class ABaseManagedBean implements Serializable {
                 .filter(itm -> !PersonalInventoryItemVO.PLACEHOLDER_TITLE.equals(itm.getTitle()))
                 .collect(Collectors.toList());
     }
+
+
 }
