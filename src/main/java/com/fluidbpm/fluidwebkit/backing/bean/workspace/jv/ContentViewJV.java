@@ -270,9 +270,10 @@ public class ContentViewJV extends ABaseContentView {
 
 		routeFieldsForKit.sort(Comparator.comparing(WebKitWorkspaceRouteField::getFieldOrder));
 		List<ABaseManagedBean.ColumnModel> returnValCustomRouteFields = routeFieldsForKit.stream()
-				.filter(itm -> itm.getRouteField() != null)
-				.map(wkField -> {
-					Field field = wkField.getRouteField();
+				.filter(itm ->
+						itm.getRouteField() != null && itm.getRouteField().getTypeAsEnum() != null)
+				.map(itm -> {
+					Field field = itm.getRouteField();
 					boolean canFilter = false;
 					switch (field.getTypeAsEnum()) {
 						case Text:
@@ -281,7 +282,6 @@ public class ContentViewJV extends ABaseContentView {
 						case MultipleChoice:
 							canFilter = true;
 					}
-
 					return new ABaseManagedBean.ColumnModel(
 							field.getFieldName(),
 							field.getFieldName(),
