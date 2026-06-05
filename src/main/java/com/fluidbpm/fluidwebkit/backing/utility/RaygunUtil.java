@@ -121,7 +121,7 @@ public class RaygunUtil {
 		Throwable exceptionThrownParam,
 		User loggedInUserParam
 	) {
-		if ( !RaygunUtil.isRaygunEnabled()) return;
+		if (!RaygunUtil.isRaygunEnabled()) return;
 
 		RaygunClient client = this.getRaygunClient(null,null);
 		if(loggedInUserParam != null && loggedInUserParam.getUsername() != null) {
