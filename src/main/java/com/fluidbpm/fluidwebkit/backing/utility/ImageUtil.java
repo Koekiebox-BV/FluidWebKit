@@ -51,6 +51,8 @@ public class ImageUtil {
 			case "application/vnd.openxmlformats-officedocument.wordprocessingml.template" :
 			case "application/msword" :
 				return ImageUtil.getThumbnailPlaceholderImageForWORD();
+			case "application/pkcs12" :
+				return ImageUtil.getThumbnailPlaceholderImageForKeystore();
 			case "image/png" :
 			case "image/jpeg" :
 			case "image/tiff" :
@@ -70,6 +72,10 @@ public class ImageUtil {
 
 	public static byte[] getThumbnailPlaceholderImageForPDF() throws IOException {
 		return getContentForPath("/image/thumbnail/pdf.svg");
+	}
+
+	public static byte[] getThumbnailPlaceholderImageForKeystore() throws IOException {
+		return getContentForPath("/image/thumbnail/keystore.svg");
 	}
 
 	public static byte[] getThumbnailPlaceholderImageForTXT() throws IOException {
