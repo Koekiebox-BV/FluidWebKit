@@ -59,9 +59,10 @@ public class ImageUtil {
 			case "image/gif" :
 				return null;
 			default: {
-				new RaygunUtil().raiseErrorToRaygun(new Exception(
-						String.format("Content Type [%s] is not yet mapped for default image.", contentTypeLower)), null);
-				return null;
+				String msg = String.format("Content Type [%s] is not yet mapped for default image.", contentTypeLower);
+				System.err.println(msg);
+				new RaygunUtil().raiseErrorToRaygun(new Exception(msg), null);
+				return ImageUtil.getThumbnailPlaceholderImageForNone();
 			}
 		}
 	}
