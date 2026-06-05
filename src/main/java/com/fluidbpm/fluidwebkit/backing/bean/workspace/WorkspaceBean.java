@@ -203,9 +203,9 @@ public class WorkspaceBean extends ABaseWorkspaceBean<JobViewItemVO, ContentView
 			fieldsForSub.forEach(rteItm -> {
 				Field fieldToAdd = new Field(rteItm.getRouteField().getFieldName());
 				Object fieldValue = null;
-				if (item.getRouteFields() != null) {
+				if (item.getRouteFields() != null && UtilGlobal.isNotBlank(fieldToAdd.getFieldName())) {
 					fieldValue = item.getRouteFields().stream()
-							.filter(itm -> fieldToAdd.getFieldName().equals(itm.getFieldName()))
+							.filter(itm -> itm != null && fieldToAdd.getFieldName().equals(itm.getFieldName()))
 							.findFirst()
 							.map(itm -> itm.getFieldValue())
 							.orElse(null);
