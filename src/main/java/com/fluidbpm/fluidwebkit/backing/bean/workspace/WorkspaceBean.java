@@ -207,7 +207,7 @@ public class WorkspaceBean extends ABaseWorkspaceBean<JobViewItemVO, ContentView
 					fieldValue = item.getRouteFields().stream()
 							.filter(itm -> itm != null && fieldToAdd.getFieldName().equals(itm.getFieldName()))
 							.findFirst()
-							.map(itm -> itm.getFieldValue())
+							.map(Field::getFieldValue)
 							.orElse(null);
 				}
 				fieldToAdd.setFieldValue(fieldValue);
