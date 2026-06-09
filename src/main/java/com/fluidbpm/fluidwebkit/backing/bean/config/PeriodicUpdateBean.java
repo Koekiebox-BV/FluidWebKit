@@ -80,7 +80,9 @@ public class PeriodicUpdateBean extends ABaseManagedBean {
 		this.actionPopulateInit();
 		FacesMessage fMsg = new FacesMessage(FacesMessage.SEVERITY_INFO,
 				"Success", "App cache has been cleared.");
-		FacesContext.getCurrentInstance().addMessage(null, fMsg);
+		if (FacesContext.getCurrentInstance() != null) {
+			FacesContext.getCurrentInstance().addMessage(null, fMsg);
+		}
 	}
 
 	public List<WebKitUserQuery> getConfigWebKitUserQueries() {
