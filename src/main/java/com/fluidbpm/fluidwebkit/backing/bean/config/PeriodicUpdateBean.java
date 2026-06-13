@@ -27,6 +27,7 @@ public class PeriodicUpdateBean extends ABaseManagedBean {
 	private static final int UPDATE_INTERVAL_HOURS = 48;
 
 	private long lastUpdate;
+	private volatile long sessionCacheInvalidatedAt = 0L;
 
 	private List<WebKitUserQuery> configWebKitUserQueries;
 
@@ -62,6 +63,10 @@ public class PeriodicUpdateBean extends ABaseManagedBean {
 		this.allJobViews = null;
 	}
 
+	public long getSessionCacheInvalidatedAt() {
+		return this.sessionCacheInvalidatedAt;
+	}
+
 	/**
 	 * Clears all application-level caches and resets managed bean properties.
 	 *
@@ -77,6 +82,7 @@ public class PeriodicUpdateBean extends ABaseManagedBean {
 	 */
 	public void actionClearAllAppCaches() {
 		this.loggedInUsersBean.clearLoggedInUsers();
+		this.sessionCacheInvalidatedAt = System.currentTimeMillis();
 		this.actionPopulateInit();
 		FacesMessage fMsg = new FacesMessage(FacesMessage.SEVERITY_INFO,
 				"Success", "App cache has been cleared.");

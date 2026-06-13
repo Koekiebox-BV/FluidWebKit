@@ -16,6 +16,7 @@
 package com.fluidbpm.fluidwebkit.backing.bean.som;
 
 import com.fluidbpm.fluidwebkit.backing.bean.ABaseManagedBean;
+import com.fluidbpm.fluidwebkit.backing.bean.config.PeriodicUpdateBean;
 import com.fluidbpm.fluidwebkit.backing.bean.config.WebKitAccessBean;
 import com.fluidbpm.program.api.vo.field.Field;
 import com.fluidbpm.program.api.vo.field.MultiChoice;
@@ -42,13 +43,24 @@ public class GlobalIssuerBean extends ABaseManagedBean {
 	@Inject
 	private WebKitAccessBean accessBean;
 
-	@Getter
+	@Inject
+	private PeriodicUpdateBean periodicUpdateBean;
+
 	@Setter
 	private List<SelectItem> issuers;
 
 	@Getter
 	@Setter
 	private String activeIssuer;
+
+	private long issuersBuiltAt = 0L;
+
+	public List<SelectItem> getIssuers() {
+		if (this.periodicUpdateBean.getSessionCacheInvalidatedAt() > this.issuersBuiltAt) {
+			this.actionPopulate();
+		}
+		return this.issuers;
+	}
 
 	private static final String ISSUER = "Issuer";
 	private static final String USER_MAKER = "User Maker";
@@ -78,6 +90,7 @@ public class GlobalIssuerBean extends ABaseManagedBean {
 
 	@PostConstruct
 	public void actionPopulate() {
+		this.issuersBuiltAt = System.currentTimeMillis();
 		this.issuers = new ArrayList<>();
 
 		User loggedIn = this.getLoggedInUserSafe();
