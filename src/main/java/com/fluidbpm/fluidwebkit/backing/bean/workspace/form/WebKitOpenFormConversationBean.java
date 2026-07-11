@@ -625,6 +625,19 @@ public class WebKitOpenFormConversationBean extends ABaseManagedBean {
 			this.contextMenuModel.getElements().add(sep);
 			this.contextMenuModel.getElements().add(itemPrint);
 		}
+
+		if (this.doesUserHavePermission(AdminPermission.delete_electronic_form) &&
+				this.wsFluidItem.getFluidItemForm() != null &&
+				this.wsFluidItem.getFluidItemForm().getId() != null
+		) {
+			this.contextMenuModel.getElements().add(sep);
+			this.contextMenuModel.getElements().add(DefaultMenuItem.builder()
+					.value(String.format("Delete '%s'", this.wsFluidItem.getFluidItemTitle()))
+					.icon("pi pi-trash")
+					.styleClass("ui-menuitem-danger")
+					.onclick("PF('varDeleteFormContainerDialog').show(); return false;")
+					.build());
+		}
 	}
 
 	public void actionPrepToUploadNewAttachment() {
@@ -920,6 +933,27 @@ public class WebKitOpenFormConversationBean extends ABaseManagedBean {
 			FacesContext.getCurrentInstance().addMessage(null, fMsg);
 		} catch (Exception except) {
 			this.raiseError(except);
+		}
+	}
+
+	public void actionDeleteFormContainer() {
+		try {
+			if (this.getFluidClientDS() == null) return;
+			if (this.wsFluidItem == null || this.wsFluidItem.getFluidItemForm() == null) return;
+
+			String title = this.wsFluidItem.getFluidItemTitle();
+			FormContainerClient fcc = this.getFluidClientDS().getFormContainerClient();
+			fcc.deleteFormContainer(this.wsFluidItem.getFluidItemForm());
+
+			FacesMessage fMsg = new FacesMessage(FacesMessage.SEVERITY_INFO,
+					"Success.", String.format("Deleted '%s'.", title));
+			FacesContext.getCurrentInstance().addMessage(null, fMsg);
+
+			if (this.conversationCallback != null) {
+				this.conversationCallback.afterSaveProcessing(null);
+			}
+		} catch (Exception err) {
+			this.raiseError(err);
 		}
 	}
 
