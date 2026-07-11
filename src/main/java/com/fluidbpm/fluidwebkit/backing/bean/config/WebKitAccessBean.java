@@ -71,9 +71,16 @@ public class WebKitAccessBean extends ABaseManagedBean {
     private boolean cachingDone = false;
     static long realtimeCounter = 0;
     private String loggedInUsername;
+    long cacheBuiltAt = 0L;
 
     public WebKitAccessBean() {
         this.cachingDone = false;
+    }
+
+    public void resetCachingDone() {
+        this.cachingDone = false;
+        this.cacheBuiltAt = 0L;
+        this.actionPopulateInit();
     }
 
     /**
@@ -100,6 +107,7 @@ public class WebKitAccessBean extends ABaseManagedBean {
             this.cacheJobViews();
 
             this.cachingDone = true;
+            this.cacheBuiltAt = System.currentTimeMillis();
         } catch (Exception except) {
             this.raiseError(except);
         } finally {

@@ -60,7 +60,6 @@ public class WebKitMenuBean extends ABaseManagedBean {
 	@Inject
 	private GuestPreferencesBean guestPreferencesBean;
 
-	@Getter
 	@Setter
 	private UISubmenu submenuWorkspace;
 
@@ -68,6 +67,7 @@ public class WebKitMenuBean extends ABaseManagedBean {
 	private PeriodicUpdateBean periodicUpdateBean;
 
 	private List<UISubmenu> submenusUserQuery;
+	private long menuBuiltAt = 0L;
 
 	public static final String ICON_DEFAULT_GROUP = "pi pi-list";
 	public static final String ICON_DEFAULT_SUB = "pi pi-table";
@@ -102,6 +102,19 @@ public class WebKitMenuBean extends ABaseManagedBean {
 
 		this.lookAndFeelBean.actionPrepareWorkspaceLookAndFeelUpdate();
 		this.buildWorkspaceMenu();
+		this.menuBuiltAt = System.currentTimeMillis();
+	}
+
+	private void rebuildMenuCachesIfStale() {
+		if (this.periodicUpdateBean.getSessionCacheInvalidatedAt() > this.menuBuiltAt) {
+			this.webKitAccessBean.resetCachingDone();
+			this.actionPopulateInit();
+		}
+	}
+
+	public UISubmenu getSubmenuWorkspace() {
+		this.rebuildMenuCachesIfStale();
+		return this.submenuWorkspace;
 	}
 
 	public String actionOpenMissingConfig() {
@@ -128,11 +141,13 @@ public class WebKitMenuBean extends ABaseManagedBean {
 	}
 
 	public boolean isSubmenusUserQueryAvailForIndex(int index) {
+		this.rebuildMenuCachesIfStale();
 		if (this.submenusUserQuery == null) return false;
 		return (index < this.submenusUserQuery.size());
 	}
 
 	public UISubmenu retrieveSubMenuForIndex(int index) {
+		this.rebuildMenuCachesIfStale();
 		if (!this.isSubmenusUserQueryAvailForIndex(index)) return new UISubmenu();
 		return this.submenusUserQuery.get(index);
 	}
