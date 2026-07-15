@@ -958,6 +958,7 @@ public class WebKitOpenFormConversationBean extends ABaseManagedBean {
 	}
 
 	public void actionOnRowEdit(RowEditEvent<Form> event) {
+		event.getObject().setCurrentUser(this.getLoggedInUser());
 		FacesMessage msg = new FacesMessage("Edited", String.format("%s - %s",
 				event.getObject().getFormType(), event.getObject().getTitle()));
 		FacesContext.getCurrentInstance().addMessage(null, msg);
