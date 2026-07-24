@@ -42,14 +42,27 @@ public class ImageUtil {
 			case "application/vnd.openxmlformats-officedocument.presentationml.presentation" :
 			case "application/vnd.openxmlformats-officedocument.presentationml.template" :
 			case "application/vnd.openxmlformats-officedocument.presentationml.slideshow" :
+			//Macro-enabled / add-in PowerPoint (.pptm/.potm/.ppsm/.ppam) - note: content type is lower-cased above.
+			case "application/vnd.ms-powerpoint.presentation.macroenabled.12" :
+			case "application/vnd.ms-powerpoint.template.macroenabled.12" :
+			case "application/vnd.ms-powerpoint.slideshow.macroenabled.12" :
+			case "application/vnd.ms-powerpoint.addin.macroenabled.12" :
 				return ImageUtil.getThumbnailPlaceholderImageForPOWERPOINT();
 			case "application/vnd.ms-excel" :
 			case "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" :
 			case "application/vnd.openxmlformats-officedocument.spreadsheetml.template" :
+			//Macro-enabled / binary / add-in Excel (.xlsm/.xltm/.xlsb/.xlam) - note: content type is lower-cased above.
+			case "application/vnd.ms-excel.sheet.macroenabled.12" :
+			case "application/vnd.ms-excel.template.macroenabled.12" :
+			case "application/vnd.ms-excel.sheet.binary.macroenabled.12" :
+			case "application/vnd.ms-excel.addin.macroenabled.12" :
 				return ImageUtil.getThumbnailPlaceholderImageForEXCEL();
 			case "application/vnd.openxmlformats-officedocument.wordprocessingml.document" :
 			case "application/vnd.openxmlformats-officedocument.wordprocessingml.template" :
 			case "application/msword" :
+			//Macro-enabled Word (.docm/.dotm) - note: content type is lower-cased above.
+			case "application/vnd.ms-word.document.macroenabled.12" :
+			case "application/vnd.ms-word.template.macroenabled.12" :
 				return ImageUtil.getThumbnailPlaceholderImageForWORD();
 			case "application/pkcs12" :
 				return ImageUtil.getThumbnailPlaceholderImageForKeystore();
