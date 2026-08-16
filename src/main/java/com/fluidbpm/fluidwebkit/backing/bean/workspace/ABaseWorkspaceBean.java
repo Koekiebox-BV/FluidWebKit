@@ -284,6 +284,7 @@ public abstract class ABaseWorkspaceBean<T extends ABaseWebVO, J extends ABaseCo
 	 * Custom functionality needs to be placed in {@code this#actionOpenFormForEditingFromWorkspace}.
 	 *
 	 * @param workspaceFluidItem The workspace item.
+	 * @return The updated workspace fluid item after opening for editing.
 	 *
 	 * @see #actionOpenForm(WorkspaceFluidItem)
 	 */
@@ -294,6 +295,7 @@ public abstract class ABaseWorkspaceBean<T extends ABaseWebVO, J extends ABaseCo
 	 * Open an 'Form' for editing or viewing.
 	 *
 	 * @param workspaceFluidItem The workitem to open.
+	 * @return The updated workspace fluid item after opening.
 	 */
 	public abstract WorkspaceFluidItem actionOpenForm(WorkspaceFluidItem workspaceFluidItem);
 

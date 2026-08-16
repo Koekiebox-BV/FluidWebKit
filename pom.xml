@@ -266,10 +266,10 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-javadoc-plugin</artifactId>
                 <version>${version.plugin.java.doc}</version>
-                <configuration>
+                <!--configuration>
                     <source>8</source>
                     <javadocExecutable>${java.home}/bin/javadoc</javadocExecutable>
-                </configuration>
+                </configuration-->
                 <executions>
                     <execution>
                         <id>attach-javadocs</id>
