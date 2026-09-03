@@ -925,7 +925,19 @@ public class WebKitOpenFormConversationBean extends ABaseManagedBean {
 			}
 			TableField tblField = tableFieldToDelFor.getFieldValueAsTableField();
 			List<Form> tbRecords = tblField == null ? null : tblField.getTableRecords();
-			if (tbRecords != null && tblRecordIndex > -1) tbRecords.remove(tblRecordIndex);
+			if (tbRecords != null) {
+				//The rendered rows may be a filtered view of the records, in which case the rendered
+				//index does not point at the same record. Remove the record itself when it can be located.
+				int indexToRemove = -1;
+				for (int index = 0; index < tbRecords.size(); index++) {
+					if (tbRecords.get(index) == tableRecordToDel) {
+						indexToRemove = index;
+						break;
+					}
+				}
+				if (indexToRemove < 0) indexToRemove = tblRecordIndex;
+				if (indexToRemove > -1 && indexToRemove < tbRecords.size()) tbRecords.remove(indexToRemove);
+			}
 
 			String prevTitle = tableRecordToDel.getTitle();
 			FacesMessage fMsg = new FacesMessage(FacesMessage.SEVERITY_INFO,
@@ -937,6 +949,20 @@ public class WebKitOpenFormConversationBean extends ABaseManagedBean {
 	}
 
 	public void actionDeleteFormContainer() {
+		this.actionDeleteFormContainer(null);
+	}
+
+	/**
+	 * Permanently delete the open form instance.
+	 *
+	 * The instance does not exist after the delete, so the open form is closed;
+	 * {@code afterSaveProcessing} takes care of the form displayed in the workspace and
+	 * {@code dialogToHideAfterSuccess} of the form displayed in a dialog.
+	 *
+	 * @param dialogToHideAfterSuccess The widget var of the dialog the form is displayed in.
+	 *                                 Only hidden when the delete was successful.
+	 */
+	public void actionDeleteFormContainer(String dialogToHideAfterSuccess) {
 		try {
 			if (this.getFluidClientDS() == null) return;
 			if (this.wsFluidItem == null || this.wsFluidItem.getFluidItemForm() == null) return;
@@ -951,6 +977,11 @@ public class WebKitOpenFormConversationBean extends ABaseManagedBean {
 
 			if (this.conversationCallback != null) {
 				this.conversationCallback.afterSaveProcessing(null);
+			}
+
+			if (UtilGlobal.isNotBlank(dialogToHideAfterSuccess)) {
+				// The close event will execute the workspace update:
+				this.executeJavaScript(String.format("PF('%s').hide();", dialogToHideAfterSuccess));
 			}
 		} catch (Exception err) {
 			this.raiseError(err);
