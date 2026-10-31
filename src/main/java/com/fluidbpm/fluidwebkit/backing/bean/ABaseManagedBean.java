@@ -1075,9 +1075,9 @@ public abstract class ABaseManagedBean implements Serializable {
     }
 
     /**
-     * 
-     * @param summary
-     * @param detail
+     * Adds an error severity FacesMessage to the current FacesContext with the provided summary and detail.
+     * @param summary The summary text of the message.
+     * @param detail The detail text of the message.
      */
     public void raiseMessageError(String summary, String detail) {
         this.raiseMessage(FacesMessage.SEVERITY_ERROR, summary, detail);

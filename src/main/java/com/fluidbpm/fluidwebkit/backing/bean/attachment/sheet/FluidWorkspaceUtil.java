@@ -20,12 +20,19 @@ import com.opencsv.CSVReader;
 import com.opencsv.exceptions.CsvException;
 import org.apache.poi.ss.util.CellReference;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.regex.Pattern;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
+import java.util.zip.ZipOutputStream;
 
 /**
  * Fluid workspace class for extracting excel based content.
@@ -77,10 +84,19 @@ public class FluidWorkspaceUtil {
 	}
 
 	public List<Worksheet> getWorksheetsFromExcel(InputStream inputStreamParam, String passwordParam) {
+		final byte[] workbookBytes;
+		try {
+			workbookBytes = readAllBytes(inputStreamParam);
+		} catch (IOException ioExcept) {
+			throw new ClientDashboardException(
+					"Unable to extract Worksheets. " + ioExcept.getMessage(), ioExcept,
+					ClientDashboardException.ErrorCode.IO_ERROR);
+		}
+
+		final String password = UtilGlobal.isBlank(passwordParam) ? null : passwordParam;
 		try {
 			org.apache.poi.ss.usermodel.Workbook workbook =
-					org.apache.poi.ss.usermodel.WorkbookFactory.create(
-							inputStreamParam, (UtilGlobal.isBlank(passwordParam) ? null: passwordParam));
+					this.createWorkbook(workbookBytes, password);
 
 			List<Worksheet> sheets = new ArrayList();
 			for (int sheetIndex = 0; sheetIndex < workbook.getNumberOfSheets(); sheetIndex++) {
@@ -118,6 +134,80 @@ public class FluidWorkspaceUtil {
 					"Unable to extract Worksheets. "+eParam.getMessage(),eParam,
 					ClientDashboardException.ErrorCode.IO_ERROR);
 		}
+	}
+
+	/**
+	 * Open a workbook from the supplied bytes.
+	 *
+	 * Some {@code .xlsx} files (typically produced by non-Microsoft tooling) declare
+	 * hyperlinks on a sheet that reference a relationship id which is missing from the
+	 * sheet's {@code .rels} part. POI raises
+	 * {@code IllegalStateException: The hyperlink for cell ... references relation ...}
+	 * while opening the workbook, before any value can be read. As we only extract cell
+	 * values here, hyperlinks are irrelevant, so on that specific failure we strip the
+	 * offending hyperlink definitions from the sheet XML and retry once.
+	 */
+	private org.apache.poi.ss.usermodel.Workbook createWorkbook(byte[] workbookBytesParam, String passwordParam) throws IOException {
+		try {
+			return org.apache.poi.ss.usermodel.WorkbookFactory.create(
+					new ByteArrayInputStream(workbookBytesParam), passwordParam);
+		} catch (IllegalStateException stateExcept) {
+			byte[] repaired = stripHyperlinksFromXlsx(workbookBytesParam);
+			if (repaired == null) throw stateExcept;
+
+			return org.apache.poi.ss.usermodel.WorkbookFactory.create(
+					new ByteArrayInputStream(repaired), passwordParam);
+		}
+	}
+
+	/** Matches the {@code <hyperlinks>...</hyperlinks>} block (and its self-closing form) in a worksheet part. */
+	private static final Pattern HYPERLINKS_BLOCK =
+			Pattern.compile("<hyperlinks\\b[^>]*?/>|<hyperlinks\\b.*?</hyperlinks>", Pattern.DOTALL);
+
+	/**
+	 * Rebuild an {@code .xlsx} (zip) in memory with every {@code <hyperlinks>} block removed
+	 * from the worksheet parts. Returns {@code null} when the bytes are not a readable zip
+	 * (e.g. a legacy {@code .xls}/OLE2 or encrypted container) or when nothing was changed,
+	 * so the caller can surface the original failure.
+	 */
+	private byte[] stripHyperlinksFromXlsx(byte[] workbookBytesParam) {
+		ByteArrayOutputStream repaired = new ByteArrayOutputStream(workbookBytesParam.length);
+		boolean modified = false;
+		try (ZipInputStream zipIn = new ZipInputStream(new ByteArrayInputStream(workbookBytesParam));
+			 ZipOutputStream zipOut = new ZipOutputStream(repaired)) {
+			ZipEntry entry;
+			int entryCount = 0;
+			while ((entry = zipIn.getNextEntry()) != null) {
+				entryCount++;
+				byte[] entryBytes = readAllBytes(zipIn);
+
+				String name = entry.getName();
+				if (name.startsWith("xl/worksheets/") && name.endsWith(".xml")) {
+					String xml = new String(entryBytes, StandardCharsets.UTF_8);
+					String cleaned = HYPERLINKS_BLOCK.matcher(xml).replaceAll("");
+					if (!cleaned.equals(xml)) {
+						entryBytes = cleaned.getBytes(StandardCharsets.UTF_8);
+						modified = true;
+					}
+				}
+
+				zipOut.putNextEntry(new ZipEntry(name));
+				zipOut.write(entryBytes);
+				zipOut.closeEntry();
+			}
+			if (entryCount == 0) return null;
+		} catch (IOException ioExcept) {
+			return null;
+		}
+		return modified ? repaired.toByteArray() : null;
+	}
+
+	private static byte[] readAllBytes(InputStream inputStreamParam) throws IOException {
+		ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+		byte[] chunk = new byte[8192];
+		int read;
+		while ((read = inputStreamParam.read(chunk)) != -1) buffer.write(chunk, 0, read);
+		return buffer.toByteArray();
 	}
 
 	private String getCellValueAsString(org.apache.poi.ss.usermodel.Workbook workbookParam, org.apache.poi.ss.usermodel.Cell cellParam) {

@@ -40,7 +40,6 @@ import java.awt.image.BufferedImage;
 import java.io.*;
 import java.util.List;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 /**
  * Servlet used to retrieve image content for a form.
@@ -171,36 +170,32 @@ public class ImageServlet extends ABaseFWKServlet {
 					String.format("no_attachments_yet_%s.svg", UUID.randomUUID().toString().substring(0, 5)));
 		}
 
-		List<Attachment> imgAttachmentsForForm = attachmentsForForm.stream()
-				.filter(itm -> itm.isFileTypeImage())
-				.collect(Collectors.toList());
-		if (imgAttachmentsForForm.isEmpty()) {
-			byte[] placeholderImageBytes = ImageUtil.getNonImagePreviewForContentType(attachmentsForForm.get(0).getContentType());
+		//Resolve the specific attachment being requested. Fall back to the first
+		//attachment only when no attachmentId was supplied (e.g. the form-level thumbnail).
+		Attachment requestedAttachment = null;
+		if (attachmentId > 0) {
+			requestedAttachment = attachmentsForForm.stream()
+					.filter(itm -> attachmentId.equals(itm.getId()))
+					.findFirst()
+					.orElse(null);
+		}
+		if (requestedAttachment == null) requestedAttachment = attachmentsForForm.get(0);
+
+		//Non-image attachment: return the type icon derived from THIS attachment's
+		//content type (never the first attachment's). No need to load the data.
+		if (!requestedAttachment.isFileTypeImage()) {
+			byte[] placeholderImageBytes = ImageUtil.getNonImagePreviewForContentType(requestedAttachment.getContentType());
 			if (placeholderImageBytes == null) placeholderImageBytes = ImageUtil.getThumbnailPlaceholderImageForNone();
-			
+
 			return new ImageStreamedContent(
 					placeholderImageBytes,
 					"image/svg+xml",
 					String.format("prev_for_non_image_attachment_%s.svg", UUID.randomUUID().toString().substring(0, 5)));
 		}
 
-		//First image...
-		Attachment imageAttachmentById = null;
-		if (attachmentId > 0) {
-			imageAttachmentById = attachmentClientParam.getAttachmentById(
-					attachmentId, true);
-		} else {
-			imageAttachmentById = attachmentClientParam.getAttachmentById(
-					attachmentsForForm.get(0).getId(), true);
-		}
-
-		byte[] nonImageData = ImageUtil.getNonImagePreviewForContentType(imageAttachmentById.getContentType());
-		if (nonImageData != null) {
-			return new ImageStreamedContent(
-					nonImageData,
-					"image/svg+xml",
-					String.format("type_icon_%s.svg", UUID.randomUUID().toString().substring(0, 5)));
-		}
+		//Image attachment: fetch the raw data and scale it into a thumbnail.
+		Attachment imageAttachmentById = attachmentClientParam.getAttachmentById(
+				requestedAttachment.getId(), true);
 
 		byte[] imageBytes = UtilGlobal.decodeBase64(imageAttachmentById.getAttachmentDataBase64());
 		if (thumbnailScale > 0) imageBytes = this.scale(imageBytes, thumbnailScale, 0);
