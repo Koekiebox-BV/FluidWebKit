@@ -184,6 +184,23 @@ public class WebKitUserQueryTopBarBean extends WebKitUserQueryBean implements IC
 	}
 
 	@Override
+	public void actionCloseOpenForm() {
+		if (this.openFormBean != null) {
+			this.openFormBean.setAreaToUpdateAfterSave(null);
+			this.openFormBean.endConversation();
+		}
+
+		this.currentlyHaveItemOpen = false;
+		this.currentOpenFormTitle = null;
+		this.dialogDisplay = false;
+
+		// Dialog close requests have no query parameters. Retain the top-bar query and its inputs.
+		if (this.executingUserQuery != null) {
+			this.actionExecuteUserQueryFromTopBar(UtilGlobal.EMPTY, UtilGlobal.EMPTY);
+		}
+	}
+
+	@Override
 	protected String getAreaToUpdateAfterSave() {
 		return ":frmExecuteTopUserQueryResults:dataTableUserQueryTopBar";
 	}
