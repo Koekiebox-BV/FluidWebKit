@@ -29,6 +29,7 @@ import com.fluidbpm.ws.client.v1.user.LoginClient;
 import javax.faces.application.FacesMessage;
 import javax.faces.context.FacesContext;
 import javax.inject.Inject;
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 import java.util.Map;
 import java.util.Properties;
@@ -96,11 +97,10 @@ public abstract class ABaseLoginBean extends ABaseManagedBean {
 				user.setRoles(Role.convertToObjects(appReqToken.getRoleString()));
 			}
 
-			// Mark the user as logged in:
-			this.loggedInUsersBean.loginUser(this.getInputUsername());
-
 			//We have a valid login here...
 			user.setServiceTicket(serviceTicket);
+			FacesContext.getCurrentInstance().getExternalContext().getSession(true);
+			((HttpServletRequest) FacesContext.getCurrentInstance().getExternalContext().getRequest()).changeSessionId();
 			this.bindFluidClientDSToSession(serviceTicket);
 
 			//Bind the config for the Fluid DS User...
@@ -110,6 +110,10 @@ public abstract class ABaseLoginBean extends ABaseManagedBean {
 
 			//Get logged in user info...
 			User loggedInUserInfo = this.getFluidClientDS().getUserClient().getLoggedInUserInformation();
+
+			// Email aliases authenticate the account; session state uses its real username.
+			user.setUsername(loggedInUserInfo.getUsername());
+			this.loggedInUsersBean.loginUser(user.getUsername());
 
 			//Set the User Id...
 			user.setDateFormat(loggedInUserInfo.getDateFormat());
@@ -152,6 +156,7 @@ public abstract class ABaseLoginBean extends ABaseManagedBean {
 			}
 			return null;
 		} finally {//Close the login after done...
+			this.inputPassword = null;
 			loginClient.closeAndClean();
 		}
 
