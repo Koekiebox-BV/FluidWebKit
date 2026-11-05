@@ -96,9 +96,6 @@ public abstract class ABaseLoginBean extends ABaseManagedBean {
                 user.setRoles(Role.convertToObjects(appReqToken.getRoleString()));
             }
 
-            // Mark the user as logged in:
-            this.loggedInUsersBean.loginUser(this.getInputUsername());
-
             //We have a valid login here...
             user.setServiceTicket(serviceTicket);
             this.bindFluidClientDSToSession(serviceTicket);
@@ -110,6 +107,10 @@ public abstract class ABaseLoginBean extends ABaseManagedBean {
 
             //Get logged in user info...
             User loggedInUserInfo = this.getFluidClientDS().getUserClient().getLoggedInUserInformation();
+
+            // Email aliases authenticate the account; session state uses its real username.
+            user.setUsername(loggedInUserInfo.getUsername());
+            this.loggedInUsersBean.loginUser(user.getUsername());
 
             //Set the User Id...
             user.setDateFormat(loggedInUserInfo.getDateFormat());
