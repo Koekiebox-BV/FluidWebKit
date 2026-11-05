@@ -98,6 +98,8 @@ public abstract class ABaseLoginBean extends ABaseManagedBean {
 
             //We have a valid login here...
             user.setServiceTicket(serviceTicket);
+            FacesContext.getCurrentInstance().getExternalContext().getSession(true);
+            ((jakarta.servlet.http.HttpServletRequest) FacesContext.getCurrentInstance().getExternalContext().getRequest()).changeSessionId();
             this.bindFluidClientDSToSession(serviceTicket);
 
             //Bind the config for the Fluid DS User...
@@ -153,6 +155,7 @@ public abstract class ABaseLoginBean extends ABaseManagedBean {
             }
             return null;
         } finally {//Close the login after done...
+            this.inputPassword = null;
             loginClient.closeAndClean();
         }
 
