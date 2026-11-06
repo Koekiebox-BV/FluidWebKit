@@ -301,7 +301,8 @@ public class WebKitOpenFormConversationBean extends ABaseManagedBean {
 			try {
 				Long fluidItemFormId = wfiParam.getFluidItemFormId();
 				if (fluidItemFormId != null && fluidItemFormId > 0) {
-					fluidItem = flowItemClient.getFluidItemByFormId(fluidItemFormId, true, webKitForm.isEnableCalculatedLabels());
+					fluidItem = flowItemClient.getFluidItemByFormId(fluidItemFormId, true,
+							webKitForm.isEnableCalculatedLabels(), webKitForm.isShowWorkflowProgress());
 				}
 			} catch (FluidClientException fce) {
 				if (FluidClientException.ErrorCode.NO_RESULT != fce.getErrorCode()) throw fce;

@@ -97,6 +97,28 @@ public class WorkspaceFluidItem extends ABaseFluidVO {
 		return this.getFluidItemForm().getId();
 	}
 
+	/** Progress is available only for an active workflow and an opted-in form type. */
+	public boolean isShowWorkflowProgress() {
+		return this.webKitForm != null && this.webKitForm.isShowWorkflowProgress()
+				&& this.getFluidItem() != null && this.getFluidItemId() != null && this.getFluidItemId() > 0
+				&& FluidItem.FlowState.isFlowStateWIP(this.getFluidItemFormFlowState())
+				&& this.getWorkflowProgressPercentage() != null;
+	}
+
+	public Integer getWorkflowProgressPercentage() {
+		FluidItem item = this.getFluidItem();
+		if (item == null || item.getCustomProperties() == null) return null;
+		for (FluidItem.FluidItemProperty property : item.getCustomProperties()) {
+			if (property == null || !FluidItem.FluidItemProperty.Prop.FLOW_COMPLETE_PERCENTAGE.equals(property.getName())) continue;
+			try {
+				return Math.max(0, Math.min(100, Integer.parseInt(property.getValue())));
+			} catch (NumberFormatException invalidProgress) {
+				return null;
+			}
+		}
+		return null;
+	}
+
 	public Long getFluidItemId() {
 		if (this.getFluidItem() == null) return null;
 		return this.getFluidItem().getId();
