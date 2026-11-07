@@ -372,6 +372,7 @@ public abstract class ABaseWorkspaceBean<T extends ABaseWebVO, J extends ABaseCo
 			List<WebKitWorkspaceJobView> viewsWithAccess = this.filterViewsForUserAccess(viewToFetchFor, clickedGroupAlias);
 			if (viewsWithAccess == null || viewsWithAccess.isEmpty()) return;
 
+            final boolean populateFlowProgress = subFilter != null && subFilter.isShowColumnProgressPercentage();
 			List<CompletableFuture> allAsyncs = new ArrayList<>();
 			final Map<WebKitWorkspaceJobView, List<FluidItem>> mappingRawViewFetch = new Hashtable<>();
 
@@ -387,7 +388,11 @@ public abstract class ABaseWorkspaceBean<T extends ABaseWebVO, J extends ABaseCo
 						listOfItems = flowItemClient.getFluidItemsForView(
 								jobViewWK.getJobView(),
 								fetchLimit,
-								0);
+                                0,
+								UtilGlobal.EMPTY,
+								UtilGlobal.EMPTY,
+								populateFlowProgress
+						);
 						if (listOfItems == null || (listOfItems.getListing() == null || listOfItems.getListing().isEmpty())) return;
 					} catch (FluidClientException fluidClientExcept) {
 						if (fluidClientExcept.getErrorCode() == FluidClientException.ErrorCode.NO_RESULT) return;
