@@ -215,6 +215,9 @@ public class WebKitOpenFormFieldHistoryConversationBean extends ABaseManagedBean
     }
 
     public void actionLoadFormHistoricData(boolean useAfsMechanism) {
+        this.formHistoricData = new ArrayList<>();
+        this.formFieldHistories = new ArrayList<>();
+        this.formFieldHistoriesFlat = new ArrayList<>();
         if (this.getFluidClientDS() == null) return;
 
         final Map<Long, List<Field>> dateAndFieldValuesMapping = new HashMap<>();
@@ -222,14 +225,14 @@ public class WebKitOpenFormFieldHistoryConversationBean extends ABaseManagedBean
 
         FormContainerClient fcc = this.getFluidClientDS().getFormContainerClient();
 
-        if (!this.webKitConfigBean.getEnableSOMPostCardFeatures()) return;
-
-        Currency currencyOverride = this.webKitConfigBean.getIssuerVelocityCurrency(
-                this.getFluidClientDSConfig().getSQLUtilWrapper(),
-                this.globalIssuerBean.getActiveIssuer()
-        );
-
         try {
+            // Only the issuer currency override depends on SOM/PostCard.
+            Currency currencyOverride = this.webKitConfigBean.getEnableSOMPostCardFeatures()
+                    ? this.webKitConfigBean.getIssuerVelocityCurrency(
+                            this.getFluidClientDSConfig().getSQLUtilWrapper(),
+                            this.globalIssuerBean.getActiveIssuer())
+                    : null;
+
             this.setFormHistoricData(fcc.getFormAndFieldHistoricData(this.historyForm, false, true));
 
             AtomicLong al = new AtomicLong();
@@ -266,9 +269,6 @@ public class WebKitOpenFormFieldHistoryConversationBean extends ABaseManagedBean
                     dateAndFieldValuesMapping.put(key, fieldsForDateChange);
                 }
             });
-
-            this.formFieldHistories = new ArrayList<>();
-            this.formFieldHistoriesFlat = new ArrayList<>();
 
             if (useAfsMechanism) {
                 this.processWithAFSMechanism(dateAndFieldValuesMapping, dateAndUserMapping);
