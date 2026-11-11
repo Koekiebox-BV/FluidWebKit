@@ -61,6 +61,15 @@ public class WebKitOpenFormFieldHistoryConversationBean extends ABaseManagedBean
     @Setter
     private List<FlatFieldHistory> formFieldHistoriesFlat;
 
+    private boolean generalHistory;
+
+    public String getHistoryTitle() {
+        if (this.historyForm == null) return "";
+        String title = UtilGlobal.isNotBlank(this.historyForm.getTitle())
+                ? this.historyForm.getTitle() : this.historyForm.getFormType();
+        return String.format("%s (#%s)", title == null ? "Form" : title, this.historyForm.getId());
+    }
+
     private static final String EMPTY_FLAG = "-";
     public static final String SYSTEM_ROUTE = "_SYSTEM_ROUTE_";
     private static final boolean IGNORE_FIELDS_WHERE_VAL_SAME = true;
@@ -164,13 +173,19 @@ public class WebKitOpenFormFieldHistoryConversationBean extends ABaseManagedBean
             if (this.field == null) return false;
             if (UtilGlobal.isBlank(this.field.getFieldValueAsString())) return false;
 
+            if (this.field.getTypeAsEnum() == null) return false;
             switch (this.field.getTypeAsEnum()) {
                 case Text:
                 case ParagraphText:
                     String val = this.field.getFieldValueAsString();
                     if (UtilGlobal.isBlank(val)) return false;
-                    JsonObject sigJSON = JsonParser.parseString(val).getAsJsonObject();
-                    return sigJSON.has("lines");
+                    if (!val.trim().startsWith("{")) return false;
+                    try {
+                        JsonObject sigJSON = JsonParser.parseString(val).getAsJsonObject();
+                        return sigJSON.has("lines");
+                    } catch (RuntimeException invalidSignature) {
+                        return false;
+                    }
             }
 
             return false;
@@ -180,6 +195,7 @@ public class WebKitOpenFormFieldHistoryConversationBean extends ABaseManagedBean
             if (this.field == null) return false;
             if (UtilGlobal.isBlank(this.field.getFieldValueAsString())) return false;
 
+            if (this.field.getTypeAsEnum() == null) return false;
             switch (this.field.getTypeAsEnum()) {
                 case Text:
                 case ParagraphText:
@@ -226,6 +242,7 @@ public class WebKitOpenFormFieldHistoryConversationBean extends ABaseManagedBean
         FormContainerClient fcc = this.getFluidClientDS().getFormContainerClient();
 
         try {
+            this.generalHistory = !this.webKitConfigBean.getEnableSOMPostCardFeatures();
             // Only the issuer currency override depends on SOM/PostCard.
             Currency currencyOverride = this.webKitConfigBean.getEnableSOMPostCardFeatures()
                     ? this.webKitConfigBean.getIssuerVelocityCurrency(
@@ -233,7 +250,7 @@ public class WebKitOpenFormFieldHistoryConversationBean extends ABaseManagedBean
                             this.globalIssuerBean.getActiveIssuer())
                     : null;
 
-            this.setFormHistoricData(fcc.getFormAndFieldHistoricData(this.historyForm, false, true));
+            this.setFormHistoricData(fcc.getFormAndFieldHistoricData(this.historyForm, false, !this.generalHistory));
 
             AtomicLong al = new AtomicLong();
             AtomicReference<String> arUser = new AtomicReference<>();
@@ -269,6 +286,12 @@ public class WebKitOpenFormFieldHistoryConversationBean extends ABaseManagedBean
                     dateAndFieldValuesMapping.put(key, fieldsForDateChange);
                 }
             });
+
+            if (this.generalHistory) {
+                dateAndFieldValuesMapping.values().forEach(this::removeFieldsWhereUserHasNoAccess);
+                this.formFieldHistoriesFlat = buildGeneralHistory(dateAndFieldValuesMapping, dateAndUserMapping);
+                return;
+            }
 
             if (useAfsMechanism) {
                 this.processWithAFSMechanism(dateAndFieldValuesMapping, dateAndUserMapping);
@@ -315,6 +338,31 @@ public class WebKitOpenFormFieldHistoryConversationBean extends ABaseManagedBean
         } catch (Exception except) {
             this.raiseError(except);
         }
+    }
+
+    static List<FlatFieldHistory> buildGeneralHistory(
+            Map<Long, List<Field>> snapshots, Map<Long, String> users) {
+        List<FlatFieldHistory> result = new ArrayList<>();
+        Map<String, PriorField> previous = new HashMap<>();
+        List<Long> timestamps = new ArrayList<>(snapshots.keySet());
+        Collections.sort(timestamps);
+        for (Long timestamp : timestamps) {
+            Date date = new Date(timestamp);
+            String user = users.getOrDefault(timestamp, EMPTY_FLAG);
+            for (Field field : snapshots.get(timestamp)) {
+                if (field == null || field.getFieldName() == null ||
+                        field.getTypeAsEnum() == Field.Type.Table ||
+                        field.getTypeAsEnum() == Field.Type.Label) continue;
+                PriorField prior = previous.get(field.getFieldName());
+                if (prior == null ? field.getFieldValue() != null : !field.valueEquals(prior)) {
+                    result.add(new FlatFieldHistory(user, timestamp, date, field,
+                            prior, prior == null ? null : prior.getModifiedDate(), false, 1));
+                }
+                previous.put(field.getFieldName(), new PriorField(field, date, user));
+            }
+        }
+        result.sort(Comparator.comparing(FlatFieldHistory::getTimestampTime).reversed());
+        return result;
     }
 
     private void processWithAFSMechanism(
@@ -547,6 +595,10 @@ public class WebKitOpenFormFieldHistoryConversationBean extends ABaseManagedBean
                     .findFirst()
                     .orElse(null);
             if (fieldWithName == null) fields.remove(param);
+            else {
+                param.setFieldType(fieldWithName.getFieldType());
+                param.setTypeMetaData(fieldWithName.getTypeMetaData());
+            }
         });
     }
 
@@ -703,7 +755,7 @@ public class WebKitOpenFormFieldHistoryConversationBean extends ABaseManagedBean
 
     public List<FlatFieldHistory> getFormFieldHistoriesFlatModifyOnly() {
         List<FlatFieldHistory> org = this.getFormFieldHistoriesFlat();
-        if (org == null || org.isEmpty()) return org;
+        if (org == null || org.isEmpty() || this.generalHistory) return org;
 
         Collections.sort(org, Comparator.comparing(FlatFieldHistory::getTimestampTime));
 
