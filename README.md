@@ -42,3 +42,26 @@ Pericard enables it for its workflow view groups. To hide the form bar, expand t
 form type in **Workspace – Look & Feel → Form Definition Configuration**, set
 **Show Workflow Progress** (the first setting) to **No**, then save. This does not
 hide the workspace column.
+
+### Workflow timeline
+
+For saved forms with **Show Workflow Progress** enabled, users with
+`view_audit_log` can click **Show Timeline** in the Workflow Progress area.
+The button also remains available after the workflow has ended. History is
+fetched only on that click; opening a form, hovering, selecting a visit and
+zooming do not fetch history. Reopening the timeline takes a fresh snapshot.
+
+The Rain timeline uses the existing step-type logos and shows each visit
+separately, including returns to the same step. Hover or select a visit for
+its name, type, entry, exit and duration. The current visit is marked ongoing
+at the time of loading. Missing boundaries remain unknown. Zoom in/out, drag
+and **Fit all** operate on the loaded history.
+
+The axis and details use the user's configured UTC offset, displayed above the
+timeline (UTC when no offset is configured). The client requests UTC history
+with `getFormFlowTimelineData(form)` so dates are converted exactly once. This
+response includes the current step, its type and the server's snapshot time,
+including waiting steps that have not written an audit event yet.
+This requires the corresponding Fluid Java client and FlowJob history endpoint
+updates; deploy them together with FluidWebKit and Rain. The existing history
+API without `utc=true` retains its timezone-adjusted response.

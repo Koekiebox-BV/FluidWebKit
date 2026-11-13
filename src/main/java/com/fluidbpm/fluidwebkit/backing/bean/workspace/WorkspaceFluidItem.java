@@ -119,6 +119,12 @@ public class WorkspaceFluidItem extends ABaseFluidVO {
 		return null;
 	}
 
+	/** Saved forms can retain workflow history after their active workflow has ended. */
+	public boolean isShowWorkflowTimeline() {
+		return this.webKitForm != null && this.webKitForm.isShowWorkflowProgress()
+				&& this.getFluidItem() != null && this.getFluidItemFormId() != null && this.getFluidItemFormId() > 0;
+	}
+
 	public Long getFluidItemId() {
 		if (this.getFluidItem() == null) return null;
 		return this.getFluidItem().getId();

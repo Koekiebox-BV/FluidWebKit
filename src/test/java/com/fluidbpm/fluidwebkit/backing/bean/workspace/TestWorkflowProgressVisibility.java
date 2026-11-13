@@ -2,6 +2,7 @@ package com.fluidbpm.fluidwebkit.backing.bean.workspace;
 
 import com.fluidbpm.fluidwebkit.backing.vo.ABaseWebVO;
 import com.fluidbpm.program.api.vo.field.Field;
+import com.fluidbpm.program.api.vo.form.Form;
 import com.fluidbpm.program.api.vo.item.FluidItem;
 import com.fluidbpm.program.api.vo.user.User;
 import com.fluidbpm.program.api.vo.webkit.form.WebKitForm;
@@ -44,6 +45,19 @@ public class TestWorkflowProgressVisibility {
         item.addCustomProperty(new FluidItem.FluidItemProperty(FluidItem.FluidItemProperty.Prop.FLOW_COMPLETE_PERCENTAGE, "50"));
         item.setId(-1L);
         assertFalse(workspace.isShowWorkflowProgress());
+    }
+
+    @Test public void savedFormsCanShowHistoryAfterLeavingWorkflow() {
+        FluidItem item = item("100");
+        item.setForm(new Form(42L));
+        item.setFlowStateString(FluidItem.FlowState.Archive.name());
+        WorkspaceFluidItem workspace = workspace(item);
+        assertFalse(workspace.isShowWorkflowTimeline());
+        workspace.getWebKitForm().setShowWorkflowProgress(true);
+        assertTrue(workspace.isShowWorkflowTimeline());
+        assertFalse(workspace.isShowWorkflowProgress());
+        item.getForm().setId(null);
+        assertFalse(workspace.isShowWorkflowTimeline());
     }
 
     private static FluidItem item(String percentage) {
