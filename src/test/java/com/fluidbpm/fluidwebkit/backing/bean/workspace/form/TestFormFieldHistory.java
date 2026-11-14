@@ -23,6 +23,7 @@ public class TestFormFieldHistory {
                 Collections.singletonMap(1000L, "creator"));
         assertEquals(1, rows.size());
         assertNull(rows.get(0).getPriorField());
+        assertEquals("N/A", rows.get(0).getDisplayValueForTimeDiff());
         WebKitOpenFormFieldHistoryConversationBean bean = new WebKitOpenFormFieldHistoryConversationBean();
         java.lang.reflect.Field general = bean.getClass().getDeclaredField("generalHistory");
         general.setAccessible(true);
@@ -62,6 +63,30 @@ public class TestFormFieldHistory {
         List<FlatFieldHistory> rows = buildGeneralHistory(snapshots, Collections.emptyMap());
         assertEquals(2, rows.size());
         assertFalse(rows.get(0).isValueOfTypeSignature());
+    }
+
+    @Test public void newlyPopulatedFieldUsesTheSameElapsedTimeAsItsChangeGroup() {
+        Map<Long, List<Field>> snapshots = new HashMap<>();
+        snapshots.put(1000L, Arrays.asList(field("A")));
+        Field added = field("RFG");
+        added.setFieldName("Region");
+        snapshots.put(61000L, Arrays.asList(field("B"), added));
+        List<FlatFieldHistory> rows = buildGeneralHistory(snapshots, Collections.emptyMap());
+        assertEquals(3, rows.size());
+        assertEquals("1 minute", rows.get(0).getDisplayValueForTimeDiff());
+        assertEquals("1 minute", rows.get(1).getDisplayValueForTimeDiff());
+        assertNull("The new field still has no previous value", rows.get(1).getPriorField());
+        assertEquals("N/A", rows.get(2).getDisplayValueForTimeDiff());
+    }
+
+    @Test public void elapsedTimeUsesThePreviousSnapshotEvenWhenItHasNoVisibleValues() {
+        Map<Long, List<Field>> snapshots = new HashMap<>();
+        snapshots.put(1000L, Collections.emptyList());
+        snapshots.put(61000L, Arrays.asList(field("A")));
+        List<FlatFieldHistory> rows = buildGeneralHistory(snapshots, Collections.emptyMap());
+        assertEquals(1, rows.size());
+        assertEquals("1 minute", rows.get(0).getDisplayValueForTimeDiff());
+        assertNull(rows.get(0).getPriorField());
     }
 
     @Test public void ordinaryTextIsNotParsedAsSignature() {

@@ -141,8 +141,13 @@ public class WebKitOpenFormFieldHistoryConversationBean extends ABaseManagedBean
         private boolean isCurrent;
         private final int numberOfChanges;
 
+        public boolean isTimeComparisonAvailable() {
+            return this.timestampTime != null && this.timestampTime > 0 &&
+                    this.priorFieldModifiedDate != null && this.priorFieldModifiedDate.getTime() > 0;
+        }
+
         public String getDisplayValueForTimeDiff() {
-            if (this.priorFieldModifiedDate == null || this.priorFieldModifiedDate.getTime() < 1) return "N/A";
+            if (!this.isTimeComparisonAvailable()) return "N/A";
 
             long takenInMillis = (this.timestampTime > this.priorFieldModifiedDate.getTime()) ?
                     (this.timestampTime - this.priorFieldModifiedDate.getTime()) :
@@ -346,6 +351,7 @@ public class WebKitOpenFormFieldHistoryConversationBean extends ABaseManagedBean
         Map<String, PriorField> previous = new HashMap<>();
         List<Long> timestamps = new ArrayList<>(snapshots.keySet());
         Collections.sort(timestamps);
+        Date previousSnapshotDate = null;
         for (Long timestamp : timestamps) {
             Date date = new Date(timestamp);
             String user = users.getOrDefault(timestamp, EMPTY_FLAG);
@@ -355,11 +361,14 @@ public class WebKitOpenFormFieldHistoryConversationBean extends ABaseManagedBean
                         field.getTypeAsEnum() == Field.Type.Label) continue;
                 PriorField prior = previous.get(field.getFieldName());
                 if (prior == null ? field.getFieldValue() != null : !field.valueEquals(prior)) {
+                    // The table header and summary describe the whole snapshot, including
+                    // newly populated fields which have no individual previous value.
                     result.add(new FlatFieldHistory(user, timestamp, date, field,
-                            prior, prior == null ? null : prior.getModifiedDate(), false, 1));
+                            prior, previousSnapshotDate, false, 1));
                 }
                 previous.put(field.getFieldName(), new PriorField(field, date, user));
             }
+            previousSnapshotDate = date;
         }
         result.sort(Comparator.comparing(FlatFieldHistory::getTimestampTime).reversed());
         return result;
