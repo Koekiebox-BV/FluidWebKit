@@ -41,9 +41,6 @@ public class ContentViewUQ extends ABaseContentView {
 
 	private WebKitAccessBean accessBean;
 
-	private static final String LEFT_SQ_BRACKET = "[";
-	private static final String RIGHT_SQ_BRACKET = "]";
-
 	@Getter
 	@Setter
 	private WorkspaceUserQueryLDM fluidItemsLazyModel = null;
@@ -54,6 +51,11 @@ public class ContentViewUQ extends ABaseContentView {
 
 	private Map<String, List<String>> multiSelectMapping;
 
+	@Getter @Setter
+	private Map<String, Map<String, Date>> rangeToDates = new HashMap<>();
+	@Getter @Setter
+	private Map<String, Map<String, Double>> rangeToDecimals = new HashMap<>();
+
 	public static final class SystemField {
 		public static final String DATE_CREATED = "Date Created";
 		public static final String DATE_LAST_UPDATED = "Date Last Updated";
@@ -63,6 +65,17 @@ public class ContentViewUQ extends ABaseContentView {
 		public static final String USER = "User";
 		public static final String STATE = "State";
 		public static final String FLOW_STATE = "Flow State";
+
+		// Query names follow the backend FormField.SystemField catalogue, not result-column labels.
+		private static final List<String> QUERY_FIELDS = Arrays.asList(
+				DATE_CREATED, DATE_LAST_UPDATED, FORM_TYPE, "Form Flow State", TITLE, "Current User",
+				"Email From Address", "Email To Address", "Email Subject", "Email Sent Date",
+				"Email Received Date", "Email Unique Identifier");
+
+		public static String queryFieldName(String name) {
+			if (name == null) return null;
+			return QUERY_FIELDS.stream().filter(field -> field.equalsIgnoreCase(name.trim())).findFirst().orElse(null);
+		}
 	}
 
 	public ContentViewUQ(
@@ -256,7 +269,7 @@ public class ContentViewUQ extends ABaseContentView {
 			this.multiSelectMapping.put(fieldName, availableOptions);
 		}
 
-		List<SelectItem> returnVal = availableOptions.stream()
+		List<SelectItem> returnVal = (availableOptions == null ? Collections.<String>emptyList() : availableOptions).stream()
 				.map(itm -> new SelectItem(itm, itm))
 				.collect(Collectors.toList());
 
@@ -271,39 +284,72 @@ public class ContentViewUQ extends ABaseContentView {
 
 		if (this.sectionFilterableColumns == null) {
 			if (this.wkUserQuery == null) return new HashMap<>();
-			this.sectionFilterableColumns = new HashMap<>();
 
 			String userQueryName = this.wkUserQuery.getUserQuery().getName();
 			UserQuery freshFetch = this.accessBean.fetchUserQueryWithNameUsingConfigUser(userQueryName);
 
 			List<ABaseManagedBean.ColumnModel> inputModels = null;
-			List<String> inputsRulesWhereInputIsReq = (freshFetch == null) ? null :
-					freshFetch.getRuleFieldNamesWhereTypeInput();
+			List<String> inputsRulesWhereInputIsReq = (freshFetch == null) ? null : freshFetch.getRules();
 			if (inputsRulesWhereInputIsReq != null && !inputsRulesWhereInputIsReq.isEmpty()) {
 				inputModels = inputsRulesWhereInputIsReq.stream()
+						.filter(rule -> UserQueryInputColumn.inputFieldName(rule) != null)
 						.map(inputRule -> {
-							int firstIndexOfBracket = inputRule.indexOf(LEFT_SQ_BRACKET);
-							int lastIndexOfBracket = inputRule.indexOf(RIGHT_SQ_BRACKET);
-							String formFieldName = inputRule.substring(firstIndexOfBracket+1, lastIndexOfBracket);
+							String formFieldName = UserQueryInputColumn.inputFieldName(inputRule);
 							Field fieldByName = this.accessBean.getFieldBy(formFieldName);
+							// System fields need not be attached to a visible form definition.
+							String systemFieldName = SystemField.queryFieldName(formFieldName);
+							if (fieldByName == null && systemFieldName != null) {
+								fieldByName = this.accessBean.getFluidClientDSConfig().getFormFieldClient()
+										.getFieldByName(systemFieldName);
+							}
 							if (fieldByName == null) return null;
 
-							return new ABaseManagedBean.ColumnModel(
-									fieldByName.getFieldName(),
-									fieldByName.getFieldName(),
-									fieldByName.getFieldDescription(),
-									fieldByName.getTypeAsEnum(),
-									fieldByName.getTypeMetaData(),
-									true,
-									true,
-									true);
+							return new UserQueryInputColumn(fieldByName, inputRule);
 						})
 						.filter(itm -> itm != null)
 						.collect(Collectors.toList());
 			}
 			if (inputModels == null) inputModels = new ArrayList<>();
+			// Inputs may be absent from the configured result columns. Preserve already entered values.
+			for (ABaseManagedBean.ColumnModel input : inputModels) {
+				String name = input.getFluidFieldName();
+				switch (input.getFluidFieldColumnType()) {
+					case Text:
+						this.getFilterByTextValueMap().computeIfAbsent(section, key -> new HashMap<>()).putIfAbsent(name, "");
+						break;
+					case TextEncrypted:
+						this.getFilterByTextEncryptedValueMap().computeIfAbsent(section, key -> new HashMap<>()).putIfAbsent(name, "");
+						break;
+					case MultipleChoice:
+						this.getFilterBySelectItemMap().computeIfAbsent(section, key -> new HashMap<>()).putIfAbsent(name, new String[]{});
+						break;
+					case DateTime:
+						this.getFilterByDateValueMap().computeIfAbsent(section, key -> new HashMap<>()).putIfAbsent(name, null);
+						this.rangeToDates.computeIfAbsent(section, key -> new HashMap<>()).putIfAbsent(name, null);
+						break;
+					case Decimal:
+						this.getFilterByDecimalValueMap().computeIfAbsent(section, key -> new HashMap<>()).putIfAbsent(name, null);
+						this.rangeToDecimals.computeIfAbsent(section, key -> new HashMap<>()).putIfAbsent(name, null);
+						break;
+					default: break;
+				}
+			}
+			// Only cache a completed lookup so a failed system-field request can be retried.
+			this.sectionFilterableColumns = new HashMap<>();
 			this.sectionFilterableColumns.put(section, inputModels);
 		}
 		return this.sectionFilterableColumns;
+	}
+
+	@Override
+	public void actionClearFilteredList(String section) {
+		this.rangeToDates.remove(section);
+		this.rangeToDecimals.remove(section);
+		Map<String, Double> decimals = this.getFilterByDecimalValueMap().get(section);
+		if (decimals != null) decimals.replaceAll((field, value) -> null);
+		// Keep writable maps present for subsequent JSF input binding.
+		this.rangeToDates.put(section, new HashMap<>());
+		this.rangeToDecimals.put(section, new HashMap<>());
+		super.actionClearFilteredList(section);
 	}
 }

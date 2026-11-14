@@ -130,6 +130,10 @@ public class WebKitUserQueryTopBarBean extends WebKitUserQueryBean implements IC
 				this.accessBean
 			);
 			//View set to a new Content View for User Query...
+			if (this.contentView != null) {
+				contentViewUserQuery.setRangeToDates(this.contentView.getRangeToDates());
+				contentViewUserQuery.setRangeToDecimals(this.contentView.getRangeToDecimals());
+			}
 			this.contentView = contentViewUserQuery;
 
 			contentViewUserQuery.setSectionFilterableColumns(completeColMap);

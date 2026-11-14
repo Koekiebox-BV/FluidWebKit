@@ -404,7 +404,8 @@ public class WebKitAccessBean extends ABaseManagedBean {
         } else {
             fieldByLookup = formFieldClientParam.getFieldById(fieldsForViewingParam.getId());
         }
-        MultiChoice fieldMultiChoiceToExtractFrom = (MultiChoice)fieldByLookup.getFieldValue();
+        MultiChoice fieldMultiChoiceToExtractFrom = fieldByLookup.getFieldValueAsMultiChoice();
+        if (fieldMultiChoiceToExtractFrom == null) fieldMultiChoiceToExtractFrom = new MultiChoice();
 
         MultiChoice multiChoiceToPopulate = (MultiChoice)fieldsForViewingParam.getFieldValue();
         if (multiChoiceToPopulate == null) multiChoiceToPopulate = new MultiChoice();

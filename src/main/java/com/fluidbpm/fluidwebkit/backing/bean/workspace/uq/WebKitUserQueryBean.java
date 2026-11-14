@@ -23,6 +23,7 @@ import com.fluidbpm.fluidwebkit.backing.bean.workspace.contentview.WebKitViewCon
 import com.fluidbpm.fluidwebkit.backing.bean.workspace.form.IConversationCallback;
 import com.fluidbpm.fluidwebkit.backing.bean.workspace.lf.WebKitWorkspaceLookAndFeelBean;
 import com.fluidbpm.fluidwebkit.backing.bean.workspace.menu.WebKitMenuBean;
+import com.fluidbpm.fluidwebkit.exception.ClientDashboardException;
 import com.fluidbpm.program.api.util.UtilGlobal;
 import com.fluidbpm.program.api.vo.field.Field;
 import com.fluidbpm.program.api.vo.field.MultiChoice;
@@ -41,6 +42,7 @@ import javax.enterprise.context.SessionScoped;
 import javax.inject.Inject;
 import javax.inject.Named;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
@@ -250,7 +252,10 @@ public class WebKitUserQueryBean extends ABaseWorkspaceBean<UserQueryItemVO, Con
 						return;
 					}
 
-					if (this.getContentView().getFilterByTextValueMap().get(sectionName) != null &&
+					if (clmItm instanceof UserQueryInputColumn && ((UserQueryInputColumn) clmItm).isRange()) {
+						Field range = this.getRangeInput(sectionName, (UserQueryInputColumn) clmItm);
+						if (range != null) inputFields.add(range);
+					} else if (this.getContentView().getFilterByTextValueMap().get(sectionName) != null &&
 							this.getContentView().getFilterByTextValueMap().get(sectionName).containsKey(fluidFieldName)) {
 						String value = this.getContentView().getFilterByTextValueMap().get(sectionName).get(fluidFieldName);
 						if (!UtilGlobal.isBlank(value)) {
@@ -262,9 +267,14 @@ public class WebKitUserQueryBean extends ABaseWorkspaceBean<UserQueryItemVO, Con
 						if (!UtilGlobal.isBlank(value)) {
 							inputFields.add(new Field(fluidFieldName, value, Field.Type.TextEncrypted));
 						}
-					} else if (this.getContentView().getFilterByDecimalValueMap().containsKey(fluidFieldName)) {
+					} else if (clmItm.getFluidFieldColumnType() == Field.Type.DateTime) {
+						Map<String, Date> dates = this.getContentView().getFilterByDateValueMap().get(sectionName);
+						Date value = dates == null ? null : dates.get(fluidFieldName);
+						if (value != null) inputFields.add(new Field(fluidFieldName, value, Field.Type.DateTime));
+					} else if (this.getContentView().getFilterByDecimalValueMap().get(sectionName) != null &&
+							this.getContentView().getFilterByDecimalValueMap().get(sectionName).containsKey(fluidFieldName)) {
 						Double val =  this.getContentView().getFilterByDecimalValueMap().get(sectionName).get(fluidFieldName);
-						if (val != null && val.doubleValue() > 0) {
+						if (val != null) {
 							inputFields.add(new Field(fluidFieldName, val, Field.Type.Decimal));
 						}
 					} else if (this.getContentView().getFilterBySelectItemMap().get(sectionName) != null &&
@@ -287,6 +297,31 @@ public class WebKitUserQueryBean extends ABaseWorkspaceBean<UserQueryItemVO, Con
 			}
 		}
 		return inputFields;
+	}
+
+	private Field getRangeInput(String section, UserQueryInputColumn column) {
+		String name = column.getFluidFieldName();
+		Number from, to;
+		if (column.getFluidFieldColumnType() == Field.Type.DateTime) {
+			Date start = this.contentView.getFilterByDateValueMap().get(section).get(name);
+			Date end = this.contentView.getRangeToDates().get(section).get(name);
+			from = start == null ? null : start.getTime();
+			to = end == null ? null : end.getTime();
+		} else {
+			from = this.contentView.getFilterByDecimalValueMap().get(section).get(name);
+			to = this.contentView.getRangeToDecimals().get(section).get(name);
+		}
+		if (!column.isFromInput()) from = null;
+		if (!column.isToInput()) to = null;
+		if (from == null && to == null) return null;
+		if ((column.isFromInput() && from == null) || (column.isToInput() && to == null)) {
+			throw new ClientDashboardException("Enter both range values for '" + name + "'.", ClientDashboardException.ErrorCode.VALIDATION);
+		}
+		if (from != null && to != null && from.doubleValue() > to.doubleValue()) {
+			throw new ClientDashboardException("From cannot be after To for '" + name + "'.", ClientDashboardException.ErrorCode.VALIDATION);
+		}
+		// UIFieldModel uses the existing from|to wire representation for BETWEEN inputs.
+		return new Field(name, (from == null ? "" : from.toString()) + "|" + (to == null ? "" : to.toString()), Field.Type.Text);
 	}
 
 	public int getEnabledNumberOfUserQueriesCanExecute() {
