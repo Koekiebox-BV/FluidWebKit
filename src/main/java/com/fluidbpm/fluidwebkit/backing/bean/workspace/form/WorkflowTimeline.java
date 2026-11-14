@@ -50,7 +50,7 @@ public final class WorkflowTimeline {
             }
             if (open == null || !open.sameStep(step)) {
                 // Without a transition record, an observed step change gives no exact boundary.
-                open = new Visit("visit-" + result.size(), step,
+                open = new Visit(result.size(), step,
                         departed == null ? at : departed, starts || forcedMove || departed != null);
                 result.add(open);
                 departed = null;
@@ -67,7 +67,7 @@ public final class WorkflowTimeline {
             // The live snapshot supplies their identity, type and recorded entry time.
             if (open == null || !open.sameStep(current)) {
                 Instant entry = currentEntered == null ? (departed == null ? now : departed) : currentEntered.toInstant();
-                open = new Visit("visit-" + result.size(), current, entry, currentEntered != null || departed != null);
+                open = new Visit(result.size(), current, entry, currentEntered != null || departed != null);
                 result.add(open);
             }
             open.ongoing = true;
@@ -85,6 +85,7 @@ public final class WorkflowTimeline {
     public static final class Visit implements Serializable {
         private static final long serialVersionUID = 1L;
         private final String id;
+        private final int sequenceNumber;
         private final Long stepId;
         private final String stepName;
         private final String stepType;
@@ -94,8 +95,9 @@ public final class WorkflowTimeline {
         private boolean ongoing;
         private Instant observedAt;
 
-        private Visit(String id, FlowStep step, Instant start, boolean entryKnown) {
-            this.id = id;
+        private Visit(int index, FlowStep step, Instant start, boolean entryKnown) {
+            this.id = "visit-" + index;
+            this.sequenceNumber = index + 1;
             this.stepId = step.getId();
             this.stepName = step.getName() == null ? "Unknown step" : step.getName();
             this.stepType = step.getFlowStepType() == null ? "Unknown" : step.getFlowStepType();
